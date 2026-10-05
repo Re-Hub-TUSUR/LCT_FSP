@@ -1,5 +1,6 @@
 .auth-choice {
   display: grid;
+  width: 100%;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
 }
@@ -22,7 +23,7 @@
 }
 
 .auth-choice__item:focus-visible {
-  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 

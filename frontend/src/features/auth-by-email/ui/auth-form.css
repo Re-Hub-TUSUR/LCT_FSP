@@ -31,7 +31,7 @@
 }
 
 .auth-form__tab:focus-visible {
-  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 
@@ -63,8 +63,8 @@
   margin: 4px 0 0;
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #ff5a6e;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  color: var(--error);
 }

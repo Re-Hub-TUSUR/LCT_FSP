@@ -40,6 +40,11 @@ app → pages → widgets → features → entities → shared
 
 Сегменты: `ui/`, `api/`, `model/`, `lib/`, `config/` — только существующие.
 
+Фон лендинга — 3D-лента плёнки в `widgets/landing-hero` (`lib/film-ribbon.js` + `lib/reel-frames.js`,
+three.js): грузится лениво после первого рендера, при `prefers-reduced-motion` — неподвижный кадр.
+Визуальные токены (шрифты Jost / IBM Plex Mono, фон, `--focus-ring`, `--error`) — в
+`app/styles/tokens.css`; литералы цветов и обводок в компонентах не дублируются.
+
 ### Маршруты
 
 | Путь | Страница | Доступ |

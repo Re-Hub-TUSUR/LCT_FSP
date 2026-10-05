@@ -30,6 +30,7 @@ export function MainLayout() {
 
   return (
     <>
+      <div className="app-glow" aria-hidden="true" />
       <SiteHeader links={links} cta={cta} />
       <main>
         <Outlet />

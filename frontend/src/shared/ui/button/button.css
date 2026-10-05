@@ -4,8 +4,8 @@
   border: 0;
   border-radius: 0;
   font-family: var(--font-mono);
-  font-weight: 400;
-  font-size: clamp(11px, 0.78vw, 14px);
+  font-weight: 600;
+  font-size: clamp(12.5px, 0.9vw, 14px);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   cursor: pointer;
@@ -25,12 +25,13 @@
 }
 
 .btn--ghost {
-  background: var(--fill-ghost);
-  color: var(--text-dimmer);
+  background: var(--fill-ghost-solid);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--text);
 }
 
 .btn--ghost:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.09);
+  background: #1a1d28;
   color: #fff;
 }
 
@@ -44,7 +45,7 @@
 }
 
 .btn:focus-visible {
-  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 

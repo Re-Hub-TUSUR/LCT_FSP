@@ -12,52 +12,32 @@
   isolation: isolate;
 }
 
-.hero__media {
+.hero__glow {
   position: absolute;
   inset: 0;
-  z-index: -1;
-  background: #000;
-}
-
-.hero__video {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-
-.hero__scrim {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
+  z-index: -2;
   pointer-events: none;
-  background:
-    linear-gradient(
-      to right,
-      transparent 0%,
-      transparent 45%,
-      rgba(0, 0, 0, 0.45) 72%,
-      rgba(0, 0, 0, 0.72) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.55) 0%,
-      transparent 22%,
-      transparent 78%,
-      rgba(0, 0, 0, 0.65) 100%
-    );
+  background: radial-gradient(
+    42% 55% at 30% 52%,
+    rgba(52, 40, 200, 0.32),
+    rgba(20, 16, 90, 0.12) 55%,
+    transparent 75%
+  );
 }
 
-/* Brand tint: recolours the video towards FSP blue without touching the darkening gradients */
-.hero__media::after {
-  content: '';
+/* 3D film ribbon: fills everything to the left of the signup panel */
+.hero__ribbon {
   position: absolute;
-  inset: 0;
-  background: var(--brand-blue);
-  opacity: var(--tint-alpha);
-  mix-blend-mode: color;
+  z-index: -1;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: calc(100% - max(380px, min(34vw, 620px)) - var(--gutter));
   pointer-events: none;
+}
+
+.hero__ribbon canvas {
+  filter: drop-shadow(0 0 36px rgba(80, 64, 255, 0.35));
 }
 
 /* ── Right panel ───────────────────────────────────── */
@@ -77,6 +57,8 @@
 
 .legal {
   border-top: 1px solid var(--line);
+  /* Opaque: the ribbon leaves the frame behind the footer instead of under its text */
+  background: var(--bg);
   padding: clamp(18px, 1.7vw, 30px) var(--gutter);
   padding-bottom: max(clamp(18px, 1.7vw, 30px), env(safe-area-inset-bottom));
   text-align: center;
@@ -85,13 +67,14 @@
 .legal p {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(12px, 0.82vw, 16px);
+  font-weight: 400;
+  font-size: clamp(13px, 0.82vw, 16px);
   line-height: 1.5;
-  color: var(--text-dim);
+  color: var(--text-mute);
 }
 
 .legal a {
+  position: relative;
   color: var(--text);
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -99,57 +82,99 @@
   transition: color 0.25s ease;
 }
 
+/* Enlarges the tap target to 44px without moving the text */
+.legal a::after {
+  content: '';
+  position: absolute;
+  inset: -12px 0;
+}
+
 .legal a:hover {
   color: var(--text-dim);
 }
 
 .legal a:focus-visible {
-  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 
 /* ── Responsive ────────────────────────────────────── */
 
-@media (max-width: 720px) {
-  .hero__scrim {
-    background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.6) 0%,
-      rgba(0, 0, 0, 0.25) 30%,
-      rgba(0, 0, 0, 0.75) 100%
-    );
+@media (max-width: 1100px) {
+  /* The ribbon becomes a dimmed backdrop under the panel */
+  .hero__ribbon {
+    width: 100%;
+    opacity: 0.22;
   }
 
+  /* Keeps the copy and the email field on a dark ground wherever the ribbon passes */
+  .hero__body {
+    position: relative;
+  }
+
+  .hero__body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+      75% 60% at 60% 50%,
+      var(--bg) 0%,
+      rgba(5, 6, 13, 0.7) 50%,
+      transparent 85%
+    );
+  }
+}
+
+@media (max-width: 720px) {
   .hero__body {
     justify-content: center;
+  }
+
+  /* Lifts the loop above the form instead of under the email field */
+  .hero__ribbon {
+    top: -64%;
+  }
+
+  /* The legal line wraps here: more leading, and tap targets that stay out of each other's line */
+  .legal p {
+    line-height: 1.9;
+  }
+
+  .legal a::after {
+    inset: -6px 0;
+  }
+
+  .hero__body::before {
+    background: radial-gradient(
+      120% 50% at 50% 55%,
+      var(--bg) 0%,
+      rgba(5, 6, 13, 0.7) 55%,
+      transparent 90%
+    );
   }
 }
 
 @media (max-height: 640px) {
+  /* Too short for a fixed frame: the page scrolls so nothing in the panel is clipped */
   .hero {
+    height: auto;
     min-height: 100svh;
   }
 
+  .hero__body {
+    overflow: visible;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
   .legal {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 12px;
+    padding-bottom: 12px;
   }
 
   .legal p {
-    font-size: 11px;
-  }
-}
-
-/* ── Reduced motion ────────────────────────────────── */
-
-@media (prefers-reduced-motion: reduce) {
-  .hero__video {
-    display: none;
-  }
-
-  .hero__media {
-    background: #000
-      url('https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260806_132328_5f9029c8-218f-4489-82b6-29ff2849920e.png')
-      center / cover no-repeat;
+    font-size: 12px;
   }
 }

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { UseQueryResult } from '@tanstack/react-query'
-import { getErrorMessage } from '../../api'
+import { ApiError, getErrorMessage } from '../../api'
 import { EmptyState, ErrorState, Loader } from './feedback'
 
 type Props<T> = {
@@ -22,6 +22,10 @@ export function QueryState<T>({
 }: Props<T>) {
   if (query.isPending) return <Loader label={loadingLabel} />
   if (query.isError) {
+    // A stubbed endpoint is not a failure: nothing to retry, nothing went wrong for the user.
+    if (query.error instanceof ApiError && query.error.status === 501) {
+      return <EmptyState title="Раздел в разработке">Скоро здесь появятся данные.</EmptyState>
+    }
     return (
       <ErrorState message={getErrorMessage(query.error)} onRetry={() => void query.refetch()} />
     )

@@ -24,7 +24,7 @@
 }
 
 .feedback--error .feedback__title {
-  color: #ff5a6e;
+  color: var(--error);
 }
 
 .feedback__spinner {

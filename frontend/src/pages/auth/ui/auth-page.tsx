@@ -6,7 +6,11 @@ import './auth-page.css'
 /** Role choice: employers and candidates have different cabinets and registration paths. */
 export function AuthPage() {
   return (
-    <Page title="Вход в КАДРЫ" lead="Выберите, кто вы на платформе">
+    <Page
+      className="page--auth page--auth-wide"
+      title="Вход в КАДРЫ"
+      lead="Выберите, кто вы на платформе"
+    >
       <div className="auth-choice">
         <Link className="auth-choice__item" to={ROUTES.candidateAuth}>
           <span className="auth-choice__title">Я специалист</span>

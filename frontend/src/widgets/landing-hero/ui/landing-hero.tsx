@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { SignupPanel } from '@/features/start-signup'
-import { LEGAL, MEDIA } from '../config/content'
+import { LEGAL } from '../config/content'
+import { FilmRibbon } from './film-ribbon'
 import './landing-hero.css'
 
 type Props = {
@@ -11,19 +12,8 @@ type Props = {
 export function LandingHero({ header }: Props) {
   return (
     <main className="hero">
-      <div className="hero__media" aria-hidden="true">
-        <video
-          className="hero__video"
-          src={MEDIA.video}
-          poster={MEDIA.poster}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-        />
-      </div>
-      <div className="hero__scrim" aria-hidden="true" />
+      <div className="hero__glow" aria-hidden="true" />
+      <FilmRibbon />
 
       {header}
 
