@@ -22,7 +22,7 @@ class Vacancy(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text)
     specialization: Mapped[str] = mapped_column(String(64), index=True)
-    grade: Mapped[Grade] = mapped_column(str_enum(Grade))
+    grade: Mapped[Grade] = mapped_column(str_enum(Grade), index=True)
     stack: Mapped[list[str]] = mapped_column(JSON, default=list)
     salary_from: Mapped[int]
     salary_to: Mapped[int]
@@ -30,4 +30,4 @@ class Vacancy(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Office location; null for fully remote positions.
     city: Mapped[str | None] = mapped_column(String(100))
     # Null = draft, not shown in feeds.
-    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)

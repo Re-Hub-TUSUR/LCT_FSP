@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -21,10 +22,27 @@ class ErrorResponse(ApiModel):
 
 
 class Page[T](ApiModel):
+    """One page of a list: `page` starts at 1, `pages` is 0 when nothing matched."""
+
     items: list[T]
     total: int
-    limit: int
-    offset: int
+    page: int
+    per_page: int
+    pages: int
+
+    @classmethod
+    def build(
+        cls, items: Sequence[T], *, total: int, page: int, per_page: int, **extra: Any
+    ) -> Self:
+        """`extra` fills the fields of subclasses (e.g. `engine` of a search page)."""
+        return cls(
+            items=list(items),
+            total=total,
+            page=page,
+            per_page=per_page,
+            pages=-(-total // per_page),
+            **extra,
+        )
 
 
 class SalaryRange(ApiModel):

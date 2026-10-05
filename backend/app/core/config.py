@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     resend_api_key: SecretStr = SecretStr("")
     resend_from: str = "КАДРЫ <onboarding@resend.dev>"
 
+    # Candidate search. Empty URL: the search runs on the database (tests, CI, low-memory hosts).
+    elasticsearch_url: str = ""
+    # Alias that points at the current versioned candidates index.
+    elasticsearch_index: str = "kadry-candidates"
+
     @field_validator("resend_from")
     @classmethod
     def _default_from(cls, value: str) -> str:

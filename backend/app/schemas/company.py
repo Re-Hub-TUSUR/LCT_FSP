@@ -10,6 +10,9 @@ class CompanyRead(ApiModel):
     name: str
     industry: str | None
     description: str | None
+    city: str | None
+    # Headcount bucket, e.g. "201–500".
+    size: str | None
     website: str | None
     contact_email: str | None
 

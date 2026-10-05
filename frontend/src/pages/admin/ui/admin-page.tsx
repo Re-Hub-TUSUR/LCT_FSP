@@ -5,7 +5,7 @@ import { Page, QueryState, Section } from '@/shared/ui'
 
 /** TODO(admin): moderation of vacancies/companies (anti-fraud, out of MVP scope). */
 export function AdminPage() {
-  const users = useQuery(userQueries.adminList({ limit: 50 }))
+  const users = useQuery(userQueries.adminList({ perPage: 50 }))
 
   return (
     <Page title="Администрирование">

@@ -40,7 +40,7 @@ export function VacanciesTable({ params }: { params: VacancyListParams }) {
                   <td>{vacancy.category.label}</td>
                   <td>{formatRubRange(vacancy.salary.from, vacancy.salary.to)}</td>
                   <td>{WORK_FORMAT_LABELS[vacancy.workFormat]}</td>
-                  <td>{formatDate(vacancy.publishedAt)}</td>
+                  <td>{vacancy.publishedAt ? formatDate(vacancy.publishedAt) : 'Черновик'}</td>
                 </tr>
               ))}
             </tbody>

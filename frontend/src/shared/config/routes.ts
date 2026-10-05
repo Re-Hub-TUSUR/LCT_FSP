@@ -5,6 +5,8 @@ export const ROUTES = {
   candidateAuth: '/auth/candidate',
   profile: '/profile',
   vacancies: '/vacancies',
+  feed: '/feed',
+  feedSwipe: '/feed/swipe',
   company: '/companies/:companyId',
   candidate: '/candidates/:candidateId',
   calendar: '/calendar',

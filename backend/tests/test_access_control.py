@@ -29,13 +29,30 @@ async def test_admin_lists_users(
     await create_admin(sessionmaker, "admin@fsp.ru")
     token = await login(client, "admin@fsp.ru")
 
-    response = await client.get(f"{API}/admin/users?limit=10", headers=bearer(token))
+    response = await client.get(f"{API}/admin/users?page=1&perPage=10", headers=bearer(token))
 
     assert response.status_code == 200
     body = response.json()
-    assert body["total"] == 2
-    assert body["limit"] == 10
+    assert (body["total"], body["page"], body["perPage"], body["pages"]) == (2, 1, 10, 1)
     assert {user["email"] for user in body["items"]} == {"cand@fsp.ru", "admin@fsp.ru"}
+
+
+async def test_admin_pagination_splits_into_pages(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession]
+) -> None:
+    await register_and_login(client, "one@fsp.ru")
+    await register_and_login(client, "two@fsp.ru")
+    await create_admin(sessionmaker, "admin@fsp.ru")
+    token = await login(client, "admin@fsp.ru")
+
+    second = await client.get(f"{API}/admin/users?page=2&perPage=2", headers=bearer(token))
+    beyond = await client.get(f"{API}/admin/users?page=3&perPage=2", headers=bearer(token))
+    invalid = await client.get(f"{API}/admin/users?page=0", headers=bearer(token))
+
+    assert second.json()["pages"] == 2
+    assert len(second.json()["items"]) == 1
+    assert beyond.json()["items"] == []
+    assert invalid.status_code == 422
 
 
 async def test_role_guard_runs_before_stub(client: AsyncClient) -> None:

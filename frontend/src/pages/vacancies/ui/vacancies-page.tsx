@@ -14,8 +14,8 @@ export function VacanciesPage() {
       <VacanciesTable
         params={{
           search: params.get('q') ?? undefined,
-          limit: PAGE_SIZE,
-          offset: (page - 1) * PAGE_SIZE,
+          page,
+          perPage: PAGE_SIZE,
         }}
       />
     </Page>

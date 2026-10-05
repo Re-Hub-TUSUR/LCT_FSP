@@ -1,0 +1,201 @@
+/* Shared look of feed cards (vacancy and candidate entities use the same class names). */
+
+.match-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: clamp(20px, 2.4vw, 32px);
+  border: 1px solid var(--line);
+  background: var(--fill-ghost);
+  transition: border-color 0.25s ease;
+}
+
+.match-card:hover {
+  border-color: var(--line-strong);
+}
+
+.match-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.match-card__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.match-card__eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.match-card__eyebrow span {
+  color: var(--text-dim);
+}
+
+.match-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(22px, 2vw, 30px);
+  line-height: 1.15;
+}
+
+.match-card__salary {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.match-card__facts,
+.match-card__stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.match-card__fact {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.match-card__fact--accent {
+  border-color: var(--brand-blue);
+  color: var(--text);
+}
+
+.match-card__fact--warn {
+  border-color: rgba(236, 29, 53, 0.6);
+}
+
+.match-card__stack li {
+  padding: 5px 9px;
+  background: var(--fill-solid);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.match-card__why {
+  padding: 16px 20px;
+  border-left: 2px solid var(--brand-blue);
+  background: var(--fill-brand);
+}
+
+.match-card__why-title {
+  margin: 0 0 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.match-card__why ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 300;
+  line-height: 1.45;
+}
+
+.match-card__why li::before {
+  content: '+ ';
+  color: #8f86ff;
+  font-family: var(--font-mono);
+}
+
+.match-card__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+.match-card__text p {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.match-card__more {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.match-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.match-card__person {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.match-card__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  background: var(--fill-brand);
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 20px;
+}
+
+.match-card__meters {
+  display: flex;
+  gap: 24px;
+}
+
+@media (max-width: 640px) {
+  .match-card__head {
+    flex-direction: column;
+  }
+
+  .match-card__meters {
+    width: 100%;
+  }
+
+  .match-card__meters > * {
+    flex: 1;
+  }
+}

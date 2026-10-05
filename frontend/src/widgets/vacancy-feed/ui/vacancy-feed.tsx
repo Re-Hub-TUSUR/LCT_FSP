@@ -1,0 +1,162 @@
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router'
+import {
+  demoVacancyFeed,
+  VacancyMatchCard,
+  vacancyQueries,
+  WORK_FORMAT_LABELS,
+  WORK_FORMATS,
+} from '@/entities/vacancy'
+import type { FeedView, WorkFormat } from '@/entities/vacancy'
+import { ReactionButtons } from '@/features/feed-reaction'
+import { ApiError } from '@/shared/api'
+import { Chip, EmptyState, FeedSkeleton, Notice, Pagination, QueryState } from '@/shared/ui'
+
+const rub = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 })
+
+/** Feed API is not deployed yet → render sample cards instead of an error. */
+const isNotReady = (error: unknown) =>
+  error instanceof ApiError && [0, 404, 501].includes(error.status)
+
+/**
+ * Candidate's feed: only vacancies relevant to the profile, ranked by fit.
+ * No free-text search by design; light filters only. State lives in the URL.
+ */
+export function VacancyFeed() {
+  const [params, setParams] = useSearchParams()
+  const page = Math.max(1, Number(params.get('page')) || 1)
+  const perPage = Number(params.get('perPage')) || 10
+  const view: FeedView = params.get('view') === 'liked' ? 'liked' : 'all'
+  const formats = params.getAll('workFormat') as WorkFormat[]
+  const salaryMin = Number(params.get('salaryMin')) || undefined
+
+  const query = useQuery({
+    ...vacancyQueries.feed({ page, perPage, view, workFormat: formats, salaryMin }),
+    placeholderData: keepPreviousData,
+  })
+  const demo = query.isError && isNotReady(query.error)
+  const data = query.data ?? (demo ? demoVacancyFeed(page, perPage) : undefined)
+
+  const update = (patch: Record<string, string | string[] | null>) => {
+    const next = new URLSearchParams(params)
+    for (const [key, value] of Object.entries(patch)) {
+      next.delete(key)
+      if (Array.isArray(value)) value.forEach((item) => next.append(key, item))
+      else if (value) next.set(key, value)
+    }
+    if (!('page' in patch)) next.delete('page')
+    setParams(next, { replace: true })
+  }
+
+  const toggleFormat = (format: WorkFormat) =>
+    update({
+      workFormat: formats.includes(format)
+        ? formats.filter((item) => item !== format)
+        : [...formats, format],
+    })
+
+  return (
+    <div className="feed">
+      <aside className="feed__filters" aria-label="Фильтры ленты">
+        <div className="feed__group">
+          <p className="feed__label">Показать</p>
+          <div className="feed__chips">
+            <Chip active={view === 'all'} onClick={() => update({ view: null })}>
+              Подходящие
+            </Chip>
+            <Chip active={view === 'liked'} onClick={() => update({ view: 'liked' })}>
+              Избранное
+            </Chip>
+          </div>
+        </div>
+        <div className="feed__group">
+          <p className="feed__label">Формат</p>
+          <div className="feed__chips">
+            {WORK_FORMATS.map((format) => (
+              <Chip
+                key={format}
+                active={formats.includes(format)}
+                onClick={() => toggleFormat(format)}
+              >
+                {WORK_FORMAT_LABELS[format]}
+              </Chip>
+            ))}
+          </div>
+        </div>
+        <label className="feed__group">
+          <span className="feed__label">Зарплата от, ₽</span>
+          <input
+            className="feed__input"
+            inputMode="numeric"
+            placeholder="Например, 200 000"
+            defaultValue={salaryMin ?? ''}
+            onBlur={(e) => update({ salaryMin: e.target.value.replace(/\D/g, '') || null })}
+          />
+        </label>
+
+        {data?.basis && (
+          <div className="feed__basis">
+            <p className="feed__label">Лента подобрана по профилю</p>
+            {data.basis.category && <p className="feed__basis-main">{data.basis.category.label}</p>}
+            <p className="feed__basis-text">
+              {data.basis.gradeVerified ? 'Грейд подтверждён тестом' : 'Грейд без теста'}
+              {data.basis.salaryExpectation !== null &&
+                ` · от ${rub.format(data.basis.salaryExpectation)} ₽`}
+            </p>
+            <p className="feed__basis-text">{data.basis.stack.join(' · ')}</p>
+          </div>
+        )}
+      </aside>
+
+      <section className="feed__results" aria-label="Вакансии">
+        {demo && <Notice>Демо-данные: API ленты ещё в разработке</Notice>}
+        {data && !data.personalized && (
+          <Notice>Пройдите тест — лента станет персональной. Пока показаны новые вакансии.</Notice>
+        )}
+        {data ? (
+          data.items.length === 0 ? (
+            <EmptyState title={view === 'liked' ? 'В избранном пусто' : 'Подходящих вакансий нет'}>
+              {view === 'liked'
+                ? 'Отмечайте вакансии звёздочкой в ленте или свайпом вправо.'
+                : 'Ослабьте фильтры или загляните позже.'}
+            </EmptyState>
+          ) : (
+            <>
+              <ol className="feed__list">
+                {data.items.map((match) => (
+                  <li key={match.vacancy.id}>
+                    <VacancyMatchCard
+                      match={match}
+                      actions={
+                        <ReactionButtons
+                          target="vacancy"
+                          id={match.vacancy.id}
+                          initial={match.reaction}
+                        />
+                      }
+                    />
+                  </li>
+                ))}
+              </ol>
+              <Pagination
+                page={data.page}
+                pages={data.pages}
+                perPage={data.perPage}
+                total={data.total}
+                onPage={(next) => {
+                  update({ page: String(next) })
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                onPerPage={(size) => update({ perPage: String(size) })}
+              />
+            </>
+          )
+        ) : query.isPending ? (
+          <FeedSkeleton />
+        ) : (
+          <QueryState query={query}>{() => null}</QueryState>
+        )}
+      </section>
+    </div>
+  )
+}

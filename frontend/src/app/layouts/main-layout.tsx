@@ -8,12 +8,12 @@ import type { NavItem } from '@/widgets/site-header'
 const NAV_BY_ROLE: Record<UserRole | 'guest', NavItem[]> = {
   guest: [{ label: 'Вакансии', to: ROUTES.vacancies }],
   candidate: [
-    { label: 'Вакансии', to: ROUTES.vacancies },
+    { label: 'Лента', to: ROUTES.feed },
     { label: 'Тестирование', to: ROUTES.testing },
     { label: 'Календарь', to: ROUTES.calendar },
   ],
   employer: [
-    { label: 'Подбор', to: ROUTES.matching },
+    { label: 'Кандидаты', to: ROUTES.feed },
     { label: 'Вакансии', to: ROUTES.vacancies },
     { label: 'Календарь', to: ROUTES.calendar },
   ],

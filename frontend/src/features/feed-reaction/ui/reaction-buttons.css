@@ -1,0 +1,46 @@
+.reaction-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reaction-buttons__btn {
+  padding: 12px 18px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.reaction-buttons__btn:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.reaction-buttons__btn--like.is-on {
+  background: var(--brand-blue);
+  border-color: var(--brand-blue);
+  color: #fff;
+}
+
+.reaction-buttons__btn.is-on:not(.reaction-buttons__btn--like) {
+  border-color: var(--brand-red);
+  color: var(--text);
+}
+
+.reaction-buttons__btn:active {
+  transform: translateY(1px);
+}
+
+.reaction-buttons__btn:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 3px;
+}
