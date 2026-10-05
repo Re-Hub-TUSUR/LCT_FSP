@@ -18,12 +18,29 @@
 }
 
 .nav--overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
   background: transparent;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+  transition:
+    background 0.3s ease,
+    backdrop-filter 0.3s ease;
+}
+
+.nav--overlay.is-scrolled {
+  background: rgba(5, 7, 26, 0.82);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
 }
 
 .nav__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42em;
+  white-space: nowrap;
   font-family: var(--font-display);
   font-weight: 200;
   font-size: clamp(20px, 1.75vw, 30px);
@@ -31,6 +48,13 @@
   line-height: 1;
   color: var(--text);
   text-decoration: none;
+}
+
+.nav__mark {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  display: block;
 }
 
 .nav__right {
@@ -238,6 +262,10 @@
 }
 
 @media (max-height: 640px) {
+  :root {
+    --nav-offset: calc(14px + 14px + 44px);
+  }
+
   .nav {
     padding-top: 14px;
     padding-bottom: 14px;

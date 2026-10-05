@@ -22,6 +22,10 @@
   --focus-ring: 2px solid rgba(255, 255, 255, 0.85);
 
   --gutter: clamp(20px, 5vw, 100px);
+  --nav-offset: calc(
+    max(clamp(20px, 2.4vw, 34px), env(safe-area-inset-top)) + clamp(20px, 2.4vw, 34px) +
+      max(44px, calc(2px + clamp(12px, 1vw, 17px) * 2 + 1.2 * clamp(11px, 0.78vw, 14px)))
+  );
   --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
 
   --font-display: 'Jost', 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;

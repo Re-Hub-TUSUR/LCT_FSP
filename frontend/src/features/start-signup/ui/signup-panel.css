@@ -51,6 +51,14 @@
   margin-top: clamp(38px, 4.6vw, 82px);
 }
 
+/* The email field and the invite link stay in the layout so the panel does not reflow. */
+.panel .field__input,
+.panel .field__error,
+.panel .panel__invite {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .panel__invite {
   align-self: center;
   /* 44px tap target without changing the visual rhythm */

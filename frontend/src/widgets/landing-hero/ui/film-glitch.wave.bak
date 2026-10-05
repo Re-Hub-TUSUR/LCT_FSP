@@ -1,0 +1,381 @@
+import { useEffect, useRef } from 'react'
+import './film-glitch.css'
+
+type Props = {
+  poster: string
+}
+
+const SLIDE_W = 1280
+const SLIDE_H = 800
+
+const VERT = `
+attribute vec2 aPos;
+varying vec2 vUv;
+void main() {
+  vUv = aPos * 0.5 + 0.5;
+  gl_Position = vec4(aPos, 0.0, 1.0);
+}
+`
+
+const FRAG = `
+precision mediump float;
+uniform sampler2D uTex;
+uniform float uTime;
+varying vec2 vUv;
+void main() {
+  vec2 uv = vec2(vUv.x, 1.0 - vUv.y);
+  float wave = sin(uv.x * 6.28318 * 1.15 + uTime * 0.85);
+  float harmonic = sin(uv.x * 6.28318 * 2.4 - uTime * 1.35);
+  uv.y += wave * 0.07 + harmonic * 0.018;
+  uv.x += sin(uv.y * 6.28318 + uTime * 0.55) * 0.012;
+  float burst = smoothstep(0.86, 0.98, sin(uTime * 1.15));
+  float band = step(0.78, fract(uv.y * 18.0 + uTime));
+  uv.x += burst * band * 0.03;
+  float split = 0.002 + burst * 0.008;
+  float r = texture2D(uTex, uv + vec2(split, 0.0)).r;
+  float g = texture2D(uTex, uv).g;
+  float b = texture2D(uTex, uv - vec2(split, 0.0)).b;
+  gl_FragColor = vec4(r, g, b, 1.0);
+}
+`
+
+/**
+ * Several generated stills travel as a film strip. A sine wave bends the strip,
+ * and a short glitch splits the color. The stills are original, in the KADRY palette.
+ */
+export function FilmGlitch({ poster }: Props) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const parent = canvas?.parentElement
+    if (!canvas || !parent) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const gl = canvas.getContext('webgl', { alpha: false, antialias: false })
+    if (!gl) return
+    const program = createProgram(gl)
+    if (!program) return
+
+    const scene = document.createElement('canvas')
+    const sceneCtx = scene.getContext('2d', { alpha: false })
+    if (!sceneCtx) return
+
+    const slides = makeSlides()
+    const photo = new Image()
+    photo.crossOrigin = 'anonymous'
+    photo.decoding = 'async'
+    photo.src = poster
+    const cover = slides[0]
+    const paintPoster = () => {
+      if (cover && photo.complete && photo.naturalWidth > 0) paintCover(cover, photo)
+    }
+    photo.addEventListener('load', paintPoster)
+    paintPoster()
+
+    const buffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
+    const pos = gl.getAttribLocation(program, 'aPos')
+    gl.enableVertexAttribArray(pos)
+    gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
+
+    const texture = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+    const bindProgram = gl.useProgram.bind(gl)
+    bindProgram(program)
+    const timeLoc = gl.getUniformLocation(program, 'uTime')
+    let frame = 0
+    let running = true
+    const started = performance.now()
+
+    const draw = (now: number) => {
+      if (!running) return
+      const time = (now - started) / 1000
+      const { width, height } = sizeToParent(canvas, parent)
+      if (scene.width !== width || scene.height !== height) {
+        scene.width = width
+        scene.height = height
+      }
+      paintStrip(sceneCtx, slides, time)
+      gl.viewport(0, 0, width, height)
+      bindProgram(program)
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+      gl.enableVertexAttribArray(pos)
+      gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0)
+      gl.bindTexture(gl.TEXTURE_2D, texture)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, scene)
+      gl.uniform1f(timeLoc, time)
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+      frame = requestAnimationFrame(draw)
+    }
+
+    frame = requestAnimationFrame(draw)
+    const observer = new ResizeObserver(() => sizeToParent(canvas, parent))
+    observer.observe(parent)
+
+    return () => {
+      running = false
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
+  }, [poster])
+
+  return <canvas ref={canvasRef} className="film-glitch" aria-hidden="true" />
+}
+
+function sizeToParent(canvas: HTMLCanvasElement, parent: HTMLElement) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
+  const width = Math.max(1, Math.floor(parent.clientWidth * dpr))
+  const height = Math.max(1, Math.floor(parent.clientHeight * dpr))
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width
+    canvas.height = height
+  }
+  return { width, height }
+}
+
+function createProgram(gl: WebGLRenderingContext) {
+  const vert = compile(gl, gl.VERTEX_SHADER, VERT)
+  const frag = compile(gl, gl.FRAGMENT_SHADER, FRAG)
+  if (!vert || !frag) return null
+  const program = gl.createProgram()
+  if (!program) return null
+  gl.attachShader(program, vert)
+  gl.attachShader(program, frag)
+  gl.linkProgram(program)
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return null
+  return program
+}
+
+function compile(gl: WebGLRenderingContext, type: number, source: string) {
+  const shader = gl.createShader(type)
+  if (!shader) return null
+  gl.shaderSource(shader, source)
+  gl.compileShader(shader)
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return null
+  return shader
+}
+
+const painters = [paintIris, paintTwins, paintArc, paintRibbon, paintCore, paintSweep]
+
+function makeSlides() {
+  return painters.map((paint) => {
+    const canvas = document.createElement('canvas')
+    canvas.width = SLIDE_W
+    canvas.height = SLIDE_H
+    paint(canvas)
+    return canvas
+  })
+}
+
+function paintCover(canvas: HTMLCanvasElement, image: HTMLImageElement) {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const scale = Math.max(canvas.width / image.width, canvas.height / image.height)
+  const w = image.width * scale
+  const h = image.height * scale
+  ctx.drawImage(image, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h)
+}
+
+function night(ctx: CanvasRenderingContext2D) {
+  const { width, height } = ctx.canvas
+  ctx.fillStyle = '#05071a'
+  ctx.fillRect(0, 0, width, height)
+}
+
+function glow(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, core: string) {
+  const { width, height } = ctx.canvas
+  const paint = ctx.createRadialGradient(x, y, radius * 0.05, x, y, radius)
+  paint.addColorStop(0, core)
+  paint.addColorStop(0.32, 'rgba(64, 47, 255, 0.42)')
+  paint.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  ctx.fillStyle = paint
+  ctx.fillRect(0, 0, width, height)
+}
+
+function ring(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  rx: number,
+  ry: number,
+  color: string,
+  weight: number,
+  tilt = 0,
+) {
+  ctx.strokeStyle = color
+  ctx.lineWidth = weight
+  ctx.beginPath()
+  ctx.ellipse(x, y, rx, ry, tilt, 0, Math.PI * 2)
+  ctx.stroke()
+}
+
+function paintIris(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const { width, height } = canvas
+  night(ctx)
+  glow(ctx, width * 0.42, height * 0.5, width * 0.46, 'rgba(232, 236, 255, 0.95)')
+  ring(ctx, width * 0.42, height * 0.5, width * 0.24, height * 0.36, '#c5d0ff', 22)
+  ring(ctx, width * 0.42, height * 0.5, width * 0.16, height * 0.22, '#402fff', 8)
+}
+
+function paintTwins(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const { width, height } = canvas
+  night(ctx)
+  glow(ctx, width * 0.3, height * 0.42, width * 0.32, 'rgba(210, 218, 255, 0.8)')
+  glow(ctx, width * 0.62, height * 0.62, width * 0.28, 'rgba(64, 47, 255, 0.7)')
+  ring(ctx, width * 0.3, height * 0.4, width * 0.16, height * 0.24, '#9aabff', 16, -0.2)
+  ring(ctx, width * 0.64, height * 0.6, width * 0.2, height * 0.16, '#402fff', 20, 0.35)
+}
+
+function paintArc(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const { width, height } = canvas
+  night(ctx)
+  glow(ctx, width * 0.2, height * 0.7, width * 0.4, 'rgba(226, 232, 255, 0.55)')
+  ctx.strokeStyle = '#d5dcff'
+  ctx.lineWidth = 34
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.ellipse(
+    width * 0.15,
+    height * 0.85,
+    width * 0.7,
+    height * 0.7,
+    0,
+    1.15 * Math.PI,
+    1.72 * Math.PI,
+  )
+  ctx.stroke()
+  ctx.strokeStyle = '#402fff'
+  ctx.lineWidth = 10
+  ctx.beginPath()
+  ctx.ellipse(
+    width * 0.15,
+    height * 0.85,
+    width * 0.52,
+    height * 0.5,
+    0,
+    1.2 * Math.PI,
+    1.65 * Math.PI,
+  )
+  ctx.stroke()
+}
+
+function paintRibbon(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const { width, height } = canvas
+  night(ctx)
+  glow(ctx, width * 0.5, height * 0.5, width * 0.36, 'rgba(64, 47, 255, 0.55)')
+  strokeSine(ctx, width, height, 0.5, 0.16, 1, '#e4e9ff', 16)
+  strokeSine(ctx, width, height, 0.56, 0.1, 2, '#402fff', 6)
+}
+
+function paintCore(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const { width, height } = canvas
+  night(ctx)
+  glow(ctx, width * 0.48, height * 0.48, width * 0.22, 'rgba(255, 255, 255, 0.95)')
+  ring(ctx, width * 0.48, height * 0.48, width * 0.1, height * 0.14, '#ffffff', 4)
+  ring(ctx, width * 0.48, height * 0.48, width * 0.2, height * 0.28, '#9aabff', 12, 0.4)
+  ring(ctx, width * 0.48, height * 0.48, width * 0.32, height * 0.4, '#402fff', 18, -0.2)
+}
+
+function paintSweep(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const { width, height } = canvas
+  night(ctx)
+  glow(ctx, width * 0.72, height * 0.35, width * 0.34, 'rgba(236, 29, 53, 0.28)')
+  glow(ctx, width * 0.38, height * 0.55, width * 0.3, 'rgba(226, 232, 255, 0.7)')
+  ring(ctx, width * 0.4, height * 0.55, width * 0.28, height * 0.2, '#c5d0ff', 14, 0.9)
+  ctx.strokeStyle = '#ec1d35'
+  ctx.globalAlpha = 0.85
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.ellipse(width * 0.7, height * 0.32, width * 0.18, height * 0.1, -0.4, 0, Math.PI * 1.4)
+  ctx.stroke()
+  ctx.globalAlpha = 1
+}
+
+function strokeSine(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  mid: number,
+  amp: number,
+  turns: number,
+  color: string,
+  weight: number,
+) {
+  ctx.strokeStyle = color
+  ctx.lineWidth = weight
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  const step = 6
+  for (let x = 0; x <= width; x += step) {
+    const y = height * mid + Math.sin((x / width) * Math.PI * 2 * turns) * height * amp
+    if (x === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  ctx.stroke()
+}
+
+const scratch = document.createElement('canvas')
+
+function paintStrip(ctx: CanvasRenderingContext2D, slides: HTMLCanvasElement[], time: number) {
+  const { width, height } = ctx.canvas
+  const count = slides.length
+  const span = width
+  const travel = (time * width * 0.07) % (span * count)
+  ctx.fillStyle = '#05071a'
+  ctx.fillRect(0, 0, width, height)
+
+  for (let index = 0; index < count; index += 1) {
+    const slide = slides[index]
+    if (!slide) continue
+    const base = index * span - travel
+    drawSoft(ctx, slide, base, width, height)
+    drawSoft(ctx, slide, base + count * span, width, height)
+  }
+}
+
+function drawSoft(
+  ctx: CanvasRenderingContext2D,
+  slide: HTMLCanvasElement,
+  x: number,
+  width: number,
+  height: number,
+) {
+  if (x >= width || x + width <= 0) return
+  if (scratch.width !== width || scratch.height !== height) {
+    scratch.width = width
+    scratch.height = height
+  }
+  const layer = scratch.getContext('2d')
+  if (!layer) return
+  layer.clearRect(0, 0, width, height)
+  layer.globalCompositeOperation = 'source-over'
+  layer.drawImage(slide, 0, 0, width, height)
+  layer.globalCompositeOperation = 'destination-in'
+  const fade = layer.createLinearGradient(0, 0, width, 0)
+  fade.addColorStop(0, 'rgba(0, 0, 0, 0)')
+  fade.addColorStop(0.14, 'rgba(0, 0, 0, 1)')
+  fade.addColorStop(0.86, 'rgba(0, 0, 0, 1)')
+  fade.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  layer.fillStyle = fade
+  layer.fillRect(0, 0, width, height)
+  ctx.drawImage(scratch, x, 0)
+}

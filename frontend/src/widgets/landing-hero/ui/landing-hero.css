@@ -1,7 +1,38 @@
 /* ── Shell ─────────────────────────────────────────── */
 
+html:has(.landing) {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+.landing__film {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #000;
+  --tint-alpha: 0.28;
+}
+
+.landing__reel {
+  position: absolute;
+  inset: 0;
+}
+
+.landing__film::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--brand-blue);
+  opacity: var(--tint-alpha);
+  mix-blend-mode: color;
+  pointer-events: none;
+}
+
 .hero {
   position: relative;
+  z-index: 1;
   width: 100%;
   height: 100vh;
   height: 100svh;
@@ -10,39 +41,39 @@
   display: grid;
   grid-template-rows: auto 1fr auto;
   isolation: isolate;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
-.hero__glow {
+.hero__bar {
+  height: var(--nav-offset);
+}
+
+.hero__media {
   position: absolute;
   inset: 0;
-  z-index: -2;
-  pointer-events: none;
-  background: radial-gradient(
-    42% 55% at 30% 52%,
-    rgba(52, 40, 200, 0.32),
-    rgba(20, 16, 90, 0.12) 55%,
-    transparent 75%
-  );
-}
-
-/* 3D film ribbon: fills everything to the left of the signup panel */
-.hero__ribbon {
-  position: absolute;
   z-index: -1;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: calc(100% - max(380px, min(34vw, 620px)) - var(--gutter));
+}
+
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(5, 7, 26, 0.55), transparent 16% 84%, rgba(5, 7, 26, 0.72)),
+    linear-gradient(
+      to right,
+      transparent 0%,
+      transparent 36%,
+      rgba(5, 7, 26, 0.45) 58%,
+      rgba(5, 7, 26, 0.92) 100%
+    );
 }
-
-.hero__ribbon canvas {
-  filter: drop-shadow(0 0 36px rgba(80, 64, 255, 0.35));
-}
-
-/* ── Right panel ───────────────────────────────────── */
 
 .hero__body {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -56,9 +87,10 @@
 /* ── Legal ─────────────────────────────────────────── */
 
 .legal {
+  position: relative;
+  z-index: 1;
   border-top: 1px solid var(--line);
-  /* Opaque: the ribbon leaves the frame behind the footer instead of under its text */
-  background: var(--bg);
+  background: rgba(5, 6, 13, 0.72);
   padding: clamp(18px, 1.7vw, 30px) var(--gutter);
   padding-bottom: max(clamp(18px, 1.7vw, 30px), env(safe-area-inset-bottom));
   text-align: center;
@@ -82,7 +114,6 @@
   transition: color 0.25s ease;
 }
 
-/* Enlarges the tap target to 44px without moving the text */
 .legal a::after {
   content: '';
   position: absolute;
@@ -100,44 +131,20 @@
 
 /* ── Responsive ────────────────────────────────────── */
 
-@media (max-width: 1100px) {
-  /* The ribbon becomes a dimmed backdrop under the panel */
-  .hero__ribbon {
-    width: 100%;
-    opacity: 0.22;
-  }
-
-  /* Keeps the copy and the email field on a dark ground wherever the ribbon passes */
-  .hero__body {
-    position: relative;
-  }
-
-  .hero__body::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background: radial-gradient(
-      75% 60% at 60% 50%,
-      var(--bg) 0%,
-      rgba(5, 6, 13, 0.7) 50%,
-      transparent 85%
-    );
-  }
-}
-
 @media (max-width: 720px) {
   .hero__body {
     justify-content: center;
   }
 
-  /* Lifts the loop above the form instead of under the email field */
-  .hero__ribbon {
-    top: -64%;
+  .hero__scrim {
+    background: linear-gradient(
+      to bottom,
+      rgba(5, 7, 26, 0.55) 0%,
+      rgba(5, 7, 26, 0.78) 42%,
+      rgba(5, 7, 26, 0.9) 100%
+    );
   }
 
-  /* The legal line wraps here: more leading, and tap targets that stay out of each other's line */
   .legal p {
     line-height: 1.9;
   }
@@ -145,21 +152,10 @@
   .legal a::after {
     inset: -6px 0;
   }
-
-  .hero__body::before {
-    background: radial-gradient(
-      120% 50% at 50% 55%,
-      var(--bg) 0%,
-      rgba(5, 6, 13, 0.7) 55%,
-      transparent 90%
-    );
-  }
 }
 
 @media (max-height: 640px) {
-  /* Too short for a fixed frame: the page scrolls so nothing in the panel is clipped */
   .hero {
-    height: auto;
     min-height: 100svh;
   }
 
@@ -170,11 +166,30 @@
   }
 
   .legal {
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding-top: 10px;
+    padding-bottom: 10px;
   }
 
   .legal p {
-    font-size: 12px;
+    font-size: 11px;
+  }
+}
+
+/* ── Reduced motion ────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(.landing) {
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+  }
+
+  .film-glitch {
+    display: none;
+  }
+
+  .hero__media {
+    background: #000
+      url('https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260806_132328_5f9029c8-218f-4489-82b6-29ff2849920e.png')
+      center / cover no-repeat;
   }
 }
