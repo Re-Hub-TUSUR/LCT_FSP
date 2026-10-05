@@ -5,6 +5,7 @@ import { Button, TextField } from '@/shared/ui'
 import { validateAuthForm } from '../model/schema'
 import type { AuthFieldErrors, AuthFormValues, AuthMode } from '../model/schema'
 import { useAuthSubmit } from '../model/use-auth-submit'
+import { EmailVerification } from './email-verification'
 import './auth-form.css'
 
 type Props = {
@@ -24,7 +25,10 @@ export function AuthForm({ role, initialEmail = '', initialMode = 'sign-in', onS
     personalDataConsent: false,
   })
   const [errors, setErrors] = useState<AuthFieldErrors>({})
-  const submit = useAuthSubmit(role, onSuccess)
+  const { submit, verification, closeVerification, finishVerification } = useAuthSubmit(
+    role,
+    onSuccess,
+  )
 
   const update = <K extends keyof AuthFormValues>(key: K, value: AuthFormValues[K]) => {
     setValues((prev) => ({ ...prev, [key]: value }))
@@ -104,6 +108,14 @@ export function AuthForm({ role, initialEmail = '', initialMode = 'sign-in', onS
           {submit.isPending ? 'Отправка…' : MODE_LABELS[mode]}
         </Button>
       </form>
+
+      {verification && (
+        <EmailVerification
+          email={verification.email}
+          onClose={closeVerification}
+          onVerified={finishVerification}
+        />
+      )}
     </div>
   )
 }

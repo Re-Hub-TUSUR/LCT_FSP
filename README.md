@@ -69,6 +69,8 @@ Pre-commit (husky + lint-staged) прогоняет oxlint и prettier по из
 | `ACCESS_TOKEN_TTL_MINUTES` | backend           | нет (30)    | срок жизни access-токена                  |
 | `APP_ENV`, `LOG_LEVEL`     | backend           | нет         | `development`/`test`/`production`, уровень логов |
 | `CORS_ORIGINS`             | backend           | нет         | список через запятую; пусто — CORS выключен |
+| `RESEND_API_KEY`           | backend           | нет         | ключ Resend для кода подтверждения почты. Пусто — код в логе API (только не в production) |
+| `RESEND_FROM`              | backend           | нет         | отправитель письма, по умолчанию `onboarding@resend.dev` |
 | `VITE_API_URL`             | frontend (build)  | нет         | база API, по умолчанию `/api/v1`          |
 | `DEV_API_PROXY_TARGET`     | frontend (dev)    | нет         | цель прокси `/api` dev-сервера            |
 

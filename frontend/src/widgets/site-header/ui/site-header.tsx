@@ -7,9 +7,10 @@ import './site-header.css'
 type Props = {
   links: readonly NavItem[]
   cta: NavItem
+  overlay?: boolean
 }
 
-export function SiteHeader({ links, cta }: Props) {
+export function SiteHeader({ links, cta, overlay = false }: Props) {
   const menu = useMobileMenu()
 
   return (
@@ -20,6 +21,7 @@ export function SiteHeader({ links, cta }: Props) {
         menuOpen={menu.open}
         onToggle={menu.toggle}
         toggleRef={menu.toggleRef}
+        overlay={overlay}
       />
       <MobileMenu links={links} cta={cta} open={menu.open} onClose={menu.close} />
     </>

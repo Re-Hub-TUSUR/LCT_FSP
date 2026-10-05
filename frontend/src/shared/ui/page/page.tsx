@@ -6,11 +6,12 @@ type PageProps = {
   lead?: ReactNode
   actions?: ReactNode
   children?: ReactNode
+  className?: string
 }
 
-export function Page({ title, lead, actions, children }: PageProps) {
+export function Page({ title, lead, actions, children, className }: PageProps) {
   return (
-    <section className="page" aria-labelledby="page-title">
+    <section className={className ? `page ${className}` : 'page'} aria-labelledby="page-title">
       <header className="page__header">
         <div>
           <h1 id="page-title" className="page__title">

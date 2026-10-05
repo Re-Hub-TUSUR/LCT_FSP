@@ -13,5 +13,5 @@ const LANDING_LINKS: NavItem[] = [
 const LANDING_CTA: NavItem = { label: 'Войти', to: ROUTES.auth }
 
 export function LandingPage() {
-  return <LandingHero header={<SiteHeader links={LANDING_LINKS} cta={LANDING_CTA} />} />
+  return <LandingHero header={<SiteHeader links={LANDING_LINKS} cta={LANDING_CTA} overlay />} />
 }

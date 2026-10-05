@@ -57,6 +57,26 @@ class ServiceUnavailableError(AppError):
     default_message = "Сервис временно недоступен"
 
 
+class EmailNotVerifiedError(AppError):
+    """Password is correct, but the address still has to be confirmed with the emailed code."""
+
+    status_code = status.HTTP_403_FORBIDDEN
+    code = "email_not_verified"
+    default_message = "Подтвердите почту: мы отправили 6-значный код"
+
+
+class TooManyRequestsError(AppError):
+    status_code = status.HTTP_429_TOO_MANY_REQUESTS
+    code = "too_many_requests"
+    default_message = "Слишком много запросов. Подождите немного."
+
+
+class EmailDeliveryError(AppError):
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    code = "email_delivery_failed"
+    default_message = "Не удалось отправить письмо. Попробуйте ещё раз."
+
+
 class NotImplementedYetError(AppError):
     """Marks documented API contracts whose business logic is not implemented yet."""
 

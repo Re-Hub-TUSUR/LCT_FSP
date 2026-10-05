@@ -112,7 +112,7 @@ migrations/    Alembic (async), URL из настроек
 | Тег | Пути | Статус |
 | --- | ---- | ------ |
 | health | `/health`, `/health/ready` | ✅ |
-| auth | `/auth/register`, `/auth/login`; `/auth/verify-email`, `/auth/refresh` | ✅ / 501 |
+| auth | `/auth/register`, `/auth/login`, `/auth/verify-email`, `/auth/resend-verification`; `/auth/refresh` | ✅ / 501 |
 | users | `/users/me` | ✅ |
 | categories | `/categories/dictionary` | ✅ (статический MVP-словарь) |
 | candidates (employees) | поиск, `/me`, резюме PDF, `fsp-link`, `/{id}` | 501 |
@@ -139,6 +139,11 @@ JWT HS256 с claims в форме Keycloak (`sub`, `email`, `realm_access.roles`
 позже принимать токены FSP ID (RS256 через JWKS) той же зависимостью. Пароли — Argon2id;
 для несуществующего email выполняется проверка «пустого» хэша (выравнивание времени ответа).
 Ошибки валидации не возвращают `input` (не эхоим пароли).
+
+Регистрация не выдаёт токен, пока почта не подтверждена 6-значным кодом (письмо через Resend,
+`RESEND_API_KEY` / `RESEND_FROM`). Код хранится как HMAC, живёт 15 минут, повторная отправка —
+не чаще раза в минуту. Без ключа в development код пишется в лог API; в production отправка
+без ключа завершается ошибкой.
 
 ## 4. Окружение
 
@@ -190,7 +195,7 @@ required reviewers; (3) задать `PUBLISH_IMAGES=true` и секрет `DEPL
    (балл тестирования, затем подтверждённые достижения ФСП).
 2. Приглашения: статусы, раскрытие контактов только после `accept`, уведомления.
 3. Тестирование: банк заданий по грейдам, варианты на кандидата, cooldown смены грейда.
-4. Подтверждение email (SMTP-провайдер), refresh-токены, FSP ID (Keycloak OIDC).
+4. Подключить домен в Resend и прописать `RESEND_API_KEY`. Дальше — refresh-токены и FSP ID.
 5. Разбор PDF-резюме, объяснимый мэтчинг, календарь.
 6. Генерация TS-типов из OpenAPI (`openapi-typescript`) вместо ручных DTO.
 7. Наблюдаемость (Sentry/OTel), rate limiting на `/auth/*`, e2e-тесты (Playwright).

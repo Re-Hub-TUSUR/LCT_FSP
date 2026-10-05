@@ -70,6 +70,10 @@ async def register_and_login(client: AsyncClient, email: str, role: str = "candi
         json={"email": email, "password": PASSWORD, "role": role, "personalDataConsent": True},
     )
     assert response.status_code == 201, response.text
+    verified = await client.post(
+        f"{API}/auth/verify-email", json={"email": email, "code": "000000"}
+    )
+    assert verified.status_code == 204, verified.text
     return await login(client, email)
 
 
@@ -81,7 +85,14 @@ async def login(client: AsyncClient, email: str) -> str:
 
 async def create_admin(sessionmaker: async_sessionmaker[AsyncSession], email: str) -> None:
     async with sessionmaker() as session:
-        session.add(User(email=email, password_hash=hash_password(PASSWORD), role=UserRole.ADMIN))
+        session.add(
+            User(
+                email=email,
+                password_hash=hash_password(PASSWORD),
+                role=UserRole.ADMIN,
+                is_email_verified=True,
+            )
+        )
         await session.commit()
 
 

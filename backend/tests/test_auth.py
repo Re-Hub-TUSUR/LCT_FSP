@@ -12,7 +12,7 @@ async def test_register_login_and_read_me(client: AsyncClient) -> None:
     body = response.json()
     assert body["email"] == "dev@fsp.ru"
     assert body["role"] == "employer"
-    assert body["isEmailVerified"] is False
+    assert body["isEmailVerified"] is True
     assert "passwordHash" not in body
 
 

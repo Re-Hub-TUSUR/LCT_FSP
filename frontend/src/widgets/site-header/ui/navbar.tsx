@@ -10,11 +10,13 @@ type Props = {
   menuOpen: boolean
   onToggle: () => void
   toggleRef: RefObject<HTMLButtonElement | null>
+  /** Transparent bar over the landing video. App pages use the sticky glass bar. */
+  overlay?: boolean
 }
 
-export function Navbar({ links, cta, menuOpen, onToggle, toggleRef }: Props) {
+export function Navbar({ links, cta, menuOpen, onToggle, toggleRef, overlay = false }: Props) {
   return (
-    <header className="nav">
+    <header className={overlay ? 'nav nav--overlay' : 'nav'}>
       <Link className="nav__logo" to={ROUTES.landing}>
         {BRAND}
       </Link>

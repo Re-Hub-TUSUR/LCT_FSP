@@ -49,6 +49,30 @@
   gap: 40px;
 }
 
+.page--auth {
+  min-height: calc(100svh - 120px);
+  justify-content: center;
+  align-items: center;
+  width: min(100%, 460px);
+}
+
+.page--auth .page__header {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.page--auth .page__lead {
+  margin-inline: auto;
+}
+
+.page--auth .page__body {
+  width: 100%;
+  align-items: center;
+}
+
 .page-section {
   display: flex;
   flex-direction: column;

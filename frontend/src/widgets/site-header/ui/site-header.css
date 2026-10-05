@@ -1,7 +1,8 @@
 /* ── Navbar ────────────────────────────────────────── */
 
 .nav {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 60;
   display: flex;
   justify-content: space-between;
@@ -11,6 +12,15 @@
   padding-top: max(clamp(20px, 2.4vw, 34px), env(safe-area-inset-top));
   padding-left: max(var(--gutter), env(safe-area-inset-left));
   padding-right: max(var(--gutter), env(safe-area-inset-right));
+  background: rgba(0, 0, 0, 0.62);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+
+.nav--overlay {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .nav__logo {

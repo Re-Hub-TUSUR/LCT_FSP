@@ -33,6 +33,16 @@ class Settings(BaseSettings):
 
     cors_origins: Annotated[list[str], NoDecode] = []
 
+    # Empty key: development logs the code, production refuses to send.
+    # From address must be a verified Resend sender (onboarding@resend.dev works for tests).
+    resend_api_key: SecretStr = SecretStr("")
+    resend_from: str = "КАДРЫ <onboarding@resend.dev>"
+
+    @field_validator("resend_from")
+    @classmethod
+    def _default_from(cls, value: str) -> str:
+        return value.strip() or "КАДРЫ <onboarding@resend.dev>"
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _split_origins(cls, value: object) -> object:

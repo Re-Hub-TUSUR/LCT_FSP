@@ -22,6 +22,15 @@ class LoginRequest(ApiModel):
     password: str = Field(min_length=1, max_length=128)
 
 
+class VerifyEmailRequest(ApiModel):
+    email: EmailStr
+    code: str = Field(pattern=r"^\d{6}$")
+
+
+class ResendVerificationRequest(ApiModel):
+    email: EmailStr
+
+
 class TokenResponse(ApiModel):
     access_token: str
     token_type: Literal["bearer"] = "bearer"  # noqa: S105 - OAuth2 scheme name, not a secret

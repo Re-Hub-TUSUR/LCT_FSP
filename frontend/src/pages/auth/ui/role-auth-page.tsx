@@ -23,7 +23,7 @@ function RoleAuthPage({ role }: { role: 'candidate' | 'employer' }) {
   const redirect = params.get('redirect')
 
   return (
-    <Page title={TITLES[role].title} lead={TITLES[role].lead}>
+    <Page className="page--auth" title={TITLES[role].title} lead={TITLES[role].lead}>
       <AuthForm
         role={role}
         initialEmail={params.get('email') ?? ''}

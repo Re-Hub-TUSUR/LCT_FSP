@@ -22,4 +22,8 @@ export type TokenResponseDto = {
 export const sessionApi = {
   signIn: (payload: SignInPayload) => http.post<TokenResponseDto>('/auth/login', payload),
   signUp: (payload: SignUpPayload) => http.post<UserDto>('/auth/register', payload),
+  verifyEmail: (payload: { email: string; code: string }) =>
+    http.post<void>('/auth/verify-email', payload),
+  resendVerification: (payload: { email: string }) =>
+    http.post<void>('/auth/resend-verification', payload),
 }
