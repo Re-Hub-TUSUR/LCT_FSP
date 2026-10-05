@@ -1,0 +1,24 @@
+.assessment-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-mute);
+}
+
+/* The state is carried by the wording first; colour only reinforces it. */
+.assessment-badge--passed {
+  border-color: #3ecf8e;
+  color: #7be3b4;
+}
+
+.assessment-badge--failed {
+  border-color: var(--error);
+  color: var(--error);
+}

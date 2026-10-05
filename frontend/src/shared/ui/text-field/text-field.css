@@ -70,3 +70,19 @@
   line-height: 1.3;
   color: var(--error);
 }
+
+/* `appearance: none` drops the native arrow, so the select draws its own */
+.field__input--select {
+  padding-right: 28px;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--text-dim) 50%) right 12px top 9px / 6px 6px
+      no-repeat,
+    linear-gradient(-45deg, transparent 50%, var(--text-dim) 50%) right 6px top 9px / 6px 6px
+      no-repeat;
+  cursor: pointer;
+}
+
+.field__input--select option {
+  background: var(--fill-ghost-solid);
+  color: var(--text);
+}

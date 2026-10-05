@@ -23,7 +23,7 @@ services:
   backend:
     build: ./backend
     image: kadry-backend
-    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    command: sh -c "alembic upgrade head && python -m app.seed.assessment && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     environment:
       APP_ENV: ${APP_ENV:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -33,6 +33,8 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM: ${RESEND_FROM:-}
+      ONLINECOMPILER_API_KEY: ${ONLINECOMPILER_API_KEY:-}
+      ONLINECOMPILER_URL: ${ONLINECOMPILER_URL:-https://api.onlinecompiler.io}
       # Used only by `docker compose exec backend python -m app.seed`.
       SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-}
     depends_on:

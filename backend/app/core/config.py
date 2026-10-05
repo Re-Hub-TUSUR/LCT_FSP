@@ -38,6 +38,14 @@ class Settings(BaseSettings):
     resend_api_key: SecretStr = SecretStr("")
     resend_from: str = "КАДРЫ <onboarding@resend.dev>"
 
+    # Code tasks run on onlinecompiler.io. Empty key: quiz-only tests still work, code tasks
+    # answer 503 until the key is set.
+    onlinecompiler_api_key: SecretStr = SecretStr("")
+    onlinecompiler_url: str = "https://api.onlinecompiler.io"
+    # Days before a failed or abandoned test can be retaken / a confirmed grade can be changed.
+    assessment_retry_days: int = Field(default=7, ge=0)
+    assessment_grade_change_days: int = Field(default=90, ge=0)
+
     # Candidate search. Empty URL: the search runs on the database (tests, CI, low-memory hosts).
     elasticsearch_url: str = ""
     # Alias that points at the current versioned candidates index.

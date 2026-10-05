@@ -127,12 +127,18 @@ migrations/    Alembic (async), URL из настроек
 | applications | отклики кандидата | 501 |
 | matching | `needs`, `recommendations` | 501 |
 | calendar | `/calendar/events?from&to` | 501 |
-| assessments (testing) | статус, анкета, попытки, ответы | 501 |
+| assessments (testing) | статус, попытки, ответы, запуск кода, завершение; анкета — 501 | ✅ / 501 |
+| банк задач | `/admin/assessment-*` (платформа), `/companies/me/assessment-*` (работодатель) | ✅ |
 | admin | `/admin/users` | ✅ |
 
 Домены «employers/employees» из задания реализованы как `companies` (профиль работодателя)
 и `candidates` (профиль соискателя) — так они называются в ТЗ и в UI; роль пользователя —
 `candidate | employer | admin`.
+
+Тестирование: `AssessmentTask` (вопрос или задача на код; владелец — платформа либо работодатель) →
+`AssessmentTest` (шаблон: правила выборки или фиксированный список) → `AssessmentAttempt` + `AssessmentAnswer`.
+Код проверяется через onlinecompiler.io (`services/code_runner.py`, ключ `ONLINECOMPILER_API_KEY`): «Запустить» —
+открытые группы тестов, завершение — закрытые. Стартовый банк — `python -m app.seed.assessment`.
 
 Модели: `User`, `EmailVerificationCode`, `CandidateProfile` (категория и балл теста,
 предпочтения для ленты: город, форматы работы, ожидания по зарплате; контакты),

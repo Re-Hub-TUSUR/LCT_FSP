@@ -1,0 +1,63 @@
+.bank__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.bank__actions .btn {
+  margin: 0 8px 8px 0;
+  padding: 10px 14px;
+}
+
+/* Wide tables scroll inside their own box instead of widening the page */
+.bank__scroll {
+  overflow-x: auto;
+}
+
+.bank__table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  font-family: var(--font-display);
+  font-size: 16px;
+}
+
+.bank__table th,
+.bank__table td {
+  padding: 12px 16px 12px 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.bank__table th {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+.bank__table td:first-child {
+  max-width: 420px;
+}
+
+.bank__check,
+.bank__note,
+.bank__error {
+  margin: 8px 0 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-mute);
+}
+
+.bank__check--ok {
+  color: #7be3b4;
+}
+
+.bank__check--fail,
+.bank__error {
+  color: var(--error);
+}

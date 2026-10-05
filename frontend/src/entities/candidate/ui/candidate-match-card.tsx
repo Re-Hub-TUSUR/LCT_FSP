@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { AssessmentStatusBadge } from '@/entities/assessment/@x/candidate'
 import { WORK_FORMAT_LABELS } from '@/entities/vacancy/@x/candidate'
 import { MatchMeter } from '@/shared/ui'
 import type { CandidateMatchDto, FspAchievementDto } from '../api/candidate-api'
@@ -56,12 +57,11 @@ export function CandidateMatchCard({ match, actions }: Props) {
         {candidate.category && (
           <li className="match-card__fact match-card__fact--accent">{candidate.category.label}</li>
         )}
-        <li
-          className={`match-card__fact${candidate.gradeVerified ? '' : ' match-card__fact--warn'}`}
-        >
-          {candidate.gradeVerified
-            ? `Тест: ${Math.round(candidate.assessmentScore ?? 0)}/100`
-            : 'Без теста'}
+        <li>
+          <AssessmentStatusBadge
+            status={candidate.assessmentStatus}
+            score={candidate.assessmentScore}
+          />
         </li>
         {candidate.experienceYears !== null && (
           <li className="match-card__fact">Опыт: {candidate.experienceYears} г.</li>

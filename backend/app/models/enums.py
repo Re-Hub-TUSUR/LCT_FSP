@@ -15,6 +15,33 @@ class Grade(StrEnum):
     LEAD = "lead"
 
 
+class AssessmentStatus(StrEnum):
+    """Outcome of the platform grade test as employers see it."""
+
+    NOT_TAKEN = "not_taken"
+    PASSED = "passed"
+    FAILED = "failed"
+
+
+class AttemptStatus(StrEnum):
+    IN_PROGRESS = "in_progress"
+    PASSED = "passed"
+    FAILED = "failed"
+    # Abandoned: the time ran out and the candidate never finished it.
+    EXPIRED = "expired"
+
+
+class TaskKind(StrEnum):
+    QUIZ = "quiz"
+    CODE = "code"
+
+
+class TaskDifficulty(StrEnum):
+    EASY = "easy"
+    MEDIUM = "medium"
+    HARD = "hard"
+
+
 class WorkFormat(StrEnum):
     OFFICE = "office"
     HYBRID = "hybrid"
