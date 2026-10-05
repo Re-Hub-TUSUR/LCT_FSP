@@ -1,0 +1,5816 @@
+[
+  {
+    "key": "cand-001",
+    "track": "python-backend",
+    "email": "candidate@example.com",
+    "display_name": "Марина Крылова",
+    "headline": "Middle Backend-разработчик (Python)",
+    "about": "5 лет в IT, из них 4 — в агротехе. В фокусе: разработка асинхронных REST API на FastAPI, покрытие кода тестами на pytest и настройка CI. 1-е место — Чемпионат Москвы по спортивному программированию (алгоритмическое программирование, 2025). Открыта к удалённой работе.",
+    "specialization": "backend",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "Python",
+      "PostgreSQL",
+      "asyncio",
+      "gRPC",
+      "Flask",
+      "Django REST Framework",
+      "Kafka",
+      "aiohttp"
+    ],
+    "soft_skills": [
+      "Адаптивность",
+      "Самоорганизация",
+      "Системное мышление"
+    ],
+    "english_level": "C1",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 270000,
+    "assessment_score": 71.2,
+    "assessed_days_ago": 191,
+    "registered_days_ago": 229,
+    "fsp_member_id": "FSP-408134",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Москвы по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2025,
+        "place": 1
+      }
+    ],
+    "phone": "+7 913 706-99-72",
+    "telegram": "@mkrylova_662",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-002",
+    "track": "android",
+    "email": "t.mukhametova@example.com",
+    "display_name": "Таисия Мухаметова",
+    "headline": "Senior Android-разработчик",
+    "about": "9 лет в IT, из них 5 — в продуктовой студии. В фокусе: перевод проекта с RxJava на корутины, многомодульная архитектура и ускорение сборки. Довожу сложные задачи от идеи до продакшена. 2-е место — Чемпионат России по спортивному программированию (продуктовое программирование, 2025). Ищу команду с сильной инженерной культурой.",
+    "specialization": "mobile",
+    "grade": "senior",
+    "experience_years": 9,
+    "stack": [
+      "Kotlin",
+      "Android SDK",
+      "Flow",
+      "JUnit",
+      "Espresso",
+      "RxJava",
+      "Jetpack Compose",
+      "Room",
+      "Dagger 2"
+    ],
+    "soft_skills": [
+      "Управление временем",
+      "Работа в команде",
+      "Наставничество"
+    ],
+    "english_level": "C2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 420000,
+    "assessment_score": 78.5,
+    "assessed_days_ago": 77,
+    "registered_days_ago": 79,
+    "fsp_member_id": "FSP-188184",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2025,
+        "place": 2
+      }
+    ],
+    "phone": "+7 950 612-72-76",
+    "telegram": "@tmukhametova_828",
+    "is_visible_to_employers": false
+  },
+  {
+    "key": "cand-003",
+    "track": "ml-classic",
+    "email": "a.smirnova@example.com",
+    "display_name": "Арина Смирнова",
+    "headline": "Junior Data Scientist",
+    "about": "Год коммерческого опыта в банковской сфере. В фокусе: проведение и анализ A/B-тестов, модели прогнозирования спроса. Хочу расти в команде с культурой код-ревью и наставничества. Готова к релокации.",
+    "specialization": "data-science",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "Python",
+      "pandas",
+      "scikit-learn",
+      "LightGBM",
+      "SQL",
+      "ClickHouse",
+      "Optuna"
+    ],
+    "soft_skills": [
+      "Обучаемость",
+      "Публичные выступления"
+    ],
+    "english_level": "B1",
+    "city": "Москва",
+    "relocation_ready": true,
+    "work_formats": [
+      "hybrid"
+    ],
+    "salary_expectation": 125000,
+    "assessment_score": 83.2,
+    "assessed_days_ago": 66,
+    "registered_days_ago": 70,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 969 608-82-60",
+    "telegram": "@asmirnova_565",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-004",
+    "track": "flutter",
+    "email": "s.shcherbakov@example.com",
+    "display_name": "Степан Щербаков",
+    "headline": "Middle Flutter-разработчик",
+    "about": "5 лет в IT, из них 1 — в travel-tech. В фокусе: интеграция нативных модулей Android и iOS, оптимизация анимаций и отрисовки. Ищу команду с сильной инженерной культурой.",
+    "specialization": "mobile",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "Dart",
+      "Flutter",
+      "GetX",
+      "Riverpod",
+      "Dio",
+      "BLoC"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Системное мышление"
+    ],
+    "english_level": "B2",
+    "city": "Самара",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 210000,
+    "assessment_score": null,
+    "assessed_days_ago": null,
+    "registered_days_ago": 27,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 936 454-77-85",
+    "telegram": "@sshcherbakov_826",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-005",
+    "track": "product-analytics",
+    "email": "d.orlov@example.com",
+    "display_name": "Даниил Орлов",
+    "headline": "Senior продуктовый аналитик",
+    "about": "6 лет в IT, из них 3 — в продуктовой студии. В фокусе: дизайн и анализ A/B-тестов, дашборды для продуктовых команд. Довожу сложные задачи от идеи до продакшена. 3-е место — Кубок России по спортивному программированию (алгоритмическое программирование, 2023). Интересны продукты, которые приносят пользу людям.",
+    "specialization": "data-science",
+    "grade": "senior",
+    "experience_years": 6,
+    "stack": [
+      "SQL",
+      "Python",
+      "pandas",
+      "ClickHouse",
+      "DataLens",
+      "A/B-тестирование",
+      "Математическая статистика"
+    ],
+    "soft_skills": [
+      "Работа в команде",
+      "Эмпатия",
+      "Адаптивность",
+      "Лидерство"
+    ],
+    "english_level": "B1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 390000,
+    "assessment_score": 81.1,
+    "assessed_days_ago": 147,
+    "registered_days_ago": 199,
+    "fsp_member_id": "FSP-813927",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2023,
+        "place": 3
+      }
+    ],
+    "phone": "+7 936 838-95-82",
+    "telegram": "@dorlov_731",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-006",
+    "track": "devops",
+    "email": "e.novikov@example.com",
+    "display_name": "Егор Новиков",
+    "headline": "Middle DevOps-инженер",
+    "about": "2 года в IT, из них 1 — в промышленной автоматизации. В фокусе: поддержка и развитие Kubernetes-кластеров, CI/CD-пайплайны в GitLab CI.",
+    "specialization": "devops",
+    "grade": "middle",
+    "experience_years": 2,
+    "stack": [
+      "Linux",
+      "Docker",
+      "Kubernetes",
+      "PostgreSQL",
+      "Argo CD",
+      "GitLab CI",
+      "GitHub Actions",
+      "Grafana"
+    ],
+    "soft_skills": [
+      "Работа в команде",
+      "Критическое мышление"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 250000,
+    "assessment_score": 95.6,
+    "assessed_days_ago": 71,
+    "registered_days_ago": 94,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 966 383-40-74",
+    "telegram": "@enovikov_576",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-007",
+    "track": "de-stream",
+    "email": "d.frolov@example.com",
+    "display_name": "Денис Фролов",
+    "headline": "Стажёр инженер данных (потоковая обработка)",
+    "about": "Выпускник МФТИ 2026 года, направление «Прикладная математика и физика». В учебных и пет-проектах — обработка телеметрии в реальном времени. Ищу стажировку, где смогу решать реальные задачи рядом с опытными инженерами. 2-е место — Кубок Москвы по спортивному программированию (продуктовое программирование, 2025). Интересны продукты, которые приносят пользу людям.",
+    "specialization": "data-engineering",
+    "grade": "intern",
+    "experience_years": 1,
+    "stack": [
+      "Kafka",
+      "Apache Flink",
+      "Python",
+      "Docker",
+      "ClickHouse"
+    ],
+    "soft_skills": [
+      "Ведение переговоров",
+      "Ответственность",
+      "Критическое мышление"
+    ],
+    "english_level": "A2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "office"
+    ],
+    "salary_expectation": 60000,
+    "assessment_score": 72.9,
+    "assessed_days_ago": 45,
+    "registered_days_ago": 54,
+    "fsp_member_id": "FSP-184576",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок Москвы по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2025,
+        "place": 2
+      },
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2025,
+        "place": null
+      },
+      {
+        "event_name": "Первенство России по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2025,
+        "place": null
+      }
+    ],
+    "phone": "+7 990 529-15-46",
+    "telegram": "@dfrolov_458",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-008",
+    "track": "ts-fullstack",
+    "email": "a.grigorev@example.com",
+    "display_name": "Арсений Григорьев",
+    "headline": "Junior Fullstack-разработчик (React + Node.js)",
+    "about": "Год коммерческого опыта в продуктовой студии. В фокусе: настройка CI/CD и деплоя в облако, API на NestJS и клиентская часть на React. Хочу расти в команде с культурой код-ревью и наставничества. 1-е место — Всероссийские соревнования по спортивному программированию (продуктовое программирование, 2023). Ценю прозрачные процессы и понятные цели.",
+    "specialization": "fullstack",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "TypeScript",
+      "React",
+      "Node.js",
+      "Docker",
+      "Tailwind CSS",
+      "Next.js",
+      "GraphQL"
+    ],
+    "soft_skills": [
+      "Системное мышление",
+      "Критическое мышление"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 110000,
+    "assessment_score": 74.7,
+    "assessed_days_ago": 49,
+    "registered_days_ago": 80,
+    "fsp_member_id": "FSP-632515",
+    "fsp_achievements": [
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2023,
+        "place": 1
+      },
+      {
+        "event_name": "Кубок Москвы по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2023,
+        "place": null
+      }
+    ],
+    "phone": "+7 918 495-17-52",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-009",
+    "track": "android",
+    "email": "e.solovev@example.com",
+    "display_name": "Егор Соловьёв",
+    "headline": "Senior Android-разработчик",
+    "about": "4 года в IT, из них 1 — в заказной разработке. В фокусе: многомодульная архитектура и ускорение сборки, интеграция карт и геолокации. Менторю младших коллег и провожу технические собеседования. Готов к релокации.",
+    "specialization": "mobile",
+    "grade": "senior",
+    "experience_years": 4,
+    "stack": [
+      "Kotlin",
+      "Android SDK",
+      "Retrofit",
+      "Hilt",
+      "JUnit",
+      "Coroutines",
+      "Firebase"
+    ],
+    "soft_skills": [
+      "Эмпатия",
+      "Критическое мышление",
+      "Ведение переговоров",
+      "Наставничество"
+    ],
+    "english_level": "C1",
+    "city": "Краснодар",
+    "relocation_ready": true,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 290000,
+    "assessment_score": 94.1,
+    "assessed_days_ago": 137,
+    "registered_days_ago": 192,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 979 844-89-68",
+    "telegram": "@esolovev_651",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-010",
+    "track": "react-frontend",
+    "email": "m.grigoreva@example.com",
+    "display_name": "Милана Григорьева",
+    "headline": "Junior Frontend-разработчик (React)",
+    "about": "Два года коммерческого опыта в телекоме. В фокусе: серверный рендеринг на Next.js, оптимизация производительности и Web Vitals. Хочу расти в команде с культурой код-ревью и наставничества. 3-е место — Кубок Санкт-Петербурга по спортивному программированию (продуктовое программирование, 2023). Ищу команду с сильной инженерной культурой.",
+    "specialization": "frontend",
+    "grade": "junior",
+    "experience_years": 2,
+    "stack": [
+      "TypeScript",
+      "React",
+      "MobX",
+      "Jest",
+      "CSS Modules",
+      "Webpack"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Системное мышление",
+      "Ответственность"
+    ],
+    "english_level": "A2",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 115000,
+    "assessment_score": 78.8,
+    "assessed_days_ago": 101,
+    "registered_days_ago": 130,
+    "fsp_member_id": "FSP-301058",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2024,
+        "place": 15
+      },
+      {
+        "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2023,
+        "place": 3
+      }
+    ],
+    "phone": "+7 999 750-83-73",
+    "telegram": "@mgrigoreva_168",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-011",
+    "track": "vue-frontend",
+    "email": "a.belov@example.com",
+    "display_name": "Александр Белов",
+    "headline": "Стажёр Frontend-разработчик (Vue)",
+    "about": "Студент 4-го курса ИТМО, направление «Прикладная информатика». В учебных и пет-проектах — интеграция с REST API и обработка ошибок. Ищу стажировку, где смогу решать реальные задачи рядом с опытными инженерами. 3-е место — Кубок Санкт-Петербурга по спортивному программированию (продуктовое программирование, 2024).",
+    "specialization": "frontend",
+    "grade": "intern",
+    "experience_years": 0,
+    "stack": [
+      "TypeScript",
+      "Vue 3",
+      "SCSS",
+      "Element Plus"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Ведение переговоров",
+      "Внимание к деталям"
+    ],
+    "english_level": "B1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "office"
+    ],
+    "salary_expectation": 50000,
+    "assessment_score": 84.2,
+    "assessed_days_ago": 81,
+    "registered_days_ago": 90,
+    "fsp_member_id": "FSP-993732",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2026,
+        "place": null
+      },
+      {
+        "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2024,
+        "place": 3
+      },
+      {
+        "event_name": "Первенство России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2024,
+        "place": 6
+      }
+    ],
+    "phone": null,
+    "telegram": "@abelov_688",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-012",
+    "track": "ios",
+    "email": "o.bykova@example.com",
+    "display_name": "Олеся Быкова",
+    "headline": "Стажёр iOS-разработчик",
+    "about": "Выпускница КФУ 2026 года, направление «Программная инженерия». В учебных и пет-проектах — переход с UIKit на SwiftUI. Ищу стажировку, где смогу решать реальные задачи рядом с опытными инженерами.",
+    "specialization": "mobile",
+    "grade": "intern",
+    "experience_years": 0,
+    "stack": [
+      "Swift",
+      "UIKit",
+      "Alamofire",
+      "Core Data"
+    ],
+    "soft_skills": [
+      "Самоорганизация",
+      "Внимание к деталям"
+    ],
+    "english_level": "B1",
+    "city": "Казань",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 40000,
+    "assessment_score": 84.9,
+    "assessed_days_ago": 180,
+    "registered_days_ago": 216,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": null,
+    "telegram": "@obykova_404",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-013",
+    "track": "sre",
+    "email": "p.kudryavtsev@example.com",
+    "display_name": "Павел Кудрявцев",
+    "headline": "Senior SRE-инженер",
+    "about": "8 лет в IT, из них 4 — в foodtech. В фокусе: разбор инцидентов и постмортемы, observability-стек: метрики, логи, трассировки. Довожу сложные задачи от идеи до продакшена. Ценю прозрачные процессы и понятные цели.",
+    "specialization": "devops",
+    "grade": "senior",
+    "experience_years": 8,
+    "stack": [
+      "Linux",
+      "Kubernetes",
+      "Prometheus",
+      "OpenTelemetry",
+      "Grafana",
+      "Loki",
+      "PostgreSQL",
+      "VictoriaMetrics"
+    ],
+    "soft_skills": [
+      "Эмпатия",
+      "Адаптивность",
+      "Лидерство"
+    ],
+    "english_level": "C2",
+    "city": "Казань",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 370000,
+    "assessment_score": 77.8,
+    "assessed_days_ago": 69,
+    "registered_days_ago": 100,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 981 966-26-91",
+    "telegram": "@pkudryavtsev_359",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-014",
+    "track": "go-backend",
+    "email": "a.fomin@example.com",
+    "display_name": "Александр Фомин",
+    "headline": "Middle Backend-разработчик (Go)",
+    "about": "2 года в IT, из них 1 — в медтехе. В фокусе: разработка высоконагруженных микросервисов на Go, оптимизация задержек и потребления памяти сервисов. Участвую в соревнованиях ФСП по алгоритмическому программированию.",
+    "specialization": "backend",
+    "grade": "middle",
+    "experience_years": 2,
+    "stack": [
+      "Go",
+      "PostgreSQL",
+      "Микросервисы",
+      "Kubernetes",
+      "NATS",
+      "Redis"
+    ],
+    "soft_skills": [
+      "Коммуникабельность",
+      "Системное мышление"
+    ],
+    "english_level": "B1",
+    "city": "Казань",
+    "relocation_ready": false,
+    "work_formats": [
+      "office"
+    ],
+    "salary_expectation": 180000,
+    "assessment_score": 72.4,
+    "assessed_days_ago": 13,
+    "registered_days_ago": 28,
+    "fsp_member_id": "FSP-549351",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Республики Татарстан по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2024,
+        "place": null
+      }
+    ],
+    "phone": "+7 935 610-33-57",
+    "telegram": "@afomin_947",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-015",
+    "track": "dotnet-backend",
+    "email": "g.sergeev@example.com",
+    "display_name": "Глеб Сергеев",
+    "headline": "Senior C#-разработчик",
+    "about": "6 лет в IT, из них 2 — в заказной разработке. В фокусе: интеграция с внешними системами через RabbitMQ, оптимизация запросов Entity Framework. Довожу сложные задачи от идеи до продакшена. Открыт к удалённой работе.",
+    "specialization": "backend",
+    "grade": "senior",
+    "experience_years": 6,
+    "stack": [
+      "C#",
+      "ASP.NET Core",
+      "SignalR",
+      "Kubernetes",
+      "Redis",
+      "gRPC",
+      "RabbitMQ",
+      "xUnit",
+      "Entity Framework Core"
+    ],
+    "soft_skills": [
+      "Критическое мышление",
+      "Публичные выступления",
+      "Ответственность",
+      "Наставничество"
+    ],
+    "english_level": "B1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 370000,
+    "assessment_score": 66.0,
+    "assessed_days_ago": 195,
+    "registered_days_ago": 221,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 987 331-56-74",
+    "telegram": "@gsergeev_317",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-016",
+    "track": "cpp-backend",
+    "email": "e.komarov@example.com",
+    "display_name": "Евгений Комаров",
+    "headline": "Senior C++-разработчик",
+    "about": "9 лет в IT, из них 7 — в маркетплейсе. В фокусе: разработка многопоточных сетевых сервисов, разработка высокопроизводительных модулей на C++20. Отвечаю за ключевые технические решения в своём направлении. Открыт к удалённой работе.",
+    "specialization": "backend",
+    "grade": "senior",
+    "experience_years": 9,
+    "stack": [
+      "C++",
+      "Linux",
+      "STL",
+      "Boost",
+      "Qt",
+      "PostgreSQL",
+      "ROS 2",
+      "Python",
+      "Многопоточность"
+    ],
+    "soft_skills": [
+      "Ведение переговоров",
+      "Работа в команде",
+      "Наставничество"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 390000,
+    "assessment_score": 73.9,
+    "assessed_days_ago": 15,
+    "registered_days_ago": 32,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 956 968-33-20",
+    "telegram": "@ekomarov_923",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-017",
+    "track": "python-backend",
+    "email": "m.melnikov@example.com",
+    "display_name": "Максим Мельников",
+    "headline": "Senior Backend-разработчик (Python)",
+    "about": "9 лет в IT, из них 5 — в финтехе. В фокусе: разработка асинхронных REST API на FastAPI, фоновые задачи и планировщики на Celery. Отвечаю за ключевые технические решения в своём направлении. Финал — Кубок России по спортивному программированию (алгоритмическое программирование, 2022), 5-е место. Открыт к удалённой работе.",
+    "specialization": "backend",
+    "grade": "senior",
+    "experience_years": 9,
+    "stack": [
+      "Python",
+      "PostgreSQL",
+      "FastAPI",
+      "Celery",
+      "Flask",
+      "Kafka",
+      "RabbitMQ",
+      "Django REST Framework",
+      "Elasticsearch"
+    ],
+    "soft_skills": [
+      "Обучаемость",
+      "Ответственность",
+      "Наставничество"
+    ],
+    "english_level": "C1",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 380000,
+    "assessment_score": null,
+    "assessed_days_ago": null,
+    "registered_days_ago": 59,
+    "fsp_member_id": "FSP-474258",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2022,
+        "place": 5
+      }
+    ],
+    "phone": "+7 955 385-92-62",
+    "telegram": "@mmelnikov_472",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-018",
+    "track": "qa-auto-ts",
+    "email": "m.morozov@example.com",
+    "display_name": "Матвей Морозов",
+    "headline": "Senior QA Automation-инженер (TypeScript)",
+    "about": "4 года в IT, из них 3 — в travel-tech. В фокусе: запуск тестов в CI на каждый merge request, визуальное регрессионное тестирование. Отвечаю за ключевые технические решения в своём направлении.",
+    "specialization": "qa",
+    "grade": "senior",
+    "experience_years": 4,
+    "stack": [
+      "TypeScript",
+      "Playwright",
+      "Docker",
+      "GitHub Actions",
+      "Jest",
+      "Allure",
+      "Cypress",
+      "Postman",
+      "k6"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Внимание к деталям",
+      "Работа в команде",
+      "Наставничество"
+    ],
+    "english_level": "B2",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 280000,
+    "assessment_score": 78.0,
+    "assessed_days_ago": 94,
+    "registered_days_ago": 108,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 957 706-50-28",
+    "telegram": "@mmorozov_350",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-019",
+    "track": "python-backend",
+    "email": "s.kazakov@example.com",
+    "display_name": "Семён Казаков",
+    "headline": "Стажёр Python-разработчик",
+    "about": "Выпускник СПбГУ 2026 года, направление «Математическое обеспечение и администрирование информационных систем». В учебных и пет-проектах — разработка асинхронных REST API на FastAPI. Ищу стажировку, где смогу решать реальные задачи рядом с опытными инженерами. 3-е место — Чемпионат Санкт-Петербурга по спортивному программированию (продуктовое программирование, 2026). Люблю сложные задачи и сильные команды.",
+    "specialization": "backend",
+    "grade": "intern",
+    "experience_years": 1,
+    "stack": [
+      "Python",
+      "PostgreSQL",
+      "Flask",
+      "asyncio"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Внимание к деталям"
+    ],
+    "english_level": "B1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "office"
+    ],
+    "salary_expectation": 55000,
+    "assessment_score": null,
+    "assessed_days_ago": null,
+    "registered_days_ago": 51,
+    "fsp_member_id": "FSP-263447",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2026,
+        "place": 3
+      },
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2024,
+        "place": 10
+      }
+    ],
+    "phone": "+7 968 559-83-26",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-020",
+    "track": "ts-fullstack",
+    "email": "a.kim@example.com",
+    "display_name": "Андрей Ким",
+    "headline": "Senior Fullstack-разработчик (React + Node.js)",
+    "about": "7 лет в IT, из них 2 — в медтехе. В фокусе: разработка фич от схемы БД до интерфейса, интеграции с внешними сервисами. Выстраиваю процессы и делюсь опытом на внутренних митапах. Интересны продукты, которые приносят пользу людям.",
+    "specialization": "fullstack",
+    "grade": "senior",
+    "experience_years": 7,
+    "stack": [
+      "TypeScript",
+      "React",
+      "Node.js",
+      "tRPC",
+      "Next.js",
+      "Redis",
+      "PostgreSQL",
+      "Tailwind CSS",
+      "GraphQL"
+    ],
+    "soft_skills": [
+      "Публичные выступления",
+      "Самоорганизация",
+      "Обучаемость",
+      "Лидерство"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "office"
+    ],
+    "salary_expectation": 440000,
+    "assessment_score": 86.3,
+    "assessed_days_ago": 139,
+    "registered_days_ago": 145,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 917 177-64-15",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-021",
+    "track": "de-batch",
+    "email": "n.bykov@example.com",
+    "display_name": "Николай Быков",
+    "headline": "Middle Data Engineer",
+    "about": "5 лет в IT, из них 3 — в промышленной автоматизации. В фокусе: построение хранилища данных и витрин, ETL/ELT-пайплайны на Airflow. Готов к релокации.",
+    "specialization": "data-engineering",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "Python",
+      "SQL",
+      "Apache Airflow",
+      "Trino",
+      "Kafka",
+      "Apache Spark",
+      "PostgreSQL"
+    ],
+    "soft_skills": [
+      "Самоорганизация",
+      "Эмпатия",
+      "Ответственность"
+    ],
+    "english_level": "B2",
+    "city": "Уфа",
+    "relocation_ready": true,
+    "work_formats": [
+      "hybrid"
+    ],
+    "salary_expectation": 210000,
+    "assessment_score": 76.8,
+    "assessed_days_ago": 99,
+    "registered_days_ago": 144,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 920 709-39-69",
+    "telegram": "@nbykov_343",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-022",
+    "track": "php-backend",
+    "email": "k.timofeeva@example.com",
+    "display_name": "Кристина Тимофеева",
+    "headline": "Senior Backend-разработчик (PHP)",
+    "about": "5 лет в IT, из них 1 — в медтехе. В фокусе: интеграции с платёжными системами и службами доставки, разработка backend интернет-магазина на Laravel. Отвечаю за ключевые технические решения в своём направлении. Открыта к удалённой работе.",
+    "specialization": "backend",
+    "grade": "senior",
+    "experience_years": 5,
+    "stack": [
+      "PHP",
+      "MySQL",
+      "Redis",
+      "Docker",
+      "PHPUnit",
+      "Nginx",
+      "Laravel"
+    ],
+    "soft_skills": [
+      "Обучаемость",
+      "Внимание к деталям",
+      "Адаптивность",
+      "Наставничество"
+    ],
+    "english_level": "B2",
+    "city": "Казань",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 290000,
+    "assessment_score": 87.6,
+    "assessed_days_ago": 198,
+    "registered_days_ago": 213,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 946 782-29-50",
+    "telegram": "@ktimofeeva_235",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-023",
+    "track": "java-backend",
+    "email": "d.petrov@example.com",
+    "display_name": "Даниил Петров",
+    "headline": "Junior Backend-разработчик (Java)",
+    "about": "Год коммерческого опыта в логистике. В фокусе: интеграция с внутренними системами через Kafka, проектирование REST API и контрактов между командами. Хочу расти в команде с культурой код-ревью и наставничества.",
+    "specialization": "backend",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "Java",
+      "Spring Boot",
+      "Kafka",
+      "RabbitMQ",
+      "Kubernetes"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Адаптивность",
+      "Ведение переговоров"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 130000,
+    "assessment_score": 79.7,
+    "assessed_days_ago": 196,
+    "registered_days_ago": 230,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 949 915-92-93",
+    "telegram": "@dpetrov_658",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-024",
+    "track": "devops",
+    "email": "y.kondratev@example.com",
+    "display_name": "Ярослав Кондратьев",
+    "headline": "Junior DevOps-инженер",
+    "about": "Полгода коммерческого опыта в госсекторе. В фокусе: CI/CD-пайплайны в GitLab CI, переезд сервисов в облако. Хочу расти в команде с культурой код-ревью и наставничества. Открыт к удалённой работе.",
+    "specialization": "devops",
+    "grade": "junior",
+    "experience_years": 0,
+    "stack": [
+      "Linux",
+      "Docker",
+      "Kubernetes",
+      "Grafana",
+      "Argo CD",
+      "GitLab CI",
+      "Yandex Cloud"
+    ],
+    "soft_skills": [
+      "Критическое мышление",
+      "Управление временем"
+    ],
+    "english_level": "B2",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 115000,
+    "assessment_score": 88.4,
+    "assessed_days_ago": 100,
+    "registered_days_ago": 129,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 973 493-45-59",
+    "telegram": "@ykondratev_202",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-025",
+    "track": "qa-auto-python",
+    "email": "i.titov@example.com",
+    "display_name": "Игорь Титов",
+    "headline": "QA Automation Lead",
+    "about": "6 лет в IT, последние 2 — руковожу командой из 14 человек. В зоне ответственности: разработка фреймворка автотестов с нуля, автоматизация тестирования API и UI на pytest. Отвечаю за найм, развитие людей и качество поставки. Открыт к удалённой работе.",
+    "specialization": "qa",
+    "grade": "lead",
+    "experience_years": 6,
+    "stack": [
+      "Python",
+      "pytest",
+      "Locust",
+      "SQL",
+      "Playwright",
+      "Requests",
+      "GitLab CI",
+      "Docker",
+      "Postman"
+    ],
+    "soft_skills": [
+      "Управление временем",
+      "Обучаемость",
+      "Системное мышление",
+      "Лидерство"
+    ],
+    "english_level": "B1",
+    "city": "Челябинск",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 290000,
+    "assessment_score": 78.3,
+    "assessed_days_ago": 200,
+    "registered_days_ago": 207,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 926 510-82-10",
+    "telegram": "@ititov_132",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-026",
+    "track": "vue-frontend",
+    "email": "v.krylova@example.com",
+    "display_name": "Валерия Крылова",
+    "headline": "Senior Frontend-разработчик (Vue)",
+    "about": "4 года в IT, из них 3 — в ритейле. В фокусе: переезд с Vue 2 на Vue 3, вёрстка сложных форм и таблиц. Выстраиваю процессы и делюсь опытом на внутренних митапах. Открыта к удалённой работе.",
+    "specialization": "frontend",
+    "grade": "senior",
+    "experience_years": 4,
+    "stack": [
+      "TypeScript",
+      "Vue 3",
+      "Vuex",
+      "Tailwind CSS",
+      "Element Plus",
+      "Webpack",
+      "Cypress"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Эмпатия",
+      "Адаптивность",
+      "Наставничество"
+    ],
+    "english_level": "C1",
+    "city": "Краснодар",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 260000,
+    "assessment_score": 78.7,
+    "assessed_days_ago": 200,
+    "registered_days_ago": 243,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 978 610-25-98",
+    "telegram": "@vkrylova_954",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-027",
+    "track": "android",
+    "email": "e.ivanov@example.com",
+    "display_name": "Евгений Иванов",
+    "headline": "Руководитель мобильной разработки",
+    "about": "12 лет в IT, последние 4 — руковожу командой из 11 человек. В зоне ответственности: перевод проекта с RxJava на корутины, многомодульная архитектура и ускорение сборки. Выстраиваю процессы, ставлю цели команде и защищаю roadmap перед бизнесом. Открыт к удалённой работе.",
+    "specialization": "mobile",
+    "grade": "lead",
+    "experience_years": 12,
+    "stack": [
+      "Kotlin",
+      "Android SDK",
+      "Gradle",
+      "Dagger 2",
+      "JUnit",
+      "Room",
+      "Coroutines"
+    ],
+    "soft_skills": [
+      "Системное мышление",
+      "Самоорганизация",
+      "Работа в команде",
+      "Лидерство"
+    ],
+    "english_level": "B2",
+    "city": "Самара",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 420000,
+    "assessment_score": 78.2,
+    "assessed_days_ago": 212,
+    "registered_days_ago": 215,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 976 148-54-93",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-028",
+    "track": "pentest",
+    "email": "a.valiev@example.com",
+    "display_name": "Арсений Валиев",
+    "headline": "Senior специалист по тестированию на проникновение",
+    "about": "8 лет в IT, из них 1 — у интегратора ИБ. В фокусе: red team-проекты, отчёты и рекомендации для заказчиков. Выстраиваю процессы и делюсь опытом на внутренних митапах. 3-е место — Чемпионат Свердловской области по спортивному программированию (программирование систем информационной безопасности, 2025). Люблю сложные задачи и сильные команды.",
+    "specialization": "security",
+    "grade": "senior",
+    "experience_years": 8,
+    "stack": [
+      "Burp Suite",
+      "Kali Linux",
+      "Bash",
+      "Metasploit",
+      "SQLMap",
+      "Hashcat",
+      "Nmap",
+      "Nuclei"
+    ],
+    "soft_skills": [
+      "Управление временем",
+      "Ведение переговоров",
+      "Наставничество"
+    ],
+    "english_level": "B1",
+    "city": "Екатеринбург",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 330000,
+    "assessment_score": 66.2,
+    "assessed_days_ago": 5,
+    "registered_days_ago": 62,
+    "fsp_member_id": "FSP-324582",
+    "fsp_achievements": [
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "security",
+        "level": "national",
+        "year": 2026,
+        "place": null
+      },
+      {
+        "event_name": "Чемпионат Свердловской области по спортивному программированию",
+        "discipline": "security",
+        "level": "regional",
+        "year": 2025,
+        "place": 3
+      }
+    ],
+    "phone": null,
+    "telegram": "@avaliev_846",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-029",
+    "track": "go-backend",
+    "email": "v.fedotova@example.com",
+    "display_name": "Варвара Федотова",
+    "headline": "Junior Go-разработчик",
+    "about": "Полгода коммерческого опыта в маркетплейсе. В фокусе: перенос легаси-сервисов с PHP и Python на Go, проектирование gRPC-контрактов между сервисами. Хочу расти в команде с культурой код-ревью и наставничества. Открыта к удалённой работе.",
+    "specialization": "backend",
+    "grade": "junior",
+    "experience_years": 0,
+    "stack": [
+      "Go",
+      "PostgreSQL",
+      "Gin",
+      "ClickHouse",
+      "OpenTelemetry"
+    ],
+    "soft_skills": [
+      "Публичные выступления",
+      "Ведение переговоров",
+      "Самоорганизация"
+    ],
+    "english_level": "B2",
+    "city": "Казань",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 115000,
+    "assessment_score": 63.2,
+    "assessed_days_ago": 212,
+    "registered_days_ago": 272,
+    "fsp_member_id": "FSP-452643",
+    "fsp_achievements": [],
+    "phone": "+7 932 942-20-89",
+    "telegram": "@vfedotova_772",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-030",
+    "track": "unreal",
+    "email": "n.titov@example.com",
+    "display_name": "Никита Титов",
+    "headline": "Senior Unreal Engine-разработчик",
+    "about": "5 лет в IT, из них 2 — в AAA-проекте. В фокусе: инструменты для геймдизайнеров, оптимизация производительности и памяти. Отвечаю за ключевые технические решения в своём направлении. Финал — Кубок Санкт-Петербурга по спортивному программированию (продуктовое программирование, 2025), 7-е место.",
+    "specialization": "gamedev",
+    "grade": "senior",
+    "experience_years": 5,
+    "stack": [
+      "C++",
+      "Unreal Engine",
+      "Blueprints",
+      "HLSL",
+      "Niagara",
+      "Сетевой мультиплеер",
+      "Perforce",
+      "Unreal Insights",
+      "Gameplay Ability System"
+    ],
+    "soft_skills": [
+      "Управление временем",
+      "Эмпатия",
+      "Лидерство"
+    ],
+    "english_level": "C1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "office"
+    ],
+    "salary_expectation": 270000,
+    "assessment_score": 83.0,
+    "assessed_days_ago": 68,
+    "registered_days_ago": 121,
+    "fsp_member_id": "FSP-154118",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2025,
+        "place": 7
+      },
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2023,
+        "place": null
+      },
+      {
+        "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2022,
+        "place": null
+      }
+    ],
+    "phone": "+7 949 675-70-78",
+    "telegram": "@ntitov_327",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-031",
+    "track": "pentest",
+    "email": "n.gorbunov@example.com",
+    "display_name": "Николай Горбунов",
+    "headline": "Middle специалист по тестированию на проникновение",
+    "about": "4 года в IT, из них 3 — в банковской сфере. В фокусе: собственные инструменты на Python, отчёты и рекомендации для заказчиков. Открыт к удалённой работе.",
+    "specialization": "security",
+    "grade": "middle",
+    "experience_years": 4,
+    "stack": [
+      "Burp Suite",
+      "Kali Linux",
+      "Python",
+      "Nmap",
+      "BloodHound",
+      "Wireshark",
+      "OWASP Top 10"
+    ],
+    "soft_skills": [
+      "Ведение переговоров",
+      "Внимание к деталям"
+    ],
+    "english_level": "B1",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 250000,
+    "assessment_score": 72.5,
+    "assessed_days_ago": 35,
+    "registered_days_ago": 66,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 932 692-26-81",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-032",
+    "track": "java-backend",
+    "email": "n.grigorev@example.com",
+    "display_name": "Никита Григорьев",
+    "headline": "Junior Backend-разработчик (Java)",
+    "about": "Полгода коммерческого опыта в медтехе. В фокусе: оптимизация работы с базой данных через Hibernate, модульные и интеграционные тесты. Хочу расти в команде с культурой код-ревью и наставничества. 3-е место — Чемпионат Санкт-Петербурга по спортивному программированию (алгоритмическое программирование, 2026).",
+    "specialization": "backend",
+    "grade": "junior",
+    "experience_years": 0,
+    "stack": [
+      "Java",
+      "Spring Boot",
+      "Gradle",
+      "Maven",
+      "Hibernate",
+      "JUnit"
+    ],
+    "soft_skills": [
+      "Системное мышление",
+      "Внимание к деталям",
+      "Публичные выступления"
+    ],
+    "english_level": "B2",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 115000,
+    "assessment_score": 78.6,
+    "assessed_days_ago": 174,
+    "registered_days_ago": 215,
+    "fsp_member_id": "FSP-269409",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2026,
+        "place": 3
+      },
+      {
+        "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2026,
+        "place": null
+      }
+    ],
+    "phone": "+7 986 628-12-68",
+    "telegram": "@ngrigorev_103",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-033",
+    "track": "python-backend",
+    "email": "k.abramov@example.com",
+    "display_name": "Кирилл Абрамов",
+    "headline": "Middle Python-разработчик",
+    "about": "5 лет в IT, из них 3 — в госсекторе. В фокусе: интеграции с внешними сервисами через очереди сообщений, проектирование схем данных и оптимизация запросов в PostgreSQL. Готов к релокации.",
+    "specialization": "backend",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "Python",
+      "PostgreSQL",
+      "gRPC",
+      "FastAPI",
+      "RabbitMQ",
+      "asyncio"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Самоорганизация",
+      "Ведение переговоров"
+    ],
+    "english_level": "C1",
+    "city": "Челябинск",
+    "relocation_ready": true,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 210000,
+    "assessment_score": 64.5,
+    "assessed_days_ago": 230,
+    "registered_days_ago": 253,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 921 895-29-62",
+    "telegram": "@kabramov_575",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-034",
+    "track": "python-backend",
+    "email": "n.romanov@example.com",
+    "display_name": "Никита Романов",
+    "headline": "Middle Python-разработчик",
+    "about": "3 года в IT, из них 1 — в e-commerce. В фокусе: фоновые задачи и планировщики на Celery, проектирование схем данных и оптимизация запросов в PostgreSQL. Готов к релокации.",
+    "specialization": "backend",
+    "grade": "middle",
+    "experience_years": 3,
+    "stack": [
+      "Python",
+      "PostgreSQL",
+      "Django",
+      "SQLAlchemy",
+      "Kubernetes",
+      "Kafka",
+      "RabbitMQ"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Критическое мышление",
+      "Эмпатия"
+    ],
+    "english_level": "B2",
+    "city": "Пермь",
+    "relocation_ready": true,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 180000,
+    "assessment_score": 73.1,
+    "assessed_days_ago": 66,
+    "registered_days_ago": 93,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 944 239-37-94",
+    "telegram": "@nromanov_652",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-035",
+    "track": "de-batch",
+    "email": "k.stepanova@example.com",
+    "display_name": "Кристина Степанова",
+    "headline": "Junior Data Engineer",
+    "about": "Год коммерческого опыта в финтехе. В фокусе: оптимизация Spark-джобов, ETL/ELT-пайплайны на Airflow. Хочу расти в команде с культурой код-ревью и наставничества. 2-е место — Чемпионат Калининградской области по спортивному программированию (продуктовое программирование, 2024). Открыта к удалённой работе.",
+    "specialization": "data-engineering",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "Python",
+      "SQL",
+      "Apache Airflow",
+      "dbt",
+      "Scala",
+      "Apache Spark"
+    ],
+    "soft_skills": [
+      "Обучаемость",
+      "Работа в команде",
+      "Самоорганизация"
+    ],
+    "english_level": "B1",
+    "city": "Калининград",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 100000,
+    "assessment_score": null,
+    "assessed_days_ago": null,
+    "registered_days_ago": 21,
+    "fsp_member_id": "FSP-221996",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2025,
+        "place": 11
+      },
+      {
+        "event_name": "Чемпионат Калининградской области по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2024,
+        "place": 2
+      }
+    ],
+    "phone": "+7 974 295-80-57",
+    "telegram": "@kstepanova_626",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-036",
+    "track": "ios",
+    "email": "m.morozov2@example.com",
+    "display_name": "Марк Морозов",
+    "headline": "Junior iOS-разработчик",
+    "about": "Год коммерческого опыта в логистике. В фокусе: переход с UIKit на SwiftUI, модуляризация и вынос фич в SPM-пакеты. Хочу расти в команде с культурой код-ревью и наставничества. Интересны продукты, которые приносят пользу людям.",
+    "specialization": "mobile",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "Swift",
+      "UIKit",
+      "MVVM",
+      "Core Data",
+      "VIPER",
+      "SwiftUI"
+    ],
+    "soft_skills": [
+      "Эмпатия",
+      "Коммуникабельность"
+    ],
+    "english_level": "B1",
+    "city": "Екатеринбург",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 105000,
+    "assessment_score": 93.1,
+    "assessed_days_ago": 178,
+    "registered_days_ago": 181,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 961 959-27-54",
+    "telegram": "@mmorozov_742",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-037",
+    "track": "ios",
+    "email": "d.sorokina@example.com",
+    "display_name": "Дарья Сорокина",
+    "headline": "Middle iOS-разработчик",
+    "about": "4 года в IT, из них 1 — в ритейле. В фокусе: разработка новых экранов на SwiftUI, оптимизация запуска и потребления памяти приложения. Финал — Всероссийские соревнования по спортивному программированию (продуктовое программирование, 2023), 4-е место.",
+    "specialization": "mobile",
+    "grade": "middle",
+    "experience_years": 4,
+    "stack": [
+      "Swift",
+      "UIKit",
+      "Combine",
+      "VIPER",
+      "Swift Package Manager",
+      "Alamofire"
+    ],
+    "soft_skills": [
+      "Обучаемость",
+      "Самоорганизация",
+      "Ведение переговоров"
+    ],
+    "english_level": "B2",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "office"
+    ],
+    "salary_expectation": 250000,
+    "assessment_score": 89.2,
+    "assessed_days_ago": 184,
+    "registered_days_ago": 215,
+    "fsp_member_id": "FSP-807290",
+    "fsp_achievements": [
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2023,
+        "place": 4
+      }
+    ],
+    "phone": "+7 954 812-99-22",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-038",
+    "track": "de-batch",
+    "email": "a.medvedev@example.com",
+    "display_name": "Алексей Медведев",
+    "headline": "Senior Data Engineer",
+    "about": "4 года в IT, из них 3 — в продуктовой студии. В фокусе: контроль качества данных, ETL/ELT-пайплайны на Airflow. Отвечаю за ключевые технические решения в своём направлении. Готов к релокации.",
+    "specialization": "data-engineering",
+    "grade": "senior",
+    "experience_years": 4,
+    "stack": [
+      "Python",
+      "SQL",
+      "Apache Airflow",
+      "Greenplum",
+      "S3",
+      "Apache Spark",
+      "Kafka",
+      "Docker"
+    ],
+    "soft_skills": [
+      "Критическое мышление",
+      "Управление временем",
+      "Лидерство"
+    ],
+    "english_level": "B1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": true,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 310000,
+    "assessment_score": 79.5,
+    "assessed_days_ago": 116,
+    "registered_days_ago": 123,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 974 738-28-53",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-039",
+    "track": "python-backend",
+    "email": "m.pokrovskaya@example.com",
+    "display_name": "Милана Покровская",
+    "headline": "Тимлид backend-команды (Python)",
+    "about": "13 лет в IT, последние 3 — руковожу командой из 5 человек. В зоне ответственности: покрытие кода тестами на pytest и настройка CI, интеграции с внешними сервисами через очереди сообщений. Совмещаю управление командой с технической экспертизой и код-ревью. Готова к релокации.",
+    "specialization": "backend",
+    "grade": "lead",
+    "experience_years": 13,
+    "stack": [
+      "Python",
+      "PostgreSQL",
+      "Elasticsearch",
+      "aiohttp",
+      "Celery",
+      "Redis",
+      "FastAPI",
+      "RabbitMQ"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Публичные выступления",
+      "Лидерство"
+    ],
+    "english_level": "C1",
+    "city": "Самара",
+    "relocation_ready": true,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 440000,
+    "assessment_score": 89.0,
+    "assessed_days_ago": 9,
+    "registered_days_ago": 18,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": null,
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-040",
+    "track": "cpp-backend",
+    "email": "p.popov@example.com",
+    "display_name": "Павел Попов",
+    "headline": "Стажёр C++-разработчик",
+    "about": "Студент 3-го курса ДВФУ, направление «Программная инженерия». В учебных и пет-проектах — бортовое ПО и симуляторы. Ищу стажировку, где смогу решать реальные задачи рядом с опытными инженерами. 1-е место — Кубок Приморского края по спортивному программированию (программирование робототехники, 2024).",
+    "specialization": "backend",
+    "grade": "intern",
+    "experience_years": 1,
+    "stack": [
+      "C++",
+      "Linux",
+      "Boost",
+      "STL"
+    ],
+    "soft_skills": [
+      "Критическое мышление",
+      "Обучаемость",
+      "Эмпатия"
+    ],
+    "english_level": "B2",
+    "city": "Владивосток",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 50000,
+    "assessment_score": 81.8,
+    "assessed_days_ago": 186,
+    "registered_days_ago": 187,
+    "fsp_member_id": "FSP-640374",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок Приморского края по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2025,
+        "place": 10
+      },
+      {
+        "event_name": "Чемпионат Приморского края по спортивному программированию",
+        "discipline": "robotics",
+        "level": "regional",
+        "year": 2025,
+        "place": null
+      },
+      {
+        "event_name": "Кубок Приморского края по спортивному программированию",
+        "discipline": "robotics",
+        "level": "regional",
+        "year": 2024,
+        "place": 1
+      }
+    ],
+    "phone": "+7 924 700-85-82",
+    "telegram": "@ppopov_371",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-041",
+    "track": "qa-manual",
+    "email": "l.safina@example.com",
+    "display_name": "Лилия Сафина",
+    "headline": "Junior QA-инженер",
+    "about": "Два года коммерческого опыта в ритейле. В фокусе: написание и актуализация тест-кейсов, функциональное и регрессионное тестирование веб-приложения. Хочу расти в команде с культурой код-ревью и наставничества. 1-е место — Чемпионат Москвы по спортивному программированию (продуктовое программирование, 2026). Открыта к удалённой работе.",
+    "specialization": "qa",
+    "grade": "junior",
+    "experience_years": 2,
+    "stack": [
+      "Тест-дизайн",
+      "Jira",
+      "Confluence",
+      "API-тестирование",
+      "TestRail",
+      "Kibana"
+    ],
+    "soft_skills": [
+      "Адаптивность",
+      "Работа в команде"
+    ],
+    "english_level": "C1",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 100000,
+    "assessment_score": 83.0,
+    "assessed_days_ago": 170,
+    "registered_days_ago": 201,
+    "fsp_member_id": "FSP-332215",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Москвы по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2026,
+        "place": 1
+      },
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2025,
+        "place": null
+      }
+    ],
+    "phone": "+7 915 716-26-54",
+    "telegram": "@lsafina_115",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-042",
+    "track": "kotlin-backend",
+    "email": "l.stepanov@example.com",
+    "display_name": "Лев Степанов",
+    "headline": "Middle Kotlin-разработчик",
+    "about": "5 лет в IT, из них 1 — в телекоме. В фокусе: перевод сервисов с Java на Kotlin, оптимизация запросов к PostgreSQL. 3-е место — Кубок Томской области по спортивному программированию (продуктовое программирование, 2026). Ищу команду с сильной инженерной культурой.",
+    "specialization": "backend",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "Kotlin",
+      "Spring Boot",
+      "Coroutines",
+      "JUnit",
+      "PostgreSQL",
+      "gRPC",
+      "Ktor",
+      "Redis"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Эмпатия"
+    ],
+    "english_level": "C1",
+    "city": "Томск",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 190000,
+    "assessment_score": 82.0,
+    "assessed_days_ago": 51,
+    "registered_days_ago": 94,
+    "fsp_member_id": "FSP-613979",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок Томской области по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2026,
+        "place": 3
+      },
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2026,
+        "place": null
+      },
+      {
+        "event_name": "Чемпионат Томской области по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2024,
+        "place": null
+      }
+    ],
+    "phone": "+7 994 698-23-38",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-043",
+    "track": "vue-frontend",
+    "email": "v.kondrateva@example.com",
+    "display_name": "Валерия Кондратьева",
+    "headline": "Middle Frontend-разработчик (Vue)",
+    "about": "2 года в IT, из них 1 — в продуктовой студии. В фокусе: разработка интерфейсов на Vue 3 и Composition API, вёрстка сложных форм и таблиц. Открыта к удалённой работе.",
+    "specialization": "frontend",
+    "grade": "middle",
+    "experience_years": 2,
+    "stack": [
+      "TypeScript",
+      "Vue 3",
+      "Element Plus",
+      "Pinia",
+      "Tailwind CSS",
+      "Vuex"
+    ],
+    "soft_skills": [
+      "Коммуникабельность",
+      "Работа в команде"
+    ],
+    "english_level": "A2",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 220000,
+    "assessment_score": 78.4,
+    "assessed_days_ago": 122,
+    "registered_days_ago": 128,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 932 817-16-15",
+    "telegram": "@vkondrateva_684",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-044",
+    "track": "react-frontend",
+    "email": "a.kim2@example.com",
+    "display_name": "Арина Ким",
+    "headline": "Middle Frontend-разработчик (React)",
+    "about": "4 года в IT, из них 1 — в foodtech. В фокусе: серверный рендеринг на Next.js, развитие дизайн-системы в Storybook. Финал — Кубок Москвы по спортивному программированию (алгоритмическое программирование, 2022), 10-е место. Открыта к удалённой работе.",
+    "specialization": "frontend",
+    "grade": "middle",
+    "experience_years": 4,
+    "stack": [
+      "TypeScript",
+      "React",
+      "Zustand",
+      "Next.js",
+      "Figma",
+      "Storybook"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Управление временем",
+      "Обучаемость"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 220000,
+    "assessment_score": 86.0,
+    "assessed_days_ago": 205,
+    "registered_days_ago": 237,
+    "fsp_member_id": "FSP-532547",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок Москвы по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2022,
+        "place": 10
+      }
+    ],
+    "phone": "+7 995 876-42-88",
+    "telegram": "@akim_177",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-045",
+    "track": "de-batch",
+    "email": "e.tsoy@example.com",
+    "display_name": "Елена Цой",
+    "headline": "Senior Data Engineer",
+    "about": "6 лет в IT, из них 2 — в финтехе. В фокусе: контроль качества данных, миграция DWH с Greenplum на ClickHouse. Отвечаю за ключевые технические решения в своём направлении. Ищу команду с сильной инженерной культурой.",
+    "specialization": "data-engineering",
+    "grade": "senior",
+    "experience_years": 6,
+    "stack": [
+      "Python",
+      "SQL",
+      "Apache Airflow",
+      "Apache Spark",
+      "Apache Iceberg",
+      "Greenplum",
+      "S3",
+      "PostgreSQL"
+    ],
+    "soft_skills": [
+      "Ведение переговоров",
+      "Самоорганизация",
+      "Наставничество"
+    ],
+    "english_level": "C1",
+    "city": "Новосибирск",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 380000,
+    "assessment_score": 73.4,
+    "assessed_days_ago": 238,
+    "registered_days_ago": 251,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 945 319-16-62",
+    "telegram": "@etsoy_657",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-046",
+    "track": "pentest",
+    "email": "n.fedotov@example.com",
+    "display_name": "Никита Федотов",
+    "headline": "Middle специалист по тестированию на проникновение",
+    "about": "3 года в IT, из них 2 — в телекоме. В фокусе: тестирование на проникновение веб-приложений, собственные инструменты на Python. 3-е место — Кубок Тюменской области по спортивному программированию (программирование систем информационной безопасности, 2025).",
+    "specialization": "security",
+    "grade": "middle",
+    "experience_years": 3,
+    "stack": [
+      "Burp Suite",
+      "Kali Linux",
+      "Active Directory",
+      "Nmap",
+      "OWASP Top 10",
+      "Bash",
+      "Wireshark",
+      "Python"
+    ],
+    "soft_skills": [
+      "Самоорганизация",
+      "Управление временем"
+    ],
+    "english_level": "C1",
+    "city": "Тюмень",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 190000,
+    "assessment_score": 76.8,
+    "assessed_days_ago": 147,
+    "registered_days_ago": 180,
+    "fsp_member_id": "FSP-642640",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок Тюменской области по спортивному программированию",
+        "discipline": "security",
+        "level": "regional",
+        "year": 2025,
+        "place": 3
+      },
+      {
+        "event_name": "Чемпионат Тюменской области по спортивному программированию",
+        "discipline": "security",
+        "level": "regional",
+        "year": 2022,
+        "place": 7
+      }
+    ],
+    "phone": "+7 920 639-12-24",
+    "telegram": "@nfedotov_543",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-047",
+    "track": "devops",
+    "email": "k.shevchenko@example.com",
+    "display_name": "Ксения Шевченко",
+    "headline": "Middle DevOps-инженер",
+    "about": "5 лет в IT, из них 4 — в e-commerce. В фокусе: поддержка и развитие Kubernetes-кластеров, мониторинг и алертинг. 1-е место — Чемпионат Санкт-Петербурга по спортивному программированию (программирование систем информационной безопасности, 2026). Открыта к удалённой работе.",
+    "specialization": "devops",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "Linux",
+      "Docker",
+      "Kubernetes",
+      "Helm",
+      "Ansible",
+      "PostgreSQL",
+      "Grafana"
+    ],
+    "soft_skills": [
+      "Коммуникабельность",
+      "Адаптивность",
+      "Самоорганизация"
+    ],
+    "english_level": "B2",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 280000,
+    "assessment_score": 89.0,
+    "assessed_days_ago": 178,
+    "registered_days_ago": 238,
+    "fsp_member_id": "FSP-338929",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "discipline": "security",
+        "level": "regional",
+        "year": 2026,
+        "place": 1
+      },
+      {
+        "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "discipline": "security",
+        "level": "regional",
+        "year": 2024,
+        "place": null
+      }
+    ],
+    "phone": null,
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-048",
+    "track": "reverse",
+    "email": "v.novikov@example.com",
+    "display_name": "Вадим Новиков",
+    "headline": "Junior вирусный аналитик",
+    "about": "Год коммерческого опыта в кибербезопасности. В фокусе: реверс-инжиниринг бинарных файлов, YARA-правила и сигнатуры. Хочу расти в команде с культурой код-ревью и наставничества. Финал — Чемпионат Санкт-Петербурга по спортивному программированию (алгоритмическое программирование, 2025), 8-е место. Готов к релокации.",
+    "specialization": "security",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "IDA Pro",
+      "Ghidra",
+      "WinDbg",
+      "C++",
+      "C"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Критическое мышление"
+    ],
+    "english_level": "B1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": true,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 130000,
+    "assessment_score": 78.6,
+    "assessed_days_ago": 79,
+    "registered_days_ago": 112,
+    "fsp_member_id": "FSP-608551",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2025,
+        "place": 8
+      }
+    ],
+    "phone": "+7 964 108-93-12",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-049",
+    "track": "unity",
+    "email": "k.kazakova@example.com",
+    "display_name": "Ксения Казакова",
+    "headline": "Middle Unity-разработчик",
+    "about": "4 года в IT, из них 1 — в геймдеве. В фокусе: оптимизация производительности на мобильных устройствах, шейдеры и визуальные эффекты. Открыта к удалённой работе.",
+    "specialization": "gamedev",
+    "grade": "middle",
+    "experience_years": 4,
+    "stack": [
+      "C#",
+      "Unity",
+      "Addressables",
+      "UniRx",
+      "Firebase",
+      "Shader Graph",
+      "ECS (DOTS)",
+      "DOTween"
+    ],
+    "soft_skills": [
+      "Самоорганизация",
+      "Эмпатия",
+      "Ведение переговоров"
+    ],
+    "english_level": "C1",
+    "city": "Нижний Новгород",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 180000,
+    "assessment_score": 76.9,
+    "assessed_days_ago": 33,
+    "registered_days_ago": 93,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 939 627-74-47",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-050",
+    "track": "soc",
+    "email": "d.vasilev@example.com",
+    "display_name": "Денис Васильев",
+    "headline": "Senior аналитик SOC",
+    "about": "8 лет в IT, из них 1 — в госсекторе. В фокусе: threat hunting по индикаторам компрометации, взаимодействие с заказчиками по инцидентам. Выстраиваю процессы и делюсь опытом на внутренних митапах. Открыт к удалённой работе.",
+    "specialization": "security",
+    "grade": "senior",
+    "experience_years": 8,
+    "stack": [
+      "SIEM",
+      "MITRE ATT&CK",
+      "Sigma",
+      "EDR",
+      "ELK",
+      "Wireshark",
+      "KUMA",
+      "Suricata"
+    ],
+    "soft_skills": [
+      "Обучаемость",
+      "Ведение переговоров",
+      "Наставничество"
+    ],
+    "english_level": "C2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 490000,
+    "assessment_score": 85.0,
+    "assessed_days_ago": 148,
+    "registered_days_ago": 152,
+    "fsp_member_id": "FSP-430885",
+    "fsp_achievements": [],
+    "phone": "+7 985 620-22-11",
+    "telegram": "@dvasilev_634",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-051",
+    "track": "ml-nlp",
+    "email": "e.isaev@example.com",
+    "display_name": "Евгений Исаев",
+    "headline": "Senior ML-инженер (NLP/LLM)",
+    "about": "6 лет в IT, из них 4 — в стриминговом сервисе. В фокусе: сбор и разметка датасетов для NLP, оптимизация инференса LLM на vLLM. Довожу сложные задачи от идеи до продакшена. 2-е место — Чемпионат России по спортивному программированию (алгоритмическое программирование, 2026). Открыт к удалённой работе.",
+    "specialization": "data-science",
+    "grade": "senior",
+    "experience_years": 6,
+    "stack": [
+      "Python",
+      "PyTorch",
+      "Hugging Face Transformers",
+      "RAG",
+      "MLflow",
+      "FAISS",
+      "LangChain",
+      "vLLM",
+      "Docker",
+      "spaCy"
+    ],
+    "soft_skills": [
+      "Критическое мышление",
+      "Коммуникабельность",
+      "Адаптивность",
+      "Наставничество"
+    ],
+    "english_level": "C1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 370000,
+    "assessment_score": null,
+    "assessed_days_ago": null,
+    "registered_days_ago": 8,
+    "fsp_member_id": "FSP-154257",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2026,
+        "place": 2
+      }
+    ],
+    "phone": "+7 936 413-30-49",
+    "telegram": "@eisaev_184",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-052",
+    "track": "python-backend",
+    "email": "v.stepanov@example.com",
+    "display_name": "Вадим Степанов",
+    "headline": "Junior Backend-разработчик (Python)",
+    "about": "Год коммерческого опыта в стриминговом сервисе. В фокусе: интеграции с внешними сервисами через очереди сообщений, разработка асинхронных REST API на FastAPI. Хочу расти в команде с культурой код-ревью и наставничества. Финал — Кубок России по спортивному программированию (алгоритмическое программирование, 2023), 13-е место.",
+    "specialization": "backend",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "Python",
+      "PostgreSQL",
+      "Flask",
+      "Kafka",
+      "SQLAlchemy",
+      "Celery"
+    ],
+    "soft_skills": [
+      "Обучаемость",
+      "Ведение переговоров"
+    ],
+    "english_level": "C1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 100000,
+    "assessment_score": 69.3,
+    "assessed_days_ago": 158,
+    "registered_days_ago": 162,
+    "fsp_member_id": "FSP-238767",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2023,
+        "place": 13
+      }
+    ],
+    "phone": "+7 994 301-42-39",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-053",
+    "track": "react-frontend",
+    "email": "d.garipova@example.com",
+    "display_name": "Дарья Гарипова",
+    "headline": "Middle Frontend-разработчик (React)",
+    "about": "4 года в IT, из них 3 — в travel-tech. В фокусе: оптимизация производительности и Web Vitals, перевод сборки с Webpack на Vite. Открыта к удалённой работе.",
+    "specialization": "frontend",
+    "grade": "middle",
+    "experience_years": 4,
+    "stack": [
+      "TypeScript",
+      "React",
+      "CSS Modules",
+      "Figma",
+      "Playwright",
+      "SCSS",
+      "Vite"
+    ],
+    "soft_skills": [
+      "Системное мышление",
+      "Ответственность"
+    ],
+    "english_level": "B2",
+    "city": "Екатеринбург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 210000,
+    "assessment_score": 79.0,
+    "assessed_days_ago": 237,
+    "registered_days_ago": 259,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 981 859-69-42",
+    "telegram": "@dgaripova_248",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-054",
+    "track": "android",
+    "email": "r.tikhonov@example.com",
+    "display_name": "Руслан Тихонов",
+    "headline": "Middle Android-разработчик",
+    "about": "2 года в IT, из них 1 — в маркетплейсе. В фокусе: многомодульная архитектура и ускорение сборки, работа приложения в фоне и в офлайн-режиме. Интересны продукты, которые приносят пользу людям.",
+    "specialization": "mobile",
+    "grade": "middle",
+    "experience_years": 2,
+    "stack": [
+      "Kotlin",
+      "Android SDK",
+      "Jetpack Compose",
+      "JUnit",
+      "Flow",
+      "Hilt",
+      "Coroutines",
+      "Firebase"
+    ],
+    "soft_skills": [
+      "Самоорганизация",
+      "Обучаемость"
+    ],
+    "english_level": "B1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid"
+    ],
+    "salary_expectation": 210000,
+    "assessment_score": 85.5,
+    "assessed_days_ago": 10,
+    "registered_days_ago": 35,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 924 433-60-95",
+    "telegram": "@rtikhonov_237",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-055",
+    "track": "qa-auto-java",
+    "email": "d.orlova@example.com",
+    "display_name": "Дарья Орлова",
+    "headline": "Middle QA Automation-инженер (Java)",
+    "about": "4 года в IT, из них 1 — в финтехе. В фокусе: автоматизация тестирования REST API на REST Assured, тестирование интеграций через Kafka.",
+    "specialization": "qa",
+    "grade": "middle",
+    "experience_years": 4,
+    "stack": [
+      "Java",
+      "JUnit 5",
+      "TestNG",
+      "Selenium",
+      "Appium",
+      "Kafka",
+      "Allure"
+    ],
+    "soft_skills": [
+      "Коммуникабельность",
+      "Работа в команде"
+    ],
+    "english_level": "C1",
+    "city": "Новосибирск",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 180000,
+    "assessment_score": 73.6,
+    "assessed_days_ago": 64,
+    "registered_days_ago": 96,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 911 536-51-56",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-056",
+    "track": "appsec",
+    "email": "s.denisov@example.com",
+    "display_name": "Степан Денисов",
+    "headline": "Middle инженер по безопасной разработке",
+    "about": "3 года в IT, из них 2 — в банковской сфере. В фокусе: ревью кода на уязвимости, внедрение SAST и DAST в CI/CD. Ищу команду с сильной инженерной культурой.",
+    "specialization": "security",
+    "grade": "middle",
+    "experience_years": 3,
+    "stack": [
+      "OWASP Top 10",
+      "SAST/DAST",
+      "Go",
+      "Docker",
+      "DefectDojo",
+      "Python"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Работа в команде",
+      "Коммуникабельность"
+    ],
+    "english_level": "B2",
+    "city": "Иннополис",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 240000,
+    "assessment_score": 85.3,
+    "assessed_days_ago": 203,
+    "registered_days_ago": 219,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 960 247-77-61",
+    "telegram": "@sdenisov_888",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-057",
+    "track": "go-backend",
+    "email": "a.tkachenko@example.com",
+    "display_name": "Артём Ткаченко",
+    "headline": "Senior Go-разработчик",
+    "about": "4 года в IT, из них 1 — в продуктовой студии. В фокусе: обработка событий из Kafka в реальном времени, разработка высоконагруженных микросервисов на Go. Отвечаю за ключевые технические решения в своём направлении. Финал — Кубок России по спортивному программированию (алгоритмическое программирование, 2025), 12-е место. Люблю сложные задачи и сильные команды.",
+    "specialization": "backend",
+    "grade": "senior",
+    "experience_years": 4,
+    "stack": [
+      "Go",
+      "PostgreSQL",
+      "OpenTelemetry",
+      "Grafana",
+      "Protobuf",
+      "NATS",
+      "Kafka",
+      "Микросервисы"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Управление временем",
+      "Наставничество"
+    ],
+    "english_level": "C2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 330000,
+    "assessment_score": 63.2,
+    "assessed_days_ago": 95,
+    "registered_days_ago": 139,
+    "fsp_member_id": "FSP-578598",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2025,
+        "place": 12
+      }
+    ],
+    "phone": null,
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-058",
+    "track": "react-frontend",
+    "email": "e.petrova@example.com",
+    "display_name": "Эльвира Петрова",
+    "headline": "Junior React-разработчик",
+    "about": "Полгода коммерческого опыта в телекоме. В фокусе: разработка интерфейсов на React и TypeScript, оптимизация производительности и Web Vitals. Хочу расти в команде с культурой код-ревью и наставничества. Участвую в соревнованиях ФСП по продуктовому программированию.",
+    "specialization": "frontend",
+    "grade": "junior",
+    "experience_years": 0,
+    "stack": [
+      "TypeScript",
+      "React",
+      "CSS Modules",
+      "Vite",
+      "Tailwind CSS",
+      "MobX"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Публичные выступления",
+      "Обучаемость"
+    ],
+    "english_level": "B2",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 100000,
+    "assessment_score": 92.8,
+    "assessed_days_ago": 143,
+    "registered_days_ago": 177,
+    "fsp_member_id": "FSP-883263",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2025,
+        "place": null
+      },
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2025,
+        "place": null
+      },
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2024,
+        "place": null
+      }
+    ],
+    "phone": "+7 978 931-66-64",
+    "telegram": "@epetrova_670",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-059",
+    "track": "de-stream",
+    "email": "s.davydov@example.com",
+    "display_name": "Степан Давыдов",
+    "headline": "Middle инженер данных (потоковая обработка)",
+    "about": "4 года в IT, из них 3 — в медтехе. В фокусе: CDC-репликация из PostgreSQL через Debezium, потоковые пайплайны на Flink. Люблю сложные задачи и сильные команды.",
+    "specialization": "data-engineering",
+    "grade": "middle",
+    "experience_years": 4,
+    "stack": [
+      "Kafka",
+      "Apache Flink",
+      "Python",
+      "Java",
+      "Kafka Streams",
+      "ClickHouse",
+      "Scala",
+      "Kubernetes",
+      "PostgreSQL"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Обучаемость",
+      "Ведение переговоров"
+    ],
+    "english_level": "B2",
+    "city": "Нижний Новгород",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid"
+    ],
+    "salary_expectation": 230000,
+    "assessment_score": 71.3,
+    "assessed_days_ago": 178,
+    "registered_days_ago": 230,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 914 204-53-63",
+    "telegram": "@sdavydov_513",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-060",
+    "track": "kotlin-backend",
+    "email": "m.alekseev@example.com",
+    "display_name": "Михаил Алексеев",
+    "headline": "Middle Kotlin-разработчик",
+    "about": "3 года в IT, из них 1 — в банковской сфере. В фокусе: разработка сервисов на Kotlin и Spring Boot, оптимизация запросов к PostgreSQL. Открыт к удалённой работе.",
+    "specialization": "backend",
+    "grade": "middle",
+    "experience_years": 3,
+    "stack": [
+      "Kotlin",
+      "Spring Boot",
+      "PostgreSQL",
+      "Kafka",
+      "Ktor",
+      "Redis",
+      "Coroutines"
+    ],
+    "soft_skills": [
+      "Ведение переговоров",
+      "Самоорганизация",
+      "Эмпатия"
+    ],
+    "english_level": "A2",
+    "city": "Казань",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 190000,
+    "assessment_score": 80.9,
+    "assessed_days_ago": 88,
+    "registered_days_ago": 120,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 961 185-95-96",
+    "telegram": "@malekseev_566",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-061",
+    "track": "ts-fullstack",
+    "email": "v.golubeva@example.com",
+    "display_name": "Виктория Голубева",
+    "headline": "Стажёр Fullstack-разработчик (React + Node.js)",
+    "about": "Студентка 5-го курса ИТМО, направление «Прикладная информатика». В учебных и пет-проектах — настройка CI/CD и деплоя в облако. Ищу стажировку, где смогу решать реальные задачи рядом с опытными инженерами. 1-е место — Чемпионат Санкт-Петербурга по спортивному программированию (продуктовое программирование, 2026).",
+    "specialization": "fullstack",
+    "grade": "intern",
+    "experience_years": 0,
+    "stack": [
+      "TypeScript",
+      "React",
+      "Node.js",
+      "Docker",
+      "Tailwind CSS"
+    ],
+    "soft_skills": [
+      "Коммуникабельность",
+      "Эмпатия",
+      "Работа в команде"
+    ],
+    "english_level": "B1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 45000,
+    "assessment_score": 67.2,
+    "assessed_days_ago": 133,
+    "registered_days_ago": 176,
+    "fsp_member_id": "FSP-707029",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2026,
+        "place": 1
+      },
+      {
+        "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2026,
+        "place": null
+      }
+    ],
+    "phone": "+7 912 671-65-15",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-062",
+    "track": "de-stream",
+    "email": "i.kim@example.com",
+    "display_name": "Иван Ким",
+    "headline": "Junior инженер данных (потоковая обработка)",
+    "about": "Год коммерческого опыта в банковской сфере. В фокусе: CDC-репликация из PostgreSQL через Debezium, проектирование схем событий и управление ими. Хочу расти в команде с культурой код-ревью и наставничества. 1-е место — Чемпионат Республики Татарстан по спортивному программированию (продуктовое программирование, 2024). Готов к релокации.",
+    "specialization": "data-engineering",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "Kafka",
+      "Apache Flink",
+      "Python",
+      "Avro",
+      "Kafka Streams",
+      "PostgreSQL"
+    ],
+    "soft_skills": [
+      "Публичные выступления",
+      "Ведение переговоров"
+    ],
+    "english_level": "C1",
+    "city": "Казань",
+    "relocation_ready": true,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 105000,
+    "assessment_score": 91.1,
+    "assessed_days_ago": 63,
+    "registered_days_ago": 87,
+    "fsp_member_id": "FSP-301190",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Республики Татарстан по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2024,
+        "place": 1
+      }
+    ],
+    "phone": "+7 978 167-92-24",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-063",
+    "track": "android",
+    "email": "o.isaev@example.com",
+    "display_name": "Олег Исаев",
+    "headline": "Junior Android-разработчик",
+    "about": "Два года коммерческого опыта в агротехе. В фокусе: разработка экранов на Jetpack Compose, работа приложения в фоне и в офлайн-режиме. Хочу расти в команде с культурой код-ревью и наставничества. 1-е место — Кубок Москвы по спортивному программированию (продуктовое программирование, 2024).",
+    "specialization": "mobile",
+    "grade": "junior",
+    "experience_years": 2,
+    "stack": [
+      "Kotlin",
+      "Android SDK",
+      "Hilt",
+      "Dagger 2",
+      "Jetpack Compose",
+      "Firebase"
+    ],
+    "soft_skills": [
+      "Ведение переговоров",
+      "Работа в команде",
+      "Управление временем"
+    ],
+    "english_level": "A2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 120000,
+    "assessment_score": null,
+    "assessed_days_ago": null,
+    "registered_days_ago": 33,
+    "fsp_member_id": "FSP-535348",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2025,
+        "place": 15
+      },
+      {
+        "event_name": "Кубок Москвы по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2024,
+        "place": 1
+      },
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2024,
+        "place": 9
+      }
+    ],
+    "phone": null,
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-064",
+    "track": "qa-manual",
+    "email": "k.volkov@example.com",
+    "display_name": "Кирилл Волков",
+    "headline": "Стажёр QA-инженер",
+    "about": "Студент 4-го курса ТюмГУ, направление «Информационная безопасность». В учебных и пет-проектах — анализ логов и локализация дефектов. Ищу стажировку, где смогу решать реальные задачи рядом с опытными инженерами. 1-е место — Кубок Тюменской области по спортивному программированию (продуктовое программирование, 2025). Ищу команду с сильной инженерной культурой.",
+    "specialization": "qa",
+    "grade": "intern",
+    "experience_years": 1,
+    "stack": [
+      "Тест-дизайн",
+      "Jira",
+      "SQL",
+      "Qase",
+      "Kibana"
+    ],
+    "soft_skills": [
+      "Публичные выступления",
+      "Самоорганизация",
+      "Ответственность"
+    ],
+    "english_level": "B1",
+    "city": "Тюмень",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid"
+    ],
+    "salary_expectation": 35000,
+    "assessment_score": 87.7,
+    "assessed_days_ago": 30,
+    "registered_days_ago": 33,
+    "fsp_member_id": "FSP-577281",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок Тюменской области по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2025,
+        "place": 1
+      },
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2025,
+        "place": 3
+      },
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2024,
+        "place": 10
+      },
+      {
+        "event_name": "Кубок Тюменской области по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2024,
+        "place": null
+      }
+    ],
+    "phone": "+7 980 362-56-39",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-065",
+    "track": "product-analytics",
+    "email": "i.titov2@example.com",
+    "display_name": "Илья Титов",
+    "headline": "Middle аналитик данных",
+    "about": "4 года в IT, из них 2 — в промышленной автоматизации. В фокусе: дизайн и анализ A/B-тестов, автоматизация отчётности. Открыт к удалённой работе.",
+    "specialization": "data-science",
+    "grade": "middle",
+    "experience_years": 4,
+    "stack": [
+      "SQL",
+      "Python",
+      "Математическая статистика",
+      "DataLens",
+      "Excel",
+      "Airflow"
+    ],
+    "soft_skills": [
+      "Адаптивность",
+      "Критическое мышление",
+      "Работа в команде"
+    ],
+    "english_level": "B1",
+    "city": "Новосибирск",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 240000,
+    "assessment_score": 84.0,
+    "assessed_days_ago": 43,
+    "registered_days_ago": 46,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 959 572-67-98",
+    "telegram": "@ititov_356",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-066",
+    "track": "ml-cv",
+    "email": "r.ilin@example.com",
+    "display_name": "Руслан Ильин",
+    "headline": "Middle ML-инженер (Computer Vision)",
+    "about": "3 года в IT, из них 1 — в маркетплейсе. В фокусе: развёртывание моделей на Triton Inference Server, подготовка и разметка датасетов. 2-е место — Всероссийские соревнования по спортивному программированию (алгоритмическое программирование, 2023).",
+    "specialization": "data-science",
+    "grade": "middle",
+    "experience_years": 3,
+    "stack": [
+      "Python",
+      "PyTorch",
+      "OpenCV",
+      "Albumentations",
+      "Docker",
+      "Triton Inference Server",
+      "ONNX",
+      "TensorRT"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Ответственность",
+      "Коммуникабельность"
+    ],
+    "english_level": "C1",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid"
+    ],
+    "salary_expectation": 260000,
+    "assessment_score": 76.7,
+    "assessed_days_ago": 144,
+    "registered_days_ago": 164,
+    "fsp_member_id": "FSP-912076",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Москвы по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2025,
+        "place": 8
+      },
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2024,
+        "place": null
+      },
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2023,
+        "place": 2
+      },
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2022,
+        "place": 3
+      }
+    ],
+    "phone": "+7 979 393-71-62",
+    "telegram": "@rilin_458",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-067",
+    "track": "ml-classic",
+    "email": "p.akhmetov@example.com",
+    "display_name": "Павел Ахметов",
+    "headline": "Junior Data Scientist",
+    "about": "Полгода коммерческого опыта в госсекторе. В фокусе: feature engineering на больших табличных данных, рекомендательные системы. Хочу расти в команде с культурой код-ревью и наставничества.",
+    "specialization": "data-science",
+    "grade": "junior",
+    "experience_years": 0,
+    "stack": [
+      "Python",
+      "pandas",
+      "scikit-learn",
+      "NumPy",
+      "MLflow",
+      "Docker",
+      "LightGBM"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Публичные выступления",
+      "Ведение переговоров"
+    ],
+    "english_level": "B1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 120000,
+    "assessment_score": 66.1,
+    "assessed_days_ago": 79,
+    "registered_days_ago": 134,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 992 218-70-70",
+    "telegram": "@pakhmetov_217",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-068",
+    "track": "qa-manual",
+    "email": "a.ilina@example.com",
+    "display_name": "Алсу Ильина",
+    "headline": "Senior тестировщик ПО",
+    "about": "9 лет в IT, из них 4 — в логистике. В фокусе: анализ логов и локализация дефектов, тестирование мобильных приложений. Менторю младших коллег и провожу технические собеседования. Интересны продукты, которые приносят пользу людям.",
+    "specialization": "qa",
+    "grade": "senior",
+    "experience_years": 9,
+    "stack": [
+      "Тест-дизайн",
+      "Jira",
+      "Allure TestOps",
+      "Postman",
+      "Qase",
+      "TestRail",
+      "Kibana",
+      "Charles Proxy"
+    ],
+    "soft_skills": [
+      "Эмпатия",
+      "Коммуникабельность",
+      "Ведение переговоров",
+      "Наставничество"
+    ],
+    "english_level": "C1",
+    "city": "Пермь",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 300000,
+    "assessment_score": 89.2,
+    "assessed_days_ago": 85,
+    "registered_days_ago": 105,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": null,
+    "telegram": "@ailina_997",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-069",
+    "track": "go-backend",
+    "email": "l.lazarev@example.com",
+    "display_name": "Лев Лазарев",
+    "headline": "Middle Go-разработчик",
+    "about": "4 года в IT, из них 3 — в медтехе. В фокусе: обработка событий из Kafka в реальном времени, проектирование gRPC-контрактов между сервисами. Открыт к удалённой работе.",
+    "specialization": "backend",
+    "grade": "middle",
+    "experience_years": 4,
+    "stack": [
+      "Go",
+      "PostgreSQL",
+      "Kafka",
+      "Docker",
+      "Kubernetes",
+      "Protobuf"
+    ],
+    "soft_skills": [
+      "Адаптивность",
+      "Работа в команде"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 240000,
+    "assessment_score": 79.2,
+    "assessed_days_ago": 26,
+    "registered_days_ago": 74,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 938 206-82-13",
+    "telegram": "@llazarev_204",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-070",
+    "track": "flutter",
+    "email": "n.krylov@example.com",
+    "display_name": "Никита Крылов",
+    "headline": "Senior Flutter-разработчик",
+    "about": "8 лет в IT, из них 4 — в заказной разработке. В фокусе: архитектура на BLoC, оптимизация анимаций и отрисовки. Отвечаю за ключевые технические решения в своём направлении.",
+    "specialization": "mobile",
+    "grade": "senior",
+    "experience_years": 8,
+    "stack": [
+      "Dart",
+      "Flutter",
+      "GetX",
+      "Swift",
+      "Firebase",
+      "Dio",
+      "Codemagic"
+    ],
+    "soft_skills": [
+      "Публичные выступления",
+      "Обучаемость",
+      "Ответственность",
+      "Наставничество"
+    ],
+    "english_level": "C1",
+    "city": "Казань",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 350000,
+    "assessment_score": 79.1,
+    "assessed_days_ago": 190,
+    "registered_days_ago": 197,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 928 379-13-86",
+    "telegram": "@nkrylov_108",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-071",
+    "track": "ts-fullstack",
+    "email": "a.akhmetov@example.com",
+    "display_name": "Артём Ахметов",
+    "headline": "Middle Fullstack-разработчик (TypeScript)",
+    "about": "5 лет в IT, из них 3 — в foodtech. В фокусе: API на NestJS и клиентская часть на React, настройка CI/CD и деплоя в облако. Открыт к удалённой работе.",
+    "specialization": "fullstack",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "TypeScript",
+      "React",
+      "Node.js",
+      "MongoDB",
+      "Docker",
+      "Jest",
+      "tRPC",
+      "Prisma"
+    ],
+    "soft_skills": [
+      "Обучаемость",
+      "Публичные выступления"
+    ],
+    "english_level": "B2",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 260000,
+    "assessment_score": 72.7,
+    "assessed_days_ago": 176,
+    "registered_days_ago": 219,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": null,
+    "telegram": "@aakhmetov_758",
+    "is_visible_to_employers": false
+  },
+  {
+    "key": "cand-072",
+    "track": "ml-classic",
+    "email": "e.maksimov@example.com",
+    "display_name": "Егор Максимов",
+    "headline": "Senior Data Scientist",
+    "about": "6 лет в IT, из них 5 — в заказной разработке. В фокусе: проведение и анализ A/B-тестов, вывод моделей в продакшен и мониторинг их качества. Отвечаю за ключевые технические решения в своём направлении.",
+    "specialization": "data-science",
+    "grade": "senior",
+    "experience_years": 6,
+    "stack": [
+      "Python",
+      "pandas",
+      "scikit-learn",
+      "A/B-тестирование",
+      "NumPy",
+      "Optuna",
+      "MLflow",
+      "Docker"
+    ],
+    "soft_skills": [
+      "Управление временем",
+      "Обучаемость",
+      "Наставничество"
+    ],
+    "english_level": "B2",
+    "city": "Пермь",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 360000,
+    "assessment_score": null,
+    "assessed_days_ago": null,
+    "registered_days_ago": 48,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 918 327-52-93",
+    "telegram": "@emaksimov_686",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-073",
+    "track": "qa-auto-python",
+    "email": "e.semenov@example.com",
+    "display_name": "Евгений Семёнов",
+    "headline": "Middle QA Automation-инженер (Python)",
+    "about": "2 года в IT, из них 1 — в заказной разработке. В фокусе: разработка фреймворка автотестов с нуля, встраивание автотестов в CI/CD. Готов к релокации.",
+    "specialization": "qa",
+    "grade": "middle",
+    "experience_years": 2,
+    "stack": [
+      "Python",
+      "pytest",
+      "Selenium",
+      "Requests",
+      "Docker",
+      "GitLab CI",
+      "Allure",
+      "Locust"
+    ],
+    "soft_skills": [
+      "Самоорганизация",
+      "Управление временем",
+      "Эмпатия"
+    ],
+    "english_level": "B1",
+    "city": "Москва",
+    "relocation_ready": true,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 200000,
+    "assessment_score": 81.0,
+    "assessed_days_ago": 68,
+    "registered_days_ago": 73,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 977 235-87-69",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-074",
+    "track": "ml-classic",
+    "email": "s.vlasov@example.com",
+    "display_name": "Семён Власов",
+    "headline": "Стажёр ML-инженер",
+    "about": "Студент 3-го курса КубГУ, направление «Прикладная информатика». В учебных и пет-проектах — вывод моделей в продакшен и мониторинг их качества. Ищу стажировку, где смогу решать реальные задачи рядом с опытными инженерами. 1-е место — Чемпионат Краснодарского края по спортивному программированию (алгоритмическое программирование, 2025).",
+    "specialization": "data-science",
+    "grade": "intern",
+    "experience_years": 1,
+    "stack": [
+      "Python",
+      "pandas",
+      "scikit-learn",
+      "Matplotlib",
+      "Airflow"
+    ],
+    "soft_skills": [
+      "Эмпатия",
+      "Публичные выступления"
+    ],
+    "english_level": "B1",
+    "city": "Краснодар",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 45000,
+    "assessment_score": 72.9,
+    "assessed_days_ago": 229,
+    "registered_days_ago": 248,
+    "fsp_member_id": "FSP-571158",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Краснодарского края по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2025,
+        "place": 1
+      }
+    ],
+    "phone": "+7 984 970-91-37",
+    "telegram": "@svlasov_980",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-075",
+    "track": "devops",
+    "email": "p.isaev@example.com",
+    "display_name": "Павел Исаев",
+    "headline": "Руководитель DevOps-направления",
+    "about": "13 лет в IT, последние 7 — руковожу командой из 9 человек. В зоне ответственности: переезд сервисов в облако, поддержка и развитие Kubernetes-кластеров. Совмещаю управление командой с технической экспертизой и код-ревью. Открыт к удалённой работе.",
+    "specialization": "devops",
+    "grade": "lead",
+    "experience_years": 13,
+    "stack": [
+      "Linux",
+      "Docker",
+      "Kubernetes",
+      "Python",
+      "HashiCorp Vault",
+      "GitHub Actions",
+      "Helm",
+      "Yandex Cloud",
+      "Ansible"
+    ],
+    "soft_skills": [
+      "Адаптивность",
+      "Критическое мышление",
+      "Наставничество"
+    ],
+    "english_level": "B2",
+    "city": "Екатеринбург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 490000,
+    "assessment_score": 65.2,
+    "assessed_days_ago": 149,
+    "registered_days_ago": 200,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 943 114-80-13",
+    "telegram": "@pisaev_130",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-076",
+    "track": "python-fullstack",
+    "email": "e.krylova@example.com",
+    "display_name": "Елизавета Крылова",
+    "headline": "Middle Fullstack-разработчик (Python + React)",
+    "about": "3 года в IT, из них 1 — в маркетплейсе. В фокусе: проектирование API и клиентских интерфейсов, разработка внутренних сервисов на Django и React. 3-е место — Чемпионат Самарской области по спортивному программированию (продуктовое программирование, 2022). Ищу команду с сильной инженерной культурой.",
+    "specialization": "fullstack",
+    "grade": "middle",
+    "experience_years": 3,
+    "stack": [
+      "Python",
+      "React",
+      "Docker",
+      "PostgreSQL",
+      "Celery",
+      "Django REST Framework"
+    ],
+    "soft_skills": [
+      "Коммуникабельность",
+      "Ведение переговоров"
+    ],
+    "english_level": "B1",
+    "city": "Самара",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 180000,
+    "assessment_score": 60.8,
+    "assessed_days_ago": 89,
+    "registered_days_ago": 149,
+    "fsp_member_id": "FSP-827720",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Самарской области по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2022,
+        "place": 3
+      }
+    ],
+    "phone": "+7 977 891-52-56",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-077",
+    "track": "react-frontend",
+    "email": "s.gorbunov@example.com",
+    "display_name": "Степан Горбунов",
+    "headline": "Middle React-разработчик",
+    "about": "5 лет в IT, из них 4 — в foodtech. В фокусе: разработка интерфейсов на React и TypeScript, развитие дизайн-системы в Storybook. Открыт к удалённой работе.",
+    "specialization": "frontend",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "TypeScript",
+      "React",
+      "Redux Toolkit",
+      "Next.js",
+      "Zustand",
+      "Vite"
+    ],
+    "soft_skills": [
+      "Коммуникабельность",
+      "Работа в команде"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 250000,
+    "assessment_score": 81.7,
+    "assessed_days_ago": 193,
+    "registered_days_ago": 227,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 942 659-68-13",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-078",
+    "track": "appsec",
+    "email": "v.karpov@example.com",
+    "display_name": "Виктор Карпов",
+    "headline": "Стажёр AppSec-инженер",
+    "about": "Студент 3-го курса ВГУ, направление «Прикладная математика и информатика». В учебных и пет-проектах — ревью кода на уязвимости. Ищу стажировку, где смогу решать реальные задачи рядом с опытными инженерами.",
+    "specialization": "security",
+    "grade": "intern",
+    "experience_years": 1,
+    "stack": [
+      "OWASP Top 10",
+      "SAST/DAST",
+      "GitLab CI",
+      "Burp Suite",
+      "Semgrep"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Управление временем"
+    ],
+    "english_level": "A2",
+    "city": "Воронеж",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 40000,
+    "assessment_score": 77.3,
+    "assessed_days_ago": 90,
+    "registered_days_ago": 117,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 946 394-97-26",
+    "telegram": "@vkarpov_170",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-079",
+    "track": "node-backend",
+    "email": "r.safin@example.com",
+    "display_name": "Роман Сафин",
+    "headline": "Тимлид backend-команды (Node.js)",
+    "about": "9 лет в IT, последние 5 — руковожу командой из 9 человек. В зоне ответственности: разработка сервисов на NestJS, интеграции со сторонними API и вебхуками. Совмещаю управление командой с технической экспертизой и код-ревью. Открыт к удалённой работе.",
+    "specialization": "backend",
+    "grade": "lead",
+    "experience_years": 9,
+    "stack": [
+      "Node.js",
+      "TypeScript",
+      "Prisma",
+      "GraphQL",
+      "Kafka",
+      "Express",
+      "Jest",
+      "TypeORM",
+      "MongoDB"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Управление временем",
+      "Наставничество"
+    ],
+    "english_level": "B2",
+    "city": "Краснодар",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 400000,
+    "assessment_score": 88.4,
+    "assessed_days_ago": 159,
+    "registered_days_ago": 180,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 998 547-34-71",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-080",
+    "track": "unity",
+    "email": "y.gerasimov@example.com",
+    "display_name": "Ярослав Герасимов",
+    "headline": "Стажёр разработчик игр (Unity)",
+    "about": "Студент 5-го курса СПбПУ Петра Великого, направление «Информационная безопасность». В учебных и пет-проектах — игровые механики на Unity. Ищу стажировку, где смогу решать реальные задачи рядом с опытными инженерами.",
+    "specialization": "gamedev",
+    "grade": "intern",
+    "experience_years": 0,
+    "stack": [
+      "C#",
+      "Unity",
+      "HLSL",
+      "ECS (DOTS)"
+    ],
+    "soft_skills": [
+      "Работа в команде",
+      "Ведение переговоров"
+    ],
+    "english_level": "B1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 50000,
+    "assessment_score": 67.6,
+    "assessed_days_ago": 131,
+    "registered_days_ago": 179,
+    "fsp_member_id": "FSP-458316",
+    "fsp_achievements": [],
+    "phone": "+7 991 892-12-13",
+    "telegram": "@ygerasimov_518",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-081",
+    "track": "ts-fullstack",
+    "email": "b.maksimov@example.com",
+    "display_name": "Богдан Максимов",
+    "headline": "Junior Fullstack-разработчик (React + Node.js)",
+    "about": "Год коммерческого опыта в продуктовой студии. В фокусе: серверный рендеринг на Next.js, API на NestJS и клиентская часть на React. Хочу расти в команде с культурой код-ревью и наставничества.",
+    "specialization": "fullstack",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "TypeScript",
+      "React",
+      "Node.js",
+      "Next.js",
+      "MongoDB",
+      "tRPC",
+      "GraphQL"
+    ],
+    "soft_skills": [
+      "Работа в команде",
+      "Самоорганизация",
+      "Публичные выступления"
+    ],
+    "english_level": "B1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 115000,
+    "assessment_score": 77.9,
+    "assessed_days_ago": 163,
+    "registered_days_ago": 196,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 983 947-37-90",
+    "telegram": "@bmaksimov_860",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-082",
+    "track": "devops",
+    "email": "n.gorbunov2@example.com",
+    "display_name": "Никита Горбунов",
+    "headline": "Middle инженер инфраструктуры",
+    "about": "5 лет в IT, из них 1 — в медтехе. В фокусе: поддержка и развитие Kubernetes-кластеров, CI/CD-пайплайны в GitLab CI. Финал — Кубок России по спортивному программированию (программирование систем информационной безопасности, 2024), 8-е место.",
+    "specialization": "devops",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "Linux",
+      "Docker",
+      "Kubernetes",
+      "Prometheus",
+      "Python",
+      "GitHub Actions",
+      "Terraform",
+      "Grafana"
+    ],
+    "soft_skills": [
+      "Работа в команде",
+      "Ответственность",
+      "Системное мышление"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "office"
+    ],
+    "salary_expectation": 250000,
+    "assessment_score": 82.5,
+    "assessed_days_ago": 193,
+    "registered_days_ago": 228,
+    "fsp_member_id": "FSP-975111",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "security",
+        "level": "national",
+        "year": 2024,
+        "place": 8
+      }
+    ],
+    "phone": "+7 956 257-54-76",
+    "telegram": "@ngorbunov_699",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-083",
+    "track": "react-native",
+    "email": "y.sidorova@example.com",
+    "display_name": "Юлия Сидорова",
+    "headline": "Middle React Native-разработчик",
+    "about": "3 года в IT, из них 2 — в агротехе. В фокусе: оптимизация производительности списков и анимаций, интеграция нативных модулей. Участвую в соревнованиях ФСП по продуктовому программированию. Открыта к удалённой работе.",
+    "specialization": "mobile",
+    "grade": "middle",
+    "experience_years": 3,
+    "stack": [
+      "TypeScript",
+      "React Native",
+      "Redux Toolkit",
+      "React Navigation",
+      "Expo",
+      "Jest"
+    ],
+    "soft_skills": [
+      "Работа в команде",
+      "Системное мышление"
+    ],
+    "english_level": "B2",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 230000,
+    "assessment_score": null,
+    "assessed_days_ago": null,
+    "registered_days_ago": 25,
+    "fsp_member_id": "FSP-378835",
+    "fsp_achievements": [
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2022,
+        "place": null
+      }
+    ],
+    "phone": "+7 951 699-14-67",
+    "telegram": "@ysidorova_215",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-084",
+    "track": "rust-backend",
+    "email": "v.akhmetov@example.com",
+    "display_name": "Владимир Ахметов",
+    "headline": "Стажёр Rust-разработчик",
+    "about": "Студент 5-го курса ПНИПУ, направление «Программная инженерия». В учебных и пет-проектах — переписывание критичных компонентов с C++ на Rust. Ищу стажировку, где смогу решать реальные задачи рядом с опытными инженерами. 2-е место — Чемпионат Пермского края по спортивному программированию (алгоритмическое программирование, 2023). Готов к релокации.",
+    "specialization": "backend",
+    "grade": "intern",
+    "experience_years": 1,
+    "stack": [
+      "Rust",
+      "Tokio",
+      "Actix Web",
+      "gRPC"
+    ],
+    "soft_skills": [
+      "Ведение переговоров",
+      "Коммуникабельность"
+    ],
+    "english_level": "B1",
+    "city": "Пермь",
+    "relocation_ready": true,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 50000,
+    "assessment_score": null,
+    "assessed_days_ago": null,
+    "registered_days_ago": 33,
+    "fsp_member_id": "FSP-304460",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок Пермского края по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2026,
+        "place": 3
+      },
+      {
+        "event_name": "Чемпионат Пермского края по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2023,
+        "place": 2
+      }
+    ],
+    "phone": "+7 985 336-33-27",
+    "telegram": "@vakhmetov_526",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-085",
+    "track": "java-backend",
+    "email": "r.davydova@example.com",
+    "display_name": "Регина Давыдова",
+    "headline": "Junior Backend-разработчик (Java)",
+    "about": "Год коммерческого опыта в EdTech. В фокусе: интеграция с внутренними системами через Kafka, автоматизация бизнес-процессов на Camunda. Хочу расти в команде с культурой код-ревью и наставничества. Участвую в соревнованиях ФСП по продуктовому программированию. Интересны продукты, которые приносят пользу людям.",
+    "specialization": "backend",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "Java",
+      "Spring Boot",
+      "Hibernate",
+      "Maven",
+      "Redis"
+    ],
+    "soft_skills": [
+      "Эмпатия",
+      "Ведение переговоров",
+      "Публичные выступления"
+    ],
+    "english_level": "B2",
+    "city": "Иннополис",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 120000,
+    "assessment_score": 76.3,
+    "assessed_days_ago": 168,
+    "registered_days_ago": 170,
+    "fsp_member_id": "FSP-608318",
+    "fsp_achievements": [
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2025,
+        "place": null
+      }
+    ],
+    "phone": "+7 955 104-58-86",
+    "telegram": "@rdavydova_942",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-086",
+    "track": "qa-load",
+    "email": "a.garipov@example.com",
+    "display_name": "Александр Гарипов",
+    "headline": "Senior инженер по нагрузочному тестированию",
+    "about": "7 лет в IT, из них 2 — в финтехе. В фокусе: поиск узких мест и анализ метрик, сценарии нагрузочного тестирования. Менторю младших коллег и провожу технические собеседования.",
+    "specialization": "qa",
+    "grade": "senior",
+    "experience_years": 7,
+    "stack": [
+      "JMeter",
+      "Grafana",
+      "Linux",
+      "Gatling",
+      "Locust",
+      "Kafka",
+      "Prometheus",
+      "Python"
+    ],
+    "soft_skills": [
+      "Обучаемость",
+      "Эмпатия",
+      "Наставничество"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 290000,
+    "assessment_score": 70.6,
+    "assessed_days_ago": 74,
+    "registered_days_ago": 94,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 967 673-62-62",
+    "telegram": "@agaripov_637",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-087",
+    "track": "php-backend",
+    "email": "r.denisov@example.com",
+    "display_name": "Руслан Денисов",
+    "headline": "Middle PHP-разработчик",
+    "about": "4 года в IT, из них 2 — в foodtech. В фокусе: рефакторинг легаси-кода и покрытие его тестами, разработка backend интернет-магазина на Laravel. Люблю сложные задачи и сильные команды.",
+    "specialization": "backend",
+    "grade": "middle",
+    "experience_years": 4,
+    "stack": [
+      "PHP",
+      "MySQL",
+      "PHPUnit",
+      "Laravel",
+      "Composer",
+      "PostgreSQL"
+    ],
+    "soft_skills": [
+      "Адаптивность",
+      "Ведение переговоров"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 270000,
+    "assessment_score": 72.6,
+    "assessed_days_ago": 175,
+    "registered_days_ago": 227,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": null,
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-088",
+    "track": "react-frontend",
+    "email": "v.lebedeva@example.com",
+    "display_name": "Вера Лебедева",
+    "headline": "Junior Frontend-разработчик (React)",
+    "about": "Полгода коммерческого опыта в продуктовой студии. В фокусе: серверный рендеринг на Next.js, тестирование компонентов. Хочу расти в команде с культурой код-ревью и наставничества. 2-е место — Кубок Томской области по спортивному программированию (продуктовое программирование, 2025).",
+    "specialization": "frontend",
+    "grade": "junior",
+    "experience_years": 0,
+    "stack": [
+      "TypeScript",
+      "React",
+      "Jest",
+      "GraphQL",
+      "Zustand"
+    ],
+    "soft_skills": [
+      "Ведение переговоров",
+      "Адаптивность"
+    ],
+    "english_level": "B2",
+    "city": "Томск",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 85000,
+    "assessment_score": 85.5,
+    "assessed_days_ago": 117,
+    "registered_days_ago": 141,
+    "fsp_member_id": "FSP-652738",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2026,
+        "place": 14
+      },
+      {
+        "event_name": "Кубок Томской области по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2025,
+        "place": 2
+      }
+    ],
+    "phone": "+7 943 837-83-45",
+    "telegram": "@vlebedeva_884",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-089",
+    "track": "qa-manual",
+    "email": "l.romanova@example.com",
+    "display_name": "Лилия Романова",
+    "headline": "Middle тестировщик ПО",
+    "about": "2 года в IT, из них 1 — в маркетплейсе. В фокусе: тестирование мобильных приложений, тестирование API через Postman. Открыта к удалённой работе.",
+    "specialization": "qa",
+    "grade": "middle",
+    "experience_years": 2,
+    "stack": [
+      "Тест-дизайн",
+      "Jira",
+      "API-тестирование",
+      "Мобильное тестирование",
+      "TestRail",
+      "Swagger",
+      "SQL",
+      "Postman"
+    ],
+    "soft_skills": [
+      "Ведение переговоров",
+      "Обучаемость",
+      "Системное мышление"
+    ],
+    "english_level": "B1",
+    "city": "Пермь",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 150000,
+    "assessment_score": 80.7,
+    "assessed_days_ago": 60,
+    "registered_days_ago": 110,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 998 503-14-18",
+    "telegram": "@lromanova_908",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-090",
+    "track": "ml-classic",
+    "email": "v.maksimov@example.com",
+    "display_name": "Владислав Максимов",
+    "headline": "Middle Data Scientist",
+    "about": "5 лет в IT, из них 1 — в EdTech. В фокусе: рекомендательные системы, модели прогнозирования спроса. Интересны продукты, которые приносят пользу людям.",
+    "specialization": "data-science",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "Python",
+      "pandas",
+      "scikit-learn",
+      "Optuna",
+      "A/B-тестирование",
+      "MLflow",
+      "ClickHouse"
+    ],
+    "soft_skills": [
+      "Адаптивность",
+      "Обучаемость"
+    ],
+    "english_level": "C1",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 270000,
+    "assessment_score": 82.5,
+    "assessed_days_ago": 221,
+    "registered_days_ago": 233,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 954 855-56-11",
+    "telegram": "@vmaksimov_994",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-091",
+    "track": "ml-nlp",
+    "email": "r.alekseeva@example.com",
+    "display_name": "Регина Алексеева",
+    "headline": "Middle ML-инженер (NLP/LLM)",
+    "about": "2 года в IT, из них 1 — в e-commerce. В фокусе: RAG-пайплайны для поиска по документам, дообучение языковых моделей под задачи клиентов.",
+    "specialization": "data-science",
+    "grade": "middle",
+    "experience_years": 2,
+    "stack": [
+      "Python",
+      "PyTorch",
+      "Hugging Face Transformers",
+      "Docker",
+      "spaCy",
+      "FastAPI",
+      "Qdrant",
+      "LangChain",
+      "vLLM"
+    ],
+    "soft_skills": [
+      "Работа в команде",
+      "Системное мышление",
+      "Коммуникабельность"
+    ],
+    "english_level": "C1",
+    "city": "Новосибирск",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 190000,
+    "assessment_score": 83.5,
+    "assessed_days_ago": 93,
+    "registered_days_ago": 135,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 969 698-57-57",
+    "telegram": "@ralekseeva_813",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-092",
+    "track": "react-frontend",
+    "email": "o.andreev@example.com",
+    "display_name": "Олег Андреев",
+    "headline": "Senior Frontend-разработчик (React)",
+    "about": "9 лет в IT, из них 4 — в EdTech. В фокусе: разработка интерфейсов на React и TypeScript, развитие дизайн-системы в Storybook. Довожу сложные задачи от идеи до продакшена.",
+    "specialization": "frontend",
+    "grade": "senior",
+    "experience_years": 9,
+    "stack": [
+      "TypeScript",
+      "React",
+      "Tailwind CSS",
+      "Playwright",
+      "Vitest",
+      "GraphQL",
+      "Figma",
+      "MobX",
+      "Webpack"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Публичные выступления",
+      "Лидерство"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 400000,
+    "assessment_score": 65.6,
+    "assessed_days_ago": 54,
+    "registered_days_ago": 86,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 926 320-98-44",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-093",
+    "track": "qa-manual",
+    "email": "e.kiseleva@example.com",
+    "display_name": "Екатерина Киселёва",
+    "headline": "Junior тестировщик ПО",
+    "about": "Два года коммерческого опыта в ритейле. В фокусе: анализ логов и локализация дефектов, функциональное и регрессионное тестирование веб-приложения. Хочу расти в команде с культурой код-ревью и наставничества. 1-е место — Чемпионат Новосибирской области по спортивному программированию (продуктовое программирование, 2024). Готова к релокации.",
+    "specialization": "qa",
+    "grade": "junior",
+    "experience_years": 2,
+    "stack": [
+      "Тест-дизайн",
+      "Jira",
+      "Мобильное тестирование",
+      "Qase",
+      "Charles Proxy"
+    ],
+    "soft_skills": [
+      "Системное мышление",
+      "Коммуникабельность",
+      "Адаптивность"
+    ],
+    "english_level": "B2",
+    "city": "Новосибирск",
+    "relocation_ready": true,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 85000,
+    "assessment_score": 78.9,
+    "assessed_days_ago": 130,
+    "registered_days_ago": 151,
+    "fsp_member_id": "FSP-796522",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Новосибирской области по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2024,
+        "place": 1
+      },
+      {
+        "event_name": "Чемпионат Новосибирской области по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2022,
+        "place": 1
+      },
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "security",
+        "level": "national",
+        "year": 2022,
+        "place": 14
+      }
+    ],
+    "phone": "+7 977 765-87-70",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-094",
+    "track": "react-frontend",
+    "email": "n.kondratev@example.com",
+    "display_name": "Николай Кондратьев",
+    "headline": "Middle Frontend-разработчик (React)",
+    "about": "5 лет в IT, из них 2 — в промышленной автоматизации. В фокусе: перевод сборки с Webpack на Vite, оптимизация производительности и Web Vitals. Открыт к удалённой работе.",
+    "specialization": "frontend",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "TypeScript",
+      "React",
+      "TanStack Query",
+      "Figma",
+      "Redux Toolkit",
+      "SCSS"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Критическое мышление",
+      "Публичные выступления"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 210000,
+    "assessment_score": 96.1,
+    "assessed_days_ago": 11,
+    "registered_days_ago": 27,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 934 795-90-15",
+    "telegram": "@nkondratev_121",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-095",
+    "track": "python-fullstack",
+    "email": "e.nazarova@example.com",
+    "display_name": "Эльвира Назарова",
+    "headline": "Тимлид fullstack-команды (Python)",
+    "about": "8 лет в IT, последние 4 — руковожу командой из 6 человек. В зоне ответственности: разработка внутренних сервисов на Django и React, автоматизация отчётов и выгрузок. Совмещаю управление командой с технической экспертизой и код-ревью. Ценю прозрачные процессы и понятные цели.",
+    "specialization": "fullstack",
+    "grade": "lead",
+    "experience_years": 8,
+    "stack": [
+      "Python",
+      "React",
+      "Redis",
+      "PostgreSQL",
+      "Django REST Framework",
+      "FastAPI",
+      "Celery",
+      "Docker",
+      "Nginx"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Работа в команде",
+      "Обучаемость",
+      "Лидерство"
+    ],
+    "english_level": "C1",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 520000,
+    "assessment_score": 75.3,
+    "assessed_days_ago": 97,
+    "registered_days_ago": 131,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 971 714-35-31",
+    "telegram": "@enazarova_110",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-096",
+    "track": "qa-auto-java",
+    "email": "g.shevchenko@example.com",
+    "display_name": "Георгий Шевченко",
+    "headline": "Middle QA Automation-инженер (Java)",
+    "about": "2 года в IT, из них 1 — в EdTech. В фокусе: автоматизация тестирования REST API на REST Assured, отчётность о качестве в Allure. 3-е место — Чемпионат Краснодарского края по спортивному программированию (продуктовое программирование, 2025). Готов к релокации.",
+    "specialization": "qa",
+    "grade": "middle",
+    "experience_years": 2,
+    "stack": [
+      "Java",
+      "JUnit 5",
+      "Allure",
+      "TestNG",
+      "Docker",
+      "Gradle"
+    ],
+    "soft_skills": [
+      "Коммуникабельность",
+      "Публичные выступления"
+    ],
+    "english_level": "B1",
+    "city": "Краснодар",
+    "relocation_ready": true,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 135000,
+    "assessment_score": 85.5,
+    "assessed_days_ago": 212,
+    "registered_days_ago": 264,
+    "fsp_member_id": "FSP-198514",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Краснодарского края по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2025,
+        "place": 3
+      },
+      {
+        "event_name": "Кубок Краснодарского края по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2023,
+        "place": null
+      }
+    ],
+    "phone": "+7 940 521-94-45",
+    "telegram": "@gshevchenko_938",
+    "is_visible_to_employers": false
+  },
+  {
+    "key": "cand-097",
+    "track": "devops",
+    "email": "g.sviridov@example.com",
+    "display_name": "Григорий Свиридов",
+    "headline": "Senior инженер инфраструктуры",
+    "about": "5 лет в IT, из них 2 — в EdTech. В фокусе: мониторинг и алертинг, поддержка и развитие Kubernetes-кластеров. Выстраиваю процессы и делюсь опытом на внутренних митапах.",
+    "specialization": "devops",
+    "grade": "senior",
+    "experience_years": 5,
+    "stack": [
+      "Linux",
+      "Docker",
+      "Kubernetes",
+      "Bash",
+      "GitHub Actions",
+      "GitLab CI",
+      "PostgreSQL",
+      "Python",
+      "HashiCorp Vault",
+      "Yandex Cloud"
+    ],
+    "soft_skills": [
+      "Адаптивность",
+      "Ответственность",
+      "Лидерство"
+    ],
+    "english_level": "B2",
+    "city": "Тюмень",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 350000,
+    "assessment_score": null,
+    "assessed_days_ago": null,
+    "registered_days_ago": 6,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 963 998-58-30",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-098",
+    "track": "node-backend",
+    "email": "y.zakharova@example.com",
+    "display_name": "Яна Захарова",
+    "headline": "Junior Backend-разработчик (Node.js)",
+    "about": "Год коммерческого опыта в промышленной автоматизации. В фокусе: интеграции со сторонними API и вебхуками, проектирование GraphQL API. Хочу расти в команде с культурой код-ревью и наставничества. Финал — Кубок Москвы по спортивному программированию (продуктовое программирование, 2024), 7-е место. Интересны продукты, которые приносят пользу людям.",
+    "specialization": "backend",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "Node.js",
+      "TypeScript",
+      "NestJS",
+      "RabbitMQ",
+      "Docker",
+      "Prisma"
+    ],
+    "soft_skills": [
+      "Обучаемость",
+      "Критическое мышление"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 120000,
+    "assessment_score": 81.2,
+    "assessed_days_ago": 175,
+    "registered_days_ago": 216,
+    "fsp_member_id": "FSP-374804",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок Москвы по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2026,
+        "place": null
+      },
+      {
+        "event_name": "Чемпионат Москвы по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2025,
+        "place": 9
+      },
+      {
+        "event_name": "Кубок Москвы по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2024,
+        "place": 7
+      }
+    ],
+    "phone": "+7 930 187-82-32",
+    "telegram": "@yzakharova_884",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-099",
+    "track": "react-frontend",
+    "email": "v.frolova@example.com",
+    "display_name": "Варвара Фролова",
+    "headline": "Тимлид frontend-команды",
+    "about": "8 лет в IT, последние 2 — руковожу командой из 13 человек. В зоне ответственности: тестирование компонентов, разработка интерфейсов на React и TypeScript. Выстраиваю процессы, ставлю цели команде и защищаю roadmap перед бизнесом. 2-е место — Чемпионат Республики Татарстан по спортивному программированию (продуктовое программирование, 2023).",
+    "specialization": "frontend",
+    "grade": "lead",
+    "experience_years": 8,
+    "stack": [
+      "TypeScript",
+      "React",
+      "SCSS",
+      "CSS Modules",
+      "GraphQL",
+      "Redux Toolkit",
+      "Next.js",
+      "Storybook",
+      "Zustand"
+    ],
+    "soft_skills": [
+      "Публичные выступления",
+      "Управление временем",
+      "Критическое мышление",
+      "Наставничество"
+    ],
+    "english_level": "C1",
+    "city": "Казань",
+    "relocation_ready": false,
+    "work_formats": [
+      "office"
+    ],
+    "salary_expectation": 380000,
+    "assessment_score": 93.3,
+    "assessed_days_ago": 123,
+    "registered_days_ago": 146,
+    "fsp_member_id": "FSP-188121",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Республики Татарстан по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2023,
+        "place": 2
+      }
+    ],
+    "phone": "+7 928 710-75-32",
+    "telegram": "@vfrolova_873",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-100",
+    "track": "php-fullstack",
+    "email": "b.nikolaev@example.com",
+    "display_name": "Богдан Николаев",
+    "headline": "Senior Fullstack-разработчик (PHP + Vue)",
+    "about": "6 лет в IT, из них 1 — в ритейле. В фокусе: разработка личных кабинетов и CRM на Laravel и Vue, оптимизация загрузки страниц. Менторю младших коллег и провожу технические собеседования. Финал — Всероссийские соревнования по спортивному программированию (продуктовое программирование, 2026), 6-е место.",
+    "specialization": "fullstack",
+    "grade": "senior",
+    "experience_years": 6,
+    "stack": [
+      "PHP",
+      "Laravel",
+      "Vue 3",
+      "PHPUnit",
+      "MySQL",
+      "Tailwind CSS",
+      "TypeScript",
+      "Redis"
+    ],
+    "soft_skills": [
+      "Адаптивность",
+      "Ведение переговоров",
+      "Наставничество"
+    ],
+    "english_level": "C2",
+    "city": "Самара",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 270000,
+    "assessment_score": 80.6,
+    "assessed_days_ago": 27,
+    "registered_days_ago": 65,
+    "fsp_member_id": "FSP-829321",
+    "fsp_achievements": [
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2026,
+        "place": 6
+      },
+      {
+        "event_name": "Чемпионат Самарской области по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2023,
+        "place": 10
+      }
+    ],
+    "phone": "+7 965 551-29-39",
+    "telegram": "@bnikolaev_399",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-101",
+    "track": "react-frontend",
+    "email": "n.tikhonov@example.com",
+    "display_name": "Николай Тихонов",
+    "headline": "Middle React-разработчик",
+    "about": "2 года в IT, из них 1 — в e-commerce. В фокусе: перевод сборки с Webpack на Vite, серверный рендеринг на Next.js. Ищу команду с сильной инженерной культурой.",
+    "specialization": "frontend",
+    "grade": "middle",
+    "experience_years": 2,
+    "stack": [
+      "TypeScript",
+      "React",
+      "Tailwind CSS",
+      "MobX",
+      "Vite",
+      "Figma"
+    ],
+    "soft_skills": [
+      "Эмпатия",
+      "Ответственность",
+      "Управление временем"
+    ],
+    "english_level": "B1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 220000,
+    "assessment_score": null,
+    "assessed_days_ago": null,
+    "registered_days_ago": 9,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 947 700-99-72",
+    "telegram": "@ntikhonov_512",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-102",
+    "track": "qa-auto-python",
+    "email": "s.soloveva@example.com",
+    "display_name": "Софья Соловьёва",
+    "headline": "Junior QA Automation-инженер (Python)",
+    "about": "Два года коммерческого опыта в продуктовой студии. В фокусе: разработка фреймворка автотестов с нуля, автоматизация тестирования API и UI на pytest. Хочу расти в команде с культурой код-ревью и наставничества. Открыта к удалённой работе.",
+    "specialization": "qa",
+    "grade": "junior",
+    "experience_years": 2,
+    "stack": [
+      "Python",
+      "pytest",
+      "Jenkins",
+      "Docker",
+      "Postman",
+      "Playwright"
+    ],
+    "soft_skills": [
+      "Управление временем",
+      "Критическое мышление"
+    ],
+    "english_level": "B1",
+    "city": "Екатеринбург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 80000,
+    "assessment_score": 82.9,
+    "assessed_days_ago": 127,
+    "registered_days_ago": 156,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 977 660-62-20",
+    "telegram": "@ssoloveva_800",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-103",
+    "track": "python-backend",
+    "email": "e.sviridova@example.com",
+    "display_name": "Екатерина Свиридова",
+    "headline": "Middle Python-разработчик",
+    "about": "2 года в IT, из них 1 — в заказной разработке. В фокусе: разработка асинхронных REST API на FastAPI, проектирование схем данных и оптимизация запросов в PostgreSQL. Открыта к удалённой работе.",
+    "specialization": "backend",
+    "grade": "middle",
+    "experience_years": 2,
+    "stack": [
+      "Python",
+      "PostgreSQL",
+      "FastAPI",
+      "RabbitMQ",
+      "Docker",
+      "Django",
+      "gRPC"
+    ],
+    "soft_skills": [
+      "Работа в команде",
+      "Публичные выступления"
+    ],
+    "english_level": "B1",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 230000,
+    "assessment_score": 75.2,
+    "assessed_days_ago": 184,
+    "registered_days_ago": 225,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 933 726-91-66",
+    "telegram": "@esviridova_476",
+    "is_visible_to_employers": false
+  },
+  {
+    "key": "cand-104",
+    "track": "ml-cv",
+    "email": "r.lebedev@example.com",
+    "display_name": "Роман Лебедев",
+    "headline": "Руководитель группы компьютерного зрения",
+    "about": "7 лет в IT, последние 3 — руковожу командой из 12 человек. В зоне ответственности: подготовка и разметка датасетов, развёртывание моделей на Triton Inference Server. Отвечаю за найм, развитие людей и качество поставки. Открыт к удалённой работе.",
+    "specialization": "data-science",
+    "grade": "lead",
+    "experience_years": 7,
+    "stack": [
+      "Python",
+      "PyTorch",
+      "OpenCV",
+      "NumPy",
+      "CUDA",
+      "FastAPI",
+      "ONNX",
+      "Triton Inference Server",
+      "MLflow"
+    ],
+    "soft_skills": [
+      "Управление временем",
+      "Ответственность",
+      "Лидерство"
+    ],
+    "english_level": "C1",
+    "city": "Пермь",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 430000,
+    "assessment_score": 88.6,
+    "assessed_days_ago": 9,
+    "registered_days_ago": 56,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 932 807-85-88",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-105",
+    "track": "angular-frontend",
+    "email": "n.baranov@example.com",
+    "display_name": "Николай Баранов",
+    "headline": "Senior Frontend-разработчик (Angular)",
+    "about": "4 года в IT, из них 1 — в маркетплейсе. В фокусе: реактивная работа с данными на RxJS, разработка корпоративных интерфейсов на Angular. Менторю младших коллег и провожу технические собеседования. 3-е место — Чемпионат Ростовской области по спортивному программированию (продуктовое программирование, 2024). Готов к релокации.",
+    "specialization": "frontend",
+    "grade": "senior",
+    "experience_years": 4,
+    "stack": [
+      "TypeScript",
+      "Angular",
+      "RxJS",
+      "Angular Material",
+      "Webpack",
+      "SCSS",
+      "Storybook",
+      "Karma"
+    ],
+    "soft_skills": [
+      "Обучаемость",
+      "Ответственность",
+      "Коммуникабельность",
+      "Лидерство"
+    ],
+    "english_level": "B2",
+    "city": "Ростов-на-Дону",
+    "relocation_ready": true,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 280000,
+    "assessment_score": 85.8,
+    "assessed_days_ago": 18,
+    "registered_days_ago": 66,
+    "fsp_member_id": "FSP-825432",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2026,
+        "place": null
+      },
+      {
+        "event_name": "Чемпионат Ростовской области по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2024,
+        "place": 3
+      }
+    ],
+    "phone": "+7 918 611-13-46",
+    "telegram": "@nbaranov_794",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-106",
+    "track": "unity",
+    "email": "f.matveev@example.com",
+    "display_name": "Фёдор Матвеев",
+    "headline": "Middle Unity-разработчик",
+    "about": "5 лет в IT, из них 2 — в мобильных играх. В фокусе: оптимизация производительности на мобильных устройствах, игровые механики на Unity. Открыт к удалённой работе.",
+    "specialization": "gamedev",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "C#",
+      "Unity",
+      "DOTween",
+      "HLSL",
+      "Addressables",
+      "Shader Graph",
+      "Git LFS"
+    ],
+    "soft_skills": [
+      "Публичные выступления",
+      "Ответственность"
+    ],
+    "english_level": "B2",
+    "city": "Уфа",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 190000,
+    "assessment_score": 77.9,
+    "assessed_days_ago": 74,
+    "registered_days_ago": 127,
+    "fsp_member_id": "FSP-886277",
+    "fsp_achievements": [],
+    "phone": "+7 971 875-85-31",
+    "telegram": "@fmatveev_492",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-107",
+    "track": "sre",
+    "email": "a.mironov@example.com",
+    "display_name": "Александр Миронов",
+    "headline": "Middle SRE-инженер",
+    "about": "4 года в IT, из них 1 — в финтехе. В фокусе: observability-стек: метрики, логи, трассировки, внедрение SLO и error budget.",
+    "specialization": "devops",
+    "grade": "middle",
+    "experience_years": 4,
+    "stack": [
+      "Linux",
+      "Kubernetes",
+      "Prometheus",
+      "HAProxy",
+      "PostgreSQL",
+      "Go",
+      "Loki",
+      "Patroni"
+    ],
+    "soft_skills": [
+      "Самоорганизация",
+      "Системное мышление",
+      "Критическое мышление"
+    ],
+    "english_level": "B1",
+    "city": "Самара",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 200000,
+    "assessment_score": 82.5,
+    "assessed_days_ago": 205,
+    "registered_days_ago": 241,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 928 649-85-31",
+    "telegram": "@amironov_176",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-108",
+    "track": "devops",
+    "email": "g.pokrovskiy@example.com",
+    "display_name": "Григорий Покровский",
+    "headline": "Junior DevOps-инженер",
+    "about": "Два года коммерческого опыта в медтехе. В фокусе: переезд сервисов в облако, CI/CD-пайплайны в GitLab CI. Хочу расти в команде с культурой код-ревью и наставничества. Готов к релокации.",
+    "specialization": "devops",
+    "grade": "junior",
+    "experience_years": 2,
+    "stack": [
+      "Linux",
+      "Docker",
+      "Kubernetes",
+      "ELK",
+      "Terraform",
+      "Helm"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Коммуникабельность",
+      "Ведение переговоров"
+    ],
+    "english_level": "C1",
+    "city": "Санкт-Петербург",
+    "relocation_ready": true,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 140000,
+    "assessment_score": 85.6,
+    "assessed_days_ago": 151,
+    "registered_days_ago": 162,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 982 917-71-89",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-109",
+    "track": "vue-frontend",
+    "email": "l.lazareva@example.com",
+    "display_name": "Лилия Лазарева",
+    "headline": "Junior Vue-разработчик",
+    "about": "Год коммерческого опыта в маркетплейсе. В фокусе: переезд с Vue 2 на Vue 3, вёрстка сложных форм и таблиц. Хочу расти в команде с культурой код-ревью и наставничества. Финал — Кубок Свердловской области по спортивному программированию (алгоритмическое программирование, 2026), 9-е место. Готова к релокации.",
+    "specialization": "frontend",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "TypeScript",
+      "Vue 3",
+      "Figma",
+      "Vitest",
+      "Nuxt"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Ответственность",
+      "Ведение переговоров"
+    ],
+    "english_level": "A2",
+    "city": "Екатеринбург",
+    "relocation_ready": true,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 85000,
+    "assessment_score": 71.7,
+    "assessed_days_ago": 170,
+    "registered_days_ago": 193,
+    "fsp_member_id": "FSP-549394",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок Свердловской области по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2026,
+        "place": 9
+      },
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2026,
+        "place": 10
+      },
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2023,
+        "place": null
+      }
+    ],
+    "phone": "+7 914 450-46-15",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-110",
+    "track": "java-backend",
+    "email": "y.kalinin@example.com",
+    "display_name": "Ярослав Калинин",
+    "headline": "Senior Backend-разработчик (Java)",
+    "about": "6 лет в IT, из них 1 — в EdTech. В фокусе: проектирование REST API и контрактов между командами, разработка микросервисов на Spring Boot. Отвечаю за ключевые технические решения в своём направлении. Интересны продукты, которые приносят пользу людям.",
+    "specialization": "backend",
+    "grade": "senior",
+    "experience_years": 6,
+    "stack": [
+      "Java",
+      "Spring Boot",
+      "JUnit",
+      "Maven",
+      "Oracle",
+      "Camunda",
+      "PostgreSQL",
+      "Gradle"
+    ],
+    "soft_skills": [
+      "Самоорганизация",
+      "Обучаемость",
+      "Наставничество"
+    ],
+    "english_level": "C1",
+    "city": "Калининград",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 280000,
+    "assessment_score": 73.6,
+    "assessed_days_ago": 161,
+    "registered_days_ago": 167,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 971 553-97-25",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-111",
+    "track": "sre",
+    "email": "d.volkov@example.com",
+    "display_name": "Дмитрий Волков",
+    "headline": "Стажёр SRE-инженер",
+    "about": "Студент 3-го курса МГТУ им. Н. Э. Баумана, направление «Информатика и вычислительная техника». В учебных и пет-проектах — планирование мощностей и нагрузочные тесты. Ищу стажировку, где смогу решать реальные задачи рядом с опытными инженерами. Готов к релокации.",
+    "specialization": "devops",
+    "grade": "intern",
+    "experience_years": 0,
+    "stack": [
+      "Linux",
+      "Kubernetes",
+      "Prometheus",
+      "Go",
+      "PostgreSQL"
+    ],
+    "soft_skills": [
+      "Управление временем",
+      "Обучаемость"
+    ],
+    "english_level": "B1",
+    "city": "Москва",
+    "relocation_ready": true,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 50000,
+    "assessment_score": 84.9,
+    "assessed_days_ago": 130,
+    "registered_days_ago": 153,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 981 901-16-84",
+    "telegram": "@dvolkov_720",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-112",
+    "track": "java-backend",
+    "email": "v.galieva@example.com",
+    "display_name": "Виктория Галиева",
+    "headline": "Senior Backend-разработчик (Java)",
+    "about": "5 лет в IT, из них 2 — в финтехе. В фокусе: модульные и интеграционные тесты, интеграция с внутренними системами через Kafka. Отвечаю за ключевые технические решения в своём направлении. Готова к релокации.",
+    "specialization": "backend",
+    "grade": "senior",
+    "experience_years": 5,
+    "stack": [
+      "Java",
+      "Spring Boot",
+      "Kubernetes",
+      "Docker",
+      "Redis",
+      "Maven",
+      "Kafka"
+    ],
+    "soft_skills": [
+      "Ответственность",
+      "Системное мышление",
+      "Управление временем",
+      "Лидерство"
+    ],
+    "english_level": "B2",
+    "city": "Москва",
+    "relocation_ready": true,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 360000,
+    "assessment_score": 90.5,
+    "assessed_days_ago": 206,
+    "registered_days_ago": 252,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 970 421-99-98",
+    "telegram": "@vgalieva_626",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-113",
+    "track": "product-analytics",
+    "email": "p.grigorev@example.com",
+    "display_name": "Павел Григорьев",
+    "headline": "Junior аналитик данных",
+    "about": "Год коммерческого опыта в маркетплейсе. В фокусе: дизайн и анализ A/B-тестов, дашборды для продуктовых команд. Хочу расти в команде с культурой код-ревью и наставничества. 2-е место — Чемпионат России по спортивному программированию (продуктовое программирование, 2025).",
+    "specialization": "data-science",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "SQL",
+      "Python",
+      "A/B-тестирование",
+      "Математическая статистика",
+      "DataLens"
+    ],
+    "soft_skills": [
+      "Коммуникабельность",
+      "Обучаемость",
+      "Ведение переговоров"
+    ],
+    "english_level": "B1",
+    "city": "Екатеринбург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 110000,
+    "assessment_score": 73.4,
+    "assessed_days_ago": 176,
+    "registered_days_ago": 198,
+    "fsp_member_id": "FSP-743051",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок Свердловской области по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2026,
+        "place": null
+      },
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2025,
+        "place": 2
+      },
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2023,
+        "place": 10
+      }
+    ],
+    "phone": "+7 968 414-37-28",
+    "telegram": "@pgrigorev_324",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-114",
+    "track": "angular-frontend",
+    "email": "a.smirnova2@example.com",
+    "display_name": "Анастасия Смирнова",
+    "headline": "Senior Angular-разработчик",
+    "about": "4 года в IT, из них 3 — в EdTech. В фокусе: оптимизация change detection, разработка корпоративных интерфейсов на Angular. Менторю младших коллег и провожу технические собеседования. 1-е место — Кубок Новосибирской области по спортивному программированию (продуктовое программирование, 2024). Открыта к удалённой работе.",
+    "specialization": "frontend",
+    "grade": "senior",
+    "experience_years": 4,
+    "stack": [
+      "TypeScript",
+      "Angular",
+      "Webpack",
+      "SCSS",
+      "NgRx",
+      "RxJS",
+      "Nx",
+      "Storybook",
+      "Angular Material"
+    ],
+    "soft_skills": [
+      "Адаптивность",
+      "Системное мышление",
+      "Лидерство"
+    ],
+    "english_level": "B2",
+    "city": "Новосибирск",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 310000,
+    "assessment_score": 83.9,
+    "assessed_days_ago": 50,
+    "registered_days_ago": 85,
+    "fsp_member_id": "FSP-695861",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2026,
+        "place": null
+      },
+      {
+        "event_name": "Кубок Новосибирской области по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2024,
+        "place": 1
+      },
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2024,
+        "place": 8
+      },
+      {
+        "event_name": "Чемпионат Новосибирской области по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2022,
+        "place": null
+      }
+    ],
+    "phone": "+7 974 327-75-98",
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-115",
+    "track": "python-fullstack",
+    "email": "m.mikhaylov@example.com",
+    "display_name": "Матвей Михайлов",
+    "headline": "Middle Fullstack-разработчик (Python + React)",
+    "about": "5 лет в IT, из них 1 — в телекоме. В фокусе: проектирование API и клиентских интерфейсов, разработка внутренних сервисов на Django и React. Открыт к удалённой работе.",
+    "specialization": "fullstack",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "Python",
+      "React",
+      "Docker",
+      "Nginx",
+      "FastAPI",
+      "Redis"
+    ],
+    "soft_skills": [
+      "Управление временем",
+      "Обучаемость",
+      "Критическое мышление"
+    ],
+    "english_level": "C1",
+    "city": "Калининград",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 210000,
+    "assessment_score": null,
+    "assessed_days_ago": null,
+    "registered_days_ago": 38,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": null,
+    "telegram": "@mmikhaylov_218",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-116",
+    "track": "unreal",
+    "email": "v.abramov@example.com",
+    "display_name": "Вадим Абрамов",
+    "headline": "Junior разработчик игр (Unreal Engine)",
+    "about": "Год коммерческого опыта в AAA-проекте. В фокусе: инструменты для геймдизайнеров, оптимизация производительности и памяти. Хочу расти в команде с культурой код-ревью и наставничества. Участвую в соревнованиях ФСП по продуктовому программированию. Готов к релокации.",
+    "specialization": "gamedev",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "C++",
+      "Unreal Engine",
+      "Сетевой мультиплеер",
+      "Niagara",
+      "Blueprints",
+      "Perforce"
+    ],
+    "soft_skills": [
+      "Критическое мышление",
+      "Самоорганизация"
+    ],
+    "english_level": "A2",
+    "city": "Краснодар",
+    "relocation_ready": true,
+    "work_formats": [
+      "office"
+    ],
+    "salary_expectation": 85000,
+    "assessment_score": 91.6,
+    "assessed_days_ago": 191,
+    "registered_days_ago": 247,
+    "fsp_member_id": "FSP-908966",
+    "fsp_achievements": [
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2025,
+        "place": null
+      }
+    ],
+    "phone": "+7 966 181-38-43",
+    "telegram": "@vabramov_385",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-117",
+    "track": "ml-cv",
+    "email": "g.kondratev@example.com",
+    "display_name": "Георгий Кондратьев",
+    "headline": "Middle ML-инженер (Computer Vision)",
+    "about": "2 года в IT, из них 1 — в банковской сфере. В фокусе: исследование новых архитектур нейросетей, оптимизация инференса с помощью ONNX и TensorRT. Готов к релокации.",
+    "specialization": "data-science",
+    "grade": "middle",
+    "experience_years": 2,
+    "stack": [
+      "Python",
+      "PyTorch",
+      "OpenCV",
+      "ClearML",
+      "TensorRT",
+      "ONNX",
+      "YOLO",
+      "Albumentations",
+      "Triton Inference Server"
+    ],
+    "soft_skills": [
+      "Критическое мышление",
+      "Эмпатия"
+    ],
+    "english_level": "B1",
+    "city": "Пермь",
+    "relocation_ready": true,
+    "work_formats": [
+      "office"
+    ],
+    "salary_expectation": 190000,
+    "assessment_score": 86.0,
+    "assessed_days_ago": 228,
+    "registered_days_ago": 264,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": null,
+    "telegram": "@gkondratev_373",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-118",
+    "track": "go-backend",
+    "email": "d.kovalev@example.com",
+    "display_name": "Даниил Ковалёв",
+    "headline": "Middle Backend-разработчик (Go)",
+    "about": "5 лет в IT, из них 2 — в travel-tech. В фокусе: оптимизация задержек и потребления памяти сервисов, перенос легаси-сервисов с PHP и Python на Go. 1-е место — Чемпионат Санкт-Петербурга по спортивному программированию (продуктовое программирование, 2024). Готов к релокации.",
+    "specialization": "backend",
+    "grade": "middle",
+    "experience_years": 5,
+    "stack": [
+      "Go",
+      "PostgreSQL",
+      "MongoDB",
+      "sqlx",
+      "Kafka",
+      "OpenTelemetry",
+      "Prometheus",
+      "Redis"
+    ],
+    "soft_skills": [
+      "Ведение переговоров",
+      "Адаптивность"
+    ],
+    "english_level": "B2",
+    "city": "Санкт-Петербург",
+    "relocation_ready": true,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 250000,
+    "assessment_score": 73.2,
+    "assessed_days_ago": 45,
+    "registered_days_ago": 85,
+    "fsp_member_id": "FSP-139168",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2024,
+        "place": 1
+      },
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2023,
+        "place": null
+      },
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2022,
+        "place": 6
+      }
+    ],
+    "phone": "+7 986 590-29-30",
+    "telegram": "@dkovalev_121",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-119",
+    "track": "dotnet-backend",
+    "email": "f.sergeev@example.com",
+    "display_name": "Фёдор Сергеев",
+    "headline": "Junior .NET-разработчик",
+    "about": "Два года коммерческого опыта в foodtech. В фокусе: перевод сервисов с .NET Framework на современный .NET, интеграция с внешними системами через RabbitMQ. Хочу расти в команде с культурой код-ревью и наставничества. 2-е место — Чемпионат России по спортивному программированию (алгоритмическое программирование, 2025).",
+    "specialization": "backend",
+    "grade": "junior",
+    "experience_years": 2,
+    "stack": [
+      "C#",
+      "ASP.NET Core",
+      "MS SQL Server",
+      "SignalR",
+      "gRPC"
+    ],
+    "soft_skills": [
+      "Обучаемость",
+      "Коммуникабельность",
+      "Ведение переговоров"
+    ],
+    "english_level": "B1",
+    "city": "Москва",
+    "relocation_ready": false,
+    "work_formats": [
+      "hybrid",
+      "office"
+    ],
+    "salary_expectation": 120000,
+    "assessment_score": 79.0,
+    "assessed_days_ago": 100,
+    "registered_days_ago": 101,
+    "fsp_member_id": "FSP-780377",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Москвы по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2026,
+        "place": 10
+      },
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "national",
+        "year": 2025,
+        "place": 2
+      }
+    ],
+    "phone": "+7 915 225-24-53",
+    "telegram": "@fsergeev_707",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-120",
+    "track": "ml-nlp",
+    "email": "v.kuzmin@example.com",
+    "display_name": "Виктор Кузьмин",
+    "headline": "Junior NLP-инженер",
+    "about": "Год коммерческого опыта в агротехе. В фокусе: сбор и разметка датасетов для NLP, оценка качества LLM и борьба с галлюцинациями. Хочу расти в команде с культурой код-ревью и наставничества. Финал — Кубок России по спортивному программированию (продуктовое программирование, 2026), 13-е место. Открыт к удалённой работе.",
+    "specialization": "data-science",
+    "grade": "junior",
+    "experience_years": 1,
+    "stack": [
+      "Python",
+      "PyTorch",
+      "Hugging Face Transformers",
+      "RAG",
+      "spaCy",
+      "Qdrant",
+      "LoRA"
+    ],
+    "soft_skills": [
+      "Управление временем",
+      "Работа в команде"
+    ],
+    "english_level": "B1",
+    "city": "Ростов-на-Дону",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 110000,
+    "assessment_score": 64.1,
+    "assessed_days_ago": 75,
+    "registered_days_ago": 76,
+    "fsp_member_id": "FSP-758106",
+    "fsp_achievements": [
+      {
+        "event_name": "Кубок России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2026,
+        "place": 13
+      }
+    ],
+    "phone": "+7 941 207-14-99",
+    "telegram": "@vkuzmin_938",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-121",
+    "track": "de-batch",
+    "email": "a.isaev@example.com",
+    "display_name": "Айдар Исаев",
+    "headline": "Middle инженер данных",
+    "about": "2 года в IT, из них 1 — в медтехе. В фокусе: ETL/ELT-пайплайны на Airflow, миграция DWH с Greenplum на ClickHouse. Финал — Чемпионат России по спортивному программированию (продуктовое программирование, 2025), 13-е место. Открыт к удалённой работе.",
+    "specialization": "data-engineering",
+    "grade": "middle",
+    "experience_years": 2,
+    "stack": [
+      "Python",
+      "SQL",
+      "Apache Airflow",
+      "dbt",
+      "Hive",
+      "Apache Iceberg",
+      "Apache Spark",
+      "Kafka",
+      "Hadoop"
+    ],
+    "soft_skills": [
+      "Адаптивность",
+      "Работа в команде",
+      "Критическое мышление"
+    ],
+    "english_level": "B1",
+    "city": "Уфа",
+    "relocation_ready": false,
+    "work_formats": [
+      "office",
+      "hybrid",
+      "remote"
+    ],
+    "salary_expectation": 180000,
+    "assessment_score": 63.0,
+    "assessed_days_ago": 40,
+    "registered_days_ago": 59,
+    "fsp_member_id": "FSP-874078",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат России по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2025,
+        "place": 13
+      }
+    ],
+    "phone": null,
+    "telegram": null,
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-122",
+    "track": "ts-fullstack",
+    "email": "v.stepanova@example.com",
+    "display_name": "Виктория Степанова",
+    "headline": "Middle Fullstack-разработчик (TypeScript)",
+    "about": "3 года в IT, из них 2 — в продуктовой студии. В фокусе: серверный рендеринг на Next.js, API на NestJS и клиентская часть на React.",
+    "specialization": "fullstack",
+    "grade": "middle",
+    "experience_years": 3,
+    "stack": [
+      "TypeScript",
+      "React",
+      "Node.js",
+      "GraphQL",
+      "PostgreSQL",
+      "MongoDB",
+      "Prisma",
+      "Next.js"
+    ],
+    "soft_skills": [
+      "Системное мышление",
+      "Ответственность",
+      "Критическое мышление"
+    ],
+    "english_level": "B2",
+    "city": "Санкт-Петербург",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 200000,
+    "assessment_score": 81.4,
+    "assessed_days_ago": 213,
+    "registered_days_ago": 258,
+    "fsp_member_id": null,
+    "fsp_achievements": [],
+    "phone": "+7 936 967-79-37",
+    "telegram": "@vstepanova_620",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-123",
+    "track": "ios",
+    "email": "r.semenov@example.com",
+    "display_name": "Руслан Семёнов",
+    "headline": "Junior iOS-разработчик",
+    "about": "Полгода коммерческого опыта в банковской сфере. В фокусе: модуляризация и вынос фич в SPM-пакеты, оптимизация запуска и потребления памяти приложения. Хочу расти в команде с культурой код-ревью и наставничества. Финал — Чемпионат Пермского края по спортивному программированию (продуктовое программирование, 2024), 5-е место. Открыт к удалённой работе.",
+    "specialization": "mobile",
+    "grade": "junior",
+    "experience_years": 0,
+    "stack": [
+      "Swift",
+      "UIKit",
+      "VIPER",
+      "Firebase",
+      "Alamofire",
+      "Swift Package Manager"
+    ],
+    "soft_skills": [
+      "Внимание к деталям",
+      "Адаптивность"
+    ],
+    "english_level": "B1",
+    "city": "Пермь",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote",
+      "hybrid"
+    ],
+    "salary_expectation": 85000,
+    "assessment_score": 97.2,
+    "assessed_days_ago": 100,
+    "registered_days_ago": 141,
+    "fsp_member_id": "FSP-442616",
+    "fsp_achievements": [
+      {
+        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "discipline": "product",
+        "level": "national",
+        "year": 2026,
+        "place": null
+      },
+      {
+        "event_name": "Чемпионат Пермского края по спортивному программированию",
+        "discipline": "algorithmic",
+        "level": "regional",
+        "year": 2025,
+        "place": null
+      },
+      {
+        "event_name": "Чемпионат Пермского края по спортивному программированию",
+        "discipline": "product",
+        "level": "regional",
+        "year": 2024,
+        "place": 5
+      }
+    ],
+    "phone": "+7 971 911-73-61",
+    "telegram": "@rsemenov_404",
+    "is_visible_to_employers": true
+  },
+  {
+    "key": "cand-124",
+    "track": "soc",
+    "email": "n.shcherbakov@example.com",
+    "display_name": "Николай Щербаков",
+    "headline": "Junior аналитик SOC",
+    "about": "Два года коммерческого опыта в госсекторе. В фокусе: взаимодействие с заказчиками по инцидентам, расследование инцидентов. Хочу расти в команде с культурой код-ревью и наставничества. Участвую в соревнованиях ФСП по программированию систем информационной безопасности. Открыт к удалённой работе.",
+    "specialization": "security",
+    "grade": "junior",
+    "experience_years": 2,
+    "stack": [
+      "SIEM",
+      "MITRE ATT&CK",
+      "ELK",
+      "Windows Event Log",
+      "MaxPatrol SIEM"
+    ],
+    "soft_skills": [
+      "Эмпатия",
+      "Внимание к деталям",
+      "Коммуникабельность"
+    ],
+    "english_level": "B1",
+    "city": "Томск",
+    "relocation_ready": false,
+    "work_formats": [
+      "remote"
+    ],
+    "salary_expectation": 100000,
+    "assessment_score": 88.3,
+    "assessed_days_ago": 233,
+    "registered_days_ago": 262,
+    "fsp_member_id": "FSP-117365",
+    "fsp_achievements": [
+      {
+        "event_name": "Чемпионат Томской области по спортивному программированию",
+        "discipline": "security",
+        "level": "regional",
+        "year": 2024,
+        "place": null
+      }
+    ],
+    "phone": "+7 962 216-97-42",
+    "telegram": null,
+    "is_visible_to_employers": true
+  }
+]

@@ -28,6 +28,7 @@ cp .env.example .env        # заполните POSTGRES_PASSWORD и JWT_SECRET
 
 ```bash
 docker compose up --build   # SPA: http://localhost:8080, API: http://localhost:8000/api/docs
+docker compose exec backend python -m app.seed   # демо-данные (см. ниже)
 ```
 
 ### Локально
@@ -38,12 +39,21 @@ docker compose up -d db     # или свой PostgreSQL; поправьте DAT
 cd backend
 uv sync
 uv run alembic upgrade head
+uv run python -m app.seed                # демо-данные (см. ниже)
 uv run uvicorn app.main:app --reload     # http://localhost:8000
 
 cd ../frontend
 npm install
 npm run dev                               # http://localhost:5173 (/api → :8000)
 ```
+
+### Демо-данные
+
+`python -m app.seed` загружает вымышленные данные: 20 компаний, 97 вакансий (3 черновика) и
+124 соискателя всех специализаций и грейдов — с результатами ФСП и без, с пройденным тестом и
+без. Повторный запуск заменяет демо-записи, не дублируя их. Демо-аккаунты:
+`candidate@example.com` (соискатель) и `employer@example.com` (работодатель, компания
+«ПэйФлоу»); пароль и остальные учётки — в [backend/README.md](backend/README.md#демо-данные).
 
 ## Проверки
 
@@ -71,6 +81,7 @@ Pre-commit (husky + lint-staged) прогоняет oxlint и prettier по из
 | `CORS_ORIGINS`             | backend           | нет         | список через запятую; пусто — CORS выключен |
 | `RESEND_API_KEY`           | backend           | нет         | ключ Resend для кода подтверждения почты. Пусто — код в логе API (только не в production) |
 | `RESEND_FROM`              | backend           | нет         | отправитель письма, по умолчанию `onboarding@resend.dev` |
+| `SEED_USER_PASSWORD`       | backend (seed)    | нет         | пароль демо-аккаунтов `python -m app.seed`; пусто — пароль из backend/README |
 | `VITE_API_URL`             | frontend (build)  | нет         | база API, по умолчанию `/api/v1`          |
 | `DEV_API_PROXY_TARGET`     | frontend (dev)    | нет         | цель прокси `/api` dev-сервера            |
 

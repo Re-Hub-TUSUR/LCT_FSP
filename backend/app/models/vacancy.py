@@ -27,4 +27,7 @@ class Vacancy(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     salary_from: Mapped[int]
     salary_to: Mapped[int]
     work_format: Mapped[WorkFormat] = mapped_column(str_enum(WorkFormat))
+    # Office location; null for fully remote positions.
+    city: Mapped[str | None] = mapped_column(String(100))
+    # Null = draft, not shown in feeds.
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

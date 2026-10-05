@@ -33,6 +33,8 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM: ${RESEND_FROM:-}
+      # Used only by `docker compose exec backend python -m app.seed`.
+      SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-}
     depends_on:
       db:
         condition: service_healthy

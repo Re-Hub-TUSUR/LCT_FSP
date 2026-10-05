@@ -17,5 +17,8 @@ class Company(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(200))
     industry: Mapped[str | None] = mapped_column(String(200))
     description: Mapped[str | None] = mapped_column(Text)
+    city: Mapped[str | None] = mapped_column(String(100))
+    # Headcount bucket, e.g. "201–500".
+    size: Mapped[str | None] = mapped_column(String(16))
     website: Mapped[str | None] = mapped_column(String(500))
     contact_email: Mapped[str | None] = mapped_column(String(320))

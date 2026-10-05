@@ -26,3 +26,19 @@ class InvitationStatus(StrEnum):
     VIEWED = "viewed"
     ACCEPTED = "accepted"
     DECLINED = "declined"
+
+
+class FspDiscipline(StrEnum):
+    """Disciplines of sport programming held by FSP."""
+
+    ALGORITHMIC = "algorithmic"
+    PRODUCT = "product"
+    SECURITY = "security"
+    ROBOTICS = "robotics"
+    UAV = "uav"
+
+
+class FspEventLevel(StrEnum):
+    REGIONAL = "regional"
+    NATIONAL = "national"
+    INTERNATIONAL = "international"
