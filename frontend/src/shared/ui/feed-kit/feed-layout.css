@@ -1,0 +1,202 @@
+/* Layout shared by the candidate's and the recruiter's feeds: filters aside + results. */
+
+.feed {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: clamp(24px, 3vw, 48px);
+  align-items: start;
+}
+
+.feed__filters {
+  position: sticky;
+  top: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-height: calc(100svh - 130px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.feed__group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feed__label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.feed__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.feed__input,
+.feed__select {
+  width: 100%;
+  padding: 10px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.feed__select {
+  background: #000;
+}
+
+.feed__input:focus,
+.feed__select:focus {
+  outline: none;
+  border-bottom-color: var(--brand-blue);
+}
+
+.feed__search {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--line-strong);
+}
+
+.feed__search input {
+  flex: 1;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.feed__search input:focus {
+  outline: none;
+}
+
+.feed__search:focus-within {
+  border-color: var(--brand-blue);
+}
+
+.feed__search button {
+  padding: 0 22px;
+  border: 0;
+  background: var(--brand-blue);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #fff;
+  cursor: pointer;
+}
+
+.feed__toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 300;
+  cursor: pointer;
+}
+
+.feed__toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand-blue);
+}
+
+.feed__basis {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: var(--fill-ghost);
+}
+
+.feed__basis-main {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 18px;
+}
+
+.feed__basis-text {
+  margin: 0;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.feed__results {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.feed__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feed__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.feed__reset {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.feed__link {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-underline-offset: 4px;
+}
+
+@media (max-width: 960px) {
+  .feed {
+    grid-template-columns: 1fr;
+  }
+
+  .feed__filters {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding: 20px;
+    border: 1px solid var(--line);
+  }
+}

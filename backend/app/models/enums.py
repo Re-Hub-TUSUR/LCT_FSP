@@ -42,3 +42,10 @@ class FspEventLevel(StrEnum):
     REGIONAL = "regional"
     NATIONAL = "national"
     INTERNATIONAL = "international"
+
+
+class ReactionKind(StrEnum):
+    """Decision on a feed card: `like` keeps it in favourites, `skip` hides it from the feed."""
+
+    LIKE = "like"
+    SKIP = "skip"

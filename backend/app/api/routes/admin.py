@@ -14,9 +14,9 @@ async def list_users(
     _: AdminUser, pagination: PaginationDep, users: UserRepositoryDep
 ) -> Page[UserRead]:
     items, total = await users.list(limit=pagination.limit, offset=pagination.offset)
-    return Page[UserRead](
-        items=[UserRead.model_validate(user) for user in items],
+    return Page[UserRead].build(
+        [UserRead.model_validate(user) for user in items],
         total=total,
-        limit=pagination.limit,
-        offset=pagination.offset,
+        page=pagination.page,
+        per_page=pagination.per_page,
     )

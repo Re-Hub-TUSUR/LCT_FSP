@@ -1,0 +1,328 @@
+/* ── Chip ──────────────────────────────────────────── */
+
+.chip-toggle {
+  padding: 9px 14px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.chip-toggle:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.chip-toggle.is-active {
+  background: var(--fill-brand);
+  border-color: var(--brand-blue);
+  color: #fff;
+}
+
+.chip-toggle:focus-visible,
+.pager button:focus-visible,
+.pager select:focus-visible,
+.swipe__btn:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 3px;
+}
+
+/* ── Meter ─────────────────────────────────────────── */
+
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 150px;
+}
+
+.meter__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.meter__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.meter__value {
+  font-family: var(--font-display);
+  font-weight: 200;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.meter__track {
+  height: 3px;
+  background: var(--fill-solid);
+}
+
+.meter__fill {
+  display: block;
+  height: 100%;
+  background: var(--text-dim);
+  transition: width 0.5s var(--ease-premium);
+}
+
+.meter--high .meter__fill {
+  background: var(--brand-blue);
+}
+
+.meter--high .meter__value {
+  color: #8f86ff;
+}
+
+/* ── Pagination ────────────────────────────────────── */
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.pager__total {
+  margin: 0;
+}
+
+.pager__pages {
+  display: flex;
+  gap: 4px;
+}
+
+.pager button,
+.pager select {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.pager button:hover:not(:disabled) {
+  border-color: var(--text-dim);
+}
+
+.pager button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pager button.is-current {
+  background: var(--brand-blue);
+  border-color: var(--brand-blue);
+}
+
+.pager__gap {
+  align-self: center;
+  padding: 0 6px;
+}
+
+.pager__size {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pager select {
+  background: #000;
+}
+
+/* ── Notice & skeleton ─────────────────────────────── */
+
+.notice {
+  margin: 0;
+  padding: 12px 16px;
+  border-left: 2px solid var(--brand-red);
+  background: var(--fill-ghost);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  line-height: 1.6;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.feed-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feed-skeleton__card {
+  height: 220px;
+  border: 1px solid var(--line);
+  background: linear-gradient(
+    100deg,
+    var(--fill-ghost) 30%,
+    rgba(255, 255, 255, 0.08) 50%,
+    var(--fill-ghost) 70%
+  );
+  background-size: 300% 100%;
+  animation: feed-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes feed-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* ── Swipe deck ────────────────────────────────────── */
+
+.swipe {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: min(100%, 680px);
+  margin: 0 auto;
+}
+
+.swipe__stage {
+  position: relative;
+  display: grid;
+}
+
+.swipe__card {
+  grid-area: 1 / 1;
+  position: relative;
+  touch-action: pan-y;
+  user-select: none;
+  cursor: grab;
+  background: #000;
+}
+
+.swipe__card:active {
+  cursor: grabbing;
+}
+
+.swipe__card.is-settled,
+.swipe__card.is-leaving {
+  transition: transform 0.22s var(--ease-premium);
+}
+
+.swipe__card.is-leaving {
+  opacity: 0;
+  transition:
+    transform 0.22s var(--ease-premium),
+    opacity 0.22s ease;
+}
+
+.swipe__card--next {
+  transform: scale(0.96) translateY(14px);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.swipe__stamp {
+  position: absolute;
+  top: 24px;
+  z-index: 2;
+  padding: 8px 14px;
+  border: 2px solid currentColor;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.swipe__stamp--like {
+  left: 24px;
+  color: #8f86ff;
+}
+
+.swipe__stamp--skip {
+  right: 24px;
+  color: #ff5a6e;
+}
+
+.swipe__controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.swipe__btn {
+  padding: 18px 20px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.swipe__btn--skip:hover {
+  border-color: var(--brand-red);
+  background: rgba(236, 29, 53, 0.12);
+}
+
+.swipe__btn--like {
+  border-color: var(--brand-blue);
+  background: var(--brand-blue);
+}
+
+.swipe__btn--like:hover {
+  background: var(--brand-blue-hover);
+}
+
+.swipe__btn:active {
+  transform: translateY(1px);
+}
+
+.swipe__left {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .swipe__controls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .swipe__left {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: center;
+  }
+}

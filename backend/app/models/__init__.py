@@ -8,16 +8,19 @@ from app.models.enums import (
     FspEventLevel,
     Grade,
     InvitationStatus,
+    ReactionKind,
     UserRole,
     WorkFormat,
 )
 from app.models.fsp_achievement import FspAchievement
 from app.models.invitation import Invitation
+from app.models.reaction import CandidateReaction, VacancyReaction
 from app.models.user import User
 from app.models.vacancy import Vacancy
 
 __all__ = [
     "CandidateProfile",
+    "CandidateReaction",
     "Company",
     "EmailVerificationCode",
     "FspAchievement",
@@ -26,8 +29,10 @@ __all__ = [
     "Grade",
     "Invitation",
     "InvitationStatus",
+    "ReactionKind",
     "User",
     "UserRole",
     "Vacancy",
+    "VacancyReaction",
     "WorkFormat",
 ]

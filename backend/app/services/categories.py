@@ -1,7 +1,7 @@
 """MVP dictionary of specializations and grades (ТЗ: the team compiles it from common IT terms)."""
 
-from app.models.enums import Grade
-from app.schemas.category import CategoryDictionary, GradeRead, SpecializationRead
+from app.models.enums import FspDiscipline, Grade, WorkFormat
+from app.schemas.category import Category, CategoryDictionary, GradeRead, SpecializationRead
 
 SPECIALIZATIONS: dict[str, str] = {
     "backend": "Backend-разработка",
@@ -23,6 +23,33 @@ GRADE_LABELS: dict[Grade, str] = {
     Grade.SENIOR: "Senior",
     Grade.LEAD: "Lead",
 }
+
+WORK_FORMAT_LABELS: dict[WorkFormat, str] = {
+    WorkFormat.OFFICE: "Офис",
+    WorkFormat.HYBRID: "Гибрид",
+    WorkFormat.REMOTE: "Удалённо",
+}
+
+FSP_DISCIPLINE_LABELS: dict[FspDiscipline, str] = {
+    FspDiscipline.ALGORITHMIC: "алгоритмическое программирование",
+    FspDiscipline.PRODUCT: "продуктовое программирование",
+    FspDiscipline.SECURITY: "программирование систем ИБ",
+    FspDiscipline.ROBOTICS: "программирование робототехники",
+    FspDiscipline.UAV: "программирование БАС",
+}
+
+
+def category_for(specialization: str | None, grade: Grade | None) -> Category | None:
+    """Category = specialization + grade; None until both are known."""
+    if specialization is None or grade is None:
+        return None
+    label = f"{SPECIALIZATIONS.get(specialization, specialization)} · {GRADE_LABELS[grade]}"
+    return Category(
+        code=f"{specialization}:{grade.value}",
+        label=label,
+        specialization=specialization,
+        grade=grade,
+    )
 
 
 def get_dictionary() -> CategoryDictionary:

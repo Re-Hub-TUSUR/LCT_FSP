@@ -50,7 +50,7 @@ function EmployerProfile() {
       <Section title="Отправленные приглашения">
         <InvitationsInbox direction="outgoing" />
       </Section>
-      <Link to={ROUTES.matching}>Перейти к подбору кандидатов</Link>
+      <Link to={ROUTES.feed}>Перейти к подбору кандидатов</Link>
     </>
   )
 }
