@@ -1,0 +1,27 @@
+:root {
+  /* ФСП России — фирменная палитра (fsp-russia.ru/press/brandbook) */
+  --brand-blue: #402fff;
+  --brand-blue-hover: #5646ff;
+  --brand-red: #ec1d35;
+  --brand-light: #ededed;
+  --brand-grey: #c8c9ca;
+  --brand-ink: #1b1c21;
+
+  --bg: #000000;
+  --text: var(--brand-light);
+  --text-dim: rgba(237, 237, 237, 0.62);
+  --text-dimmer: rgba(237, 237, 237, 0.42);
+  --line: rgba(255, 255, 255, 0.14);
+  --line-strong: rgba(255, 255, 255, 0.26);
+  --fill-ghost: rgba(255, 255, 255, 0.05);
+  --fill-solid: rgba(255, 255, 255, 0.1);
+  --fill-brand: rgba(64, 47, 255, 0.22);
+  --tint-alpha: 0.22;
+
+  --gutter: clamp(20px, 5vw, 100px);
+  --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --font-display: "Manrope", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas,
+    monospace;
+}
