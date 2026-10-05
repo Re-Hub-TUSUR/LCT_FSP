@@ -1,0 +1,43 @@
+.feedback {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 28px 0;
+}
+
+.feedback__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 20px;
+  color: var(--text);
+}
+
+.feedback__text {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.feedback--error .feedback__title {
+  color: #ff5a6e;
+}
+
+.feedback__spinner {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--line-strong);
+  border-top-color: var(--brand-blue);
+  border-radius: 50%;
+  animation: feedback-spin 0.8s linear infinite;
+}
+
+@keyframes feedback-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

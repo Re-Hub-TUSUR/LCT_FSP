@@ -1,0 +1,25 @@
+import { http } from '@/shared/api'
+import type { UserDto, UserRole } from '@/entities/user/@x/session'
+
+export type SignInPayload = {
+  email: string
+  password: string
+}
+
+export type SignUpPayload = SignInPayload & {
+  role: Exclude<UserRole, 'admin'>
+  /** Consent to personal data processing (152-ФЗ) is mandatory for registration. */
+  personalDataConsent: true
+}
+
+export type TokenResponseDto = {
+  accessToken: string
+  tokenType: 'bearer'
+  expiresIn: number
+  user: UserDto
+}
+
+export const sessionApi = {
+  signIn: (payload: SignInPayload) => http.post<TokenResponseDto>('/auth/login', payload),
+  signUp: (payload: SignUpPayload) => http.post<UserDto>('/auth/register', payload),
+}

@@ -1,0 +1,42 @@
+.auth-choice {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.auth-choice__item {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 32px;
+  border: 1px solid var(--line-strong);
+  text-decoration: none;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.auth-choice__item:hover {
+  background: var(--fill-brand);
+  border-color: var(--brand-blue);
+}
+
+.auth-choice__item:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 3px;
+}
+
+.auth-choice__title {
+  font-family: var(--font-display);
+  font-weight: 200;
+  font-size: 32px;
+}
+
+.auth-choice__text {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}

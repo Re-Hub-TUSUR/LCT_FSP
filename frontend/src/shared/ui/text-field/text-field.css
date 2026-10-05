@@ -1,0 +1,73 @@
+.field {
+  position: relative;
+}
+
+.field__label {
+  display: block;
+  margin-bottom: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.field__input {
+  display: block;
+  width: 100%;
+  padding: 0 2px clamp(12px, 1.1vw, 18px);
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(16px, 0.95vw, 18px);
+  color: var(--text);
+  transition: border-color 0.25s ease;
+  appearance: none;
+}
+
+.field__input--multiline {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.field__input::placeholder {
+  color: var(--text-dim);
+  opacity: 1;
+  transition: color 0.25s ease;
+}
+
+.field__input:focus {
+  outline: none;
+  border-bottom-color: var(--brand-blue);
+}
+
+.field__input:focus::placeholder {
+  color: var(--text-dimmer);
+}
+
+.field__input[aria-invalid='true'] {
+  border-bottom-color: var(--brand-red);
+}
+
+.field__input:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 3px;
+}
+
+/* Sits in the form gap so the layout doesn't jump when an error appears */
+.field__error {
+  position: absolute;
+  top: 100%;
+  left: 2px;
+  margin: 3px 0 0;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #ff5a6e;
+}

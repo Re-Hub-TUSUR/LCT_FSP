@@ -1,0 +1,219 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "react",
+    "react-perf",
+    "import",
+    "jsx-a11y",
+    "unicorn",
+    "oxc",
+    "vitest"
+  ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "env": {
+    "browser": true,
+    "es2024": true
+  },
+  "ignorePatterns": ["dist/**", "coverage/**", "node_modules/**"],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "error",
+    "react/jsx-key": "error",
+    "react-perf/jsx-no-new-function-as-prop": "off",
+    "react-perf/jsx-no-new-object-as-prop": "off",
+    "react-perf/jsx-no-new-array-as-prop": "off",
+    "react-perf/jsx-no-jsx-as-prop": "off",
+    "import/no-unassigned-import": [
+      "warn",
+      { "allow": ["**/*.css", "@testing-library/jest-dom/vitest"] }
+    ],
+    "jsx-a11y/aria-role": ["error", { "ignoreNonDOM": true }],
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "typescript/consistent-type-imports": "error",
+    "typescript/no-explicit-any": "error",
+    "import/no-cycle": "error",
+    "import/no-self-import": "error",
+    "import/no-duplicates": "error",
+    "unicorn/filename-case": ["error", { "case": "kebabCase" }],
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@/*/*/**", "!@/entities/*/@x/*"],
+            "message": "FSD: импортируйте slice/segment только через public API (index.ts). Глубокие импорты запрещены."
+          },
+          {
+            "group": ["../../*/*/*"],
+            "message": "FSD: межслайсовые импорты делаются через алиас '@/<layer>/<slice>', а не относительным путём."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/shared/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**",
+                  "@/widgets",
+                  "@/widgets/**",
+                  "@/features",
+                  "@/features/**",
+                  "@/entities",
+                  "@/entities/**"
+                ],
+                "message": "FSD: shared — нижний слой и не зависит от бизнес-слоёв."
+              },
+              {
+                "group": ["@/shared/*/**"],
+                "message": "FSD: внутри shared используйте относительные импорты или public API сегмента."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/entities/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**",
+                  "@/widgets",
+                  "@/widgets/**",
+                  "@/features",
+                  "@/features/**"
+                ],
+                "message": "FSD: entities может импортировать только shared и @x-API других entities."
+              },
+              {
+                "group": ["@/entities", "@/entities/**", "!@/entities/*/@x/*"],
+                "message": "FSD: сущности связываются только через cross-import API '@/entities/<entity>/@x/<consumer>'."
+              },
+              {
+                "group": ["@/shared/*/**"],
+                "message": "FSD: импортируйте shared через public API сегмента ('@/shared/ui', '@/shared/api', ...)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/features/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/app",
+                  "@/app/**",
+                  "@/pages",
+                  "@/pages/**",
+                  "@/widgets",
+                  "@/widgets/**"
+                ],
+                "message": "FSD: features может импортировать только entities и shared."
+              },
+              {
+                "group": ["@/features", "@/features/**"],
+                "message": "FSD: feature не может импортировать другую feature — композиция делается во widgets/pages."
+              },
+              {
+                "group": ["@/*/*/**", "!@/entities/*/@x/*"],
+                "message": "FSD: импортируйте slice/segment только через public API (index.ts)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/widgets/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/app", "@/app/**", "@/pages", "@/pages/**"],
+                "message": "FSD: widgets может импортировать только features, entities и shared."
+              },
+              {
+                "group": ["@/widgets", "@/widgets/**"],
+                "message": "FSD: widget не может импортировать другой widget — передайте его через слот (props/children) на уровне page."
+              },
+              {
+                "group": ["@/*/*/**"],
+                "message": "FSD: импортируйте slice/segment только через public API (index.ts)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/pages/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/app", "@/app/**"],
+                "message": "FSD: pages не может импортировать app."
+              },
+              {
+                "group": ["@/pages", "@/pages/**"],
+                "message": "FSD: page не может импортировать другую page."
+              },
+              {
+                "group": ["@/*/*/**"],
+                "message": "FSD: импортируйте slice/segment только через public API (index.ts)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "tests/**"],
+      "rules": {
+        "no-restricted-imports": "off",
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["*.config.ts", "*.config.js"],
+      "env": { "node": true },
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ]
+}

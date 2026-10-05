@@ -1,0 +1,42 @@
+.company-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  background: var(--fill-ghost);
+}
+
+.company-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.company-card__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 28px;
+}
+
+.company-card__text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  line-height: 1.5;
+}
+
+.company-card__link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+
+.company-card__actions {
+  display: flex;
+  gap: 12px;
+}

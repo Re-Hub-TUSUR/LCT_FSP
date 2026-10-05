@@ -1,0 +1,52 @@
+.invitation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: var(--fill-ghost);
+}
+
+.invitation-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.invitation-card__company {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 22px;
+}
+
+.invitation-card__salary {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--text);
+}
+
+.invitation-card__message {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.invitation-card__meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.invitation-card__actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 6px;
+}
