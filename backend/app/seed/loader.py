@@ -15,6 +15,7 @@ from app.models import (
     AssessmentTask,
     AssessmentTest,
     CandidateProfile,
+    CandidateReaction,
     Company,
     EmailVerificationCode,
     FspAchievement,
@@ -22,6 +23,7 @@ from app.models import (
     User,
     UserRole,
     Vacancy,
+    VacancyReaction,
 )
 from app.seed.fixtures import CandidateFixture, CompanyFixture, SeedData, VacancyFixture
 
@@ -190,8 +192,19 @@ async def _clear(session: AsyncSession, user_ids: list[uuid.UUID]) -> None:
     """
     profiles = select(CandidateProfile.id).where(CandidateProfile.user_id.in_(user_ids))
     companies = select(Company.id).where(Company.owner_id.in_(user_ids))
+    vacancies = select(Vacancy.id).where(Vacancy.company_id.in_(companies))
     attempts = select(AssessmentAttempt.id).where(AssessmentAttempt.candidate_id.in_(profiles))
     statements = (
+        # Feed decisions by demo accounts and on demo cards, by anyone.
+        delete(VacancyReaction).where(
+            or_(VacancyReaction.user_id.in_(user_ids), VacancyReaction.vacancy_id.in_(vacancies))
+        ),
+        delete(CandidateReaction).where(
+            or_(
+                CandidateReaction.user_id.in_(user_ids),
+                CandidateReaction.candidate_id.in_(profiles),
+            )
+        ),
         delete(AssessmentAnswer).where(AssessmentAnswer.attempt_id.in_(attempts)),
         delete(AssessmentAttempt).where(AssessmentAttempt.candidate_id.in_(profiles)),
         delete(AssessmentTest).where(AssessmentTest.owner_id.in_(user_ids)),
@@ -209,6 +222,14 @@ async def _clear(session: AsyncSession, user_ids: list[uuid.UUID]) -> None:
     for statement in statements:
         # Nothing of this is loaded in the session, so there is nothing to synchronise.
         await session.execute(statement.execution_options(synchronize_session=False))
+
+
+async def demo_data_loaded(session: AsyncSession, data: SeedData) -> bool:
+    """Is any demo account already in the database? Used to seed a fresh stack only once."""
+    user_ids = [seed_id("user", company.key) for company in data.companies]
+    user_ids += [seed_id("user", candidate.key) for candidate in data.candidates]
+    found = await session.scalar(select(User.id).where(User.id.in_(user_ids)).limit(1))
+    return found is not None
 
 
 async def seed_database(

@@ -26,13 +26,15 @@ class CandidateProfileService:
             raise NotFoundError("Кандидат не найден")
         own = profile.user_id == viewer.id
         employer = viewer.role == UserRole.EMPLOYER
-        visible = own or viewer.role == UserRole.ADMIN
-        if not visible and not (employer and profile.is_visible_to_employers):
+        if not (
+            own or viewer.role == UserRole.ADMIN or (employer and profile.is_visible_to_employers)
+        ):
             raise NotFoundError("Кандидат не найден")
 
         contacts = None
-        accepted = await self._invitations.accepted_from_owner(candidate_id, viewer.id)
-        if own or (employer and accepted):
+        if own or (
+            employer and await self._invitations.accepted_from_owner(candidate_id, viewer.id)
+        ):
             email = await self._candidates.email_of(profile)
             contacts = CandidateContacts(
                 email=email or "", phone=profile.phone, telegram=profile.telegram

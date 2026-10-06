@@ -36,6 +36,20 @@ async def get_current_user(
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
+async def get_optional_user(
+    session: SessionDep,
+    settings: SettingsDep,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+) -> User | None:
+    """Public endpoints: anonymous without a token, but a bad token is still a 401."""
+    if credentials is None:
+        return None
+    return await get_current_user(session, settings, credentials)
+
+
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
+
+
 def require_roles(*roles: UserRole) -> Callable[[User], Awaitable[User]]:
     """Role guard. Role is re-read from the DB on every request, not trusted from the token."""
 

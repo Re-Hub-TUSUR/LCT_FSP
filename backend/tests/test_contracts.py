@@ -29,11 +29,12 @@ async def test_openapi_documents_all_domains(client: AsyncClient) -> None:
 
 
 async def test_not_implemented_contract_uses_error_envelope(client: AsyncClient) -> None:
-    response = await client.get(f"{API}/vacancies")
+    token = await register_and_login(client, "stub@fsp.ru", role="employer")
+    response = await client.get(f"{API}/matching/recommendations", headers=bearer(token))
     assert response.status_code == 501
     error = response.json()["error"]
     assert error["code"] == "not_implemented"
-    assert error["details"] == {"operation": "vacancies.list"}
+    assert error["details"] == {"operation": "matching.recommendations"}
 
 
 async def test_invitation_requires_ordered_salary_range(client: AsyncClient) -> None:

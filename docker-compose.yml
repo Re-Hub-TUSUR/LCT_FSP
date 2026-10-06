@@ -1,4 +1,4 @@
-# Local full stack: PostgreSQL + API + SPA (nginx proxies /api to the backend).
+# Local full stack: PostgreSQL + Elasticsearch + API + SPA (nginx proxies /api to the backend).
 # Usage: cp .env.example .env  (fill JWT_SECRET and POSTGRES_PASSWORD), then `docker compose up --build`.
 name: kadry
 
@@ -20,10 +20,31 @@ services:
       retries: 10
     restart: unless-stopped
 
+  # Candidate search for recruiters. ~1 GB RAM; without it the API searches the database.
+  elasticsearch:
+    image: elasticsearch:9.5.3
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      # A nearly full laptop disk would otherwise switch the index to read-only.
+      cluster.routing.allocation.disk.threshold_enabled: "false"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - "127.0.0.1:${ELASTICSEARCH_PORT:-9200}:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+    restart: unless-stopped
+
   backend:
     build: ./backend
     image: kadry-backend
-    command: sh -c "alembic upgrade head && python -m app.seed.assessment && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    # Demo data is loaded once, into an empty database (`--if-missing` never blocks the start).
+    command: sh -c "alembic upgrade head && python -m app.seed.assessment && python -m app.seed --if-missing && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     environment:
       APP_ENV: ${APP_ENV:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -35,11 +56,15 @@ services:
       RESEND_FROM: ${RESEND_FROM:-}
       ONLINECOMPILER_API_KEY: ${ONLINECOMPILER_API_KEY:-}
       ONLINECOMPILER_URL: ${ONLINECOMPILER_URL:-https://api.onlinecompiler.io}
-      # Used only by `docker compose exec backend python -m app.seed`.
+      # Password of the demo accounts created by `python -m app.seed`.
       SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-}
+      ELASTICSEARCH_URL: http://elasticsearch:9200
     depends_on:
       db:
         condition: service_healthy
+      # Soft dependency: the API starts first and builds the index once the cluster is up.
+      elasticsearch:
+        condition: service_started
     ports:
       - "127.0.0.1:8000:8000"
     restart: unless-stopped
@@ -61,3 +86,4 @@ services:
 
 volumes:
   db-data:
+  es-data:

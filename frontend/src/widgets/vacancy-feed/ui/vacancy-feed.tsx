@@ -1,7 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router'
 import {
-  demoVacancyFeed,
   VacancyMatchCard,
   vacancyQueries,
   WORK_FORMAT_LABELS,
@@ -9,14 +8,9 @@ import {
 } from '@/entities/vacancy'
 import type { FeedView, WorkFormat } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
-import { ApiError } from '@/shared/api'
 import { Chip, EmptyState, FeedSkeleton, Notice, Pagination, QueryState } from '@/shared/ui'
 
 const rub = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 })
-
-/** Feed API is not deployed yet → render sample cards instead of an error. */
-const isNotReady = (error: unknown) =>
-  error instanceof ApiError && [0, 404, 501].includes(error.status)
 
 /**
  * Candidate's feed: only vacancies relevant to the profile, ranked by fit.
@@ -34,8 +28,7 @@ export function VacancyFeed() {
     ...vacancyQueries.feed({ page, perPage, view, workFormat: formats, salaryMin }),
     placeholderData: keepPreviousData,
   })
-  const demo = query.isError && isNotReady(query.error)
-  const data = query.data ?? (demo ? demoVacancyFeed(page, perPage) : undefined)
+  const data = query.data
 
   const update = (patch: Record<string, string | string[] | null>) => {
     const next = new URLSearchParams(params)
@@ -109,7 +102,6 @@ export function VacancyFeed() {
       </aside>
 
       <section className="feed__results" aria-label="Вакансии">
-        {demo && <Notice>Демо-данные: API ленты ещё в разработке</Notice>}
         {data && !data.personalized && (
           <Notice>Пройдите тест — лента станет персональной. Пока показаны новые вакансии.</Notice>
         )}

@@ -16,6 +16,7 @@ from app.services.matching import (
     CandidateFacts,
     Fit,
     VacancyFacts,
+    as_utc,
     fit,
     freshness,
     neighbour_grades,
@@ -136,7 +137,7 @@ class VacancyFeedService:
             return sorted(
                 ranked,
                 key=lambda item: (
-                    -reactions[item.row[0].id].updated_at.timestamp(),
+                    -as_utc(reactions[item.row[0].id].updated_at).timestamp(),
                     str(item.row[0].id),
                 ),
             )
@@ -145,7 +146,7 @@ class VacancyFeedService:
             ranked,
             key=lambda item: (
                 -(item.fit.points if item.fit else 0.0),
-                -(item.row[0].published_at or _EPOCH).timestamp(),
+                -as_utc(item.row[0].published_at or _EPOCH).timestamp(),
                 str(item.row[0].id),
             ),
         )

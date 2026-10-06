@@ -2,16 +2,15 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router'
-import { CandidateMatchCard, candidateQueries, demoCandidateSearch } from '@/entities/candidate'
+import { CandidateMatchCard, candidateQueries } from '@/entities/candidate'
 import type { CandidateSort } from '@/entities/candidate'
 import { categoryQueries, GRADE_LABELS, GRADES } from '@/entities/category'
 import type { Grade } from '@/entities/category'
-import { WORK_FORMAT_LABELS, WORK_FORMATS } from '@/entities/vacancy'
+import { vacancyQueries, WORK_FORMAT_LABELS, WORK_FORMATS } from '@/entities/vacancy'
 import type { FeedView, WorkFormat } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
-import { ApiError } from '@/shared/api'
 import { paths } from '@/shared/config'
-import { Chip, EmptyState, FeedSkeleton, Notice, Pagination, QueryState } from '@/shared/ui'
+import { Chip, EmptyState, FeedSkeleton, Pagination, QueryState } from '@/shared/ui'
 
 const SORTS: Record<CandidateSort, string> = {
   relevance: 'По релевантности',
@@ -19,9 +18,6 @@ const SORTS: Record<CandidateSort, string> = {
   salary: 'По ожиданиям ↑',
   experience: 'По опыту',
 }
-
-const isNotReady = (error: unknown) =>
-  error instanceof ApiError && [0, 404, 501].includes(error.status)
 
 const list = (value: string | null) =>
   (value ?? '')
@@ -43,9 +39,11 @@ export function CandidateFeed() {
   const formats = params.getAll('workFormat') as WorkFormat[]
   const stack = list(params.get('stack'))
   const sort = (params.get('sort') as CandidateSort | null) ?? 'relevance'
+  const vacancyId = params.get('vacancyId') ?? undefined
   const [text, setText] = useState(q)
 
   const dictionary = useQuery(categoryQueries.dictionary())
+  const mine = useQuery(vacancyQueries.mine())
   const query = useQuery({
     ...candidateQueries.search({
       page,
@@ -60,12 +58,12 @@ export function CandidateFeed() {
       workFormat: formats,
       city: params.get('city') ?? undefined,
       salaryMax: Number(params.get('salaryMax')) || undefined,
+      vacancyId,
       sort,
     }),
     placeholderData: keepPreviousData,
   })
-  const demo = query.isError && isNotReady(query.error)
-  const data = query.data ?? (demo ? demoCandidateSearch(page, perPage) : undefined)
+  const data = query.data
 
   const update = (patch: Record<string, string | string[] | null>) => {
     const next = new URLSearchParams(params)
@@ -91,6 +89,23 @@ export function CandidateFeed() {
   return (
     <div className="feed">
       <aside className="feed__filters" aria-label="Фильтры поиска">
+        <label className="feed__group">
+          <span className="feed__label">Подбор под вакансию</span>
+          <select
+            className="feed__select"
+            value={vacancyId ?? ''}
+            onChange={(e) => update({ vacancyId: e.target.value || null })}
+          >
+            <option value="">Без вакансии — по силе профиля</option>
+            {mine.data?.items.map((vacancy) => (
+              <option key={vacancy.id} value={vacancy.id}>
+                {vacancy.title}
+                {vacancy.publishedAt ? '' : ' (черновик)'}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <div className="feed__group">
           <p className="feed__label">Показать</p>
           <div className="feed__chips">
@@ -236,14 +251,13 @@ export function CandidateFeed() {
               </option>
             ))}
           </select>
-          {data && !demo && (
+          {data && (
             <span className="feed__label">
               Поиск: {data.engine === 'elasticsearch' ? 'Elasticsearch' : 'база данных'}
             </span>
           )}
         </div>
 
-        {demo && <Notice>Демо-данные: API поиска ещё в разработке</Notice>}
         {data ? (
           data.items.length === 0 ? (
             <EmptyState title={view === 'liked' ? 'В избранном пусто' : 'Никого не нашли'}>
@@ -264,6 +278,7 @@ export function CandidateFeed() {
                             target="candidate"
                             id={match.candidate.id}
                             initial={match.reaction}
+                            vacancyId={vacancyId}
                           />
                           <Link
                             className="feed__link"

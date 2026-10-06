@@ -28,7 +28,7 @@ cp .env.example .env        # заполните POSTGRES_PASSWORD и JWT_SECRET
 
 ```bash
 docker compose up --build   # SPA: http://localhost:8080, API: http://localhost:8000/api/docs
-docker compose exec backend python -m app.seed   # демо-данные (см. ниже)
+docker compose exec backend python -m app.seed   # перезалить демо-данные (на пустой базе грузятся сами)
 ```
 
 ### Локально
@@ -82,6 +82,7 @@ Pre-commit (husky + lint-staged) прогоняет oxlint и prettier по из
 | `RESEND_API_KEY`           | backend           | нет         | ключ Resend для кода подтверждения почты. Пусто — код в логе API (только не в production) |
 | `RESEND_FROM`              | backend           | нет         | отправитель письма, по умолчанию `onboarding@resend.dev` |
 | `SEED_USER_PASSWORD`       | backend (seed)    | нет         | пароль демо-аккаунтов `python -m app.seed`; пусто — пароль из backend/README |
+| `ELASTICSEARCH_URL`        | backend           | нет         | поиск кандидатов; в compose задан, пусто — поиск по базе |
 | `VITE_API_URL`             | frontend (build)  | нет         | база API, по умолчанию `/api/v1`          |
 | `DEV_API_PROXY_TARGET`     | frontend (dev)    | нет         | цель прокси `/api` dev-сервера            |
 

@@ -17,7 +17,7 @@ from app.seed.generate import (
     build_dataset,
     dump,
 )
-from app.seed.loader import SeedConflictError, seed_database, seed_id
+from app.seed.loader import SeedConflictError, demo_data_loaded, seed_database, seed_id
 from app.services.categories import SPECIALIZATIONS
 from tests.conftest import API, PASSWORD
 
@@ -134,3 +134,14 @@ async def test_seed_does_not_take_over_existing_accounts(
     async with sessionmaker() as session:
         with pytest.raises(SeedConflictError, match=DEMO_EMPLOYER_EMAIL):
             await seed_database(session, data, password_hash="not-a-real-hash")
+
+
+async def test_demo_data_loaded_detects_an_earlier_load(
+    sessionmaker: async_sessionmaker[AsyncSession], data: SeedData
+) -> None:
+    async with sessionmaker() as session:
+        assert not await demo_data_loaded(session, data)
+        await seed_database(session, data, password_hash="not-a-real-hash")
+        await session.commit()
+    async with sessionmaker() as session:
+        assert await demo_data_loaded(session, data)

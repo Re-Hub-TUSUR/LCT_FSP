@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from app.api.routes.assessment_bank import bank_router
 from app.api.stub import not_implemented
 from app.dependencies.auth import EmployerUser
+from app.dependencies.services import VacancyServiceDep
 from app.schemas.company import CompanyRead, CompanyUpsert
 
 router = APIRouter(prefix="/companies", tags=["companies"])
@@ -23,5 +24,5 @@ async def upsert_my_company(_: EmployerUser, data: CompanyUpsert) -> CompanyRead
 
 
 @router.get("/{company_id}", summary="Public company page")
-async def read_company(company_id: uuid.UUID) -> CompanyRead:
-    not_implemented("companies.read")
+async def read_company(company_id: uuid.UUID, vacancies: VacancyServiceDep) -> CompanyRead:
+    return await vacancies.company(company_id)

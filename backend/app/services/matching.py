@@ -13,7 +13,7 @@ order candidates the same way and the reasons shown on a card explain its actual
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Literal, Self
 
 from app.models import CandidateProfile, FspDiscipline, FspEventLevel, Grade, Vacancy, WorkFormat
@@ -220,7 +220,7 @@ class Fit:
 
 
 def normalize_term(value: str) -> str:
-    """Case- and «ё»-insensitive comparison, the same way the search index does it."""
+    """Case- and «ё»-insensitive comparison of technologies and cities, as the index does."""
     return value.lower().replace("ё", "е")
 
 
@@ -233,66 +233,71 @@ def _same_city(left: str | None, right: str | None) -> bool:
     return left is not None and right is not None and normalize_term(left) == normalize_term(right)
 
 
-def _specialization_fit(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[Relation, float]:
+def _specialization(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[float, Relation]:
     if candidate.specialization == vacancy.specialization:
-        return "same", WEIGHTS.specialization
-    related = candidate.specialization in related_specializations(vacancy.specialization)
-    if related:
-        return "related", WEIGHTS.specialization * HALF
-    return "other", 0.0
+        return WEIGHTS.specialization, "same"
+    if candidate.specialization in related_specializations(vacancy.specialization):
+        return WEIGHTS.specialization * HALF, "related"
+    return 0.0, "other"
 
 
-def _grade_fit(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[int | None, float]:
+def _grade(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[float, int | None]:
     if candidate.grade is None:
-        return None, 0.0
+        return 0.0, None
     gap = GRADES.index(candidate.grade) - GRADES.index(vacancy.grade)
     if gap == 0:
-        return gap, WEIGHTS.grade
-    if abs(gap) == 1:
-        return gap, WEIGHTS.grade * HALF
-    return gap, 0.0
+        return WEIGHTS.grade, gap
+    return (WEIGHTS.grade * HALF if abs(gap) == 1 else 0.0), gap
 
 
-def _location_fit(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[Location, float]:
+def _stack(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[float, tuple[str, ...]]:
+    owned = {normalize_term(item) for item in candidate.stack}
+    matched = tuple(item for item in vacancy.stack if normalize_term(item) in owned)
+    if not vacancy.stack:
+        return 0.0, matched
+    return WEIGHTS.stack * len(matched) / len(vacancy.stack), matched
+
+
+def _location(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[float, Location]:
     if vacancy.work_format == WorkFormat.REMOTE:
-        return "remote", WEIGHTS.location
+        return WEIGHTS.location, "remote"
     if _same_city(candidate.city, vacancy.city):
-        return "same_city", WEIGHTS.location
+        return WEIGHTS.location, "same_city"
     if candidate.relocation_ready:
-        return "relocation", WEIGHTS.location * RELOCATION_SHARE
-    return "other", 0.0
+        return WEIGHTS.location * RELOCATION_SHARE, "relocation"
+    return 0.0, "other"
 
 
-def _salary_fit(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[SalaryFit, float]:
+def _salary(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[float, SalaryFit]:
     expectation = candidate.salary_expectation
     if expectation is None:
-        return "unknown", WEIGHTS.salary * HALF
+        return WEIGHTS.salary * HALF, "unknown"
     if expectation <= vacancy.salary_to:
-        return "fits", WEIGHTS.salary
+        return WEIGHTS.salary, "fits"
     if expectation <= vacancy.salary_to * SALARY_TOLERANCE:
-        return "close", WEIGHTS.salary * HALF
-    return "above", 0.0
+        return WEIGHTS.salary * HALF, "close"
+    return 0.0, "above"
 
 
 def fit(candidate: CandidateFacts, vacancy: VacancyFacts, *, bonus: float) -> Fit:
-    """How well a candidate and a vacancy suit each other; `bonus` is a 0–1 side-specific signal."""
-    w = WEIGHTS
-    relation, specialization_points = _specialization_fit(candidate, vacancy)
-    gap, grade_points = _grade_fit(candidate, vacancy)
-    location, location_points = _location_fit(candidate, vacancy)
-    salary, salary_points = _salary_fit(candidate, vacancy)
-    points = w.bonus * bonus + specialization_points + grade_points
-    points += location_points + salary_points
+    """How well a candidate and a vacancy suit each other; `bonus` is a 0–1 side-specific signal.
 
-    owned = {normalize_term(item) for item in candidate.stack}
-    matched = tuple(item for item in vacancy.stack if normalize_term(item) in owned)
-    if vacancy.stack:
-        points += w.stack * len(matched) / len(vacancy.stack)
-
+    The additions keep the order of the Elasticsearch script, so both give the same doubles.
+    """
+    specialization, relation = _specialization(candidate, vacancy)
+    grade, gap = _grade(candidate, vacancy)
+    stack, matched = _stack(candidate, vacancy)
     format_ok = vacancy.work_format in candidate.work_formats
-    if format_ok:
-        points += w.work_format
+    location, place = _location(candidate, vacancy)
+    salary, salary_fit = _salary(candidate, vacancy)
 
+    points = WEIGHTS.bonus * bonus
+    points += specialization
+    points += grade
+    points += stack
+    points += WEIGHTS.work_format if format_ok else 0.0
+    points += location
+    points += salary
     return Fit(
         points=round_points(points),
         specialization=relation,
@@ -300,8 +305,8 @@ def fit(candidate: CandidateFacts, vacancy: VacancyFacts, *, bonus: float) -> Fi
         matched_stack=matched,
         stack_size=len(vacancy.stack),
         format_ok=format_ok,
-        location=location,
-        salary=salary,
+        location=place,
+        salary=salary_fit,
     )
 
 
@@ -309,10 +314,15 @@ def fit(candidate: CandidateFacts, vacancy: VacancyFacts, *, bonus: float) -> Fi
 FRESHNESS: tuple[tuple[int, float], ...] = ((3, 1.0), (7, 0.7), (14, 0.4), (30, 0.2))
 
 
+def as_utc(value: datetime) -> datetime:
+    """SQLite returns naive datetimes; every stored datetime is UTC."""
+    return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
+
+
 def freshness(published_at: datetime | None, now: datetime) -> float:
     if published_at is None:
         return 0.0
-    days = (now - published_at).days
+    days = (now - as_utc(published_at)).days
     return next((value for limit, value in FRESHNESS if days <= limit), 0.0)
 
 
@@ -341,7 +351,7 @@ def _technologies(items: Sequence[str], total: int) -> str:
 
 
 def _published(published_at: datetime, now: datetime) -> str:
-    days = (now - published_at).days
+    days = (now - as_utc(published_at)).days
     if days <= 0:
         return "Опубликована сегодня"
     if days == 1:
@@ -392,7 +402,9 @@ def _fsp_reason(result: FspResult) -> str:
     return f"ФСП: финал, {result.place}-е место — {details}"
 
 
-def _match_reasons(candidate: CandidateFacts, vacancy: VacancyFacts, result: Fit) -> list[str]:
+def _vacancy_fit_reasons(
+    candidate: CandidateFacts, vacancy: VacancyFacts, result: Fit
+) -> list[str]:
     reasons: list[str] = []
     if result.specialization == "related" and candidate.specialization:
         label = SPECIALIZATIONS.get(candidate.specialization, candidate.specialization)
@@ -416,15 +428,6 @@ def _match_reasons(candidate: CandidateFacts, vacancy: VacancyFacts, result: Fit
     return reasons
 
 
-def _stack_filter_reason(candidate: CandidateFacts, stack_filter: Sequence[str]) -> str | None:
-    owned = {normalize_term(item) for item in candidate.stack}
-    matched = [item for item in stack_filter if normalize_term(item) in owned]
-    if not matched:
-        return None
-    listed = ", ".join(matched[:MAX_LISTED_TECHNOLOGIES])
-    return f"Стек: {listed}"
-
-
 def candidate_reasons(
     candidate: CandidateFacts,
     result: Fit | None,
@@ -443,9 +446,10 @@ def candidate_reasons(
         reasons.append(_fsp_reason(best))
 
     if result is not None and vacancy is not None:
-        reasons.extend(_match_reasons(candidate, vacancy, result))
+        reasons += _vacancy_fit_reasons(candidate, vacancy, result)
     elif stack_filter:
-        stack_reason = _stack_filter_reason(candidate, stack_filter)
-        if stack_reason is not None:
-            reasons.append(stack_reason)
+        owned = {normalize_term(item) for item in candidate.stack}
+        matched = [item for item in stack_filter if normalize_term(item) in owned]
+        if matched:
+            reasons.append(f"Стек: {', '.join(matched[:MAX_LISTED_TECHNOLOGIES])}")
     return reasons[:MAX_REASONS]

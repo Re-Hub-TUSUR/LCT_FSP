@@ -17,12 +17,12 @@ class VacancyRepository:
         self._session = session
 
     @staticmethod
-    def _rows() -> Select[tuple[Vacancy, Company]]:
+    def _rows() -> Select[Vacancy, Company]:
         return select(Vacancy, Company).join(Company, Company.id == Vacancy.company_id)
 
-    async def _fetch(self, statement: Select[tuple[Vacancy, Company]]) -> list[VacancyRow]:
+    async def _fetch(self, statement: Select[Vacancy, Company]) -> list[VacancyRow]:
         result = await self._session.execute(statement)
-        return [(vacancy, company) for vacancy, company in result.tuples()]
+        return [(vacancy, company) for vacancy, company in result]
 
     async def get(self, vacancy_id: uuid.UUID) -> VacancyRow | None:
         rows = await self._fetch(self._rows().where(Vacancy.id == vacancy_id))

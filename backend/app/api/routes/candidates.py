@@ -1,29 +1,75 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Query, UploadFile, status
+from fastapi import APIRouter, Query, Response, UploadFile, status
 
 from app.api.stub import not_implemented
 from app.dependencies.auth import CandidateUser, CurrentUser, EmployerUser
 from app.dependencies.common import PaginationDep
-from app.models.enums import Grade
-from app.schemas.candidate import CandidateProfileUpdate, CandidateRead, FspLinkRequest
-from app.schemas.common import Page
+from app.dependencies.services import (
+    CandidateProfileServiceDep,
+    CandidateSearchServiceDep,
+    ReactionServiceDep,
+)
+from app.models.enums import Grade, WorkFormat
+from app.schemas.candidate import (
+    CandidateProfileUpdate,
+    CandidateRead,
+    CandidateSearchPage,
+    FspLinkRequest,
+)
+from app.schemas.reaction import CandidateReactionRequest, FeedView, ReactionRead
+from app.search.base import CandidateSort
+from app.services.candidate_search import CandidateSearchParams
 
 router = APIRouter(prefix="/candidates", tags=["candidates"])
 
 
-@router.get("", summary="Employer search over the categorised candidate bank")
+@router.get(
+    "",
+    summary="Employer: search the categorised candidate bank",
+    description=(
+        "Full-text search runs on Elasticsearch (Russian morphology, IT slang, typos) with a "
+        "database fallback; `engine` tells which one answered. Hidden and uncategorised profiles "
+        "never appear; contacts are never returned here. Ranking: with `vacancyId` — fit to "
+        "that vacancy, otherwise profile strength (test result + FSP results)."
+    ),
+)
 async def search_candidates(
-    _: EmployerUser,
+    *,
+    user: EmployerUser,
     pagination: PaginationDep,
+    search: CandidateSearchServiceDep,
+    q: Annotated[str | None, Query(max_length=200)] = None,
     specialization: str | None = None,
-    grade: Grade | None = None,
+    grade: Annotated[list[Grade] | None, Query()] = None,
     stack: Annotated[list[str] | None, Query()] = None,
     has_fsp_achievements: Annotated[bool | None, Query(alias="hasFspAchievements")] = None,
-) -> Page[CandidateRead]:
-    # Ranking inside a category: assessment score first, confirmed FSP achievements next.
-    not_implemented("candidates.search")
+    verified_only: Annotated[bool, Query(alias="verifiedOnly")] = False,
+    work_format: Annotated[list[WorkFormat] | None, Query(alias="workFormat")] = None,
+    city: Annotated[str | None, Query(max_length=100)] = None,
+    salary_max: Annotated[int | None, Query(alias="salaryMax", gt=0)] = None,
+    experience_min: Annotated[int | None, Query(alias="experienceMin", ge=0, le=60)] = None,
+    vacancy_id: Annotated[uuid.UUID | None, Query(alias="vacancyId")] = None,
+    view: FeedView = "all",
+    sort: CandidateSort = "relevance",
+) -> CandidateSearchPage:
+    params = CandidateSearchParams(
+        text=q,
+        specialization=specialization,
+        grades=tuple(grade or ()),
+        stack=tuple(stack or ()),
+        has_fsp=has_fsp_achievements,
+        verified_only=verified_only,
+        work_formats=tuple(work_format or ()),
+        city=city,
+        salary_max=salary_max,
+        experience_min=experience_min,
+        vacancy_id=vacancy_id,
+        view=view,
+        sort=sort,
+    )
+    return await search.search(user, params, pagination)
 
 
 @router.get("/me", summary="Own candidate profile")
@@ -50,6 +96,37 @@ async def link_fsp(_: CandidateUser, data: FspLinkRequest) -> CandidateRead:
     not_implemented("candidates.link_fsp")
 
 
-@router.get("/{candidate_id}", summary="Public candidate profile (contacts only when allowed)")
-async def read_candidate(candidate_id: uuid.UUID, _: CurrentUser) -> CandidateRead:
-    not_implemented("candidates.read")
+@router.get(
+    "/{candidate_id}",
+    summary="Candidate profile: the candidate themself or an employer (visible profiles only)",
+    description="Contacts only for the candidate and an employer whose invitation was accepted.",
+)
+async def read_candidate(
+    candidate_id: uuid.UUID, viewer: CurrentUser, profiles: CandidateProfileServiceDep
+) -> CandidateRead:
+    return await profiles.read(candidate_id, viewer)
+
+
+@router.put(
+    "/{candidate_id}/reaction", summary="Employer: add a candidate to favourites or skip them"
+)
+async def react_to_candidate(
+    candidate_id: uuid.UUID,
+    data: CandidateReactionRequest,
+    user: EmployerUser,
+    reactions: ReactionServiceDep,
+) -> ReactionRead:
+    reaction = await reactions.react_to_candidate(user, candidate_id, data.kind, data.vacancy_id)
+    return ReactionRead.model_validate(reaction)
+
+
+@router.delete(
+    "/{candidate_id}/reaction",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Employer: undo a like or a skip",
+)
+async def clear_candidate_reaction(
+    candidate_id: uuid.UUID, user: EmployerUser, reactions: ReactionServiceDep
+) -> Response:
+    await reactions.clear_candidate(user, candidate_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
