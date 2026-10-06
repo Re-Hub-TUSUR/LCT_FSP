@@ -18,12 +18,14 @@ export function SignupPanel() {
     const role = submitter?.value === 'employer' ? 'employer' : 'candidate'
     const value = email.trim()
 
-    if (!value) return setError(PANEL.emailEmpty)
-    if (!isEmail(value)) return setError(PANEL.emailInvalid)
+    // The email field is hidden on the current landing, so an empty value is the normal case:
+    // the buttons choose a role and the address is asked for on the registration page.
+    if (value && !isEmail(value)) return setError(PANEL.emailInvalid)
 
     setError('')
     const target = role === 'employer' ? ROUTES.employerAuth : ROUTES.candidateAuth
-    navigate(`${target}?${new URLSearchParams({ email: value, mode: 'register' })}`)
+    const query = new URLSearchParams({ mode: 'register', ...(value && { email: value }) })
+    navigate(`${target}?${query}`)
   }
 
   return (

@@ -5,9 +5,12 @@ import type { Paginated, PaginationParams } from '@/shared/api'
 /** What an employer sees about the platform grade test. */
 export type AssessmentStatus = 'not_taken' | 'passed' | 'failed'
 
-/** `awaiting_review`: finished, but open answers wait for the company's grades. */
+/**
+ * `awaiting_review`: finished, but open answers wait for the company's grades.
+ * `grading`: finished while the code runner was down; the score appears once it is back.
+ */
 export type AssessmentAttemptStatus =
-  'in_progress' | 'passed' | 'failed' | 'expired' | 'awaiting_review'
+  'in_progress' | 'passed' | 'failed' | 'expired' | 'awaiting_review' | 'grading'
 
 /** Every kind has a view in the runner and an editor in the bank, see the kind registries. */
 export type TaskKind = 'quiz' | 'code' | 'open'
@@ -36,6 +39,8 @@ export type AssessmentAttemptDto = {
   expiresAt: string
   finishedAt: string | null
   breakdown: TopicResultDto[] | null
+  /** In the answer to «finish» only: the next grade a strong result opened. */
+  recommendedGrade?: string | null
 }
 
 export type CodeAnswerDto = { language: string; code: string }
@@ -119,6 +124,11 @@ export type AssessmentTrackDto = {
   nextAttemptAt: string | null
   /** The category employers see in search and feeds. */
   isPrimary: boolean
+  /**
+   * The next grade a strong result opened: a test for it skips the grade-change cooldown.
+   * `nextAttemptAt` is null when it may start now, a date after a failed try at it.
+   */
+  recommendation: { grade: string; nextAttemptAt: string | null } | null
 }
 
 /** What a platform grade test consists of, shown before the candidate starts it. */
@@ -131,6 +141,8 @@ export type AssessmentTemplateDto = {
   tasks: Partial<Record<TaskKind, number>>
   retryDays: number
   gradeChangeDays: number
+  /** A pass with at least this score opens the next grade at once. */
+  recommendScore: number
 }
 
 /** Candidate's categorisation state and what they may do next. */
@@ -261,6 +273,7 @@ export type BankTestWrite = {
   /** Null = the platform defaults. */
   retryDays: number | null
   gradeChangeDays: number | null
+  recommendScore: number | null
   isActive: boolean
 }
 

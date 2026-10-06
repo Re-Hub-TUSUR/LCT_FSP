@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   TASK_KIND_LABELS,
@@ -17,9 +17,8 @@ import type {
 import { ApiError, getErrorMessage } from '@/shared/api'
 import { Button, QueryState } from '@/shared/ui'
 import { TASK_TRAITS, TaskView, isAnswered } from '../config/task-views'
+import { createDraftSaver } from '../lib/draft-saver'
 import './assessment-runner.css'
-
-const DRAFT_SAVE_DELAY_MS = 1000
 
 type Props = {
   attemptId: string
@@ -82,36 +81,27 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
     return () => clearInterval(timer)
   }, [])
 
-  // Typed answers (code, text) that changed since the last save, flushed after a pause and
-  // before finishing.
-  const dirty = useRef(new Map<string, TaskAnswerDto>())
-
-  const flushDrafts = useCallback(async () => {
-    const pending = [...dirty.current.entries()]
-    dirty.current.clear()
-    await Promise.all(
-      pending.map(([taskId, answer]) =>
+  // Typed answers (code, text) are saved in the background: after a pause in typing, and
+  // every few seconds while the typing goes on without one.
+  const [drafts] = useState(() =>
+    createDraftSaver<TaskAnswerDto>(
+      (taskId, answer) =>
         assessmentApi.saveAnswer(attempt.id, { taskId, answer }).catch((error: unknown) => {
           // Too late to save is fine: the last saved version will be checked.
           if (!(error instanceof ApiError && error.code === 'attempt_expired')) throw error
         }),
-      ),
-    )
-  }, [attempt.id])
-
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  // Leaving the page mid-typing saves the draft at once instead of dropping the pending save.
-  useEffect(
-    () => () => {
-      clearTimeout(saveTimer.current)
-      void flushDrafts().catch(() => {})
-    },
-    [flushDrafts],
+      {
+        onSaved: () => setSaveError(''),
+        onFailed: (error) => setSaveError(getErrorMessage(error)),
+      },
+    ),
   )
+  // Leaving the page mid-typing saves the draft at once instead of dropping the pending save.
+  useEffect(() => () => void drafts.flush().catch(() => {}), [drafts])
 
   const finish = useMutation({
     mutationFn: async () => {
-      await flushDrafts()
+      await drafts.flush()
       return assessmentApi.finish(attempt.id)
     },
     onSuccess: (result) => {
@@ -136,21 +126,13 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
     return () => window.removeEventListener('blur', onBlur)
   }, [attempt.id])
 
-  const reportSaved = (saving: Promise<unknown>) =>
-    saving.then(
+  const changeAnswer = (task: AttemptTaskDto, answer: TaskAnswerDto) => {
+    setAnswers((prev) => ({ ...prev, [task.id]: answer }))
+    if (TASK_TRAITS[task.kind].save === 'draft') return drafts.change(task.id, answer)
+    assessmentApi.saveAnswer(attempt.id, { taskId: task.id, answer }).then(
       () => setSaveError(''),
       (error: unknown) => setSaveError(getErrorMessage(error)),
     )
-
-  const changeAnswer = (task: AttemptTaskDto, answer: TaskAnswerDto) => {
-    setAnswers((prev) => ({ ...prev, [task.id]: answer }))
-    if (TASK_TRAITS[task.kind].save === 'instant') {
-      void reportSaved(assessmentApi.saveAnswer(attempt.id, { taskId: task.id, answer }))
-      return
-    }
-    dirty.current.set(task.id, answer)
-    clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => void reportSaved(flushDrafts()), DRAFT_SAVE_DELAY_MS)
   }
 
   const answered = tasks.filter((item) => isAnswered(item, answers[item.id])).length

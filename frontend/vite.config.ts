@@ -34,6 +34,9 @@ export default defineConfig(({ mode }) => {
       include: ['src/**/*.test.{ts,tsx}', 'tests/**/*.test.{ts,tsx}'],
       css: false,
       restoreMocks: true,
+      // Page tests render the whole app and load lazy chunks: 5 s is too tight when every
+      // test file runs in parallel.
+      testTimeout: 15_000,
     },
   }
 })

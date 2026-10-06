@@ -144,8 +144,14 @@ class AssessmentRepository:
 
     # ── Attempts ──────────────────────────────────────────────────────────────────────────
 
-    async def get_attempt(self, attempt_id: uuid.UUID) -> AssessmentAttempt | None:
-        return await self._session.get(AssessmentAttempt, attempt_id)
+    async def get_attempt(
+        self, attempt_id: uuid.UUID, *, lock: bool = False
+    ) -> AssessmentAttempt | None:
+        """`lock` holds the row until the transaction ends: two simultaneous "finish" requests
+        grade the attempt once, the second one sees it already closed."""
+        return await self._session.get(
+            AssessmentAttempt, attempt_id, with_for_update=lock, populate_existing=lock
+        )
 
     async def attempts_of(self, candidate_id: uuid.UUID) -> Sequence[AssessmentAttempt]:
         """Newest first."""

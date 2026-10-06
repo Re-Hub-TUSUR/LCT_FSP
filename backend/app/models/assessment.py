@@ -2,7 +2,17 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, CheckConstraint, DateTime, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    String,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -40,6 +50,9 @@ class AssessmentTest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("quiz_weight >= 0 AND quiz_weight <= 100", name="quiz_weight_range"),
         CheckConstraint("retry_days >= 0", name="retry_days_positive"),
         CheckConstraint("grade_change_days >= 0", name="grade_change_days_positive"),
+        CheckConstraint(
+            "recommend_score >= 0 AND recommend_score <= 100", name="recommend_score_range"
+        ),
     )
 
     owner_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -60,11 +73,23 @@ class AssessmentTest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Null = the platform defaults from the settings.
     retry_days: Mapped[int | None]
     grade_change_days: Mapped[int | None]
+    # A pass with at least this score recommends (and opens) the next grade. Null = the default.
+    recommend_score: Mapped[int | None]
     is_active: Mapped[bool] = mapped_column(default=True)
 
 
 class AssessmentAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "assessment_attempts"
+    __table_args__ = (
+        # One running test per candidate, whatever two simultaneous requests think.
+        Index(
+            "uq_assessment_attempts_running",
+            "candidate_id",
+            unique=True,
+            postgresql_where=text("status = 'in_progress'"),
+            sqlite_where=text("status = 'in_progress'"),
+        ),
+    )
 
     candidate_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("candidate_profiles.id", ondelete="CASCADE"), index=True
@@ -91,16 +116,23 @@ class AssessmentAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Cooldowns are copied too: they count from this attempt, whatever the template says later.
     retry_days: Mapped[int] = mapped_column(default=7, server_default="7")
     grade_change_days: Mapped[int] = mapped_column(default=90, server_default="90")
+    recommend_score: Mapped[int] = mapped_column(default=85, server_default="85")
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # The variant handed to this candidate, in display order.
+    # Ids of the variant: what the candidate has already met, for drawing the next one.
     task_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    # The variant itself, in display order, as the tasks were at the start. The attempt is
+    # shown, graded and reviewed from this copy, so later edits of the bank cannot reach it.
+    tasks: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, default=list, server_default=text("'[]'")
+    )
     # task id → what the task's kind fixed for this attempt (e.g. the order of quiz options).
     task_state: Mapped[dict[str, dict[str, Any]]] = mapped_column(JSON, default=dict)
     # Per-topic result, filled on finish.
     breakdown: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON)
     runs_count: Mapped[int] = mapped_column(default=0)
+    # The last execution of the candidate's code: a run during the test or a try to grade it.
     last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Signals for reviewers; they never change the score.
     paste_count: Mapped[int] = mapped_column(default=0)
@@ -114,9 +146,9 @@ class AssessmentAnswer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     attempt_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("assessment_attempts.id", ondelete="CASCADE"), index=True
     )
-    task_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("assessment_tasks.id", ondelete="CASCADE")
-    )
+    # Id of a task in the attempt's own copy of the variant. Deliberately not a foreign key:
+    # deleting a task from the bank must not delete what candidates answered.
+    task_id: Mapped[uuid.UUID]
     # In the stored form of the task's kind, e.g. quiz: {"selected": [bank indexes]}.
     answer: Mapped[dict[str, Any]] = mapped_column(JSON)
     # Share of the task earned, 0–1. Filled on finish; an answer only a person can grade

@@ -37,6 +37,8 @@ DEFAULT_PASSWORD: Final = "kadry-demo-2026"  # noqa: S105 - documented password 
 
 # Matches the default of ASSESSMENT_GRADE_CHANGE_DAYS.
 GRADE_CHANGE_DAYS: Final = 90
+# Matches the default of ASSESSMENT_RECOMMEND_SCORE.
+RECOMMEND_SCORE: Final = 85
 
 # Ids derive from fixture keys, so links to demo profiles survive re-seeding.
 SEED_NAMESPACE: Final = uuid.UUID("6f1c8f8e-2b0b-4c51-9d8a-3f2a7c1e5b90")
@@ -190,6 +192,9 @@ def _category(candidate: CandidateFixture, now: datetime) -> CandidateCategory |
         score=candidate.assessment_score,
         confirmed_at=assessed,
         change_allowed_at=assessed + timedelta(days=GRADE_CHANGE_DAYS),
+        recommended_grade=candidate.grade.following
+        if candidate.assessment_score >= RECOMMEND_SCORE
+        else None,
     )
 
 

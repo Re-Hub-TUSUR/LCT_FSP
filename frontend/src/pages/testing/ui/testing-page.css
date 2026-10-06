@@ -105,3 +105,14 @@
   outline: var(--focus-ring);
   outline-offset: 3px;
 }
+
+.test-result__note--strong {
+  color: var(--text);
+}
+
+.test-link--hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #7be3b4;
+}

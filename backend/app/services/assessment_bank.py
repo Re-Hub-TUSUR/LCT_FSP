@@ -65,6 +65,7 @@ def test_read(test: AssessmentTest) -> TestRead:
             "composition": test.composition,
             "retry_days": test.retry_days,
             "grade_change_days": test.grade_change_days,
+            "recommend_score": test.recommend_score,
             "is_active": test.is_active,
         }
     )
@@ -195,7 +196,13 @@ class AssessmentBankService:
         composition = data.composition
         # Rules draw from the platform bank and a grade confirms a platform category:
         # neither belongs to an employer's own test.
-        platform_only = (data.grade, data.specialization, data.retry_days, data.grade_change_days)
+        platform_only = (
+            data.grade,
+            data.specialization,
+            data.retry_days,
+            data.grade_change_days,
+            data.recommend_score,
+        )
         if owner_id is not None and (
             any(value is not None for value in platform_only)
             or not isinstance(composition, FixedComposition)
@@ -223,6 +230,7 @@ class AssessmentBankService:
         test.composition = composition.model_dump(mode="json")
         test.retry_days = data.retry_days
         test.grade_change_days = data.grade_change_days
+        test.recommend_score = data.recommend_score
         test.is_active = data.is_active
 
 

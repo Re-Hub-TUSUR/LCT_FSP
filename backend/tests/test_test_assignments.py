@@ -219,6 +219,17 @@ async def test_candidate_takes_the_test_and_the_company_reviews_it(
     inbox = (await client.get(INBOX, headers=bearer(candidate))).json()
     assert (inbox[0]["status"], inbox[0]["score"], inbox[0]["passScore"]) == ("done", 75.0, 60)
 
+    # The tasks may leave the bank: what the candidate answered stays with the attempt.
+    for task in (await client.get(f"{BANK}/assessment-tasks", headers=bearer(employer))).json()[
+        "items"
+    ]:
+        gone = await client.delete(
+            f"{BANK}/assessment-tasks/{task['id']}", headers=bearer(employer)
+        )
+        assert gone.status_code == 204
+    kept = (await client.get(f"{SENT}/{assignment_id}", headers=bearer(employer))).json()
+    assert kept["tasks"] == reviewed.json()["tasks"]
+
     # A company's test neither confirms a category nor starts a cooldown.
     after = (await client.get(f"{API}/assessments/me", headers=bearer(candidate))).json()
     assert after["tracks"] == tracks_before["tracks"]

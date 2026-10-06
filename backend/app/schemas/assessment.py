@@ -176,6 +176,8 @@ class TestWrite(ApiModel):
     # Null = the platform defaults.
     retry_days: int | None = Field(default=None, ge=0, le=365)
     grade_change_days: int | None = Field(default=None, ge=0, le=365)
+    # A pass with at least this score opens the next grade at once. Null = the platform default.
+    recommend_score: int | None = Field(default=None, ge=0, le=100)
     is_active: bool = True
 
 
@@ -279,6 +281,8 @@ class AttemptRead(ApiModel):
     finished_at: datetime | None
     # Filled once the attempt is finished.
     breakdown: list[TopicResult] | None = None
+    # In the answer to "finish" only: the grade this result opens, if it was good enough.
+    recommended_grade: Grade | None = None
 
 
 class AttemptDetail(AttemptRead):
@@ -326,6 +330,14 @@ class AttemptSignal(ApiModel):
     kind: Literal["paste", "blur"]
 
 
+class Recommendation(ApiModel):
+    """The next grade a well-passed test opened: no wait for the grade-change cooldown."""
+
+    grade: Grade
+    # Null = may start right now; a date after a failed try at it.
+    next_attempt_at: datetime | None
+
+
 class TrackRead(ApiModel):
     """One specialization the candidate has tried: its own category and its own cooldown."""
 
@@ -338,6 +350,7 @@ class TrackRead(ApiModel):
     next_attempt_at: datetime | None
     # The category employers see in search and feeds.
     is_primary: bool
+    recommendation: Recommendation | None = None
 
 
 class AssessmentStatusRead(ApiModel):
@@ -373,6 +386,7 @@ class TemplateRead(ApiModel):
     tasks: dict[TaskKind, int]
     retry_days: int
     grade_change_days: int
+    recommend_score: int
 
 
 class SurveyAnswers(ApiModel):

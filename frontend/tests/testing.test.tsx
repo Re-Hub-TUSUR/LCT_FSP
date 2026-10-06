@@ -22,6 +22,8 @@ const status: AssessmentStatusDto = {
       score: 82,
       nextAttemptAt: '2027-01-10T10:00:00Z',
       isPrimary: true,
+      // A strong result opened Senior: no wait for the cooldown above.
+      recommendation: { grade: 'senior', nextAttemptAt: null },
     },
     {
       specialization: 'frontend',
@@ -30,6 +32,7 @@ const status: AssessmentStatusDto = {
       score: 71,
       nextAttemptAt: null,
       isPrimary: false,
+      recommendation: null,
     },
   ],
   activeAttemptId: null,
@@ -46,6 +49,7 @@ const templates: AssessmentTemplateDto[] = [
     tasks: { quiz: 10, code: 1 },
     retryDays: 7,
     gradeChangeDays: 90,
+    recommendScore: 85,
   },
   {
     grade: 'junior',
@@ -55,6 +59,17 @@ const templates: AssessmentTemplateDto[] = [
     tasks: { quiz: 12 },
     retryDays: 1,
     gradeChangeDays: 30,
+    recommendScore: 90,
+  },
+  {
+    grade: 'senior',
+    specialization: null,
+    durationMinutes: 35,
+    passScore: 60,
+    tasks: { quiz: 12 },
+    retryDays: 7,
+    gradeChangeDays: 90,
+    recommendScore: 85,
   },
 ]
 
@@ -67,7 +82,21 @@ const dictionary = {
   grades: [
     { code: 'junior', label: 'Junior' },
     { code: 'middle', label: 'Middle' },
+    { code: 'senior', label: 'Senior' },
   ],
+}
+
+function signIn() {
+  sessionStore.set({
+    accessToken: 't',
+    user: {
+      id: 'u1',
+      email: 'u@fsp.ru',
+      role: 'candidate',
+      isEmailVerified: true,
+      createdAt: '2026-01-01',
+    },
+  })
 }
 
 function stubFetch() {
@@ -93,16 +122,7 @@ describe('testing page', () => {
   afterEach(() => sessionStore.clear())
 
   it('lists the categories and lets the candidate choose the primary one', async () => {
-    sessionStore.set({
-      accessToken: 't',
-      user: {
-        id: 'u1',
-        email: 'u@fsp.ru',
-        role: 'candidate',
-        isEmailVerified: true,
-        createdAt: '2026-01-01',
-      },
-    })
+    signIn()
     const fetchMock = stubFetch()
     const user = userEvent.setup()
 
@@ -123,16 +143,7 @@ describe('testing page', () => {
   })
 
   it('shows the real rules of the chosen test and what blocks the start', async () => {
-    sessionStore.set({
-      accessToken: 't',
-      user: {
-        id: 'u1',
-        email: 'u@fsp.ru',
-        role: 'candidate',
-        isEmailVerified: true,
-        createdAt: '2026-01-01',
-      },
-    })
+    signIn()
     stubFetch()
     const user = userEvent.setup()
 
@@ -146,6 +157,7 @@ describe('testing page', () => {
     await user.selectOptions(grade, 'junior')
     expect(await screen.findByText(/Тест идёт 40 минут/)).toBeInTheDocument()
     expect(screen.getByText(/Проходной балл — 70 из 100/)).toBeInTheDocument()
+    expect(screen.getByText(/При результате от 90 из 100 тест на Middle/)).toBeInTheDocument()
     expect(startButton).toBeEnabled()
 
     // The general junior test has a code task, and the runner is down.
@@ -158,5 +170,35 @@ describe('testing page', () => {
     await user.selectOptions(specialization, 'backend')
     expect(screen.getByText(/следующая попытка будет доступна/)).toBeInTheDocument()
     expect(startButton).toBeDisabled()
+  })
+
+  it('opens the recommended next grade without the grade-change pause', async () => {
+    signIn()
+    stubFetch()
+    const user = userEvent.setup()
+
+    renderApp('/testing')
+    const specialization = await screen.findByLabelText('Специализация', {}, SLOW)
+    const grade = screen.getByLabelText('Грейд, на который претендуете')
+    const startButton = screen.getByRole('button', { name: 'Начать тест' })
+
+    // The form opens on what the primary category recommends.
+    await waitFor(() => expect(specialization).toHaveValue('backend'))
+    expect(grade).toHaveValue('senior')
+    expect(
+      await screen.findByText(/рекомендован по итогам вашего прошлого теста/),
+    ).toBeInTheDocument()
+    expect(startButton).toBeEnabled()
+
+    // Any other grade of the same specialization still waits.
+    await user.selectOptions(grade, 'junior')
+    expect(screen.getByText(/следующая попытка будет доступна/)).toBeInTheDocument()
+    expect(startButton).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: 'Рекомендуем Senior' }))
+    await waitFor(() =>
+      expect(screen.getByLabelText('Грейд, на который претендуете')).toHaveValue('senior'),
+    )
+    expect(screen.getByRole('button', { name: 'Начать тест' })).toBeEnabled()
   })
 })

@@ -61,6 +61,7 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
   const [specialization, setSpecialization] = useState(test?.specialization ?? '')
   const [retryDays, setRetryDays] = useState(String(test?.retryDays ?? ''))
   const [gradeChangeDays, setGradeChangeDays] = useState(String(test?.gradeChangeDays ?? ''))
+  const [recommendScore, setRecommendScore] = useState(String(test?.recommendScore ?? ''))
   const [duration, setDuration] = useState(String(test?.durationMinutes ?? 30))
   const [passScore, setPassScore] = useState(String(test?.passScore ?? 60))
   const [quizWeight, setQuizWeight] = useState(String(test?.quizWeight ?? 40))
@@ -90,6 +91,7 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
           composition: mode === 'rules' ? { mode, rules } : { mode, taskIds },
           retryDays: scope === 'admin' ? optionalDays(retryDays) : null,
           gradeChangeDays: scope === 'admin' ? optionalDays(gradeChangeDays) : null,
+          recommendScore: scope === 'admin' && grade ? optionalDays(recommendScore) : null,
           isActive,
         },
         test?.id,
@@ -111,6 +113,9 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
       pauses.some((days) => days !== null && !(Number.isInteger(days) && days >= 0 && days <= 365))
     )
       return 'Паузы — целое число дней от 0 до 365 или пусто'
+    const bar = optionalDays(recommendScore)
+    if (bar !== null && !(Number.isInteger(bar) && bar >= 0 && bar <= 100))
+      return 'Балл рекомендации — целое число от 0 до 100 или пусто'
     if (mode === 'fixed' && taskIds.length === 0) return 'Выберите хотя бы одну задачу'
     if (mode === 'rules' && rules.some((rule) => !(rule.count >= 1 && rule.count <= 40)))
       return 'В каждом правиле — от 1 до 40 заданий'
@@ -210,6 +215,14 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
             inputMode="numeric"
             value={gradeChangeDays}
             onChange={(e) => setGradeChangeDays(e.target.value)}
+          />
+          <TextField
+            id="test-recommend-score"
+            label="Балл, открывающий следующий грейд"
+            placeholder="По умолчанию"
+            inputMode="numeric"
+            value={recommendScore}
+            onChange={(e) => setRecommendScore(e.target.value)}
           />
         </div>
       )}

@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react'
 import { QueryClient } from '@tanstack/react-query'
 import { render } from '@testing-library/react'
+import { vi } from 'vitest'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import type { RouteObject } from 'react-router'
 import { AppProviders } from '@/app/providers/app-providers'
@@ -42,4 +43,26 @@ export function mockFetch(handlers: Record<string, { status?: number; body?: unk
       },
     )
   }
+}
+
+export type ApiCall = { method: string; path: string; body: unknown }
+
+/** A `fetch` whose answers may depend on what was called before. */
+export function stubApi(answer: (call: ApiCall, calls: ApiCall[]) => unknown) {
+  const calls: ApiCall[] = []
+  vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = new URL(typeof input === 'string' ? input : input.toString(), 'http://localhost')
+    const call: ApiCall = {
+      method: init?.method ?? 'GET',
+      path: url.pathname.replace('/api/v1', ''),
+      body: init?.body ? JSON.parse(String(init.body)) : undefined,
+    }
+    const body = answer(call, calls)
+    calls.push(call)
+    return new Response(body === undefined ? null : JSON.stringify(body), {
+      status: body === undefined ? 204 : 200,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  })
+  return calls
 }

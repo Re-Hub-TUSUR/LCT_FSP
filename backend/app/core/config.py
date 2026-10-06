@@ -45,6 +45,8 @@ class Settings(BaseSettings):
     # Days before a failed or abandoned test can be retaken / a confirmed grade can be changed.
     assessment_retry_days: int = Field(default=7, ge=0)
     assessment_grade_change_days: int = Field(default=90, ge=0)
+    # A grade test passed with at least this score opens the next grade at once.
+    assessment_recommend_score: int = Field(default=85, ge=0, le=100)
 
     # Candidate search. Empty URL: the search runs on the database (tests, CI, low-memory hosts).
     elasticsearch_url: str = ""

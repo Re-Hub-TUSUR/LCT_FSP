@@ -32,3 +32,6 @@ class CandidateCategory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     confirmed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     # Until then the grade of this specialization cannot be re-tested.
     change_allowed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Set when the confirming test was passed well: a test for this grade may start at once,
+    # without waiting for `change_allowed_at`.
+    recommended_grade: Mapped[Grade | None] = mapped_column(str_enum(Grade))

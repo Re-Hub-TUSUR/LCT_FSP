@@ -14,6 +14,13 @@ class Grade(StrEnum):
     SENIOR = "senior"
     LEAD = "lead"
 
+    @property
+    def following(self) -> "Grade | None":
+        """The grade one step up; the top one has none."""
+        grades = list(Grade)
+        position = grades.index(self) + 1
+        return grades[position] if position < len(grades) else None
+
 
 class AssessmentStatus(StrEnum):
     """Outcome of the platform grade test as employers see it."""
@@ -31,6 +38,8 @@ class AttemptStatus(StrEnum):
     EXPIRED = "expired"
     # Finished, but some answers wait for a person to grade them (employer's tests only).
     AWAITING_REVIEW = "awaiting_review"
+    # Finished, but the code runner was down: the answers are frozen and graded once it is back.
+    GRADING = "grading"
 
 
 class TaskKind(StrEnum):

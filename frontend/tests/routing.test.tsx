@@ -20,18 +20,37 @@ describe('application routing', () => {
 
   it('renders the landing with the signup panel', async () => {
     renderApp('/')
-    expect(await screen.findByRole('heading', { level: 1, name: 'КАДРЫ' })).toBeInTheDocument()
+    // The first render loads the lazy landing chunk, which can take longer than the default 1 s.
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'КАДРЫ' }, { timeout: 5000 }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Я специалист' })).toBeInTheDocument()
   })
 
-  it('validates email and routes the specialist to candidate registration', async () => {
+  it('takes both roles from the landing to their registration without asking for an email', async () => {
+    const user = userEvent.setup()
+
+    const specialist = renderApp('/')
+    await user.click(await screen.findByRole('button', { name: 'Я специалист' }, { timeout: 5000 }))
+    await waitFor(() => expect(specialist.router.state.location.pathname).toBe('/auth/candidate'))
+    expect(specialist.router.state.location.search).toBe('?mode=register')
+    specialist.unmount()
+
+    const employer = renderApp('/')
+    await user.click(await screen.findByRole('button', { name: 'Я ищу специалистов' }))
+    await waitFor(() => expect(employer.router.state.location.pathname).toBe('/auth/employer'))
+    expect(employer.router.state.location.search).toBe('?mode=register')
+  })
+
+  it('carries a typed email over and rejects a malformed one', async () => {
     const { router } = renderApp('/')
     const user = userEvent.setup()
 
-    await user.click(await screen.findByRole('button', { name: 'Я специалист' }))
-    expect(screen.getByRole('alert')).toHaveTextContent('Укажите email')
+    await user.type(await screen.findByLabelText('Электронная почта'), 'dev@')
+    await user.click(screen.getByRole('button', { name: 'Я специалист' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Проверьте адрес почты')
 
-    await user.type(screen.getByLabelText('Электронная почта'), 'dev@fsp.ru')
+    await user.type(screen.getByLabelText('Электронная почта'), 'fsp.ru')
     await user.click(screen.getByRole('button', { name: 'Я специалист' }))
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/auth/candidate'))

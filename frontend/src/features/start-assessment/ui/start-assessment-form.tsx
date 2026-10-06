@@ -13,7 +13,8 @@ import type {
   AttemptDetailDto,
   TaskKind,
 } from '@/entities/assessment'
-import { categoryQueries } from '@/entities/category'
+import { GRADES, GRADE_LABELS, categoryQueries } from '@/entities/category'
+import type { Grade } from '@/entities/category'
 import { getErrorMessage } from '@/shared/api'
 import { formatDateTime } from '@/shared/lib'
 import { Button, QueryState, SelectField } from '@/shared/ui'
@@ -38,6 +39,9 @@ function templateFor(templates: AssessmentTemplateDto[], specialization: string,
     ofGrade.find((template) => template.specialization === null)
   )
 }
+
+/** One step up; the top grade has none. */
+const nextGrade = (grade: string): Grade | undefined => GRADES[GRADES.indexOf(grade as Grade) + 1]
 
 const days = (count: number) => (count === 0 ? 'сразу' : `через ${count} дн.`)
 
@@ -67,7 +71,10 @@ export function StartAssessmentForm({
 
   const chosen = Boolean(specialization && grade)
   const template = chosen ? templateFor(templates.data ?? [], specialization, grade) : undefined
-  const pausedUntil = tracks.find((track) => track.specialization === specialization)?.nextAttemptAt
+  const track = tracks.find((item) => item.specialization === specialization)
+  // The grade a strong result recommended is not held back by the grade-change cooldown.
+  const recommended = track?.recommendation?.grade === grade ? track.recommendation : null
+  const pausedUntil = recommended ? recommended.nextAttemptAt : track?.nextAttemptAt
   const needsRunner = Boolean(template?.tasks.code) && !runnerAvailable
   const blocked =
     Boolean(pausedUntil) || needsRunner || (chosen && templates.isSuccess && !template)
@@ -134,6 +141,12 @@ export function StartAssessmentForm({
                 После сдачи сменить грейд в этой специализации можно{' '}
                 {days(template.gradeChangeDays)}. Другие специализации это не задерживает.
               </li>
+              {nextGrade(grade) && (
+                <li>
+                  При результате от {template.recommendScore} из 100 тест на{' '}
+                  {GRADE_LABELS[nextGrade(grade)!]} откроется сразу, без этой паузы.
+                </li>
+              )}
             </ul>
           ) : (
             <p className="start-test__note">
@@ -143,6 +156,11 @@ export function StartAssessmentForm({
             </p>
           )}
 
+          {recommended && !pausedUntil && (
+            <p className="start-test__note" role="status">
+              Этот грейд рекомендован по итогам вашего прошлого теста и доступен без паузы.
+            </p>
+          )}
           {pausedUntil && (
             <p className="start-test__note" role="status">
               По этой специализации следующая попытка будет доступна {formatDateTime(pausedUntil)}.

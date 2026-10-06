@@ -12,8 +12,6 @@ from typing import Final
 
 from app.core.errors import AppError, ConflictError, NotFoundError
 from app.models import (
-    AssessmentAttempt,
-    AssessmentTask,
     AssessmentTest,
     AssignmentStatus,
     AttemptStatus,
@@ -38,7 +36,7 @@ from app.schemas.assessment import (
     ReviewTask,
 )
 from app.services.assessment_bank import test_read
-from app.services.assessments import AssessmentService, settle
+from app.services.assessments import AssessmentService, attempt_tasks, settle
 from app.services.task_kinds import spec_of
 
 DEFAULT_DUE: Final = timedelta(days=7)
@@ -147,7 +145,7 @@ class TestAssignmentService:
         attempt = await self._repository.attempt_of_assignment(assignment.id)
         if attempt is None or attempt.status not in _GRADED:
             raise ConflictError("Кандидат ещё не завершил этот тест")
-        tasks = await self._tasks(attempt)
+        tasks = attempt_tasks(attempt)
         by_id = {task.id: task for task in tasks}
         answers = await self._repository.answers_of(attempt.id)
         for grade in data.grades:
@@ -242,7 +240,7 @@ class TestAssignmentService:
                 await self._repository.add(assignment)
             elif assignment.id in attempts:
                 # Changes the assignment's status too when the attempt is closed.
-                await self._assessments.close_abandoned(attempts[assignment.id])
+                await self._assessments.settle_assigned(attempts[assignment.id])
         return assignments
 
     async def _tasks_count(self, test: AssessmentTest) -> int:
@@ -251,11 +249,6 @@ class TestAssignmentService:
             return 0
         tasks = await self._repository.tasks_by_ids(composition.task_ids)
         return sum(task.is_active for task in tasks.values())
-
-    async def _tasks(self, attempt: AssessmentAttempt) -> list[AssessmentTask]:
-        ids = [uuid.UUID(task_id) for task_id in attempt.task_ids]
-        tasks = await self._repository.tasks_by_ids(ids)
-        return [tasks[task_id] for task_id in ids if task_id in tasks]
 
     async def _read(self, assignments: Sequence[TestAssignment]) -> list[AssignmentRead]:
         attempts = await self._repository.attempts_of_assignments([a.id for a in assignments])
@@ -310,7 +303,7 @@ class TestAssignmentService:
         # Nothing of a running attempt is shown: the company sees the finished work only.
         if attempt is not None and attempt.status in _GRADED:
             answers = await self._repository.answers_of(attempt.id)
-            for task in await self._tasks(attempt):
+            for task in attempt_tasks(attempt):
                 spec = spec_of(task)
                 answer = answers.get(task.id)
                 review.append(

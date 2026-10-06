@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router'
 import {
@@ -23,13 +23,36 @@ import { AssignmentInbox } from '@/widgets/assignment-inbox'
 import { AssignmentReview } from '@/widgets/assignment-review'
 import './testing-page.css'
 
+/** What the start form opens with. */
+type Preset = { specialization: string; grade: string }
+
 const gradeLabel = (grade: string | null) => (grade ? (GRADE_LABELS[grade as Grade] ?? grade) : '')
 
 /** Result of a finished attempt: the score against the pass mark and what went well or not. */
-function AttemptResult({ attempt }: { attempt: AssessmentAttemptDto }) {
+function AttemptResult({
+  attempt,
+  onRecommended,
+}: {
+  attempt: AssessmentAttemptDto
+  /** Puts the recommended test into the start form. */
+  onRecommended: (preset: Preset) => void
+}) {
   const passed = attempt.status === 'passed'
   // A test a company sent confirms nothing and starts no cooldown.
   const assigned = attempt.assignmentId !== null
+  const { recommendedGrade, specialization } = attempt
+
+  if (attempt.status === 'grading') {
+    return (
+      <div className="test-result" role="status">
+        <p className="test-result__title">Проверяем решение</p>
+        <p className="test-result__note">
+          Ответы сохранены, но сервис проверки кода сейчас не отвечает. Итог появится в истории
+          попыток, как только он вернётся; пауза за это время не начисляется.
+        </p>
+      </div>
+    )
+  }
 
   if (attempt.status === 'awaiting_review') {
     return (
@@ -58,6 +81,19 @@ function AttemptResult({ attempt }: { attempt: AssessmentAttemptDto }) {
         {attempt.score === null ? '—' : Math.round(attempt.score)} из 100
         <span> · проходной балл {attempt.passScore}</span>
       </p>
+      {recommendedGrade && specialization && (
+        <p className="test-result__note test-result__note--strong">
+          Отличный результат — рекомендуем тест на {gradeLabel(recommendedGrade)}: он доступен уже
+          сейчас, без паузы.{' '}
+          <button
+            type="button"
+            className="test-link"
+            onClick={() => onRecommended({ specialization, grade: recommendedGrade })}
+          >
+            Выбрать этот тест
+          </button>
+        </p>
+      )}
       {!passed && !assigned && (
         <p className="test-result__note">
           Категория не присвоена. Повторить попытку по этой специализации можно после паузы — дата
@@ -92,7 +128,13 @@ function AttemptResult({ attempt }: { attempt: AssessmentAttemptDto }) {
 }
 
 /** Confirmed and tried specializations: each has its own grade, cooldown and «primary» switch. */
-function Tracks({ status }: { status: AssessmentStatusDto }) {
+function Tracks({
+  status,
+  onRecommended,
+}: {
+  status: AssessmentStatusDto
+  onRecommended: (preset: Preset) => void
+}) {
   const queryClient = useQueryClient()
   const dictionary = useQuery(categoryQueries.dictionary())
   const setPrimary = useMutation({
@@ -122,7 +164,23 @@ function Tracks({ status }: { status: AssessmentStatusDto }) {
           {status.tracks.map((track) => (
             <tr key={track.specialization}>
               <td>{label(track.specialization)}</td>
-              <td>{track.grade ? gradeLabel(track.grade) : 'Не подтверждён'}</td>
+              <td>
+                {track.grade ? gradeLabel(track.grade) : 'Не подтверждён'}
+                {track.recommendation && (
+                  <button
+                    type="button"
+                    className="test-link test-link--hint"
+                    onClick={() =>
+                      onRecommended({
+                        specialization: track.specialization,
+                        grade: track.recommendation!.grade,
+                      })
+                    }
+                  >
+                    Рекомендуем {gradeLabel(track.recommendation.grade)}
+                  </button>
+                )}
+              </td>
               <td>{track.score === null ? '—' : Math.round(track.score)}</td>
               <td>{track.nextAttemptAt ? formatDate(track.nextAttemptAt) : 'Доступна'}</td>
               <td>
@@ -162,25 +220,41 @@ function Overview({
   result: AssessmentAttemptDto | null
 }) {
   const lastTried = status.history[0]
+  const primary = status.tracks.find((track) => track.isPrimary)
+  const [preset, setPreset] = useState<Preset | null>(null)
+  const startForm = useRef<HTMLDivElement>(null)
+
+  const choose = (next: Preset) => {
+    setPreset(next)
+    startForm.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
     <>
-      {result && <AttemptResult attempt={result} />}
+      {result && <AttemptResult attempt={result} onRecommended={choose} />}
 
       <AssignmentInbox />
 
       <Section title="Мои категории">
-        <Tracks status={status} />
+        <Tracks status={status} onRecommended={choose} />
       </Section>
 
-      <Section title="Пройти тест">
-        <StartAssessmentForm
-          tracks={status.tracks}
-          runnerAvailable={status.codeRunnerAvailable}
-          defaultSpecialization={status.specialization ?? lastTried?.specialization}
-          defaultGrade={status.grade ?? lastTried?.grade}
-        />
-      </Section>
+      <div ref={startForm}>
+        <Section title="Пройти тест">
+          <StartAssessmentForm
+            // A chosen recommendation reopens the form with it.
+            key={preset ? `${preset.specialization}:${preset.grade}` : 'default'}
+            tracks={status.tracks}
+            runnerAvailable={status.codeRunnerAvailable}
+            defaultSpecialization={
+              preset?.specialization ?? status.specialization ?? lastTried?.specialization
+            }
+            defaultGrade={
+              preset?.grade ?? primary?.recommendation?.grade ?? status.grade ?? lastTried?.grade
+            }
+          />
+        </Section>
+      </div>
 
       {status.history.length > 0 && (
         <Section title="История попыток">

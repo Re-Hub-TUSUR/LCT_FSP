@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.dependencies.services import get_code_runner
@@ -14,7 +15,7 @@ from app.schemas.assessment import RulesComposition
 from app.seed.assessment import code_tasks, grade_tests, quiz_tasks, seed_assessment_bank
 from app.services.assessments import _draw
 from app.services.categories import SPECIALIZATIONS
-from app.services.code_runner import Execution
+from app.services.code_runner import CodeRunnerUnavailableError, Execution
 from app.services.task_kinds.code import judge, normalize_output
 from tests.conftest import API, bearer, create_admin, login, register_and_login
 
@@ -28,8 +29,12 @@ class StubRunner:
 
     def __init__(self) -> None:
         self.inputs: list[str] = []
+        # True: the service is configured but does not answer.
+        self.down = False
 
     async def run(self, *, compiler: str, code: str, stdin: str) -> Execution:
+        if self.down:
+            raise CodeRunnerUnavailableError()
         self.inputs.append(stdin)
         if code == "echo":
             return Execution(ok=True, output=stdin + "  \n", error="", time=0.1)
@@ -461,6 +466,7 @@ async def test_template_of_a_specialization_overrides_the_general_one(
         "tasks": {"quiz": 1},
         "retryDays": 1,
         "gradeChangeDays": 30,
+        "recommendScore": 85,
     }
     assert (by_scope[None]["tasks"], by_scope[None]["retryDays"]) == ({"quiz": 2}, 7)
     assert len(qa["tasks"]) == 1
@@ -590,6 +596,237 @@ async def test_employer_bank_is_isolated(
     removed = await client.delete(task_url, headers=first)
     assert (stolen.status_code, removed_by_stranger.status_code) == (404, 404)
     assert (forbidden.status_code, removed.status_code) == (403, 204)
+
+
+# --- an attempt does not depend on what happens around it -------------------------------------
+
+
+async def test_bank_edits_do_not_reach_a_started_attempt(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker)
+    token = await register_and_login(client, "dev@fsp.ru")
+    attempt = await start(client, token)
+    await answer_all(client, token, attempt, right=True)
+
+    admin = bearer(await admin_token(client, sessionmaker, "admin2@fsp.ru"))
+    bank = (await client.get(f"{API}/admin/assessment-tasks", headers=admin)).json()["items"]
+    first, second = (task for task in bank if task["kind"] == "quiz")
+    # One question loses an option and moves the right one, the other leaves the bank.
+    changed = quiz(first["title"])
+    changed["payload"] = {"options": ["wrong a", f"right {first['title']}"], "correct": [1]}
+    edited = await client.put(
+        f"{API}/admin/assessment-tasks/{first['id']}", headers=admin, json=changed
+    )
+    deleted = await client.delete(f"{API}/admin/assessment-tasks/{second['id']}", headers=admin)
+    assert (edited.status_code, deleted.status_code) == (200, 204)
+
+    reread = await client.get(f"{API}/assessments/attempts/{attempt['id']}", headers=bearer(token))
+    finished = await client.post(
+        f"{API}/assessments/attempts/{attempt['id']}/finish", headers=bearer(token)
+    )
+
+    assert reread.status_code == 200, reread.text
+    # Same tasks, same options in the same order, same answers.
+    assert reread.json()["tasks"] == [
+        {**task, "answer": saved["answer"]}
+        for task, saved in zip(attempt["tasks"], reread.json()["tasks"], strict=True)
+    ]
+    assert all(task["answer"] for task in reread.json()["tasks"])
+    assert (finished.json()["status"], finished.json()["score"]) == ("passed", 100.0)
+
+
+async def test_code_runner_outage_on_finish_keeps_the_work(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker)
+    token = await register_and_login(client, "dev@fsp.ru")
+    attempt = await start(client, token)
+    await answer_all(client, token, attempt, right=True)
+    url = f"{API}/assessments/attempts/{attempt['id']}"
+
+    runner.down = True
+    finished = await client.post(f"{url}/finish", headers=bearer(token))
+    late = await client.post(
+        f"{url}/answers",
+        headers=bearer(token),
+        json={"taskId": attempt["tasks"][0]["id"], "answer": {"selected": [0]}},
+    )
+    waiting = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+    again = await client.post(
+        f"{API}/assessments/attempts",
+        headers=bearer(token),
+        json={"specialization": "backend", "grade": "junior"},
+    )
+
+    # Not a failure and not an error: the answers are frozen and wait for the runner.
+    assert finished.status_code == 200, finished.text
+    assert (finished.json()["status"], finished.json()["score"]) == ("grading", None)
+    assert late.status_code == 409
+    assert (waiting["activeAttemptId"], waiting["tracks"]) == (None, [])
+    assert waiting["history"][0]["status"] == "grading"
+    assert again.status_code == 409, "the same specialization waits for its result"
+
+    # The runner is back, but the retry is not due yet.
+    runner.down = False
+    early = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+    assert early["history"][0]["status"] == "grading"
+
+    async with sessionmaker() as session:
+        row = await session.get(AssessmentAttempt, uuid.UUID(attempt["id"]))
+        assert row is not None
+        row.last_run_at = datetime.now(UTC) - timedelta(minutes=5)
+        await session.commit()
+    graded = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+
+    assert (graded["history"][0]["status"], graded["history"][0]["score"]) == ("passed", 100.0)
+    assert (graded["tracks"][0]["status"], graded["tracks"][0]["grade"]) == ("passed", "junior")
+
+
+async def test_last_answer_is_accepted_right_after_the_deadline(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker, with_code=False)
+    token = await register_and_login(client, "dev@fsp.ru")
+    attempt = await start(client, token)
+    body = {"taskId": attempt["tasks"][0]["id"], "answer": {"selected": [0]}}
+    url = f"{API}/assessments/attempts/{attempt['id']}/answers"
+
+    async def answer_after(deadline_ago: timedelta) -> int:
+        async with sessionmaker() as session:
+            row = await session.get(AssessmentAttempt, uuid.UUID(attempt["id"]))
+            assert row is not None
+            row.expires_at = datetime.now(UTC) - deadline_ago
+            await session.commit()
+        return (await client.post(url, headers=bearer(token), json=body)).status_code
+
+    # The save the runner sends when the clock hits zero still lands; a later one does not.
+    assert await answer_after(timedelta(seconds=3)) == 204
+    assert await answer_after(timedelta(seconds=30)) == 409
+
+
+async def test_one_running_attempt_is_enforced_by_the_database(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker, with_code=False)
+    token = await register_and_login(client, "dev@fsp.ru")
+    attempt = await start(client, token)
+
+    async with sessionmaker() as session:
+        row = await session.get(AssessmentAttempt, uuid.UUID(attempt["id"]))
+        assert row is not None
+        # What a second "start" racing past the service check would write.
+        session.add(
+            AssessmentAttempt(
+                candidate_id=row.candidate_id,
+                title="twin",
+                pass_score=60,
+                quiz_weight=40,
+                started_at=row.started_at,
+                expires_at=row.expires_at,
+            )
+        )
+        with pytest.raises(IntegrityError):
+            await session.flush()
+
+
+# --- the next grade after a strong result ------------------------------------------------------
+
+
+async def grade_template(client: AsyncClient, headers: dict[str, str], **fields: Any) -> None:
+    created = await client.post(
+        f"{API}/admin/assessment-tests",
+        headers=headers,
+        json={
+            "title": "Template",
+            "durationMinutes": 25,
+            "composition": {"mode": "rules", "rules": [{"kind": "quiz", "count": 2}]},
+            **fields,
+        },
+    )
+    assert created.status_code == 201, created.text
+
+
+async def test_strong_result_opens_the_next_grade_at_once(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker, with_code=False)
+    admin = bearer(await admin_token(client, sessionmaker, "admin2@fsp.ru"))
+    await grade_template(client, admin, grade="middle")
+    await grade_template(client, admin, grade="senior")
+    token = await register_and_login(client, "dev@fsp.ru")
+
+    async def start_grade(grade: str) -> Any:
+        return await client.post(
+            f"{API}/assessments/attempts",
+            headers=bearer(token),
+            json={"specialization": "backend", "grade": grade},
+        )
+
+    async def track() -> dict[str, Any]:
+        status = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+        result: dict[str, Any] = status["tracks"][0]
+        return result
+
+    junior = await start(client, token)
+    await answer_all(client, token, junior, right=True)
+    passed = await finish(client, token, junior)
+
+    assert (passed["score"], passed["recommendedGrade"]) == (100.0, "middle")
+    opened = await track()
+    assert opened["recommendation"] == {"grade": "middle", "nextAttemptAt": None}
+    assert opened["nextAttemptAt"] is not None, "any other grade still waits"
+    # Only one step up is open: neither a retake nor a jump over a grade.
+    assert [(await start_grade(grade)).status_code for grade in ("junior", "senior")] == [409, 409]
+
+    middle = await start_grade("middle")
+    assert middle.status_code == 201, middle.text
+    await answer_all(client, token, middle.json(), right=False)
+    failed = await finish(client, token, middle.json())
+
+    # A failed step up costs nothing but the usual pause before another try.
+    assert (failed["status"], failed["recommendedGrade"]) == ("failed", None)
+    after = await track()
+    assert (after["status"], after["grade"]) == ("passed", "junior")
+    assert after["recommendation"]["grade"] == "middle"
+    wait = datetime.fromisoformat(after["recommendation"]["nextAttemptAt"]) - datetime.now(UTC)
+    assert timedelta(days=6) < wait < timedelta(days=8)
+    assert (await start_grade("middle")).status_code == 409
+
+
+async def test_ordinary_pass_keeps_the_grade_change_cooldown(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker, with_code=False)
+    admin = bearer(await admin_token(client, sessionmaker, "admin2@fsp.ru"))
+    # Two questions and a pass mark of 50: one right answer passes, but is far from strong.
+    await grade_template(client, admin, grade="junior", specialization="qa", passScore=50)
+    await grade_template(client, admin, grade="middle")
+    token = await register_and_login(client, "dev@fsp.ru")
+
+    attempt = await start(client, token, "qa")
+    await answer_all(client, token, attempt, right=True)
+    # One of the two answers is changed to a wrong one: 50 passes, but is far from "strong".
+    first = attempt["tasks"][0]
+    wrong = next(
+        index for index, option in enumerate(first["content"]["options"]) if "wrong" in option
+    )
+    await client.post(
+        f"{API}/assessments/attempts/{attempt['id']}/answers",
+        headers=bearer(token),
+        json={"taskId": first["id"], "answer": {"selected": [wrong]}},
+    )
+    passed = await finish(client, token, attempt)
+    status = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+    up = await client.post(
+        f"{API}/assessments/attempts",
+        headers=bearer(token),
+        json={"specialization": "qa", "grade": "middle"},
+    )
+
+    assert (passed["status"], passed["score"], passed["recommendedGrade"]) == ("passed", 50.0, None)
+    assert status["tracks"][0]["recommendation"] is None
+    assert up.status_code == 409
 
 
 async def test_bank_search_export_and_import(

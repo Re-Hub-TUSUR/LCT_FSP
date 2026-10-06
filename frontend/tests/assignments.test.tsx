@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import type {
   AssessmentAttemptDto,
   AssessmentStatusDto,
@@ -10,39 +10,16 @@ import type {
 } from '@/entities/assessment'
 import { sessionStore } from '@/entities/session'
 import type { UserRole } from '@/entities/user'
-import { renderApp } from './test-utils'
+import { renderApp, stubApi } from './test-utils'
 
 // The first render loads the lazy page chunk, which can take longer than the default 1 s.
 const SLOW = { timeout: 5000 }
-const API = '/api/v1'
 
 function signIn(role: UserRole) {
   sessionStore.set({
     accessToken: 't',
     user: { id: 'u1', email: 'u@fsp.ru', role, isEmailVerified: true, createdAt: '2026-01-01' },
   })
-}
-
-type Call = { method: string; path: string; body: unknown }
-
-/** A `fetch` whose answers may depend on what was called before. */
-function stubApi(answer: (call: Call, calls: Call[]) => unknown) {
-  const calls: Call[] = []
-  vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = new URL(typeof input === 'string' ? input : input.toString(), 'http://localhost')
-    const call: Call = {
-      method: init?.method ?? 'GET',
-      path: url.pathname.replace(API, ''),
-      body: init?.body ? JSON.parse(String(init.body)) : undefined,
-    }
-    const body = answer(call, calls)
-    calls.push(call)
-    return new Response(body === undefined ? null : JSON.stringify(body), {
-      status: body === undefined ? 204 : 200,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  })
-  return calls
 }
 
 const assignment: AssignmentDto = {
