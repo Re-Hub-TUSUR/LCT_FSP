@@ -43,7 +43,8 @@ services:
   backend:
     build: ./backend
     image: kadry-backend
-    command: sh -c "alembic upgrade head && python -m app.seed.assessment && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    # Demo data is loaded once, into an empty database (`--if-missing` never blocks the start).
+    command: sh -c "alembic upgrade head && python -m app.seed.assessment && python -m app.seed --if-missing && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     environment:
       APP_ENV: ${APP_ENV:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -55,7 +56,7 @@ services:
       RESEND_FROM: ${RESEND_FROM:-}
       ONLINECOMPILER_API_KEY: ${ONLINECOMPILER_API_KEY:-}
       ONLINECOMPILER_URL: ${ONLINECOMPILER_URL:-https://api.onlinecompiler.io}
-      # Used only by `docker compose exec backend python -m app.seed`.
+      # Password of the demo accounts created by `python -m app.seed`.
       SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-}
       ELASTICSEARCH_URL: http://elasticsearch:9200
     depends_on:

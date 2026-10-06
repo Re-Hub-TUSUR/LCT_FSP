@@ -224,6 +224,14 @@ async def _clear(session: AsyncSession, user_ids: list[uuid.UUID]) -> None:
         await session.execute(statement.execution_options(synchronize_session=False))
 
 
+async def demo_data_loaded(session: AsyncSession, data: SeedData) -> bool:
+    """Is any demo account already in the database? Used to seed a fresh stack only once."""
+    user_ids = [seed_id("user", company.key) for company in data.companies]
+    user_ids += [seed_id("user", candidate.key) for candidate in data.candidates]
+    found = await session.scalar(select(User.id).where(User.id.in_(user_ids)).limit(1))
+    return found is not None
+
+
 async def seed_database(
     session: AsyncSession, data: SeedData, *, password_hash: str, now: datetime | None = None
 ) -> SeedSummary:

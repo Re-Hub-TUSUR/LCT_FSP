@@ -9,7 +9,7 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass
 
 import pytest
-from elasticsearch import AsyncElasticsearch
+from elasticsearch import AsyncElasticsearch, NotFoundError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.models import Grade, WorkFormat
@@ -39,6 +39,15 @@ QUERIES = (
 )
 
 
+async def drop(client: AsyncElasticsearch, alias: str) -> None:
+    """Elasticsearch refuses wildcard deletes: remove the indices behind the alias by name."""
+    try:
+        response = await client.indices.get_alias(name=alias)
+    except NotFoundError:
+        return
+    await client.indices.delete(index=list(response.body))
+
+
 @dataclass
 class Engines:
     elastic: ElasticCandidateSearch
@@ -65,7 +74,7 @@ async def engines(sessionmaker: async_sessionmaker[AsyncSession]) -> AsyncIterat
                 [VacancyFacts.of(vacancy) for vacancy, _ in rows],
             )
     finally:
-        await client.indices.delete(index=f"{index.alias}-*")
+        await drop(client, index.alias)
         await client.close()
 
 
@@ -135,7 +144,7 @@ async def test_sync_brings_new_test_results_into_search(
             assert await state.sync(CandidateRepository(session).updated_since) >= 1
             after = await search.search(verified, offset=0, limit=500)
     finally:
-        await client.indices.delete(index=f"{state.index.alias}-*")
+        await drop(client, state.index.alias)
         await client.close()
 
     assert candidate_id not in before.ids

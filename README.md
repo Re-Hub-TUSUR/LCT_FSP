@@ -28,7 +28,7 @@ cp .env.example .env        # заполните POSTGRES_PASSWORD и JWT_SECRET
 
 ```bash
 docker compose up --build   # SPA: http://localhost:8080, API: http://localhost:8000/api/docs
-docker compose exec backend python -m app.seed   # демо-данные (см. ниже)
+docker compose exec backend python -m app.seed   # перезалить демо-данные (на пустой базе грузятся сами)
 ```
 
 ### Локально

@@ -32,6 +32,7 @@ Swagger: <http://localhost:8000/api/docs>, OpenAPI: `/api/openapi.json`.
 | `uv run pytest`                                 | тесты (SQLite in-memory, без БД)  |
 | `uv run alembic revision --autogenerate -m "…"` | новая миграция (проверяйте руками) |
 | `uv run python -m app.seed`                     | загрузить демо-данные (заменяет прежние демо-записи) |
+| `uv run python -m app.seed --if-missing`        | загрузить, только если демо-данных ещё нет (так делает контейнер при старте) |
 | `uv run python -m app.seed.assessment`          | добавить стартовый банк задач и тесты на грейд (только недостающие строки) |
 | `uv run python -m app.seed.generate`            | пересобрать `app/seed/data/*.json` из `app/seed/content.py` |
 
