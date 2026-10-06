@@ -103,3 +103,16 @@ class CandidateRepository:
 
     async def email_of(self, profile: CandidateProfile) -> str | None:
         return await self._session.scalar(select(User.email).where(User.id == profile.user_id))
+
+    async def photo_of(self, candidate_id: uuid.UUID) -> tuple[bytes, str] | None:
+        """Load the image bytes. The column is deferred on ordinary profile queries."""
+        row = (
+            await self._session.execute(
+                select(CandidateProfile.photo, CandidateProfile.photo_type).where(
+                    CandidateProfile.id == candidate_id
+                )
+            )
+        ).one_or_none()
+        if row is None or row.photo is None or row.photo_type is None:
+            return None
+        return row.photo, row.photo_type

@@ -1,4 +1,7 @@
+import { useQuery } from '@tanstack/react-query'
 import { NavLink, Outlet } from 'react-router'
+import { candidateQueries } from '@/entities/candidate'
+import { companyQueries } from '@/entities/company'
 import { useSession } from '@/entities/session'
 import { ROUTES } from '@/shared/config'
 import './cabinet.css'
@@ -18,11 +21,28 @@ const EMPLOYER_LINKS = [
 
 export function CabinetLayout() {
   const { user } = useSession()
-  const links =
-    user?.role === 'employer' ? EMPLOYER_LINKS : user?.role === 'candidate' ? CANDIDATE_LINKS : []
+  const candidate = useQuery({
+    ...candidateQueries.mine(),
+    enabled: user?.role === 'candidate',
+  })
+  const company = useQuery({
+    ...companyQueries.mine(),
+    enabled: user?.role === 'employer',
+  })
+  const ready =
+    user?.role === 'admin' ||
+    (user?.role === 'candidate' && candidate.isSuccess) ||
+    (user?.role === 'employer' && company.isSuccess)
+  const links = !ready
+    ? []
+    : user?.role === 'employer'
+      ? EMPLOYER_LINKS
+      : user?.role === 'candidate'
+        ? CANDIDATE_LINKS
+        : []
 
   return (
-    <div className="cabinet">
+    <div className={links.length > 0 ? 'cabinet' : 'cabinet cabinet--setup'}>
       {links.length > 0 && (
         <nav className="cabinet-nav" aria-label="Разделы кабинета">
           {links.map((link) => (

@@ -171,6 +171,33 @@ body:has(.page--swipe) main {
   padding: 0;
 }
 
+/* First resume: one centred column, no side actions. */
+.page.page--setup {
+  width: min(100%, 760px);
+  margin-inline: auto;
+  align-items: center;
+}
+
+.page--setup .page__header {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.page--setup .page__lead {
+  margin-inline: auto;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+}
+
+.page--setup .page__body {
+  width: 100%;
+  align-items: center;
+}
+
 .page-section {
   display: flex;
   flex-direction: column;

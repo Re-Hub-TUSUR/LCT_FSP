@@ -42,9 +42,14 @@ function RoleAuthPage({ role }: { role: 'candidate' | 'employer' }) {
         initialEmail={params.get('email') ?? ''}
         initialMode={mode}
         onModeChange={setMode}
-        onSuccess={() =>
+        onSuccess={(entry) => {
+          const setup = role === 'candidate' ? ROUTES.profileResume : ROUTES.profileCompany
+          if (entry === 'verified') {
+            navigate(setup, { replace: true })
+            return
+          }
           navigate(isSafeInternalPath(redirect) ? redirect : ROUTES.feedSwipe, { replace: true })
-        }
+        }}
       />
     </Page>
   )

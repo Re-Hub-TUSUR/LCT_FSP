@@ -13,13 +13,15 @@ const session = {
 }
 
 describe('sessionStore', () => {
-  it('persists, notifies subscribers and clears', () => {
+  it('keeps the session in memory and out of web storage', () => {
     const listener = vi.fn<() => void>()
     const unsubscribe = sessionStore.subscribe(listener)
+    window.localStorage.setItem('kadry.session', '{"accessToken":"stolen"}')
 
     sessionStore.set(session)
     expect(sessionStore.getSnapshot()).toEqual(session)
-    expect(window.sessionStorage.getItem('kadry.session')).not.toBeNull()
+    expect(window.localStorage.getItem('kadry.session')).toBeNull()
+    expect(window.sessionStorage.getItem('kadry.session')).toBeNull()
 
     sessionStore.clear()
     expect(sessionStore.getSnapshot()).toBeNull()

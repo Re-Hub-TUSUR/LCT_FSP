@@ -1,6 +1,8 @@
 import hashlib
 import hmac
 import secrets
+import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from app.core.config import Settings
@@ -10,9 +12,16 @@ from app.core.errors import (
     EmailNotVerifiedError,
     TooManyRequestsError,
 )
-from app.core.security import create_access_token, hash_password, verify_password
-from app.models import EmailVerificationCode, User, UserRole
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_refresh_token,
+    hash_password,
+    verify_password,
+)
+from app.models import EmailVerificationCode, RefreshToken, User, UserRole
 from app.repositories.email_verification import EmailVerificationRepository
+from app.repositories.refresh_token import RefreshTokenRepository
 from app.repositories.user import UserRepository
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
 from app.schemas.user import UserRead
@@ -46,16 +55,25 @@ def _hash_code(code: str, settings: Settings) -> str:
     ).hexdigest()
 
 
+@dataclass(frozen=True, slots=True)
+class IssuedSession:
+    response: TokenResponse
+    refresh_token: str
+    refresh_ttl: int
+
+
 class AuthService:
     def __init__(
         self,
         users: UserRepository,
         codes: EmailVerificationRepository,
+        refresh_tokens: RefreshTokenRepository,
         settings: Settings,
         mailer: EmailSender,
     ) -> None:
         self._users = users
         self._codes = codes
+        self._refresh_tokens = refresh_tokens
         self._settings = settings
         self._mailer = mailer
 
@@ -75,7 +93,7 @@ class AuthService:
         await self._issue_code(user)
         return user
 
-    async def login(self, data: LoginRequest) -> TokenResponse:
+    async def login(self, data: LoginRequest) -> IssuedSession:
         user = await self._users.get_by_email(normalize_email(str(data.email)))
         # Same error for unknown email and wrong password: don't reveal registered accounts.
         if not verify_password(data.password, user.password_hash if user else None) or not user:
@@ -89,12 +107,57 @@ class AuthService:
             except TooManyRequestsError:
                 pass
             raise EmailNotVerifiedError(details={"email": user.email})
+        return await self._open_session(user)
 
+    async def refresh(self, raw_token: str) -> IssuedSession:
+        claims = decode_refresh_token(raw_token, self._settings)
+        stored = await self._refresh_tokens.get(claims.token_id)
+        now = datetime.now(UTC)
+        if (
+            stored is None
+            or stored.revoked_at is not None
+            or _aware(stored.expires_at) < now
+            or str(stored.user_id) != claims.subject
+        ):
+            raise AuthenticationError("Сессия недействительна")
+        user = await self._users.get_by_id(stored.user_id)
+        if user is None or not user.is_active:
+            raise AuthenticationError("Сессия недействительна")
+        stored.revoked_at = now
+        return await self._open_session(user)
+
+    async def logout(self, raw_token: str | None) -> None:
+        if not raw_token:
+            return
+        try:
+            claims = decode_refresh_token(raw_token, self._settings)
+        except AuthenticationError:
+            return
+        stored = await self._refresh_tokens.get(claims.token_id)
+        if stored is not None and stored.revoked_at is None:
+            stored.revoked_at = datetime.now(UTC)
+
+    async def _open_session(self, user: User) -> IssuedSession:
         token, expires_in = create_access_token(
             subject=str(user.id), email=user.email, roles=[user.role.value], settings=self._settings
         )
-        return TokenResponse(
-            access_token=token, expires_in=expires_in, user=UserRead.model_validate(user)
+        token_id = uuid.uuid4()
+        refresh, refresh_ttl = create_refresh_token(
+            subject=str(user.id), token_id=token_id, settings=self._settings
+        )
+        await self._refresh_tokens.add(
+            RefreshToken(
+                id=token_id,
+                user_id=user.id,
+                expires_at=datetime.now(UTC) + timedelta(seconds=refresh_ttl),
+            )
+        )
+        return IssuedSession(
+            response=TokenResponse(
+                access_token=token, expires_in=expires_in, user=UserRead.model_validate(user)
+            ),
+            refresh_token=refresh,
+            refresh_ttl=refresh_ttl,
         )
 
     async def verify_email(self, email: str, code: str) -> None:

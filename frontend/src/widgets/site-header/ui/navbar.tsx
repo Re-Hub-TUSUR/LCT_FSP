@@ -9,7 +9,8 @@ import { LogoMark } from './logo-mark'
 
 type Props = {
   links: readonly NavItem[]
-  cta: NavItem
+  cta?: NavItem
+  home?: string
   menuOpen: boolean
   onToggle: () => void
   toggleRef: RefObject<HTMLButtonElement | null>
@@ -23,7 +24,15 @@ function onHashClick(event: MouseEvent<HTMLAnchorElement>, to: string) {
   scrollToId(to)
 }
 
-export function Navbar({ links, cta, menuOpen, onToggle, toggleRef, overlay = false }: Props) {
+export function Navbar({
+  links,
+  cta,
+  home = ROUTES.landing,
+  menuOpen,
+  onToggle,
+  toggleRef,
+  overlay = false,
+}: Props) {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -38,7 +47,7 @@ export function Navbar({ links, cta, menuOpen, onToggle, toggleRef, overlay = fa
 
   return (
     <header className={bar}>
-      <Link className="nav__logo" to={ROUTES.landing}>
+      <Link className="nav__logo" to={home}>
         <LogoMark />
         {BRAND}
       </Link>
@@ -60,23 +69,27 @@ export function Navbar({ links, cta, menuOpen, onToggle, toggleRef, overlay = fa
           ))}
         </nav>
 
-        <Link className="nav__cta" to={cta.to}>
-          {cta.label}
-        </Link>
+        {cta && (
+          <Link className="nav__cta" to={cta.to}>
+            {cta.label}
+          </Link>
+        )}
 
-        <button
-          ref={toggleRef}
-          type="button"
-          className={`nav__toggle${menuOpen ? ' is-active' : ''}`}
-          aria-expanded={menuOpen}
-          aria-controls={MENU.id}
-          aria-label={menuOpen ? MENU.close : MENU.open}
-          onClick={onToggle}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
+        {(links.length > 0 || cta) && (
+          <button
+            ref={toggleRef}
+            type="button"
+            className={`nav__toggle${menuOpen ? ' is-active' : ''}`}
+            aria-expanded={menuOpen}
+            aria-controls={MENU.id}
+            aria-label={menuOpen ? MENU.close : MENU.open}
+            onClick={onToggle}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        )}
       </div>
     </header>
   )

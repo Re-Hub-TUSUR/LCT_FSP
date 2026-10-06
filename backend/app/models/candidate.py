@@ -1,8 +1,8 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import JSON, CheckConstraint, DateTime, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import JSON, CheckConstraint, DateTime, ForeignKey, LargeBinary, String, Text
+from sqlalchemy.orm import Mapped, deferred, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 from app.db.types import str_enum
@@ -70,3 +70,10 @@ class CandidateProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     telegram: Mapped[str | None] = mapped_column(String(64))
 
     is_visible_to_employers: Mapped[bool] = mapped_column(default=True)
+
+    # Resumes besides the priority one stored in the columns above. The priority resume is what
+    # search and the vacancy feed rank first; these stay visible on the card.
+    additional_resumes: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    # Deferred: list and search queries must not pull the image bytes.
+    photo: Mapped[bytes | None] = deferred(mapped_column(LargeBinary))
+    photo_type: Mapped[str | None] = mapped_column(String(32))

@@ -6,6 +6,7 @@ from app.schemas.candidate import (
     CandidateRead,
     FspAchievementRead,
     OwnCandidateRead,
+    ResumeRead,
 )
 from app.schemas.category import Category
 from app.schemas.common import SalaryRange
@@ -51,6 +52,53 @@ def profile_category(profile: CandidateProfile) -> Category | None:
     return category_for(profile.specialization, profile.grade)
 
 
+def resume_views(profile: CandidateProfile) -> list[ResumeRead]:
+    """Priority resume first. Extra resumes keep the id they were stored with."""
+    primary = ResumeRead(
+        id=profile.id,
+        headline=profile.headline,
+        specialization=profile.specialization,
+        stack=list(profile.stack),
+        soft_skills=list(profile.soft_skills),
+        about=profile.about,
+        experience_years=profile.experience_years,
+        is_primary=True,
+    )
+    extras: list[ResumeRead] = []
+    for item in profile.additional_resumes or []:
+        if not isinstance(item, dict) or "id" not in item:
+            continue
+        extras.append(
+            ResumeRead(
+                id=item["id"],
+                headline=stored_text(item.get("headline")),
+                specialization=stored_text(item.get("specialization")),
+                stack=stored_skills(item.get("stack")),
+                soft_skills=stored_skills(item.get("soft_skills")),
+                about=stored_text(item.get("about")),
+                experience_years=stored_years(item.get("experience_years")),
+                is_primary=False,
+            )
+        )
+    return [primary, *extras]
+
+
+def stored_text(value: object) -> str | None:
+    return value if isinstance(value, str) else None
+
+
+def stored_skills(value: object) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str)]
+
+
+def stored_years(value: object) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int):
+        return None
+    return value
+
+
 def candidate_read(
     profile: CandidateProfile, *, contacts: CandidateContacts | None = None
 ) -> CandidateRead:
@@ -83,6 +131,8 @@ def candidate_read(
             for item in profile.fsp_achievements
         ],
         fsp_linked=profile.fsp_member_id is not None,
+        resumes=resume_views(profile),
+        has_photo=profile.photo_type is not None,
         contacts=contacts,
     )
 

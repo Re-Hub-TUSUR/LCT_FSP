@@ -139,6 +139,8 @@ class CandidateFacts:
     salary_expectation: int | None
     assessment_score: float | None
     fsp: tuple[FspResult, ...]
+    # Specializations of the non-priority resumes. They rank below an exact priority match.
+    other_specializations: tuple[str, ...] = ()
 
     @classmethod
     def of(cls, profile: CandidateProfile) -> Self:
@@ -152,6 +154,11 @@ class CandidateFacts:
             relocation_ready=profile.relocation_ready,
             salary_expectation=profile.salary_expectation,
             assessment_score=profile.assessment_score,
+            other_specializations=tuple(
+                str(item["specialization"])
+                for item in (profile.additional_resumes or [])
+                if isinstance(item, dict) and item.get("specialization")
+            ),
             fsp=tuple(
                 FspResult(
                     event_name=item.event_name,
@@ -236,6 +243,9 @@ def _same_city(left: str | None, right: str | None) -> bool:
 def _specialization(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[float, Relation]:
     if candidate.specialization == vacancy.specialization:
         return WEIGHTS.specialization, "same"
+    # A second resume in this profession ranks above a merely related one, below the priority.
+    if vacancy.specialization in candidate.other_specializations:
+        return WEIGHTS.specialization * 0.75, "related"
     if candidate.specialization in related_specializations(vacancy.specialization):
         return WEIGHTS.specialization * HALF, "related"
     return 0.0, "other"

@@ -10,6 +10,7 @@ from app.repositories.email_verification import EmailVerificationRepository
 from app.repositories.invitation import InvitationRepository
 from app.repositories.meeting import MeetingRepository
 from app.repositories.reaction import ReactionRepository
+from app.repositories.refresh_token import RefreshTokenRepository
 from app.repositories.user import UserRepository
 from app.repositories.vacancy import VacancyRepository
 from app.search.elastic import ElasticSearchState
@@ -38,7 +39,11 @@ def get_auth_service(
     session: SessionDep, users: UserRepositoryDep, settings: SettingsDep
 ) -> AuthService:
     return AuthService(
-        users, EmailVerificationRepository(session), settings, ResendEmailSender(settings)
+        users,
+        EmailVerificationRepository(session),
+        RefreshTokenRepository(session),
+        settings,
+        ResendEmailSender(settings),
     )
 
 

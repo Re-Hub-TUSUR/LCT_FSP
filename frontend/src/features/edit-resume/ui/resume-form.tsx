@@ -2,19 +2,30 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router'
-import { candidateApi, candidateKeys } from '@/entities/candidate'
-import type { OwnCandidateDto } from '@/entities/candidate'
+import { candidateApi, candidateKeys, dropPhotoUrl } from '@/entities/candidate'
+import type { OwnCandidateDto, ResumeDto } from '@/entities/candidate'
 import { categoryQueries } from '@/entities/category'
 import { WORK_FORMAT_LABELS, WORK_FORMATS } from '@/entities/vacancy'
 import type { WorkFormat } from '@/entities/vacancy'
 import { ApiError, getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
 import { Button, SelectField, TextArea, TextField } from '@/shared/ui'
-import { resumeValuesFrom, toResumePayload, validateResume } from '../model/schema'
+import { photoFileError, resumeFileError } from '../model/files'
+import {
+  EMPTY_RESUME,
+  resumeValuesFrom,
+  toExtraResume,
+  toResumePayload,
+  validateExtra,
+  validateResume,
+} from '../model/schema'
 import type { ResumeErrors, ResumeValues } from '../model/schema'
+import { SOFT_SKILLS, STACK_SKILLS } from '../model/skills'
+import { PhotoField } from './photo-field'
+import { SkillField } from './skill-field'
 import './resume-form.css'
 
-const PDF_LIMIT = 5 * 1024 * 1024
+const MAX_RESUMES = 3
 
 const FIELD_IDS: Record<keyof ResumeValues, string> = {
   displayName: 'resume-name',
@@ -29,6 +40,15 @@ const FIELD_IDS: Record<keyof ResumeValues, string> = {
   phone: 'resume-phone',
   telegram: 'resume-telegram',
   salary: 'resume-salary',
+}
+
+const EXTRA_IDS: Partial<Record<keyof ResumeValues, string>> = {
+  headline: 'extra-headline',
+  specialization: 'extra-specialization',
+  experienceYears: 'extra-experience',
+  stack: 'extra-stack',
+  softSkills: 'extra-soft',
+  about: 'extra-about',
 }
 
 type Props = {
@@ -46,13 +66,26 @@ export function ResumeForm({ profile }: Props) {
   const [notice, setNotice] = useState('')
   const [saved, setSaved] = useState(false)
   const [createdHere] = useState(() => profile === null)
+  const [askAnother, setAskAnother] = useState(false)
+  const [extraOpen, setExtraOpen] = useState(false)
+  const [extraValues, setExtraValues] = useState<ResumeValues>(EMPTY_RESUME)
+  const [extraErrors, setExtraErrors] = useState<ResumeErrors>({})
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [photoError, setPhotoError] = useState('')
+
+  const remember = (next: OwnCandidateDto) => {
+    queryClient.setQueryData(candidateKeys.mine(), next)
+  }
 
   const save = useMutation({
     mutationFn: candidateApi.saveResume,
     onSuccess: (next) => {
-      queryClient.setQueryData(candidateKeys.mine(), next)
+      remember(next)
       setSaved(true)
       setFormError('')
+      setAskAnother(true)
+      if (pendingPhoto) uploadPhoto.mutate(pendingPhoto)
     },
     onError: (error) => setFormError(getErrorMessage(error)),
   })
@@ -60,7 +93,7 @@ export function ResumeForm({ profile }: Props) {
   const upload = useMutation({
     mutationFn: candidateApi.uploadResume,
     onSuccess: (next) => {
-      queryClient.setQueryData(candidateKeys.mine(), next)
+      remember(next)
       setValues(resumeValuesFrom(next))
       setManual(true)
       setFileError('')
@@ -72,15 +105,51 @@ export function ResumeForm({ profile }: Props) {
       setManual(true)
       setFileError(
         error instanceof ApiError && error.status === 501
-          ? 'Автораспознавание PDF пока недоступно. Заполните поля вручную — файл не сохранён.'
+          ? 'Файл прошёл проверку, но автораспознавание пока недоступно. Заполните поля вручную — файл не сохранён.'
           : getErrorMessage(error),
       )
     },
   })
 
+  const addResume = useMutation({
+    mutationFn: candidateApi.addResume,
+    onSuccess: (next) => {
+      remember(next)
+      setExtraOpen(false)
+      setExtraValues(EMPTY_RESUME)
+      setExtraErrors({})
+      setAskAnother((next.resumes?.length ?? 1) < MAX_RESUMES)
+      setFormError('')
+    },
+    onError: (error) => setFormError(getErrorMessage(error)),
+  })
+
+  const makePrimary = useMutation({
+    mutationFn: candidateApi.makePrimary,
+    onSuccess: (next) => {
+      remember(next)
+      setValues(resumeValuesFrom(next))
+      setFormError('')
+    },
+    onError: (error) => setFormError(getErrorMessage(error)),
+  })
+
+  const uploadPhoto = useMutation({
+    mutationFn: candidateApi.uploadPhoto,
+    onSuccess: (next) => {
+      remember(next)
+      dropPhotoUrl(next.id)
+      setPendingPhoto(null)
+      setPhotoError('')
+      void queryClient.invalidateQueries({ queryKey: [...candidateKeys.all, 'photo', next.id] })
+    },
+    onError: (error) => setPhotoError(getErrorMessage(error)),
+  })
+
   const update = <K extends keyof ResumeValues>(key: K, value: ResumeValues[K]) => {
     setValues((prev) => ({ ...prev, [key]: value }))
     setSaved(false)
+    setAskAnother(false)
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }))
   }
 
@@ -91,21 +160,30 @@ export function ResumeForm({ profile }: Props) {
     update('workFormats', next)
   }
 
-  const onFile = (file: File | undefined) => {
+  const onFile = async (file: File | undefined) => {
     setFileError('')
     if (!file) return
-    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-    if (!isPdf) {
-      setFileError('Нужен файл PDF. Скан без текста лучше заполнить вручную.')
-      setManual(true)
-      return
-    }
-    if (file.size > PDF_LIMIT) {
-      setFileError('Файл больше 5 МБ. Сожмите его или заполните поля вручную.')
-      setManual(true)
+    const message = await resumeFileError(file)
+    if (message) {
+      setFileError(message)
       return
     }
     upload.mutate(file)
+  }
+
+  const onPhoto = async (file: File) => {
+    const message = await photoFileError(file)
+    if (message) {
+      setPhotoError(message)
+      return
+    }
+    setPhotoError('')
+    setPreviewUrl((current) => {
+      if (current) URL.revokeObjectURL(current)
+      return URL.createObjectURL(file)
+    })
+    setPendingPhoto(file)
+    if (profile) uploadPhoto.mutate(file)
   }
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -120,7 +198,23 @@ export function ResumeForm({ profile }: Props) {
     save.mutate(toResumePayload(values))
   }
 
+  const onExtra = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const nextErrors = validateExtra(extraValues)
+    setExtraErrors(nextErrors)
+    const first = (Object.keys(EXTRA_IDS) as (keyof ResumeValues)[]).find((key) => nextErrors[key])
+    if (first) {
+      document.getElementById(EXTRA_IDS[first] ?? '')?.focus()
+      return
+    }
+    addResume.mutate(toExtraResume(extraValues))
+  }
+
   const showForm = manual || profile !== null
+  const resumes = profile?.resumes ?? []
+  const canAdd = resumes.length < MAX_RESUMES
+  const labelOf = (code: string | null) =>
+    dictionary.data?.specializations.find((item) => item.code === code)?.label ?? code ?? 'Профиль'
 
   return (
     <div className="resume-form">
@@ -131,18 +225,22 @@ export function ResumeForm({ profile }: Props) {
           </p>
           <div className="resume-start__actions">
             <label className="btn btn--solid btn--inline file-btn">
-              {upload.isPending ? 'Читаем файл…' : 'Приложить PDF'}
+              {upload.isPending ? 'Читаем файл…' : 'Приложить резюме'}
               <input
                 type="file"
-                accept="application/pdf,.pdf"
+                accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 disabled={upload.isPending}
-                onChange={(event) => onFile(event.target.files?.[0])}
+                onChange={(event) => {
+                  void onFile(event.target.files?.[0])
+                  event.target.value = ''
+                }}
               />
             </label>
             <Button variant="ghost" size="inline" onClick={() => setManual(true)}>
               Заполнить вручную
             </Button>
           </div>
+          <p className="form-hint">PDF или DOCX, не больше 5 МБ.</p>
           {fileError && (
             <p className="form-banner" role="alert">
               {fileError}
@@ -161,15 +259,41 @@ export function ResumeForm({ profile }: Props) {
           {profile && (
             <div className="resume-start__actions">
               <label className="btn btn--ghost btn--inline file-btn">
-                {upload.isPending ? 'Читаем файл…' : 'Заменить из PDF'}
+                {upload.isPending ? 'Читаем файл…' : 'Приложить резюме'}
                 <input
                   type="file"
-                  accept="application/pdf,.pdf"
+                  accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   disabled={upload.isPending}
-                  onChange={(event) => onFile(event.target.files?.[0])}
+                  onChange={(event) => {
+                    void onFile(event.target.files?.[0])
+                    event.target.value = ''
+                  }}
                 />
               </label>
             </div>
+          )}
+
+          <PhotoField
+            candidateId={profile?.id ?? null}
+            hasPhoto={profile?.hasPhoto === true}
+            previewUrl={previewUrl}
+            error={photoError}
+            busy={uploadPhoto.isPending}
+            onPick={(file) => void onPhoto(file)}
+          />
+
+          {resumes.length > 0 && (
+            <ul className="resume-list" aria-label="Ваши резюме">
+              {resumes.map((resume) => (
+                <ResumeRow
+                  key={resume.id}
+                  resume={resume}
+                  title={`${labelOf(resume.specialization)}${resume.headline ? ` · ${resume.headline}` : ''}`}
+                  busy={makePrimary.isPending}
+                  onPrimary={() => makePrimary.mutate(resume.id)}
+                />
+              ))}
+            </ul>
           )}
 
           <div className="resume-form__grid">
@@ -253,25 +377,27 @@ export function ResumeForm({ profile }: Props) {
               )}
             </fieldset>
             <div className="resume-form__wide">
-              <TextField
+              <SkillField
                 id="resume-stack"
                 label="Стек"
-                placeholder="Python, PostgreSQL, Docker"
+                catalog={STACK_SKILLS}
                 value={values.stack}
                 error={errors.stack}
-                onChange={(event) => update('stack', event.target.value)}
+                onChange={(next) => update('stack', next)}
               />
               <p className="form-hint">
-                От 1 до 30 навыков, через запятую. Грейд резюме не задаёт — его подтверждает тест.
+                Начните вводить название или выберите готовый навык. Грейд резюме не задаёт — его
+                подтверждает тест.
               </p>
             </div>
             <div className="resume-form__wide">
-              <TextField
+              <SkillField
                 id="resume-soft"
                 label="Софт-скиллы"
+                catalog={SOFT_SKILLS}
                 value={values.softSkills}
                 error={errors.softSkills}
-                onChange={(event) => update('softSkills', event.target.value)}
+                onChange={(next) => update('softSkills', next)}
               />
             </div>
             <div className="resume-form__wide">
@@ -316,14 +442,57 @@ export function ResumeForm({ profile }: Props) {
           )}
           {saved && (
             <p className="form-status" role="status">
-              Резюме сохранено.
-              {createdHere && (
+              Резюме сохранено. Оно приоритетное: вакансии подбираются по нему в первую очередь.
+              {createdHere && !askAnother && !extraOpen && (
                 <>
                   {' '}
                   <Link to={ROUTES.testing}>Дальше — пройти тест</Link>
                 </>
               )}
             </p>
+          )}
+
+          {profile && canAdd && !extraOpen && !askAnother && (
+            <div className="form-actions">
+              <Button
+                type="button"
+                variant="ghost"
+                size="inline"
+                onClick={() => setExtraOpen(true)}
+              >
+                Ещё одно резюме
+              </Button>
+            </div>
+          )}
+
+          {askAnother && canAdd && !extraOpen && (
+            <div className="resume-ask">
+              <p className="resume-start__lead">Желаете ли вы создать ещё одно резюме?</p>
+              <p className="form-hint">
+                Например, Backend и DevOps. Приоритетное резюме работодатель видит первым, остальные
+                — как дополнительные профили.
+              </p>
+              <div className="resume-start__actions">
+                <Button
+                  type="button"
+                  size="inline"
+                  onClick={() => {
+                    setAskAnother(false)
+                    setExtraOpen(true)
+                  }}
+                >
+                  Да, ещё одно
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="inline"
+                  onClick={() => setAskAnother(false)}
+                >
+                  Нет, достаточно
+                </Button>
+              </div>
+            </div>
           )}
 
           <div className="form-actions">
@@ -333,6 +502,120 @@ export function ResumeForm({ profile }: Props) {
           </div>
         </form>
       )}
+
+      {extraOpen && (
+        <form className="resume-form resume-extra" noValidate onSubmit={onExtra}>
+          <p className="resume-start__lead">Ещё один профиль</p>
+          <div className="resume-form__grid">
+            <TextField
+              id="extra-headline"
+              label="Должность"
+              value={extraValues.headline}
+              error={extraErrors.headline}
+              onChange={(event) =>
+                setExtraValues((prev) => ({ ...prev, headline: event.target.value }))
+              }
+            />
+            <SelectField
+              id="extra-specialization"
+              label="Специализация"
+              value={extraValues.specialization}
+              error={extraErrors.specialization}
+              disabled={dictionary.isPending}
+              onChange={(event) =>
+                setExtraValues((prev) => ({ ...prev, specialization: event.target.value }))
+              }
+            >
+              <option value="">{dictionary.isPending ? 'Загрузка…' : 'Выберите'}</option>
+              {dictionary.data?.specializations.map((item) => (
+                <option key={item.code} value={item.code}>
+                  {item.label}
+                </option>
+              ))}
+            </SelectField>
+            <TextField
+              id="extra-experience"
+              label="Стаж, лет"
+              inputMode="numeric"
+              value={extraValues.experienceYears}
+              error={extraErrors.experienceYears}
+              onChange={(event) =>
+                setExtraValues((prev) => ({ ...prev, experienceYears: event.target.value }))
+              }
+            />
+            <div className="resume-form__wide">
+              <SkillField
+                id="extra-stack"
+                label="Стек"
+                catalog={STACK_SKILLS}
+                value={extraValues.stack}
+                error={extraErrors.stack}
+                onChange={(next) => setExtraValues((prev) => ({ ...prev, stack: next }))}
+              />
+            </div>
+            <div className="resume-form__wide">
+              <SkillField
+                id="extra-soft"
+                label="Софт-скиллы"
+                catalog={SOFT_SKILLS}
+                value={extraValues.softSkills}
+                error={extraErrors.softSkills}
+                onChange={(next) => setExtraValues((prev) => ({ ...prev, softSkills: next }))}
+              />
+            </div>
+            <div className="resume-form__wide">
+              <TextArea
+                id="extra-about"
+                label="О себе"
+                maxLength={2000}
+                value={extraValues.about}
+                error={extraErrors.about}
+                onChange={(event) =>
+                  setExtraValues((prev) => ({ ...prev, about: event.target.value }))
+                }
+              />
+            </div>
+          </div>
+          <div className="form-actions">
+            <Button type="submit" size="inline" disabled={addResume.isPending}>
+              {addResume.isPending ? 'Сохраняем…' : 'Сохранить ещё одно'}
+            </Button>
+            <Button type="button" variant="ghost" size="inline" onClick={() => setExtraOpen(false)}>
+              Отмена
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
+  )
+}
+
+function ResumeRow({
+  resume,
+  title,
+  busy,
+  onPrimary,
+}: {
+  resume: ResumeDto
+  title: string
+  busy: boolean
+  onPrimary: () => void
+}) {
+  return (
+    <li className="resume-list__item">
+      <span
+        className={
+          resume.isPrimary ? 'resume-list__badge' : 'resume-list__badge resume-list__badge--muted'
+        }
+      >
+        {resume.isPrimary ? 'Приоритетное' : 'Второстепенное'}
+      </span>
+      <span className="resume-list__title">{title}</span>
+      {!resume.isPrimary && (
+        <Button type="button" variant="ghost" size="inline" disabled={busy} onClick={onPrimary}>
+          Сделать приоритетным
+        </Button>
+      )}
+    </li>
   )
 }

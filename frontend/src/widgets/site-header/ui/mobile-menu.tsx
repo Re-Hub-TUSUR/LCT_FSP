@@ -6,7 +6,7 @@ import type { NavItem } from '../model/types'
 
 type Props = {
   links: readonly NavItem[]
-  cta: NavItem
+  cta?: NavItem
   open: boolean
   onClose: () => void
 }
@@ -52,9 +52,11 @@ export function MobileMenu({ links, cta, open, onClose }: Props) {
             {link.label}
           </NavLink>
         ))}
-        <Link className="menu__cta" to={cta.to} style={stagger(links.length)} onClick={onClose}>
-          {cta.label}
-        </Link>
+        {cta && (
+          <Link className="menu__cta" to={cta.to} style={stagger(links.length)} onClick={onClose}>
+            {cta.label}
+          </Link>
+        )}
       </nav>
     </div>
   )

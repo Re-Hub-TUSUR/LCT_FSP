@@ -6,11 +6,13 @@ import './site-header.css'
 
 type Props = {
   links: readonly NavItem[]
-  cta: NavItem
+  cta?: NavItem
+  /** Logo target. Defaults to the landing page. */
+  home?: string
   overlay?: boolean
 }
 
-export function SiteHeader({ links, cta, overlay = false }: Props) {
+export function SiteHeader({ links, cta, home, overlay = false }: Props) {
   const menu = useMobileMenu()
 
   return (
@@ -18,6 +20,7 @@ export function SiteHeader({ links, cta, overlay = false }: Props) {
       <Navbar
         links={links}
         cta={cta}
+        home={home}
         menuOpen={menu.open}
         onToggle={menu.toggle}
         toggleRef={menu.toggleRef}

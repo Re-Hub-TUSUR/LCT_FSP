@@ -1,8 +1,17 @@
 .resume-form,
-.resume-start {
+.resume-start,
+.resume-ask,
+.resume-extra {
   display: flex;
   flex-direction: column;
   gap: 28px;
+}
+
+.resume-start {
+  align-items: center;
+  text-align: center;
+  width: min(100%, 640px);
+  margin-inline: auto;
 }
 
 .resume-start__lead,
@@ -11,13 +20,26 @@
   margin: 0;
   max-width: 62ch;
   font-weight: 300;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.5;
+}
+
+.resume-start__lead {
+  font-size: 22px;
 }
 
 .form-hint {
   color: var(--text-dim);
-  font-size: 14px;
+  font-size: 16px;
+}
+
+.resume-form .field__label,
+.resume-form .check-group__legend {
+  font-size: 13px;
+}
+
+.resume-form .field__input {
+  font-size: clamp(18px, 1.15vw, 22px);
 }
 
 /* Field errors are absolutely positioned under the input, so the hint starts below them. */
@@ -133,6 +155,157 @@
   font-size: 12px;
   line-height: 1.3;
   color: var(--error);
+}
+
+.skills {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skills__chosen,
+.skills__list,
+.skills__popular {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.skills__chosen,
+.skills__popular {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skills__chip,
+.skills__option,
+.skills__suggest {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.skills__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+
+.skills__option,
+.skills__suggest {
+  width: 100%;
+  padding: 0 12px;
+  text-align: left;
+}
+
+.skills__suggest {
+  width: auto;
+}
+
+.skills__chip:hover,
+.skills__option:hover,
+.skills__suggest:hover,
+.skills__chip:focus-visible,
+.skills__option:focus-visible,
+.skills__suggest:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+  border-color: var(--brand-blue);
+}
+
+.skills__remove {
+  color: var(--text-dim);
+}
+
+.skills__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.skills__list {
+  position: absolute;
+  z-index: 2;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg, #05060d);
+  border: 1px solid var(--line);
+}
+
+.photo__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+
+.photo__preview {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  background: var(--fill-brand);
+}
+
+.photo__preview--empty {
+  display: block;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.photo__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.resume-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resume-list__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.resume-list__badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.resume-list__badge--muted {
+  color: var(--text-dim);
+}
+
+.resume-list__title {
+  font-weight: 300;
+  font-size: 18px;
+}
+
+.resume-ask {
+  padding-top: 8px;
 }
 
 @media (max-width: 720px) {

@@ -5,23 +5,21 @@ export type Session = {
   user: UserDto
 }
 
-// MVP trade-off: the short-lived access token lives in sessionStorage so a reload keeps the user
-// signed in. Planned replacement: refresh token in an httpOnly cookie (see docs/ARCHITECTURE.md).
-const STORAGE_KEY = 'kadry.session'
+// Access JWT lives in memory only. localStorage would let an XSS script steal it.
+// A closed tab is restored by the httpOnly refresh cookie, which scripts cannot read.
+const LEGACY_KEY = 'kadry.session'
 
 type Listener = () => void
 
-function readPersisted(): Session | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = window.sessionStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as Session) : null
-  } catch {
-    return null
-  }
+function forgetLegacyStorage() {
+  if (typeof window === 'undefined') return
+  window.localStorage.removeItem(LEGACY_KEY)
+  window.sessionStorage.removeItem(LEGACY_KEY)
 }
 
-let current: Session | null = readPersisted()
+forgetLegacyStorage()
+
+let current: Session | null = null
 const listeners = new Set<Listener>()
 
 function emit() {
@@ -37,14 +35,14 @@ export const sessionStore = {
     }
   },
   set(next: Session) {
+    forgetLegacyStorage()
     current = next
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next))
     emit()
   },
   clear() {
+    forgetLegacyStorage()
     if (current === null) return
     current = null
-    window.sessionStorage.removeItem(STORAGE_KEY)
     emit()
   },
 }

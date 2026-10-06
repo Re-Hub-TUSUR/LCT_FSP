@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     jwt_algorithm: Literal["HS256", "HS384", "HS512"] = "HS256"
     jwt_issuer: str = "kadry"
     access_token_ttl_minutes: int = Field(default=30, ge=1, le=24 * 60)
+    # Survives a closed browser. Logout revokes it; each refresh rotates it.
+    refresh_token_ttl_days: int = Field(default=30, ge=1, le=365)
 
     cors_origins: Annotated[list[str], NoDecode] = []
 
@@ -63,6 +65,15 @@ class Settings(BaseSettings):
     def _split_origins(cls, value: object) -> object:
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
+
+    @field_validator("cors_origins")
+    @classmethod
+    def _no_wildcard_origin(cls, value: list[str]) -> list[str]:
+        # Credentials and `*` cannot be combined: a reflection of any origin would leak the cookie.
+        if any(origin == "*" for origin in value):
+            msg = "CORS_ORIGINS must list explicit origins; '*' is not allowed"
+            raise ValueError(msg)
         return value
 
     @field_validator("jwt_secret")

@@ -29,6 +29,7 @@ from app.models.fsp_achievement import FspAchievement
 from app.models.invitation import Invitation
 from app.models.meeting import Meeting
 from app.models.reaction import CandidateReaction, VacancyReaction
+from app.models.refresh_token import RefreshToken
 from app.models.test_assignment import TestAssignment
 from app.models.user import User
 from app.models.vacancy import Vacancy
@@ -55,6 +56,7 @@ __all__ = [
     "Meeting",
     "MeetingStatus",
     "ReactionKind",
+    "RefreshToken",
     "TaskDifficulty",
     "TaskKind",
     "TestAssignment",

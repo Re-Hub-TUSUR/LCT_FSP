@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
+from app.core.headers import security_headers_middleware
 from app.core.logging import configure_logging, request_logging_middleware
 from app.db.session import get_engine, get_sessionmaker
 from app.repositories.candidate import CandidateRepository
@@ -56,9 +57,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             CORSMiddleware,
             allow_origins=settings.cors_origins,
             allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
+            allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            allow_headers=["Authorization", "Content-Type", "Accept", "X-Kadry-Request"],
         )
+    app.middleware("http")(security_headers_middleware)
     app.middleware("http")(request_logging_middleware)
     register_exception_handlers(app)
     app.include_router(api_router)

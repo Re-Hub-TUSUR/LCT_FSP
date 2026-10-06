@@ -36,14 +36,15 @@ describe('personal cabinet', () => {
         },
       }),
     )
-    const { router } = renderApp('/profile')
+    const { router } = renderApp('/feed/swipe')
     const user = userEvent.setup()
 
-    await user.click(await screen.findByRole('link', { name: 'Создать резюме' }, SLOW))
-    await waitFor(() => expect(router.state.location.pathname).toBe('/profile/resume'))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/profile/resume'), SLOW)
     expect(
       await screen.findByText(/Есть готовое резюме\? Приложите его/, {}, SLOW),
     ).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Свайпы' })).not.toBeInTheDocument()
+    expect(screen.getByText(/остальные разделы закрыты/)).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Заполнить вручную' }))
     expect(screen.getByLabelText('Имя и фамилия')).toBeInTheDocument()
@@ -60,11 +61,12 @@ describe('personal cabinet', () => {
         },
       }),
     )
-    renderApp('/profile')
-    expect(
-      await screen.findByRole('heading', { name: 'Профиль компании' }, SLOW),
-    ).toBeInTheDocument()
-    expect(screen.getByLabelText('Название')).toBeInTheDocument()
+    const { router } = renderApp('/feed/swipe')
+    await waitFor(() => expect(router.state.location.pathname).toBe('/profile/company'), SLOW)
+    expect(await screen.findByLabelText('Название', {}, SLOW)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Профиль компании' })).toBeInTheDocument()
+    expect(screen.getByText(/остальные разделы закрыты/)).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Свайпы' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Сохранить' })).toBeInTheDocument()
   })
 })

@@ -331,7 +331,8 @@
   gap: 16px;
 }
 
-.match-card__avatar {
+.match-card__avatar,
+.match-card__photo {
   display: grid;
   place-items: center;
   flex: none;
@@ -341,6 +342,10 @@
   font-family: var(--font-display);
   font-weight: 300;
   font-size: 20px;
+}
+
+.match-card__photo {
+  object-fit: cover;
 }
 
 .match-card__meters {

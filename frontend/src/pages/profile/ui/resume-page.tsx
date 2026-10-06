@@ -32,11 +32,17 @@ export function ResumePage() {
     )
   }
 
+  const missing = !profile.data
+
   return (
     <Page
-      className="page--inset"
+      className={missing ? 'page--inset page--setup' : 'page--inset'}
       title="Резюме"
-      lead="Почта берётся из аккаунта. Грейд здесь не выбирается — его подтверждает тест."
+      lead={
+        missing
+          ? 'Пока резюме не сохранено, свайпы и остальные разделы закрыты. Грейд здесь не выбирается — его подтверждает тест.'
+          : 'Почта берётся из аккаунта. Грейд здесь не выбирается — его подтверждает тест.'
+      }
     >
       <ResumeForm profile={profile.data ?? null} />
     </Page>

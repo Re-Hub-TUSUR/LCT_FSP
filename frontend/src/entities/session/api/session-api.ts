@@ -26,4 +26,7 @@ export const sessionApi = {
     http.post<void>('/auth/verify-email', payload),
   resendVerification: (payload: { email: string }) =>
     http.post<void>('/auth/resend-verification', payload),
+  /** Cookie-only. A 401 means there is no session to restore. */
+  refresh: () => http.post<TokenResponseDto>('/auth/refresh', undefined, { skipAuthRefresh: true }),
+  logout: () => http.post<void>('/auth/logout', undefined, { skipAuthRefresh: true }),
 }

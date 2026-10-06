@@ -4,6 +4,7 @@ import type { UserRole } from '@/entities/user'
 import { ROUTES } from '@/shared/config'
 import { SiteHeader } from '@/widgets/site-header'
 import type { NavItem } from '@/widgets/site-header'
+import { CabinetGate, useCabinetSetup } from '../router/cabinet-gate'
 
 const NAV_BY_ROLE: Record<UserRole | 'guest', NavItem[]> = {
   guest: [{ label: 'Вакансии', to: ROUTES.vacancies }],
@@ -28,15 +29,26 @@ const NAV_BY_ROLE: Record<UserRole | 'guest', NavItem[]> = {
 
 export function MainLayout() {
   const { user } = useSession()
-  const links = NAV_BY_ROLE[user?.role ?? 'guest']
-  const cta = user ? { label: 'Кабинет', to: ROUTES.profile } : { label: 'Войти', to: ROUTES.auth }
+  const setup = useCabinetSetup()
+  const links = setup.phase === 'open' ? NAV_BY_ROLE[user?.role ?? 'guest'] : []
+  const cta = !user
+    ? { label: 'Войти', to: ROUTES.auth }
+    : setup.phase === 'required'
+      ? undefined
+      : { label: 'Кабинет', to: ROUTES.profile }
 
   return (
     <>
       <div className="app-glow" aria-hidden="true" />
-      <SiteHeader links={links} cta={cta} />
+      <SiteHeader
+        links={links}
+        cta={cta}
+        home={setup.phase === 'required' ? setup.setupPath : undefined}
+      />
       <main>
-        <Outlet />
+        <CabinetGate>
+          <Outlet />
+        </CabinetGate>
       </main>
     </>
   )

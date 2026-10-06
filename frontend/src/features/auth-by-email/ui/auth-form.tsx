@@ -4,7 +4,7 @@ import { getErrorMessage } from '@/shared/api'
 import { Button, TextField } from '@/shared/ui'
 import { validateAuthForm } from '../model/schema'
 import type { AuthFieldErrors, AuthFormValues, AuthMode } from '../model/schema'
-import { useAuthSubmit } from '../model/use-auth-submit'
+import { useAuthSubmit, type AuthEntry } from '../model/use-auth-submit'
 import { EmailVerification } from './email-verification'
 import './auth-form.css'
 
@@ -13,7 +13,7 @@ type Props = {
   initialEmail?: string
   initialMode?: AuthMode
   onModeChange?: (mode: AuthMode) => void
-  onSuccess: () => void
+  onSuccess: (entry: AuthEntry) => void
 }
 
 const MODE_LABELS: Record<AuthMode, string> = { 'sign-in': 'Вход', 'sign-up': 'Регистрация' }

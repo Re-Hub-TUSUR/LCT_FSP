@@ -1,3 +1,4 @@
+import { useSession } from '@/entities/session'
 import { ROUTES } from '@/shared/config'
 import { LandingHero } from '@/widgets/landing-hero'
 import { SiteHeader } from '@/widgets/site-header'
@@ -10,12 +11,15 @@ const LANDING_LINKS: NavItem[] = [
   { label: 'Контакты', to: '#contacts' },
 ]
 
-const LANDING_CTA: NavItem = { label: 'Войти', to: ROUTES.auth }
-
 export function LandingPage() {
+  const { user } = useSession()
+  const cta: NavItem = user
+    ? { label: 'Кабинет', to: ROUTES.profile }
+    : { label: 'Войти', to: ROUTES.auth }
+
   return (
     <>
-      <SiteHeader links={LANDING_LINKS} cta={LANDING_CTA} overlay />
+      <SiteHeader links={LANDING_LINKS} cta={cta} overlay />
       <LandingHero />
     </>
   )

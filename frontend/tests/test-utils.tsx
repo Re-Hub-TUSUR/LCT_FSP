@@ -29,11 +29,19 @@ export function renderWithProviders(ui: ReactElement, url = '/') {
   return renderApp(url, [{ path: '*', element: ui }])
 }
 
+/** A saved cabinet, so existing screens stay open unless a test overrides these paths. */
+const filledCabinet: Record<string, { status?: number; body?: unknown }> = {
+  '/api/v1/candidates/me': { body: { id: 'me' } },
+  '/api/v1/companies/me': { body: { id: 'co', name: 'Компания' } },
+}
+
 /** Builds a `fetch` mock that answers JSON for matching paths and 404 otherwise. */
 export function mockFetch(handlers: Record<string, { status?: number; body?: unknown }>) {
   return async (input: RequestInfo | URL) => {
     const url = new URL(typeof input === 'string' ? input : input.toString(), 'http://localhost')
-    const match = handlers[url.pathname]
+    const match = Object.hasOwn(handlers, url.pathname)
+      ? handlers[url.pathname]
+      : filledCabinet[url.pathname]
     const status = match?.status ?? (match ? 200 : 404)
     return new Response(
       JSON.stringify(match?.body ?? { error: { code: 'not_found', message: 'Not found' } }),

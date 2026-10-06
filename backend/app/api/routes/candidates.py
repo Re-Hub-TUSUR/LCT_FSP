@@ -19,6 +19,7 @@ from app.schemas.candidate import (
     CandidateSearchUpdate,
     FspLinkRequest,
     OwnCandidateRead,
+    ResumeCreate,
 )
 from app.schemas.reaction import (
     CandidateReactionRequest,
@@ -28,6 +29,7 @@ from app.schemas.reaction import (
 )
 from app.search.base import CandidateSort
 from app.services.candidate_search import CandidateSearchParams
+from app.services.uploads import PHOTO_LIMIT
 
 router = APIRouter(prefix="/candidates", tags=["candidates"])
 
@@ -117,6 +119,64 @@ async def update_searching(
 )
 async def upload_resume(_: CandidateUser, file: UploadFile) -> CandidateRead:
     not_implemented("candidates.upload_resume")
+
+
+@router.post("/me/resumes", summary="Add a second profession profile. It is not the priority one.")
+async def add_resume(
+    user: CandidateUser, data: ResumeCreate, profiles: CandidateProfileServiceDep
+) -> OwnCandidateRead:
+    return await profiles.add_resume(user, data)
+
+
+@router.post(
+    "/me/resumes/{resume_id}/primary",
+    summary="Make this resume the one employers and the feed see first",
+)
+async def make_resume_primary(
+    resume_id: uuid.UUID, user: CandidateUser, profiles: CandidateProfileServiceDep
+) -> OwnCandidateRead:
+    return await profiles.make_primary(user, resume_id)
+
+
+@router.post("/me/photo", summary="Upload a profile photo (JPEG, PNG or WebP, up to 2 MB)")
+async def upload_photo(
+    user: CandidateUser, file: UploadFile, profiles: CandidateProfileServiceDep
+) -> OwnCandidateRead:
+    return await profiles.set_photo(user, await file.read(PHOTO_LIMIT + 1))
+
+
+@router.delete("/me/photo", summary="Remove the profile photo")
+async def delete_photo(
+    user: CandidateUser, profiles: CandidateProfileServiceDep
+) -> OwnCandidateRead:
+    return await profiles.clear_photo(user)
+
+
+@router.get("/me/photo", summary="Own profile photo")
+async def read_my_photo(user: CandidateUser, profiles: CandidateProfileServiceDep) -> Response:
+    profile = await profiles.read_own(user)
+    body, media = await profiles.open_photo(profile.id, user)
+    return _photo_response(body, media)
+
+
+@router.get("/{candidate_id}/photo", summary="Profile photo, when the viewer may see the profile")
+async def read_candidate_photo(
+    candidate_id: uuid.UUID, viewer: CurrentUser, profiles: CandidateProfileServiceDep
+) -> Response:
+    body, media = await profiles.open_photo(candidate_id, viewer)
+    return _photo_response(body, media)
+
+
+def _photo_response(body: bytes, media: str) -> Response:
+    return Response(
+        content=body,
+        media_type=media,
+        headers={
+            "X-Content-Type-Options": "nosniff",
+            "Content-Disposition": "inline",
+            "Cache-Control": "private, max-age=300",
+        },
+    )
 
 
 @router.post("/me/fsp-link", summary="Link the profile to an FSP participant ID")

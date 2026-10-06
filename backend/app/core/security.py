@@ -1,9 +1,10 @@
-"""Password hashing and JWT access tokens.
+"""Password hashing and JWT access / refresh tokens.
 
 Token claims follow the OIDC / Keycloak shape (`sub`, `email`, `realm_access.roles`) so that the
 future FSP ID (Keycloak) tokens can be validated by the same dependency with an RS256 key.
 """
 
+import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -81,3 +82,51 @@ def decode_access_token(token: str, settings: Settings) -> AccessTokenClaims:
         email=str(payload.get("email", "")),
         roles=tuple(str(role) for role in roles),
     )
+
+
+@dataclass(frozen=True, slots=True)
+class RefreshTokenClaims:
+    subject: str
+    token_id: uuid.UUID
+
+
+def create_refresh_token(
+    *, subject: str, token_id: uuid.UUID, settings: Settings
+) -> tuple[str, int]:
+    now = datetime.now(UTC)
+    expires_in = settings.refresh_token_ttl_days * 24 * 60 * 60
+    payload: dict[str, Any] = {
+        "iss": settings.jwt_issuer,
+        "sub": subject,
+        "jti": str(token_id),
+        "typ": "refresh",
+        "iat": now,
+        "exp": now + timedelta(seconds=expires_in),
+    }
+    token = jwt.encode(
+        payload, settings.jwt_secret.get_secret_value(), algorithm=settings.jwt_algorithm
+    )
+    return token, expires_in
+
+
+def decode_refresh_token(token: str, settings: Settings) -> RefreshTokenClaims:
+    try:
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret.get_secret_value(),
+            algorithms=[settings.jwt_algorithm],
+            issuer=settings.jwt_issuer,
+            options={"require": ["exp", "iat", "sub", "iss", "jti"]},
+        )
+    except jwt.ExpiredSignatureError as exc:
+        raise AuthenticationError("Срок действия сессии истёк") from exc
+    except jwt.InvalidTokenError as exc:
+        raise AuthenticationError("Сессия недействительна") from exc
+
+    if payload.get("typ") != "refresh":
+        raise AuthenticationError("Сессия недействительна")
+    try:
+        token_id = uuid.UUID(str(payload["jti"]))
+    except ValueError as exc:
+        raise AuthenticationError("Сессия недействительна") from exc
+    return RefreshTokenClaims(subject=str(payload["sub"]), token_id=token_id)

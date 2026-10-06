@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Tag } from '@/shared/ui'
 import type { CandidateDto } from '../api/candidate-api'
+import { CandidateResumes } from './candidate-resumes'
 import './candidate-card.css'
 
 type Props = {
@@ -19,6 +20,8 @@ export function CandidateCard({ candidate, actions }: Props) {
         <h3 className="candidate-card__name">{displayName}</h3>
         {category && <Tag>{category.label}</Tag>}
       </header>
+
+      <CandidateResumes candidate={candidate} />
 
       {headline && <p className="candidate-card__headline">{headline}</p>}
       {experienceYears !== null && (

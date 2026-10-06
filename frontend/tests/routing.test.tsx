@@ -16,7 +16,10 @@ const candidateSession = {
 }
 
 describe('application routing', () => {
-  afterEach(() => sessionStore.clear())
+  afterEach(() => {
+    sessionStore.clear()
+    vi.unstubAllGlobals()
+  })
 
   it('renders the landing with the signup panel', async () => {
     renderApp('/')
@@ -65,6 +68,7 @@ describe('application routing', () => {
 
   it('blocks routes not allowed for the role', async () => {
     sessionStore.set(candidateSession)
+    vi.stubGlobal('fetch', mockFetch({}))
     renderApp('/matching')
     expect(await screen.findByText('Нет доступа')).toBeInTheDocument()
   })

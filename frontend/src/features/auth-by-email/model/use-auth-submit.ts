@@ -6,6 +6,9 @@ import type { AuthFormValues, AuthMode } from './schema'
 
 type Role = 'candidate' | 'employer'
 
+/** `verified` — the email code just succeeded. `session` — an already verified sign-in. */
+export type AuthEntry = 'verified' | 'session'
+
 type PendingVerification = {
   email: string
   password: string
@@ -19,7 +22,7 @@ type AuthResult =
  * Sign-in stores the session. Sign-up and an unverified sign-in stop at the email code,
  * then sign in once the code is confirmed.
  */
-export function useAuthSubmit(role: Role, onSuccess: () => void) {
+export function useAuthSubmit(role: Role, onSuccess: (entry: AuthEntry) => void) {
   const [verification, setVerification] = useState<PendingVerification | null>(null)
 
   const submit = useMutation({
@@ -51,7 +54,7 @@ export function useAuthSubmit(role: Role, onSuccess: () => void) {
         return
       }
       sessionStore.set({ accessToken: result.token.accessToken, user: result.token.user })
-      onSuccess()
+      onSuccess('session')
     },
   })
 
@@ -63,7 +66,7 @@ export function useAuthSubmit(role: Role, onSuccess: () => void) {
     })
     sessionStore.set({ accessToken: token.accessToken, user: token.user })
     setVerification(null)
-    onSuccess()
+    onSuccess('verified')
   }
 
   return {

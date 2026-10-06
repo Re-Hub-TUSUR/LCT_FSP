@@ -1,5 +1,7 @@
 export { sessionApi } from './api/session-api'
 export type { SignInPayload, SignUpPayload, TokenResponseDto } from './api/session-api'
+export { refreshSession } from './model/refresh-session'
 export { sessionStore } from './model/session-store'
 export type { Session } from './model/session-store'
+export { signOut } from './model/sign-out'
 export { useSession } from './model/use-session'

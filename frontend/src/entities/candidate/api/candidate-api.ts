@@ -50,6 +50,8 @@ export type CandidateDto = {
   /** Empty list is a valid, explicitly handled state: candidate has no FSP history. */
   fspAchievements: FspAchievementDto[]
   fspLinked: boolean
+  resumes?: ResumeDto[]
+  hasPhoto?: boolean
   contacts: CandidateContactsDto | null
   /**
    * For an employer on a profile page: mutual interest (the recruiter saved the candidate, the
@@ -64,6 +66,26 @@ export type OwnCandidateDto = CandidateDto & {
   fspMemberId: string | null
   /** Kept before a grade exists, so the resume can be reopened. */
   specialization: string | null
+}
+
+export type ResumeDto = {
+  id: string
+  headline: string | null
+  specialization: string | null
+  stack: string[]
+  softSkills: string[]
+  about: string | null
+  experienceYears: number | null
+  isPrimary: boolean
+}
+
+export type ResumeCreate = {
+  headline: string
+  specialization: string
+  stack: string[]
+  softSkills: string[]
+  about: string | null
+  experienceYears: number
 }
 
 export type CandidateProfileUpdate = {
@@ -148,6 +170,7 @@ export const candidateQueries = {
     queryOptions({
       queryKey: candidateKeys.mine(),
       queryFn: ({ signal }) => http.get<OwnCandidateDto>('/candidates/me', { signal }),
+      staleTime: 30_000,
     }),
 }
 
@@ -157,6 +180,16 @@ export const candidateApi = {
   clearReaction: (id: string) => http.delete<void>(`/candidates/${id}/reaction`),
   saveResume: (payload: CandidateProfileUpdate) =>
     http.patch<OwnCandidateDto>('/candidates/me', payload),
+  addResume: (payload: ResumeCreate) =>
+    http.post<OwnCandidateDto>('/candidates/me/resumes', payload),
+  makePrimary: (resumeId: string) =>
+    http.post<OwnCandidateDto>(`/candidates/me/resumes/${resumeId}/primary`),
+  uploadPhoto: (file: File) => {
+    const body = new FormData()
+    body.append('file', file)
+    return http.post<OwnCandidateDto>('/candidates/me/photo', body)
+  },
+  photo: (candidateId: string) => http.blob(`/candidates/${candidateId}/photo`),
   uploadResume: (file: File) => {
     const body = new FormData()
     body.append('file', file)

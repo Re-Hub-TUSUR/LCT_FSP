@@ -29,6 +29,28 @@ class CandidateContacts(ApiModel):
     telegram: str | None
 
 
+class ResumeRead(ApiModel):
+    """One profession profile. The priority resume is what employers and the feed see first."""
+
+    id: uuid.UUID
+    headline: str | None
+    specialization: str | None
+    stack: list[str]
+    soft_skills: list[str]
+    about: str | None
+    experience_years: int | None
+    is_primary: bool
+
+
+class ResumeCreate(ApiModel):
+    headline: str = Field(min_length=1, max_length=300)
+    specialization: str = Field(min_length=1, max_length=64)
+    stack: list[str] = Field(min_length=1, max_length=30)
+    soft_skills: list[str] = Field(default_factory=list, max_length=20)
+    about: str | None = Field(default=None, max_length=2000)
+    experience_years: int = Field(ge=0, le=50)
+
+
 class CandidateRead(ApiModel):
     id: uuid.UUID
     display_name: str
@@ -51,6 +73,9 @@ class CandidateRead(ApiModel):
     # Empty list = no FSP history; must be handled explicitly (ТЗ, section 2).
     fsp_achievements: list[FspAchievementRead]
     fsp_linked: bool
+    # Priority resume first, then the others.
+    resumes: list[ResumeRead] = Field(default_factory=list)
+    has_photo: bool = False
     # Revealed only after the candidate accepted an invitation or applied (ТЗ 2.2, item 2).
     contacts: CandidateContacts | None
     # For an employer viewing one profile: mutual interest (the recruiter liked the candidate,

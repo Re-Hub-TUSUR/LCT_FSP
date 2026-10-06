@@ -1,4 +1,4 @@
-import type { CandidateProfileUpdate, OwnCandidateDto } from '@/entities/candidate'
+import type { CandidateProfileUpdate, OwnCandidateDto, ResumeCreate } from '@/entities/candidate'
 import type { WorkFormat } from '@/entities/vacancy'
 import { WORK_FORMATS } from '@/entities/vacancy'
 
@@ -9,8 +9,8 @@ export type ResumeValues = {
   city: string
   experienceYears: string
   workFormats: WorkFormat[]
-  stack: string
-  softSkills: string
+  stack: string[]
+  softSkills: string[]
   about: string
   phone: string
   telegram: string
@@ -26,8 +26,8 @@ export const EMPTY_RESUME: ResumeValues = {
   city: '',
   experienceYears: '',
   workFormats: [],
-  stack: '',
-  softSkills: '',
+  stack: [],
+  softSkills: [],
   about: '',
   phone: '',
   telegram: '',
@@ -55,8 +55,7 @@ function wholeNumber(value: string): number | null {
   return Number(value.trim())
 }
 
-function listError(value: string, limit: number): string | undefined {
-  const items = splitList(value)
+function listError(items: string[], limit: number): string | undefined {
   if (items.length > limit) return `Не больше ${limit} пунктов`
   const long = items.find((item) => item.length > 40)
   if (long) return `«${long.slice(0, 40)}» длиннее 40 символов`
@@ -75,7 +74,7 @@ export function validateResume(values: ResumeValues): ResumeErrors {
   if (values.workFormats.some((format) => !FORMATS.has(format))) {
     errors.workFormats = 'Выберите формат из списка'
   }
-  if (splitList(values.stack).length === 0) errors.stack = 'Укажите хотя бы один навык'
+  if (values.stack.length === 0) errors.stack = 'Укажите хотя бы один навык'
   else {
     const stack = listError(values.stack, 30)
     if (stack) errors.stack = stack
@@ -92,6 +91,34 @@ export function validateResume(values: ResumeValues): ResumeErrors {
   return errors
 }
 
+export function validateExtra(values: ResumeValues): ResumeErrors {
+  const errors: ResumeErrors = {}
+  if (!values.headline.trim()) errors.headline = 'Укажите должность'
+  if (!values.specialization) errors.specialization = 'Выберите специализацию'
+  const years = wholeNumber(values.experienceYears)
+  if (years === null || years > 50) errors.experienceYears = 'Стаж — целое число от 0 до 50'
+  if (values.stack.length === 0) errors.stack = 'Укажите хотя бы один навык'
+  else {
+    const stack = listError(values.stack, 30)
+    if (stack) errors.stack = stack
+  }
+  const soft = listError(values.softSkills, 20)
+  if (soft) errors.softSkills = soft
+  if (values.about.trim().length > 2000) errors.about = 'Не больше 2000 символов'
+  return errors
+}
+
+export function toExtraResume(values: ResumeValues): ResumeCreate {
+  return {
+    headline: values.headline.trim(),
+    specialization: values.specialization,
+    stack: values.stack,
+    softSkills: values.softSkills,
+    about: values.about.trim() || null,
+    experienceYears: Number(values.experienceYears.trim()),
+  }
+}
+
 export function toResumePayload(values: ResumeValues): CandidateProfileUpdate {
   const salary = values.salary.trim() ? Number(values.salary.trim()) : null
   return {
@@ -101,8 +128,8 @@ export function toResumePayload(values: ResumeValues): CandidateProfileUpdate {
     city: values.city.trim(),
     experienceYears: Number(values.experienceYears.trim()),
     workFormats: values.workFormats,
-    stack: splitList(values.stack),
-    softSkills: splitList(values.softSkills),
+    stack: values.stack,
+    softSkills: values.softSkills,
     about: values.about.trim() || null,
     phone: values.phone.trim() || null,
     telegram: values.telegram.trim().replace(/^@+/, '') || null,
@@ -119,8 +146,8 @@ export function resumeValuesFrom(profile: OwnCandidateDto | null): ResumeValues 
     city: profile.city ?? '',
     experienceYears: profile.experienceYears == null ? '' : String(profile.experienceYears),
     workFormats: profile.workFormats,
-    stack: profile.stack.join(', '),
-    softSkills: profile.softSkills.join(', '),
+    stack: profile.stack,
+    softSkills: profile.softSkills,
     about: profile.about ?? '',
     phone: profile.contacts?.phone ?? '',
     telegram: profile.contacts?.telegram ?? '',

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { candidateQueries } from '@/entities/candidate'
-import { sessionStore, useSession } from '@/entities/session'
+import { signOut, useSession } from '@/entities/session'
 import { ROLE_LABELS } from '@/entities/user'
 import { getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
@@ -21,7 +21,7 @@ export function SettingsPage() {
       title="Настройки"
       lead={`${user.email} · ${ROLE_LABELS[user.role]}`}
       actions={
-        <Button variant="ghost" size="inline" onClick={() => sessionStore.clear()}>
+        <Button variant="ghost" size="inline" onClick={() => void signOut()}>
           Выйти
         </Button>
       }

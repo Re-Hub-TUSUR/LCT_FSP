@@ -87,3 +87,39 @@ async def test_short_password_rejected(client: AsyncClient) -> None:
 async def test_relogin_returns_fresh_token(client: AsyncClient) -> None:
     await register_and_login(client, "f@fsp.ru")
     assert await login(client, "f@fsp.ru")
+
+
+CSRF = {"X-Kadry-Request": "1"}
+
+
+async def test_refresh_cookie_restores_the_session_and_logout_revokes_it(
+    client: AsyncClient,
+) -> None:
+    await register_and_login(client, "keep@fsp.ru")
+    forged = await client.post(f"{API}/auth/refresh")
+    assert forged.status_code == 401
+
+    refreshed = await client.post(f"{API}/auth/refresh", headers=CSRF)
+    assert refreshed.status_code == 200, refreshed.text
+    cookie = refreshed.headers["set-cookie"].lower()
+    assert "httponly" in cookie
+    assert "samesite=lax" in cookie
+    token = refreshed.json()["accessToken"]
+    me = await client.get(f"{API}/users/me", headers=bearer(token))
+    assert me.status_code == 200
+    assert me.json()["email"] == "keep@fsp.ru"
+
+    blocked = await client.post(f"{API}/auth/logout")
+    assert blocked.status_code == 401
+    logged_out = await client.post(f"{API}/auth/logout", headers=CSRF)
+    assert logged_out.status_code == 204
+    again = await client.post(f"{API}/auth/refresh", headers=CSRF)
+    assert again.status_code == 401
+
+
+async def test_api_responses_cannot_be_sniffed_or_framed(client: AsyncClient) -> None:
+    response = await client.get(f"{API}/health")
+    assert response.status_code == 200
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert "frame-ancestors 'none'" in response.headers["content-security-policy"]

@@ -13,9 +13,19 @@ from app.schemas.candidate import (
     CandidateProfileUpdate,
     CandidateRead,
     OwnCandidateRead,
+    ResumeCreate,
 )
 from app.services.categories import SPECIALIZATIONS
-from app.services.presenters import candidate_read, own_candidate_read
+from app.services.presenters import (
+    candidate_read,
+    own_candidate_read,
+    stored_skills,
+    stored_text,
+    stored_years,
+)
+from app.services.uploads import PHOTO_LIMIT, sniff_image
+
+MAX_RESUMES = 3
 
 
 class CandidateProfileService:
@@ -81,6 +91,7 @@ class CandidateProfileService:
                 stack=[],
                 soft_skills=[],
                 work_formats=[],
+                additional_resumes=[],
             )
             profile.fsp_achievements = []
             _apply_resume(profile, data)
@@ -110,6 +121,91 @@ class CandidateProfileService:
         profile.fsp_achievements.clear()
         profile.fsp_member_id = None
         return own_candidate_read(profile, email=user.email)
+
+    async def add_resume(self, user: User, data: ResumeCreate) -> OwnCandidateRead:
+        profile = await self._require(user)
+        extras = list(profile.additional_resumes or [])
+        if 1 + len(extras) >= MAX_RESUMES:
+            raise AppError("Можно сохранить не больше трёх резюме")
+        if data.specialization not in SPECIALIZATIONS:
+            raise AppError("Выберите специализацию из списка")
+        stack = _skills(data.stack, limit=30, label="Стек")
+        if not stack:
+            raise AppError("Укажите хотя бы один навык")
+        extras.append(
+            {
+                "id": str(uuid.uuid4()),
+                "headline": data.headline.strip(),
+                "specialization": data.specialization,
+                "stack": stack,
+                "soft_skills": _skills(data.soft_skills, limit=20, label="Софт-скиллы"),
+                "about": data.about.strip() if data.about else None,
+                "experience_years": data.experience_years,
+            }
+        )
+        profile.additional_resumes = extras
+        return own_candidate_read(profile, email=user.email)
+
+    async def make_primary(self, user: User, resume_id: uuid.UUID) -> OwnCandidateRead:
+        """Swap the chosen resume into the columns search and the feed rank first."""
+        profile = await self._require(user)
+        if resume_id == profile.id:
+            return own_candidate_read(profile, email=user.email)
+        extras = list(profile.additional_resumes or [])
+        chosen = next((item for item in extras if str(item.get("id")) == str(resume_id)), None)
+        if chosen is None:
+            raise NotFoundError("Резюме не найдено")
+        previous: dict[str, object] = {
+            "id": str(uuid.uuid4()),
+            "headline": profile.headline,
+            "specialization": profile.specialization,
+            "stack": list(profile.stack),
+            "soft_skills": list(profile.soft_skills),
+            "about": profile.about,
+            "experience_years": profile.experience_years,
+        }
+        profile.headline = stored_text(chosen.get("headline"))
+        profile.specialization = stored_text(chosen.get("specialization"))
+        profile.stack = stored_skills(chosen.get("stack"))
+        profile.soft_skills = stored_skills(chosen.get("soft_skills"))
+        profile.about = stored_text(chosen.get("about"))
+        profile.experience_years = stored_years(chosen.get("experience_years"))
+        profile.additional_resumes = [
+            previous if str(item.get("id")) == str(resume_id) else item for item in extras
+        ]
+        return own_candidate_read(profile, email=user.email)
+
+    async def set_photo(self, user: User, data: bytes) -> OwnCandidateRead:
+        profile = await self._require(user)
+        if len(data) > PHOTO_LIMIT:
+            raise AppError("Фото больше 2 МБ")
+        media = sniff_image(data)
+        if media is None:
+            raise AppError("Нужна фотография JPEG, PNG или WebP")
+        profile.photo = data
+        profile.photo_type = media
+        return own_candidate_read(profile, email=user.email)
+
+    async def clear_photo(self, user: User) -> OwnCandidateRead:
+        profile = await self._require(user)
+        profile.photo = None
+        profile.photo_type = None
+        return own_candidate_read(profile, email=user.email)
+
+    async def open_photo(self, candidate_id: uuid.UUID, viewer: User) -> tuple[bytes, str]:
+        profile = await self._candidates.get(candidate_id)
+        if profile is None:
+            raise NotFoundError("Кандидат не найден")
+        own = profile.user_id == viewer.id
+        employer = viewer.role == UserRole.EMPLOYER
+        if not (
+            own or viewer.role == UserRole.ADMIN or (employer and profile.is_visible_to_employers)
+        ):
+            raise NotFoundError("Кандидат не найден")
+        photo = await self._candidates.photo_of(profile.id)
+        if photo is None:
+            raise NotFoundError("Фото не загружено")
+        return photo
 
     async def _require(self, user: User) -> CandidateProfile:
         profile = await self._candidates.get_by_user(user.id)

@@ -1,0 +1,29 @@
+.candidate-resumes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.candidate-resumes li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  font-weight: 300;
+  font-size: 16px;
+}
+
+.candidate-resumes__mark {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.candidate-resumes__mark--muted {
+  color: var(--text-dim);
+}

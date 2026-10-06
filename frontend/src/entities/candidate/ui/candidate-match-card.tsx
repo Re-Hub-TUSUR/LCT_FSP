@@ -4,6 +4,8 @@ import { WORK_FORMAT_LABELS } from '@/entities/vacancy/@x/candidate'
 import { MatchMeter } from '@/shared/ui'
 import type { CandidateMatchDto, FspAchievementDto } from '../api/candidate-api'
 import { FSP_DISCIPLINE_LABELS } from '../model/fsp'
+import { CandidateResumes } from './candidate-resumes'
+import { useCandidatePhoto } from './use-candidate-photo'
 
 const rub = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 })
 
@@ -39,9 +41,11 @@ export function CandidateMatchCard({ match, actions }: Props) {
     <article className="match-card" aria-label={candidate.displayName}>
       <header className="match-card__head">
         <div className="match-card__person">
-          <span className="match-card__avatar" aria-hidden="true">
-            {initials(candidate.displayName)}
-          </span>
+          <CandidateAvatar
+            candidateId={candidate.id}
+            hasPhoto={candidate.hasPhoto === true}
+            name={candidate.displayName}
+          />
           <div className="match-card__titles">
             <h3 className="match-card__title">{candidate.displayName}</h3>
             {candidate.headline && <p className="match-card__eyebrow">{candidate.headline}</p>}
@@ -85,6 +89,8 @@ export function CandidateMatchCard({ match, actions }: Props) {
         )}
       </ul>
 
+      <CandidateResumes candidate={candidate} />
+
       <ul className="match-card__stack" aria-label="Стек">
         {candidate.stack.map((item) => (
           <li key={item}>{item}</li>
@@ -116,5 +122,23 @@ export function CandidateMatchCard({ match, actions }: Props) {
 
       {actions && <footer className="match-card__actions">{actions}</footer>}
     </article>
+  )
+}
+
+function CandidateAvatar({
+  candidateId,
+  hasPhoto,
+  name,
+}: {
+  candidateId: string
+  hasPhoto: boolean
+  name: string
+}) {
+  const photo = useCandidatePhoto(candidateId, hasPhoto)
+  if (photo.data) return <img className="match-card__photo" src={photo.data} alt="" />
+  return (
+    <span className="match-card__avatar" aria-hidden="true">
+      {initials(name)}
+    </span>
   )
 }

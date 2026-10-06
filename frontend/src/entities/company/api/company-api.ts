@@ -40,6 +40,7 @@ export const companyQueries = {
     queryOptions({
       queryKey: companyKeys.mine(),
       queryFn: ({ signal }) => http.get<CompanyDto>('/companies/me', { signal }),
+      staleTime: 30_000,
     }),
 }
 

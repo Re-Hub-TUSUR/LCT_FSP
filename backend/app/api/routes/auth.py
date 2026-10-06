@@ -1,6 +1,13 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Request, Response, status
 
-from app.api.stub import not_implemented
+from app.api.auth_cookies import (
+    REFRESH_COOKIE,
+    clear_refresh_cookie,
+    require_csrf,
+    set_refresh_cookie,
+)
+from app.core.errors import AuthenticationError
+from app.dependencies.common import SettingsDep
 from app.dependencies.services import AuthServiceDep
 from app.schemas.auth import (
     LoginRequest,
@@ -26,8 +33,12 @@ async def register(data: RegisterRequest, auth: AuthServiceDep) -> UserRead:
 
 
 @router.post("/login", summary="Exchange email + password for a JWT access token")
-async def login(data: LoginRequest, auth: AuthServiceDep) -> TokenResponse:
-    return await auth.login(data)
+async def login(
+    data: LoginRequest, auth: AuthServiceDep, settings: SettingsDep, response: Response
+) -> TokenResponse:
+    issued = await auth.login(data)
+    set_refresh_cookie(response, issued.refresh_token, issued.refresh_ttl, settings)
+    return issued.response
 
 
 @router.post(
@@ -48,6 +59,23 @@ async def resend_verification(data: ResendVerificationRequest, auth: AuthService
     await auth.resend_verification(str(data.email))
 
 
-@router.post("/refresh", summary="Rotate access token using an httpOnly refresh cookie")
-async def refresh() -> TokenResponse:
-    not_implemented("auth.refresh")
+@router.post("/refresh", summary="Rotate the session and return a fresh access token")
+async def refresh(
+    request: Request, auth: AuthServiceDep, settings: SettingsDep, response: Response
+) -> TokenResponse:
+    require_csrf(request)
+    raw = request.cookies.get(REFRESH_COOKIE)
+    if not raw:
+        raise AuthenticationError("Сессия не найдена")
+    issued = await auth.refresh(raw)
+    set_refresh_cookie(response, issued.refresh_token, issued.refresh_ttl, settings)
+    return issued.response
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, summary="Revoke the refresh cookie")
+async def logout(
+    request: Request, auth: AuthServiceDep, settings: SettingsDep, response: Response
+) -> None:
+    require_csrf(request)
+    await auth.logout(request.cookies.get(REFRESH_COOKIE))
+    clear_refresh_cookie(response, settings)

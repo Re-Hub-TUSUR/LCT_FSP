@@ -122,3 +122,62 @@ async def test_employer_company_profile_and_role_split(client: AsyncClient) -> N
     assert forbidden.status_code == 403
     foreign_resume = await client.get(f"{API}/candidates/me", headers=bearer(employer))
     assert foreign_resume.status_code == 403
+
+
+async def test_second_resume_stays_behind_the_priority_one(client: AsyncClient) -> None:
+    token = await register_and_login(client, "two@fsp.ru")
+    saved = await client.patch(f"{API}/candidates/me", headers=bearer(token), json=RESUME)
+    assert saved.status_code == 200, saved.text
+    added = await client.post(
+        f"{API}/candidates/me/resumes",
+        headers=bearer(token),
+        json={
+            "headline": "DevOps-инженер",
+            "specialization": "devops",
+            "stack": ["Kubernetes", "Terraform"],
+            "softSkills": [],
+            "about": None,
+            "experienceYears": 3,
+        },
+    )
+    assert added.status_code == 200, added.text
+    resumes = added.json()["resumes"]
+    assert [item["isPrimary"] for item in resumes] == [True, False]
+    assert resumes[0]["specialization"] == "backend"
+    assert resumes[1]["headline"] == "DevOps-инженер"
+
+    promoted = await client.post(
+        f"{API}/candidates/me/resumes/{resumes[1]['id']}/primary",
+        headers=bearer(token),
+    )
+    assert promoted.status_code == 200, promoted.text
+    body = promoted.json()
+    assert body["specialization"] == "devops"
+    assert body["resumes"][0]["isPrimary"] is True
+    assert body["resumes"][0]["specialization"] == "devops"
+    assert body["resumes"][1]["specialization"] == "backend"
+
+
+async def test_photo_rejects_a_file_that_is_not_an_image(client: AsyncClient) -> None:
+    token = await register_and_login(client, "photo@fsp.ru")
+    await client.patch(f"{API}/candidates/me", headers=bearer(token), json=RESUME)
+    rejected = await client.post(
+        f"{API}/candidates/me/photo",
+        headers=bearer(token),
+        files={"file": ("face.svg", b"<svg><script>alert(1)</script></svg>", "image/svg+xml")},
+    )
+    assert rejected.status_code == 400
+
+    png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
+    accepted = await client.post(
+        f"{API}/candidates/me/photo",
+        headers=bearer(token),
+        files={"file": ("face.png.exe", png, "application/octet-stream")},
+    )
+    assert accepted.status_code == 200, accepted.text
+    assert accepted.json()["hasPhoto"] is True
+    photo = await client.get(f"{API}/candidates/me/photo", headers=bearer(token))
+    assert photo.status_code == 200
+    assert photo.headers["content-type"].startswith("image/png")
+    assert photo.headers["x-content-type-options"] == "nosniff"
+    assert photo.content.startswith(b"\x89PNG")

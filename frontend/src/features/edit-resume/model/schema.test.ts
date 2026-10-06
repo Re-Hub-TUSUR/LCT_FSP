@@ -9,8 +9,8 @@ const valid: ResumeValues = {
   city: 'Казань',
   experienceYears: '4',
   workFormats: ['hybrid'],
-  stack: 'Python, PostgreSQL',
-  softSkills: '',
+  stack: ['Python', 'PostgreSQL'],
+  softSkills: [],
   about: '',
   phone: '',
   telegram: '@ivan',
@@ -19,7 +19,7 @@ const valid: ResumeValues = {
 
 describe('validateResume', () => {
   it('asks for the required resume fields', () => {
-    const errors = validateResume({ ...valid, displayName: ' ', stack: '', workFormats: [] })
+    const errors = validateResume({ ...valid, displayName: ' ', stack: [], workFormats: [] })
     expect(errors.displayName).toBe('Укажите имя и фамилию')
     expect(errors.stack).toBe('Укажите хотя бы один навык')
     expect(errors.workFormats).toBe('Выберите формат работы')

@@ -149,9 +149,10 @@ class VacancyFeedService:
                 work_formats=filters.work_formats, salary_min=filters.salary_min, reactions=exclude
             )
 
-        # Relevant = the candidate's or a related specialization, the same or a neighbouring grade.
+        # Priority specialization first in the score; other resumes are included, then ranked lower.
         return await self._vacancies.published(
             specializations={candidate.specialization}
+            | set(candidate.other_specializations)
             | related_specializations(candidate.specialization),
             grades={candidate.grade, *neighbour_grades(candidate.grade)},
             work_formats=filters.work_formats,
