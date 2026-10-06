@@ -7,7 +7,6 @@ import { ROLE_LABELS } from '@/entities/user'
 import { ROUTES } from '@/shared/config'
 import { formatDate } from '@/shared/lib'
 import { Button, Page, QueryState, Section } from '@/shared/ui'
-import { AssessmentBank } from '@/widgets/assessment-bank'
 import { InvitationsInbox } from '@/widgets/invitations-inbox'
 
 function CandidateProfile() {
@@ -53,8 +52,7 @@ function EmployerProfile() {
         <InvitationsInbox direction="outgoing" />
       </Section>
       <Link to={ROUTES.feed}>Перейти к подбору кандидатов</Link>
-      {/* Own tasks and tests of the company; assigning them to candidates is a later step. */}
-      <AssessmentBank scope="employer" />
+      <Link to={ROUTES.testBuilder}>Конструктор тестов компании</Link>
     </>
   )
 }

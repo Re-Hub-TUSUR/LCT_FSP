@@ -13,6 +13,7 @@ export const ROUTES = {
   matching: '/matching',
   matchingProfile: '/matching/:kind/:id',
   testing: '/testing',
+  testBuilder: '/testing/builder',
   admin: '/admin',
 } as const
 

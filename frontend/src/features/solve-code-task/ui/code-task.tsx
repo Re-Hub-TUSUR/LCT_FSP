@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { VERDICT_LABELS, assessmentApi } from '@/entities/assessment'
-import type { AttemptTaskDto, CodeAnswerDto, RunResultDto } from '@/entities/assessment'
+import type { CodeAnswerDto, CodeTaskDto, RunResultDto } from '@/entities/assessment'
 import { getErrorMessage } from '@/shared/api'
 import { Button, CodeEditor, SelectField } from '@/shared/ui'
 import { starterFor } from '../config/starters'
@@ -12,31 +12,34 @@ const RUN_COOLDOWN_MS = 5000
 
 type Props = {
   attemptId: string
-  task: AttemptTaskDto
+  task: CodeTaskDto
   /** Null until the candidate picks a language or types anything. */
-  draft: CodeAnswerDto | null
+  answer: CodeAnswerDto | null
   runsLeft: number
   /** False while the code runner is not configured on the server. */
   runnerAvailable: boolean
   disabled?: boolean
-  onDraftChange: (draft: CodeAnswerDto) => void
+  onChange: (answer: CodeAnswerDto) => void
   onRunsLeft: (runsLeft: number) => void
+  /** Reported for reviewers; never changes the score. */
+  onPaste?: () => void
 }
 
 /** Statement, editor and "Run" on the open tests. Hidden tests run only when the test ends. */
 export function CodeTask({
   attemptId,
   task,
-  draft,
+  answer,
   runsLeft,
   runnerAvailable,
   disabled,
-  onDraftChange,
+  onChange,
   onRunsLeft,
+  onPaste,
 }: Props) {
-  const languages = task.languages ?? []
-  const language = draft?.language ?? languages[0]?.id ?? ''
-  const code = draft?.code ?? starterFor(language)
+  const { languages, samples, timeLimit } = task.content
+  const language = answer?.language ?? languages[0]?.id ?? ''
+  const code = answer?.code ?? starterFor(language)
   const [results, setResults] = useState<RunResultDto[] | null>(null)
   const [coolingDown, setCoolingDown] = useState(false)
 
@@ -57,8 +60,8 @@ export function CodeTask({
 
   const changeLanguage = (next: string) => {
     // An untouched starter follows the language; real code is never replaced.
-    const untouched = draft === null || draft.code === starterFor(draft.language)
-    onDraftChange({ language: next, code: untouched ? starterFor(next) : code })
+    const untouched = answer === null || answer.code === starterFor(answer.language)
+    onChange({ language: next, code: untouched ? starterFor(next) : code })
   }
 
   const canRun = runnerAvailable && !disabled && !run.isPending && !coolingDown && runsLeft > 0
@@ -68,11 +71,9 @@ export function CodeTask({
       <div className="code-task__brief">
         <h2 className="code-task__title">{task.title}</h2>
         <p className="code-task__statement">{task.statement}</p>
-        {task.timeLimit !== null && (
-          <p className="code-task__limit">Ограничение времени: {task.timeLimit} с на запуск</p>
-        )}
+        <p className="code-task__limit">Ограничение времени: {timeLimit} с на запуск</p>
 
-        {(task.samples ?? []).map((sample, index) => (
+        {samples.map((sample, index) => (
           // Samples are a fixed list of the task and never reorder.
           // oxlint-disable-next-line react/no-array-index-key
           <div key={index} className="code-task__sample">
@@ -108,8 +109,8 @@ export function CodeTask({
           language={language}
           label={`Решение задачи «${task.title}»`}
           readOnly={disabled}
-          onChange={(value) => onDraftChange({ language, code: value })}
-          onPaste={() => void assessmentApi.signal(attemptId, 'paste').catch(() => {})}
+          onChange={(value) => onChange({ language, code: value })}
+          onPaste={onPaste}
         />
 
         <div className="code-task__actions">

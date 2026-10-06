@@ -1,0 +1,62 @@
+/* Wide tables scroll inside their own box instead of widening the page */
+.sent__scroll {
+  overflow-x: auto;
+}
+
+.sent__table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  font-family: var(--font-display);
+  font-size: 16px;
+}
+
+.sent__table th,
+.sent__table td {
+  padding: 12px 16px 12px 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.sent__table th {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+.sent__table td:nth-child(4),
+.sent__table td:nth-child(5) {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sent__table tr.is-open td {
+  background: var(--fill-ghost);
+}
+
+.sent__table a {
+  text-underline-offset: 4px;
+}
+
+.sent__hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-mute);
+}
+
+.sent__actions .btn {
+  margin: 0 8px 8px 0;
+  padding: 10px 14px;
+}
+
+.sent__error {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--error);
+}

@@ -1,25 +1,26 @@
-import type { AttemptTaskDto } from '@/entities/assessment'
+import type { QuizAnswerDto, QuizTaskDto } from '@/entities/assessment'
 import './quiz-question.css'
 
 type Props = {
-  task: AttemptTaskDto
-  /** Positions of the chosen options. */
-  selected: number[]
+  task: QuizTaskDto
+  /** Positions of the chosen options; null until the candidate picks one. */
+  answer: QuizAnswerDto | null
   disabled?: boolean
-  onChange: (selected: number[]) => void
+  onChange: (answer: QuizAnswerDto) => void
 }
 
 /** One question with shuffled options; a multiple-choice question allows several answers. */
-export function QuizQuestion({ task, selected, disabled, onChange }: Props) {
-  const multiple = task.multiple === true
+export function QuizQuestion({ task, answer, disabled, onChange }: Props) {
+  const { options, multiple } = task.content
+  const selected = answer?.selected ?? []
 
   const toggle = (position: number) => {
-    if (!multiple) return onChange([position])
-    onChange(
-      selected.includes(position)
+    if (!multiple) return onChange({ selected: [position] })
+    onChange({
+      selected: selected.includes(position)
         ? selected.filter((item) => item !== position)
         : [...selected, position],
-    )
+    })
   }
 
   return (
@@ -27,7 +28,7 @@ export function QuizQuestion({ task, selected, disabled, onChange }: Props) {
       <legend className="quiz__question">{task.statement}</legend>
       {multiple && <p className="quiz__hint">Можно выбрать несколько вариантов</p>}
       <div className="quiz__options">
-        {(task.options ?? []).map((option, position) => (
+        {options.map((option, position) => (
           // Options have no ids of their own: the position in this attempt is their identity.
           // oxlint-disable-next-line react/no-array-index-key
           <label key={position} className="quiz__option">

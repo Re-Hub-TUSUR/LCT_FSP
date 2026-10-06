@@ -14,6 +14,7 @@ from app.models import (
     AssessmentStatus,
     AssessmentTask,
     AssessmentTest,
+    CandidateCategory,
     CandidateProfile,
     CandidateReaction,
     Company,
@@ -22,6 +23,7 @@ from app.models import (
     Invitation,
     Meeting,
     MeetingStatus,
+    TestAssignment,
     User,
     UserRole,
     Vacancy,
@@ -32,6 +34,9 @@ from app.seed.fixtures import CandidateFixture, CompanyFixture, SeedData, Vacanc
 # Demo accounts share one password. Override it on a public stand with SEED_USER_PASSWORD.
 PASSWORD_ENV: Final = "SEED_USER_PASSWORD"  # noqa: S105 - variable name, not a secret
 DEFAULT_PASSWORD: Final = "kadry-demo-2026"  # noqa: S105 - documented password of demo accounts
+
+# Matches the default of ASSESSMENT_GRADE_CHANGE_DAYS.
+GRADE_CHANGE_DAYS: Final = 90
 
 # Ids derive from fixture keys, so links to demo profiles survive re-seeding.
 SEED_NAMESPACE: Final = uuid.UUID("6f1c8f8e-2b0b-4c51-9d8a-3f2a7c1e5b90")
@@ -172,6 +177,22 @@ def _candidate(candidate: CandidateFixture, now: datetime) -> CandidateProfile:
     )
 
 
+def _category(candidate: CandidateFixture, now: datetime) -> CandidateCategory | None:
+    """The tested grade as a confirmed category; self-declared grades have none."""
+    if candidate.assessment_score is None or candidate.assessed_days_ago is None:
+        return None
+    assessed = _ago(now, candidate.assessed_days_ago)
+    return CandidateCategory(
+        id=seed_id("category", candidate.key),
+        candidate_id=seed_id("candidate", candidate.key),
+        specialization=candidate.specialization,
+        grade=candidate.grade,
+        score=candidate.assessment_score,
+        confirmed_at=assessed,
+        change_allowed_at=assessed + timedelta(days=GRADE_CHANGE_DAYS),
+    )
+
+
 def _demo_meetings(data: SeedData, now: datetime) -> list[Meeting]:
     """A few interviews of the demo company in the coming days, the demo candidate first."""
     company = data.companies[0]
@@ -233,6 +254,12 @@ async def _clear(session: AsyncSession, user_ids: list[uuid.UUID]) -> None:
         ),
         delete(AssessmentAnswer).where(AssessmentAnswer.attempt_id.in_(attempts)),
         delete(AssessmentAttempt).where(AssessmentAttempt.candidate_id.in_(profiles)),
+        delete(TestAssignment).where(
+            or_(
+                TestAssignment.candidate_id.in_(profiles),
+                TestAssignment.company_id.in_(companies),
+            )
+        ),
         delete(AssessmentTest).where(AssessmentTest.owner_id.in_(user_ids)),
         delete(AssessmentTask).where(AssessmentTask.owner_id.in_(user_ids)),
         delete(Invitation).where(
@@ -241,6 +268,7 @@ async def _clear(session: AsyncSession, user_ids: list[uuid.UUID]) -> None:
         delete(Meeting).where(
             or_(Meeting.candidate_id.in_(profiles), Meeting.company_id.in_(companies))
         ),
+        delete(CandidateCategory).where(CandidateCategory.candidate_id.in_(profiles)),
         delete(FspAchievement).where(FspAchievement.candidate_id.in_(profiles)),
         delete(Vacancy).where(Vacancy.company_id.in_(companies)),
         delete(CandidateProfile).where(CandidateProfile.user_id.in_(user_ids)),
@@ -281,6 +309,9 @@ async def seed_database(
     session.add_all(_vacancy(vacancy, order, now) for order, vacancy in enumerate(data.vacancies))
     session.add_all(_candidate(candidate, now) for candidate in data.candidates)
     await session.flush()
+    session.add_all(
+        category for candidate in data.candidates if (category := _category(candidate, now))
+    )
     session.add_all(_demo_meetings(data, now))
     await session.flush()
 

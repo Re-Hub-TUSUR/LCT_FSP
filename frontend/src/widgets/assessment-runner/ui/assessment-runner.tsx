@@ -5,18 +5,18 @@ import {
   assessmentApi,
   assessmentKeys,
   assessmentQueries,
+  assignmentKeys,
   topicLabel,
 } from '@/entities/assessment'
 import type {
   AssessmentAttemptDto,
   AttemptDetailDto,
   AttemptTaskDto,
-  CodeAnswerDto,
+  TaskAnswerDto,
 } from '@/entities/assessment'
-import { QuizQuestion } from '@/features/answer-quiz'
-import { CodeTask } from '@/features/solve-code-task'
 import { ApiError, getErrorMessage } from '@/shared/api'
 import { Button, QueryState } from '@/shared/ui'
+import { TASK_TRAITS, TaskView, isAnswered } from '../config/task-views'
 import './assessment-runner.css'
 
 const DRAFT_SAVE_DELAY_MS = 1000
@@ -64,11 +64,8 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
   const queryClient = useQueryClient()
   const { tasks } = attempt
   const [index, setIndex] = useState(0)
-  const [selected, setSelected] = useState<Record<string, number[]>>(() =>
-    Object.fromEntries(tasks.map((task) => [task.id, task.selected ?? []])),
-  )
-  const [drafts, setDrafts] = useState<Record<string, CodeAnswerDto>>(() =>
-    Object.fromEntries(tasks.flatMap((task) => (task.draft ? [[task.id, task.draft]] : []))),
+  const [answers, setAnswers] = useState<Record<string, TaskAnswerDto>>(() =>
+    Object.fromEntries(tasks.flatMap((task) => (task.answer ? [[task.id, task.answer]] : []))),
   )
   const [runsLeft, setRunsLeft] = useState(attempt.runsLeft)
   const [confirming, setConfirming] = useState(false)
@@ -85,15 +82,16 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
     return () => clearInterval(timer)
   }, [])
 
-  // Code drafts that changed since the last save, flushed after a pause and before finishing.
-  const dirty = useRef(new Map<string, CodeAnswerDto>())
+  // Typed answers (code, text) that changed since the last save, flushed after a pause and
+  // before finishing.
+  const dirty = useRef(new Map<string, TaskAnswerDto>())
 
   const flushDrafts = useCallback(async () => {
     const pending = [...dirty.current.entries()]
     dirty.current.clear()
     await Promise.all(
-      pending.map(([taskId, draft]) =>
-        assessmentApi.saveAnswer(attempt.id, { taskId, ...draft }).catch((error: unknown) => {
+      pending.map(([taskId, answer]) =>
+        assessmentApi.saveAnswer(attempt.id, { taskId, answer }).catch((error: unknown) => {
           // Too late to save is fine: the last saved version will be checked.
           if (!(error instanceof ApiError && error.code === 'attempt_expired')) throw error
         }),
@@ -118,6 +116,8 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
     },
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: assessmentKeys.status() })
+      // A test a company sent changes its line in the inbox too.
+      void queryClient.invalidateQueries({ queryKey: assignmentKeys.all })
       queryClient.removeQueries({ queryKey: assessmentKeys.attempt(attempt.id) })
       onFinished(result)
     },
@@ -136,29 +136,24 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
     return () => window.removeEventListener('blur', onBlur)
   }, [attempt.id])
 
-  const selectOptions = (task: AttemptTaskDto, positions: number[]) => {
-    setSelected((prev) => ({ ...prev, [task.id]: positions }))
-    assessmentApi.saveAnswer(attempt.id, { taskId: task.id, selected: positions }).then(
+  const reportSaved = (saving: Promise<unknown>) =>
+    saving.then(
       () => setSaveError(''),
       (error: unknown) => setSaveError(getErrorMessage(error)),
     )
-  }
 
-  const changeDraft = (task: AttemptTaskDto, draft: CodeAnswerDto) => {
-    dirty.current.set(task.id, draft)
-    setDrafts((prev) => ({ ...prev, [task.id]: draft }))
+  const changeAnswer = (task: AttemptTaskDto, answer: TaskAnswerDto) => {
+    setAnswers((prev) => ({ ...prev, [task.id]: answer }))
+    if (TASK_TRAITS[task.kind].save === 'instant') {
+      void reportSaved(assessmentApi.saveAnswer(attempt.id, { taskId: task.id, answer }))
+      return
+    }
+    dirty.current.set(task.id, answer)
     clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => {
-      flushDrafts().then(
-        () => setSaveError(''),
-        (error: unknown) => setSaveError(getErrorMessage(error)),
-      )
-    }, DRAFT_SAVE_DELAY_MS)
+    saveTimer.current = setTimeout(() => void reportSaved(flushDrafts()), DRAFT_SAVE_DELAY_MS)
   }
 
-  const isAnswered = (task: AttemptTaskDto) =>
-    task.kind === 'quiz' ? (selected[task.id]?.length ?? 0) > 0 : task.id in drafts
-  const answered = tasks.filter(isAnswered).length
+  const answered = tasks.filter((item) => isAnswered(item, answers[item.id])).length
   const task = tasks[index]
   const locked = timeIsUp || finish.isPending
 
@@ -190,15 +185,15 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
             className={[
               'runner__step',
               position === index && 'is-current',
-              isAnswered(item) && 'is-answered',
+              isAnswered(item, answers[item.id]) && 'is-answered',
             ]
               .filter(Boolean)
               .join(' ')}
             aria-current={position === index ? 'step' : undefined}
-            aria-label={`Задание ${position + 1}, ${TASK_KIND_LABELS[item.kind].toLowerCase()}${isAnswered(item) ? ', есть ответ' : ''}`}
+            aria-label={`Задание ${position + 1}, ${TASK_KIND_LABELS[item.kind].toLowerCase()}${isAnswered(item, answers[item.id]) ? ', есть ответ' : ''}`}
             onClick={() => setIndex(position)}
           >
-            {item.kind === 'code' ? '</>' : position + 1}
+            {TASK_TRAITS[item.kind].mark ?? position + 1}
           </button>
         ))}
       </nav>
@@ -207,25 +202,17 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
         <p className="runner__eyebrow">
           Задание {index + 1} · {topicLabel(task.topic)}
         </p>
-        {task.kind === 'quiz' ? (
-          <QuizQuestion
-            task={task}
-            selected={selected[task.id] ?? []}
-            disabled={locked}
-            onChange={(positions) => selectOptions(task, positions)}
-          />
-        ) : (
-          <CodeTask
-            attemptId={attempt.id}
-            task={task}
-            draft={drafts[task.id] ?? null}
-            runsLeft={runsLeft}
-            runnerAvailable={runnerAvailable}
-            disabled={locked}
-            onDraftChange={(draft) => changeDraft(task, draft)}
-            onRunsLeft={setRunsLeft}
-          />
-        )}
+        <TaskView
+          task={task}
+          answer={answers[task.id]}
+          disabled={locked}
+          onChange={(answer) => changeAnswer(task, answer)}
+          onPaste={() => void assessmentApi.signal(attempt.id, 'paste').catch(() => {})}
+          attemptId={attempt.id}
+          runsLeft={runsLeft}
+          runnerAvailable={runnerAvailable}
+          onRunsLeft={setRunsLeft}
+        />
       </div>
 
       {(saveError || finish.isError) && (

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   DIFFICULTY_LABELS,
   TASK_KIND_LABELS,
@@ -16,7 +16,7 @@ import type {
   TaskDifficulty,
   TaskKind,
 } from '@/entities/assessment'
-import { GRADES, GRADE_LABELS } from '@/entities/category'
+import { GRADES, GRADE_LABELS, categoryQueries } from '@/entities/category'
 import { getErrorMessage } from '@/shared/api'
 import { Button, Chip, SelectField, TextField } from '@/shared/ui'
 
@@ -42,6 +42,9 @@ const SCOPE_LABELS: Record<CompositionRuleDto['scope'], string> = {
   any: 'Любые подходящие',
 }
 
+/** An empty field keeps the platform default. */
+const optionalDays = (value: string) => (value.trim() === '' ? null : Number(value))
+
 const toggle = <T,>(list: T[], item: T) =>
   list.includes(item) ? list.filter((value) => value !== item) : [...list, item]
 
@@ -53,7 +56,11 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
   const queryClient = useQueryClient()
   const composition = test?.composition
   const [title, setTitle] = useState(test?.title ?? '')
+  const dictionary = useQuery({ ...categoryQueries.dictionary(), enabled: scope === 'admin' })
   const [grade, setGrade] = useState(test?.grade ?? '')
+  const [specialization, setSpecialization] = useState(test?.specialization ?? '')
+  const [retryDays, setRetryDays] = useState(String(test?.retryDays ?? ''))
+  const [gradeChangeDays, setGradeChangeDays] = useState(String(test?.gradeChangeDays ?? ''))
   const [duration, setDuration] = useState(String(test?.durationMinutes ?? 30))
   const [passScore, setPassScore] = useState(String(test?.passScore ?? 60))
   const [quizWeight, setQuizWeight] = useState(String(test?.quizWeight ?? 40))
@@ -76,10 +83,13 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
         {
           title: title.trim(),
           grade: scope === 'admin' && grade ? grade : null,
+          specialization: scope === 'admin' && grade && specialization ? specialization : null,
           durationMinutes: Number(duration),
           passScore: Number(passScore),
           quizWeight: Number(quizWeight),
           composition: mode === 'rules' ? { mode, rules } : { mode, taskIds },
+          retryDays: scope === 'admin' ? optionalDays(retryDays) : null,
+          gradeChangeDays: scope === 'admin' ? optionalDays(gradeChangeDays) : null,
           isActive,
         },
         test?.id,
@@ -96,6 +106,11 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
     if (!(minutes >= 5 && minutes <= 180)) return 'Длительность — от 5 до 180 минут'
     if (![passScore, quizWeight].every((value) => Number(value) >= 0 && Number(value) <= 100))
       return 'Проходной балл и вес вопросов — от 0 до 100'
+    const pauses = [optionalDays(retryDays), optionalDays(gradeChangeDays)]
+    if (
+      pauses.some((days) => days !== null && !(Number.isInteger(days) && days >= 0 && days <= 365))
+    )
+      return 'Паузы — целое число дней от 0 до 365 или пусто'
     if (mode === 'fixed' && taskIds.length === 0) return 'Выберите хотя бы одну задачу'
     if (mode === 'rules' && rules.some((rule) => !(rule.count >= 1 && rule.count <= 40)))
       return 'В каждом правиле — от 1 до 40 заданий'
@@ -164,6 +179,40 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
           onChange={(e) => setQuizWeight(e.target.value)}
         />
       </div>
+
+      {scope === 'admin' && grade && (
+        <div className="task-form__row">
+          <SelectField
+            id="test-specialization"
+            label="Специализация"
+            value={specialization}
+            onChange={(e) => setSpecialization(e.target.value)}
+          >
+            <option value="">Все без своего теста</option>
+            {dictionary.data?.specializations.map((item) => (
+              <option key={item.code} value={item.code}>
+                {item.label}
+              </option>
+            ))}
+          </SelectField>
+          <TextField
+            id="test-retry-days"
+            label="Пауза после провала, дней"
+            placeholder="По умолчанию"
+            inputMode="numeric"
+            value={retryDays}
+            onChange={(e) => setRetryDays(e.target.value)}
+          />
+          <TextField
+            id="test-grade-change-days"
+            label="Пауза до смены грейда, дней"
+            placeholder="По умолчанию"
+            inputMode="numeric"
+            value={gradeChangeDays}
+            onChange={(e) => setGradeChangeDays(e.target.value)}
+          />
+        </div>
+      )}
 
       {scope === 'admin' && (
         <SelectField

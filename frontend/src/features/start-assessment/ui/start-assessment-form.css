@@ -25,6 +25,14 @@
   color: var(--text-mute);
 }
 
+.start-test__note {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-mute);
+}
+
 .start-test__error {
   margin: 0;
   font-family: var(--font-mono);

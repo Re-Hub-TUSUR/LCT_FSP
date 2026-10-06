@@ -4,25 +4,40 @@ from fastapi import APIRouter, status
 
 from app.api.stub import not_implemented
 from app.dependencies.auth import CandidateUser
-from app.dependencies.services import AssessmentServiceDep
+from app.dependencies.services import AssessmentServiceDep, TestAssignmentServiceDep
 from app.schemas.assessment import (
     AssessmentStatusRead,
+    AssignmentRead,
     AttemptAnswer,
     AttemptDetail,
     AttemptRead,
     AttemptSignal,
     AttemptStart,
+    PrimaryCategory,
     RunRequest,
     RunResponse,
     SurveyAnswers,
+    TemplateRead,
 )
 
 router = APIRouter(prefix="/assessments", tags=["assessments"])
 
 
-@router.get("/me", summary="Test status, next allowed attempt and attempt history")
+@router.get("/me", summary="Categories by specialization, their cooldowns and attempt history")
 async def read_status(user: CandidateUser, service: AssessmentServiceDep) -> AssessmentStatusRead:
     return await service.status(user)
+
+
+@router.put("/me/primary", summary="Choose which confirmed category employers see")
+async def set_primary_category(
+    user: CandidateUser, data: PrimaryCategory, service: AssessmentServiceDep
+) -> AssessmentStatusRead:
+    return await service.set_primary(user, data.specialization)
+
+
+@router.get("/templates", summary="What the grade tests consist of: time, pass score, cooldowns")
+async def list_templates(_: CandidateUser, service: AssessmentServiceDep) -> list[TemplateRead]:
+    return await service.templates()
 
 
 @router.post("/survey", status_code=status.HTTP_204_NO_CONTENT, summary="Submit onboarding survey")
@@ -82,3 +97,29 @@ async def finish_attempt(
     attempt_id: uuid.UUID, user: CandidateUser, service: AssessmentServiceDep
 ) -> AttemptRead:
     return await service.finish(user, attempt_id)
+
+
+@router.get("/assignments", summary="Tests companies sent to me")
+async def list_assignments(
+    user: CandidateUser, service: TestAssignmentServiceDep
+) -> list[AssignmentRead]:
+    return await service.incoming(user)
+
+
+@router.post(
+    "/assignments/{assignment_id}/start",
+    status_code=status.HTTP_201_CREATED,
+    summary="Start a test a company sent",
+    description="The attempt is answered and finished through the same `/attempts` endpoints.",
+)
+async def start_assignment(
+    assignment_id: uuid.UUID, user: CandidateUser, service: TestAssignmentServiceDep
+) -> AttemptDetail:
+    return await service.start(user, assignment_id)
+
+
+@router.post("/assignments/{assignment_id}/decline", summary="Refuse a test a company sent")
+async def decline_assignment(
+    assignment_id: uuid.UUID, user: CandidateUser, service: TestAssignmentServiceDep
+) -> AssignmentRead:
+    return await service.decline(user, assignment_id)

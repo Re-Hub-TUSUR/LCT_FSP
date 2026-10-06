@@ -7,10 +7,12 @@ from app.models.assessment import (
     AssessmentTest,
 )
 from app.models.candidate import CandidateProfile
+from app.models.candidate_category import CandidateCategory
 from app.models.company import Company
 from app.models.email_verification import EmailVerificationCode
 from app.models.enums import (
     AssessmentStatus,
+    AssignmentStatus,
     AttemptStatus,
     FspDiscipline,
     FspEventLevel,
@@ -27,6 +29,7 @@ from app.models.fsp_achievement import FspAchievement
 from app.models.invitation import Invitation
 from app.models.meeting import Meeting
 from app.models.reaction import CandidateReaction, VacancyReaction
+from app.models.test_assignment import TestAssignment
 from app.models.user import User
 from app.models.vacancy import Vacancy
 
@@ -36,7 +39,9 @@ __all__ = [
     "AssessmentStatus",
     "AssessmentTask",
     "AssessmentTest",
+    "AssignmentStatus",
     "AttemptStatus",
+    "CandidateCategory",
     "CandidateProfile",
     "CandidateReaction",
     "Company",
@@ -52,6 +57,7 @@ __all__ = [
     "ReactionKind",
     "TaskDifficulty",
     "TaskKind",
+    "TestAssignment",
     "User",
     "UserRole",
     "Vacancy",

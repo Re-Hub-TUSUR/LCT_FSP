@@ -1,0 +1,19 @@
+.assignment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.assignment-actions .btn {
+  padding: 11px 18px;
+}
+
+.assignment-actions__error {
+  flex-basis: 100%;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--error);
+}

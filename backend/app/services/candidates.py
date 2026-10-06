@@ -5,15 +5,25 @@ import uuid
 from app.core.errors import NotFoundError
 from app.models import User, UserRole
 from app.repositories.candidate import CandidateRepository
+from app.repositories.company import CompanyRepository
 from app.repositories.invitation import InvitationRepository
+from app.repositories.reaction import ReactionRepository
 from app.schemas.candidate import CandidateContacts, CandidateRead
 from app.services.presenters import candidate_read
 
 
 class CandidateProfileService:
-    def __init__(self, candidates: CandidateRepository, invitations: InvitationRepository) -> None:
+    def __init__(
+        self,
+        candidates: CandidateRepository,
+        invitations: InvitationRepository,
+        reactions: ReactionRepository,
+        companies: CompanyRepository,
+    ) -> None:
         self._candidates = candidates
         self._invitations = invitations
+        self._reactions = reactions
+        self._companies = companies
 
     async def read(self, candidate_id: uuid.UUID, viewer: User) -> CandidateRead:
         """Candidates see only themselves; employers see visible profiles.
@@ -39,4 +49,13 @@ class CandidateProfileService:
             contacts = CandidateContacts(
                 email=email or "", phone=profile.phone, telegram=profile.telegram
             )
-        return candidate_read(profile, contacts=contacts)
+        matched = None
+        if employer:
+            company = await self._companies.get_by_owner(viewer.id)
+            matched = company is not None and await self._reactions.is_match(
+                recruiter_id=viewer.id,
+                company_id=company.id,
+                candidate_id=profile.id,
+                candidate_user_id=profile.user_id,
+            )
+        return candidate_read(profile, contacts=contacts).model_copy(update={"matched": matched})

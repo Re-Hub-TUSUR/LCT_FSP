@@ -1,7 +1,8 @@
 """Candidate side of testing: draw a variant, collect answers, run code, score, set the category.
 
-Open test groups serve "Run"; hidden ones are executed only on finish. Correct quiz options and
-hidden groups never leave this module.
+What a task shows, accepts and earns is decided by its kind (`app.services.task_kinds`); this
+module only drives the attempt. An attempt belongs either to a platform grade test (it confirms
+a category and starts a cooldown) or to a test a company assigned (it does neither).
 """
 
 import asyncio
@@ -20,9 +21,13 @@ from app.models import (
     AssessmentStatus,
     AssessmentTask,
     AssessmentTest,
+    AssignmentStatus,
     AttemptStatus,
+    CandidateCategory,
     CandidateProfile,
+    Grade,
     TaskKind,
+    TestAssignment,
     User,
 )
 from app.repositories.assessment import AssessmentRepository
@@ -35,25 +40,20 @@ from app.schemas.assessment import (
     AttemptSignal,
     AttemptStart,
     AttemptTask,
-    CodeAnswer,
     FixedComposition,
-    LanguageOption,
     RulesComposition,
     RunRequest,
     RunResponse,
     RunResult,
-    SampleTest,
+    TemplateRead,
     TopicResult,
+    TrackRead,
 )
-from app.services.assessment_bank import (
-    allowed_languages,
-    code_payload,
-    judge,
-    quiz_payload,
-    test_read,
-)
+from app.services.assessment_bank import test_read
 from app.services.categories import SPECIALIZATIONS, category_for
-from app.services.code_runner import COMPILERS, CodeRunner
+from app.services.code_runner import CodeRunner, CodeRunnerUnavailableError
+from app.services.task_kinds import REGISTRY, spec_of
+from app.services.task_kinds.code import CodeKind, judge
 
 MAX_RUNS: Final = 20
 RUN_INTERVAL: Final = timedelta(seconds=5)
@@ -96,24 +96,78 @@ class AssessmentService:
                 specialization=None,
                 grade=None,
                 score=None,
-                active_attempt_id=None,
                 next_attempt_at=None,
+                tracks=[],
+                active_attempt_id=None,
                 code_runner_available=self._runner.available,
                 history=[],
             )
         attempts = await self._settled_attempts(profile)
+        categories = await self._repository.categories_of(profile.id)
         active = next((a for a in attempts if a.status == AttemptStatus.IN_PROGRESS), None)
-        confirmed = profile.assessment_status == AssessmentStatus.PASSED
+        # Confirmed specializations first, then the ones tried without success.
+        tried = [a.specialization for a in attempts if a.specialization and a.finished_at]
+        tracks = [
+            _track(profile, specialization, categories.get(specialization), attempts)
+            for specialization in dict.fromkeys([*categories, *tried])
+        ]
+        primary = next((track for track in tracks if track.is_primary), None)
         return AssessmentStatusRead(
             status=profile.assessment_status,
-            specialization=profile.specialization if confirmed else None,
-            grade=profile.grade if confirmed else None,
-            score=profile.assessment_score,
+            specialization=primary.specialization if primary else None,
+            grade=primary.grade if primary else None,
+            score=primary.score if primary else None,
+            next_attempt_at=primary.next_attempt_at if primary else None,
+            tracks=tracks,
             active_attempt_id=active.id if active else None,
-            next_attempt_at=self._next_attempt_at(profile, attempts),
             code_runner_available=self._runner.available,
             history=[_attempt_read(attempt) for attempt in attempts],
         )
+
+    async def templates(self) -> list[TemplateRead]:
+        """What every grade test consists of. A fixed list is counted by its tasks."""
+        result: list[TemplateRead] = []
+        seen: set[tuple[Grade, str | None]] = set()
+        for test in await self._repository.platform_tests():
+            # Newest first: older templates of the same category are shadowed.
+            if test.grade is None or (test.grade, test.specialization) in seen:
+                continue
+            seen.add((test.grade, test.specialization))
+            composition = test_read(test).composition
+            counts: dict[TaskKind, int] = defaultdict(int)
+            if isinstance(composition, FixedComposition):
+                tasks = await self._repository.tasks_by_ids(composition.task_ids)
+                for task in tasks.values():
+                    counts[task.kind] += task.is_active
+            else:
+                for rule in composition.rules:
+                    counts[rule.kind] += rule.count
+            result.append(
+                TemplateRead(
+                    grade=test.grade,
+                    specialization=test.specialization,
+                    duration_minutes=test.duration_minutes,
+                    pass_score=test.pass_score,
+                    tasks={kind: count for kind, count in counts.items() if count},
+                    retry_days=self._retry_days(test),
+                    grade_change_days=self._grade_change_days(test),
+                )
+            )
+        return result
+
+    async def set_primary(self, user: User, specialization: str) -> AssessmentStatusRead:
+        """Makes a confirmed category the one employers see in search and feeds."""
+        profile = await self._candidates.get_by_user(user.id)
+        category = (
+            (await self._repository.categories_of(profile.id)).get(specialization)
+            if profile
+            else None
+        )
+        if profile is None or category is None:
+            raise NotFoundError("Эта специализация ещё не подтверждена тестом")
+        _mirror(profile, category)
+        await self._repository.add(profile)
+        return await self.status(user)
 
     async def start(self, user: User, data: AttemptStart) -> AttemptDetail:
         if data.specialization not in SPECIALIZATIONS:
@@ -122,12 +176,16 @@ class AssessmentService:
         attempts = await self._settled_attempts(profile)
         if any(attempt.status == AttemptStatus.IN_PROGRESS for attempt in attempts):
             raise ConflictError("У вас уже есть незавершённый тест")
-        allowed_at = self._next_attempt_at(profile, attempts)
+        categories = await self._repository.categories_of(profile.id)
+        allowed_at = _next_attempt_at(
+            data.specialization, categories.get(data.specialization), attempts
+        )
         if allowed_at is not None:
             raise ConflictError(
-                "Повторная попытка пока недоступна", details={"nextAttemptAt": allowed_at}
+                "Повторная попытка по этой специализации пока недоступна",
+                details={"nextAttemptAt": allowed_at},
             )
-        test = await self._repository.platform_test(data.grade)
+        test = await self._repository.platform_test(data.grade, data.specialization)
         if test is None:
             raise ConflictError("Тест для этого грейда ещё не подготовлен")
 
@@ -135,29 +193,79 @@ class AssessmentService:
         tasks = await self._compose(test, data.specialization, seen)
         if not tasks:
             raise ConflictError("Банк задач для этой специализации пока пуст")
+        if not self._runner.available and any(spec_of(task).code_group for task in tasks):
+            # Most of the score would be out of reach: better not to burn the attempt.
+            raise CodeRunnerUnavailableError(
+                "Проверка кода сейчас недоступна, тест с задачей на код начать нельзя"
+            )
 
         category = category_for(data.specialization, data.grade)
+        return await self._open(
+            profile,
+            test,
+            tasks,
+            title=category.label if category else test.title,
+            specialization=data.specialization,
+            grade=data.grade,
+        )
+
+    async def start_assigned(
+        self, profile: CandidateProfile, test: AssessmentTest, assignment: TestAssignment
+    ) -> AttemptDetail:
+        """Starts a test a company sent. No category, no cooldown: only the «one test at a
+        time» rule is shared with grade tests."""
+        attempts = await self._settled_attempts(profile)
+        if any(attempt.status == AttemptStatus.IN_PROGRESS for attempt in attempts):
+            raise ConflictError("У вас уже есть незавершённый тест")
+        tasks = await self._compose(test, "", set())
+        if not tasks:
+            raise ConflictError("В этом тесте не осталось доступных задач")
+        if not self._runner.available and any(spec_of(task).code_group for task in tasks):
+            raise CodeRunnerUnavailableError(
+                "Проверка кода сейчас недоступна, тест с задачей на код начать нельзя"
+            )
+        return await self._open(
+            profile,
+            test,
+            tasks,
+            title=assignment.title,
+            specialization=None,
+            grade=None,
+            assignment_id=assignment.id,
+        )
+
+    async def _open(
+        self,
+        profile: CandidateProfile,
+        test: AssessmentTest,
+        tasks: Sequence[AssessmentTask],
+        *,
+        title: str,
+        specialization: str | None,
+        grade: Grade | None,
+        assignment_id: uuid.UUID | None = None,
+    ) -> AttemptDetail:
         now = datetime.now(UTC)
+        states = {
+            str(task.id): spec_of(task).new_state(spec_of(task).payload(task)) for task in tasks
+        }
         attempt = await self._repository.add(
             AssessmentAttempt(
                 candidate_id=profile.id,
                 test_id=test.id,
-                title=category.label if category else test.title,
-                specialization=data.specialization,
-                grade=data.grade,
+                assignment_id=assignment_id,
+                title=title,
+                specialization=specialization,
+                grade=grade,
                 status=AttemptStatus.IN_PROGRESS,
                 pass_score=test.pass_score,
                 quiz_weight=test.quiz_weight,
+                retry_days=self._retry_days(test),
+                grade_change_days=self._grade_change_days(test),
                 started_at=now,
                 expires_at=now + timedelta(minutes=test.duration_minutes),
                 task_ids=[str(task.id) for task in tasks],
-                option_orders={
-                    str(task.id): _random.sample(
-                        range(len(quiz_payload(task).options)), len(quiz_payload(task).options)
-                    )
-                    for task in tasks
-                    if task.kind == TaskKind.QUIZ
-                },
+                task_state={key: state for key, state in states.items() if state is not None},
             )
         )
         return self._detail(attempt, tasks, {})
@@ -172,19 +280,10 @@ class AssessmentService:
     async def answer(self, user: User, attempt_id: uuid.UUID, data: AttemptAnswer) -> None:
         attempt = await self._running_attempt(user, attempt_id)
         task = await self._task(attempt, data.task_id)
-        if task.kind == TaskKind.QUIZ:
-            order = attempt.option_orders[str(task.id)]
-            selected = list(dict.fromkeys(data.selected or []))
-            if any(not 0 <= position < len(order) for position in selected) or (
-                len(selected) > 1 and not quiz_payload(task).multiple
-            ):
-                raise AppError("Некорректный вариант ответа")
-            value: dict[str, object] = {"selected": sorted(order[pos] for pos in selected)}
-        else:
-            if data.language is None or data.code is None:
-                raise AppError("Передайте язык и код решения")
-            self._check_language(task, data.language)
-            value = {"language": data.language, "code": data.code}
+        spec = spec_of(task)
+        value = spec.store_answer(
+            spec.payload(task), attempt.task_state.get(str(task.id)), data.answer
+        )
 
         saved = (await self._repository.answers_of(attempt.id)).get(task.id)
         if saved is None:
@@ -195,9 +294,11 @@ class AssessmentService:
     async def run(self, user: User, attempt_id: uuid.UUID, data: RunRequest) -> RunResponse:
         attempt = await self._running_attempt(user, attempt_id)
         task = await self._task(attempt, data.task_id)
-        if task.kind != TaskKind.CODE:
+        spec = spec_of(task)
+        if not isinstance(spec, CodeKind):
             raise AppError("Запуск доступен только для задач на код")
-        self._check_language(task, data.language)
+        payload = spec.payload(task)
+        spec.check_language(payload, data.language)
 
         now = datetime.now(UTC)
         if attempt.runs_count >= MAX_RUNS:
@@ -208,7 +309,6 @@ class AssessmentService:
         attempt.last_run_at = now
         await self._repository.add(attempt)
 
-        payload = code_payload(task)
         if data.input is not None:
             execution = await self._runner.run(
                 compiler=data.language, code=data.code, stdin=data.input
@@ -263,65 +363,86 @@ class AssessmentService:
         attempt = await self._attempt(user, attempt_id)
         if attempt.status != AttemptStatus.IN_PROGRESS:
             return _attempt_read(attempt)
+        await self._close(attempt, finished_at=datetime.now(UTC))
+        return _attempt_read(attempt)
+
+    async def _close(self, attempt: AssessmentAttempt, *, finished_at: datetime) -> None:
+        """Grades what is saved. Answers only a person can grade leave the attempt
+        `awaiting_review`: its score appears once they are all graded."""
         tasks = await self._tasks(attempt)
         answers = await self._repository.answers_of(attempt.id)
-
-        points = dict(
-            zip(
-                (task.id for task in tasks),
-                await asyncio.gather(*(self._points(task, answers.get(task.id)) for task in tasks)),
-                strict=True,
-            )
-        )
+        earned = await asyncio.gather(*(self._points(task, answers.get(task.id)) for task in tasks))
+        points = dict(zip((task.id for task in tasks), earned, strict=True))
         for task_id, answer in answers.items():
             answer.points = points.get(task_id, 0.0)
             await self._repository.add(answer)
 
-        attempt.score = _score(tasks, points, attempt.quiz_weight)
-        attempt.breakdown = [item.model_dump(mode="json") for item in _breakdown(tasks, points)]
-        passed = attempt.score >= attempt.pass_score
-        attempt.status = AttemptStatus.PASSED if passed else AttemptStatus.FAILED
-        attempt.finished_at = datetime.now(UTC)
+        attempt.finished_at = finished_at
+        if any(value is None for value in points.values()):
+            attempt.status = AttemptStatus.AWAITING_REVIEW
+        else:
+            settle(attempt, tasks, {task_id: value or 0.0 for task_id, value in points.items()})
         await self._repository.add(attempt)
+        await self.after_close(attempt)
 
+    async def close_abandoned(self, attempt: AssessmentAttempt) -> None:
+        """Closes an assigned attempt the candidate left past its deadline, grading what was
+        saved: the company still wants to see it."""
+        if (
+            attempt.assignment_id is not None
+            and attempt.status == AttemptStatus.IN_PROGRESS
+            and datetime.now(UTC) > _aware(attempt.expires_at) + ABANDON_AFTER
+        ):
+            await self._close(attempt, finished_at=attempt.expires_at)
+
+    async def after_close(self, attempt: AssessmentAttempt) -> None:
+        """What a closed (or just reviewed) attempt changes outside itself."""
+        if attempt.assignment_id is not None:
+            assignment = await self._repository.get_assignment(attempt.assignment_id)
+            if assignment is not None:
+                assignment.status = (
+                    AssignmentStatus.REVIEW
+                    if attempt.status == AttemptStatus.AWAITING_REVIEW
+                    else AssignmentStatus.DONE
+                )
+                await self._repository.add(assignment)
+            return
         profile = await self._candidates.get(attempt.candidate_id)
-        if profile is not None and attempt.grade is not None:
-            if passed:
-                profile.specialization = attempt.specialization
-                profile.grade = attempt.grade
-                profile.assessment_score = attempt.score
-                profile.grade_changed_at = attempt.finished_at
-                profile.assessment_status = AssessmentStatus.PASSED
+        if profile is not None and attempt.grade is not None and attempt.specialization:
+            if attempt.status == AttemptStatus.PASSED:
+                await self._confirm(profile, attempt)
             elif profile.assessment_status != AssessmentStatus.PASSED:
-                # A failed test assigns nothing; an earlier confirmed category stays as it was.
+                # A failed test assigns nothing; confirmed categories stay as they were.
                 profile.assessment_status = AssessmentStatus.FAILED
-        return _attempt_read(attempt)
 
-    async def _points(self, task: AssessmentTask, answer: AssessmentAnswer | None) -> float:
-        """Share of the task earned, 0–1."""
+    async def _confirm(self, profile: CandidateProfile, attempt: AssessmentAttempt) -> None:
+        """Records the confirmed grade of the attempt's specialization."""
+        if attempt.grade is None or not attempt.specialization or attempt.finished_at is None:
+            return
+        category = (await self._repository.categories_of(profile.id)).get(attempt.specialization)
+        if category is None:
+            category = CandidateCategory(
+                candidate_id=profile.id, specialization=attempt.specialization
+            )
+        category.grade = attempt.grade
+        category.score = attempt.score or 0.0
+        category.confirmed_at = attempt.finished_at
+        category.change_allowed_at = attempt.finished_at + timedelta(days=attempt.grade_change_days)
+        await self._repository.add(category)
+        # The first confirmed category becomes the primary one; later ones wait for the
+        # candidate's choice and only refresh the profile when they are the primary already.
+        if (
+            profile.assessment_status != AssessmentStatus.PASSED
+            or profile.specialization == attempt.specialization
+        ):
+            _mirror(profile, category)
+
+    async def _points(self, task: AssessmentTask, answer: AssessmentAnswer | None) -> float | None:
+        """Share of the task earned, 0–1; None = waits for a reviewer."""
         if answer is None:
             return 0.0
-        if task.kind == TaskKind.QUIZ:
-            return float(
-                sorted(answer.answer.get("selected", [])) == sorted(quiz_payload(task).correct)
-            )
-        payload = code_payload(task)
-        hidden = [group for group in payload.groups if group.hidden]
-        executions = await asyncio.gather(
-            *(
-                self._runner.run(
-                    compiler=answer.answer["language"],
-                    code=answer.answer["code"],
-                    stdin=group.input,
-                )
-                for group in hidden
-            )
-        )
-        passed = sum(
-            judge(execution, group.expected, payload.time_limit) == "ok"
-            for group, execution in zip(hidden, executions, strict=True)
-        )
-        return passed / len(hidden)
+        spec = spec_of(task)
+        return await spec.grade(spec.payload(task), answer.answer, self._runner)
 
     # ── Variant ───────────────────────────────────────────────────────────────────────────
 
@@ -376,20 +497,19 @@ class AssessmentService:
             raise NotFoundError("Задача не входит в этот тест")
         return task
 
-    @staticmethod
-    def _check_language(task: AssessmentTask, language: str) -> None:
-        if language not in allowed_languages(code_payload(task)):
-            raise AppError("Этот язык недоступен для задачи")
-
     async def _settled_attempts(self, profile: CandidateProfile) -> Sequence[AssessmentAttempt]:
         """Attempts newest first; the ones abandoned past their deadline are closed on the way."""
         attempts = await self._repository.attempts_of(profile.id)
         now = datetime.now(UTC)
         for attempt in attempts:
-            if (
+            if not (
                 attempt.status == AttemptStatus.IN_PROGRESS
                 and now > _aware(attempt.expires_at) + ABANDON_AFTER
             ):
+                continue
+            if attempt.assignment_id is not None:
+                await self.close_abandoned(attempt)
+            else:
                 attempt.status = AttemptStatus.EXPIRED
                 attempt.finished_at = attempt.expires_at
                 await self._repository.add(attempt)
@@ -397,23 +517,15 @@ class AssessmentService:
                     profile.assessment_status = AssessmentStatus.FAILED
         return attempts
 
-    def _next_attempt_at(
-        self, profile: CandidateProfile, attempts: Sequence[AssessmentAttempt]
-    ) -> datetime | None:
-        """When the next attempt may start; None = right now."""
-        waits: list[datetime] = []
-        finished = [attempt for attempt in attempts if attempt.finished_at is not None]
-        if finished and finished[0].status in (AttemptStatus.FAILED, AttemptStatus.EXPIRED):
-            last = finished[0].finished_at
-            if last is not None:
-                waits.append(_aware(last) + timedelta(days=self._settings.assessment_retry_days))
-        if profile.assessment_status == AssessmentStatus.PASSED and profile.grade_changed_at:
-            waits.append(
-                _aware(profile.grade_changed_at)
-                + timedelta(days=self._settings.assessment_grade_change_days)
-            )
-        allowed_at = max(waits, default=None)
-        return allowed_at if allowed_at and allowed_at > datetime.now(UTC) else None
+    def _retry_days(self, test: AssessmentTest) -> int:
+        if test.retry_days is not None:
+            return test.retry_days
+        return self._settings.assessment_retry_days
+
+    def _grade_change_days(self, test: AssessmentTest) -> int:
+        if test.grade_change_days is not None:
+            return test.grade_change_days
+        return self._settings.assessment_grade_change_days
 
     def _detail(
         self,
@@ -429,9 +541,64 @@ class AssessmentService:
         )
 
 
+def _next_attempt_at(
+    specialization: str,
+    category: CandidateCategory | None,
+    attempts: Sequence[AssessmentAttempt],
+) -> datetime | None:
+    """When a test of the specialization may start; None = right now.
+
+    Every specialization keeps its own clock: a failure in one does not hold back another.
+    `attempts` come newest first.
+    """
+    waits: list[datetime] = []
+    last = next(
+        (a for a in attempts if a.specialization == specialization and a.finished_at is not None),
+        None,
+    )
+    if (
+        last is not None
+        and last.finished_at is not None
+        and last.status in (AttemptStatus.FAILED, AttemptStatus.EXPIRED)
+    ):
+        waits.append(_aware(last.finished_at) + timedelta(days=last.retry_days))
+    if category is not None:
+        waits.append(_aware(category.change_allowed_at))
+    allowed_at = max(waits, default=None)
+    return allowed_at if allowed_at and allowed_at > datetime.now(UTC) else None
+
+
+def _track(
+    profile: CandidateProfile,
+    specialization: str,
+    category: CandidateCategory | None,
+    attempts: Sequence[AssessmentAttempt],
+) -> TrackRead:
+    return TrackRead(
+        specialization=specialization,
+        status=AssessmentStatus.PASSED if category else AssessmentStatus.FAILED,
+        grade=category.grade if category else None,
+        score=category.score if category else None,
+        next_attempt_at=_next_attempt_at(specialization, category, attempts),
+        is_primary=category is not None
+        and profile.assessment_status == AssessmentStatus.PASSED
+        and profile.specialization == specialization,
+    )
+
+
+def _mirror(profile: CandidateProfile, category: CandidateCategory) -> None:
+    """Copies the primary category into the profile, where search and feeds read it."""
+    profile.specialization = category.specialization
+    profile.grade = category.grade
+    profile.assessment_score = category.score
+    profile.grade_changed_at = category.confirmed_at
+    profile.assessment_status = AssessmentStatus.PASSED
+
+
 def _attempt_read(attempt: AssessmentAttempt) -> AttemptRead:
     return AttemptRead(
         id=attempt.id,
+        assignment_id=attempt.assignment_id,
         title=attempt.title,
         specialization=attempt.specialization,
         grade=attempt.grade,
@@ -450,39 +617,31 @@ def _attempt_read(attempt: AssessmentAttempt) -> AttemptRead:
 def _attempt_task(
     attempt: AssessmentAttempt, task: AssessmentTask, answer: AssessmentAnswer | None
 ) -> AttemptTask:
-    """Candidate view of a task: no correct options, no hidden groups, no reference solution."""
-    common = {
-        "id": task.id,
-        "kind": task.kind,
-        "topic": task.topic,
-        "difficulty": task.difficulty,
-        "title": task.title,
-        "statement": task.statement,
-    }
-    if task.kind == TaskKind.QUIZ:
-        quiz = quiz_payload(task)
-        order = attempt.option_orders[str(task.id)]
-        chosen = set(answer.answer.get("selected", [])) if answer else set()
-        return AttemptTask(
-            **common,
-            options=[quiz.options[index] for index in order],
-            multiple=quiz.multiple,
-            selected=[position for position, index in enumerate(order) if index in chosen],
-        )
-    code = code_payload(task)
+    """Candidate view of a task: the kind decides what is safe to show."""
+    spec = spec_of(task)
+    payload = spec.payload(task)
+    state = attempt.task_state.get(str(task.id))
+    shown = spec.show_answer(payload, state, answer.answer) if answer else None
     return AttemptTask(
-        **common,
-        languages=[
-            LanguageOption(id=language, label=COMPILERS[language])
-            for language in allowed_languages(code)
-        ],
-        time_limit=code.time_limit,
-        samples=[
-            SampleTest(input=group.input, expected=group.expected)
-            for group in code.groups
-            if not group.hidden
-        ],
-        draft=CodeAnswer.model_validate(answer.answer) if answer else None,
+        id=task.id,
+        kind=task.kind,
+        topic=task.topic,
+        difficulty=task.difficulty,
+        title=task.title,
+        statement=task.statement,
+        content=spec.content(payload, state).model_dump(mode="json", by_alias=True),
+        answer=shown.model_dump(mode="json", by_alias=True) if shown else None,
+    )
+
+
+def settle(
+    attempt: AssessmentAttempt, tasks: Sequence[AssessmentTask], points: dict[uuid.UUID, float]
+) -> None:
+    """Final score, per-topic breakdown and the verdict, once every task has its points."""
+    attempt.score = _score(tasks, points, attempt.quiz_weight)
+    attempt.breakdown = [item.model_dump(mode="json") for item in _breakdown(tasks, points)]
+    attempt.status = (
+        AttemptStatus.PASSED if attempt.score >= attempt.pass_score else AttemptStatus.FAILED
     )
 
 
@@ -528,16 +687,15 @@ def _draw(
 def _score(
     tasks: Sequence[AssessmentTask], points: dict[uuid.UUID, float], quiz_weight: int
 ) -> float:
-    """0–100. A test of one kind only gives that kind the whole weight."""
-    by_kind: dict[TaskKind, list[float]] = defaultdict(list)
-    for task in tasks:
-        by_kind[task.kind].append(points.get(task.id, 0.0))
-    quiz, code = by_kind.get(TaskKind.QUIZ), by_kind.get(TaskKind.CODE)
-    if quiz and code:
+    """0–100. Code tasks share `100 - quiz_weight`, every other kind shares `quiz_weight`;
+    a test without one of the groups gives the other the whole weight."""
+    code = [points.get(task.id, 0.0) for task in tasks if REGISTRY[task.kind].code_group]
+    rest = [points.get(task.id, 0.0) for task in tasks if not REGISTRY[task.kind].code_group]
+    if rest and code:
         share = quiz_weight / 100
-        value = share * sum(quiz) / len(quiz) + (1 - share) * sum(code) / len(code)
+        value = share * sum(rest) / len(rest) + (1 - share) * sum(code) / len(code)
     else:
-        only = quiz or code or [0.0]
+        only = rest or code or [0.0]
         value = sum(only) / len(only)
     return round(value * 100, 1)
 

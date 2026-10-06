@@ -22,6 +22,7 @@ from app.services.candidates import CandidateProfileService
 from app.services.code_runner import CodeRunner, OnlineCompilerRunner
 from app.services.email import ResendEmailSender
 from app.services.reactions import ReactionService
+from app.services.test_assignments import TestAssignmentService
 from app.services.vacancies import VacancyService
 from app.services.vacancy_feed import VacancyFeedService
 
@@ -76,7 +77,12 @@ CandidateSearchServiceDep = Annotated[CandidateSearchService, Depends(get_candid
 
 
 def get_candidate_profile_service(session: SessionDep) -> CandidateProfileService:
-    return CandidateProfileService(CandidateRepository(session), InvitationRepository(session))
+    return CandidateProfileService(
+        CandidateRepository(session),
+        InvitationRepository(session),
+        ReactionRepository(session),
+        CompanyRepository(session),
+    )
 
 
 CandidateProfileServiceDep = Annotated[
@@ -121,6 +127,22 @@ def get_assessment_service(
 
 
 AssessmentServiceDep = Annotated[AssessmentService, Depends(get_assessment_service)]
+
+
+def get_test_assignment_service(
+    session: SessionDep, assessments: AssessmentServiceDep
+) -> TestAssignmentService:
+    return TestAssignmentService(
+        AssessmentRepository(session),
+        CompanyRepository(session),
+        CandidateRepository(session),
+        vacancies=VacancyRepository(session),
+        reactions=ReactionRepository(session),
+        assessments=assessments,
+    )
+
+
+TestAssignmentServiceDep = Annotated[TestAssignmentService, Depends(get_test_assignment_service)]
 
 
 def get_assessment_bank_service(

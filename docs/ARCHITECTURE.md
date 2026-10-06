@@ -33,8 +33,8 @@ app → pages → widgets → features → entities → shared
 | ---------- | ---------- | ------ |
 | `app`      | вход, провайдеры (QueryClient), роутер, guard'ы, layout, глобальные стили | — |
 | `pages`    | экран на маршрут, композиция виджетов/фич | `landing`, `auth` (выбор роли, `EmployerAuthPage`, `CandidateAuthPage`), `profile`, `vacancies`, `company`, `candidate`, `calendar`, `matching` (`MatchingSwipePage`, `MatchingProfilePage`), `testing`, `admin`, `not-found` |
-| `widgets`  | крупные самостоятельные блоки | `site-header`, `landing-hero`, `vacancies-table`, `invitations-inbox`, `candidate-deck` (свайпы), `meeting-calendar` (сетка недели и месяца) |
-| `features` | пользовательские действия | `start-signup`, `auth-by-email`, `invite-candidate`, `respond-to-invitation`, `manage-meeting` (назначить, перенести, подтвердить встречу) |
+| `widgets`  | крупные самостоятельные блоки | `site-header`, `landing-hero`, `vacancies-table`, `invitations-inbox`, `candidate-deck` (свайпы), `meeting-calendar` (сетка недели и месяца), `assessment-runner` (прохождение теста, реестр типов заданий), `assessment-bank`, `assignment-inbox` и `assignment-review` (тестовые от компаний) |
+| `features` | пользовательские действия | `start-signup`, `auth-by-email`, `invite-candidate`, `respond-to-invitation`, `manage-meeting` (назначить, перенести, подтвердить встречу), `start-assessment`, `answer-quiz`, `solve-code-task`, `answer-open`, `edit-assessment-task` (редактор по типам заданий), `send-test-assignment`, `take-assignment`, `review-assignment` |
 | `entities` | бизнес-сущности: DTO, query-ключи, карточки | `user`, `session`, `category`, `candidate`, `company`, `vacancy`, `invitation`, `match`, `calendar-event`, `assessment` |
 | `shared`   | инфраструктура без бизнес-логики | `api` (http-клиент, `ApiError`, query-client), `config` (env, routes), `lib` (формат, валидация), `ui` (Button, TextField, Loader/Error/Empty, QueryState, Page) |
 
@@ -58,7 +58,8 @@ three.js): грузится лениво после первого рендер�
 | `/calendar` | календарь | авторизованные |
 | `/matching` | свайпы | работодатель |
 | `/matching/:kind/:id` | открытый профиль кандидата/компании | авторизованные |
-| `/testing` | тестирование | кандидат |
+| `/testing` | тестирование (кандидат) и отправленные тестовые (работодатель) | кандидат, работодатель |
+| `/testing/builder` | конструктор тестов: банк задач и тесты компании | работодатель |
 | `/admin` | админка | админ |
 
 Страницы грузятся лениво (`lazy` в `app/router/routes.tsx`), доступ — `RequireAuth({ roles })`.
@@ -121,13 +122,13 @@ migrations/    Alembic (async), URL из настроек
 | users | `/users/me` | ✅ |
 | categories | `/categories/dictionary` | ✅ (статический MVP-словарь) |
 | candidates (employees) | поиск (Elasticsearch), `/{id}`, реакции ✅; `/me`, резюме PDF, `fsp-link` — 501 | ✅ / 501 |
-| companies (employers) | `/{id}` ✅; `/me` GET/PUT — 501 | ✅ / 501 |
+| companies (employers) | `/{id}` ✅; банк задач и тестов компании с импортом и экспортом JSON, `/me/test-assignments` (отправить тестовое при взаимном лайке, ответы, ручная проверка) ✅; `/me` GET/PUT — 501 | ✅ / 501 |
 | vacancies | список, `feed`, `mine`, `/{id}`, реакции ✅; создание и правка — 501 | ✅ / 501 |
 | invitations | создание, `incoming`, `outgoing`, `accept`/`decline` | 501 |
 | applications | отклики кандидата | 501 |
 | matching | `needs`, `recommendations` | 501 |
 | calendar | `/calendar/events`: список за период, создание, перенос и отмена встречи работодателем, `confirm`/`decline` кандидатом | ✅ |
-| assessments (testing) | статус, попытки, ответы, запуск кода, завершение; анкета — 501 | ✅ / 501 |
+| assessments (testing) | категории по специальностям с отдельными паузами, выбор основной, шаблоны тестов, попытки, ответы, запуск кода, завершение; входящие тестовые (`/assessments/assignments`: начать, отказаться); анкета — 501 | ✅ / 501 |
 | банк задач | `/admin/assessment-*` (платформа), `/companies/me/assessment-*` (работодатель) | ✅ |
 | admin | `/admin/users` | ✅ |
 

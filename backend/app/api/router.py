@@ -12,6 +12,7 @@ from app.api.routes import (
     health,
     invitations,
     matching,
+    test_assignments,
     users,
     vacancies,
 )
@@ -28,6 +29,7 @@ for module in (
     categories,
     candidates,
     companies,
+    test_assignments,
     vacancies,
     invitations,
     applications,

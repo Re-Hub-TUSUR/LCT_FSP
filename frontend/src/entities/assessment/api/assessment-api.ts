@@ -1,13 +1,16 @@
 import { queryOptions } from '@tanstack/react-query'
 import { http } from '@/shared/api'
-import type { Paginated } from '@/shared/api'
+import type { Paginated, PaginationParams } from '@/shared/api'
 
 /** What an employer sees about the platform grade test. */
 export type AssessmentStatus = 'not_taken' | 'passed' | 'failed'
 
-export type AssessmentAttemptStatus = 'in_progress' | 'passed' | 'failed' | 'expired'
+/** `awaiting_review`: finished, but open answers wait for the company's grades. */
+export type AssessmentAttemptStatus =
+  'in_progress' | 'passed' | 'failed' | 'expired' | 'awaiting_review'
 
-export type TaskKind = 'quiz' | 'code'
+/** Every kind has a view in the runner and an editor in the bank, see the kind registries. */
+export type TaskKind = 'quiz' | 'code' | 'open'
 export type TaskDifficulty = 'easy' | 'medium' | 'hard'
 export type Verdict = 'ok' | 'wrong_answer' | 'runtime_error' | 'time_limit'
 
@@ -21,6 +24,8 @@ export type TopicResultDto = {
 
 export type AssessmentAttemptDto = {
   id: string
+  /** Set for a test a company sent; null for a platform grade test. */
+  assignmentId: string | null
   title: string
   specialization: string | null
   grade: string | null
@@ -35,22 +40,44 @@ export type AssessmentAttemptDto = {
 
 export type CodeAnswerDto = { language: string; code: string }
 
-/** Candidate view of a task: never carries correct options or hidden tests. */
-export type AttemptTaskDto = {
+export type QuizAnswerDto = { selected: number[] }
+export type OpenAnswerDto = { text: string }
+
+type AttemptTaskBase = {
   id: string
-  kind: TaskKind
   topic: string
   difficulty: TaskDifficulty
   title: string
   statement: string
-  options: string[] | null
-  multiple: boolean | null
-  selected: number[] | null
-  languages: { id: string; label: string }[] | null
-  timeLimit: number | null
-  samples: { input: string; expected: string }[] | null
-  draft: CodeAnswerDto | null
 }
+
+/** Options come in the order shown to this candidate; the answer holds positions in it. */
+export type QuizTaskDto = AttemptTaskBase & {
+  kind: 'quiz'
+  content: { options: string[]; multiple: boolean }
+  answer: QuizAnswerDto | null
+}
+
+export type CodeTaskDto = AttemptTaskBase & {
+  kind: 'code'
+  content: {
+    languages: { id: string; label: string }[]
+    timeLimit: number
+    samples: { input: string; expected: string }[]
+  }
+  answer: CodeAnswerDto | null
+}
+
+export type OpenTaskDto = AttemptTaskBase & {
+  kind: 'open'
+  content: { maxLength: number }
+  answer: OpenAnswerDto | null
+}
+
+/** Candidate view of a task: never carries correct options, hidden tests or grading notes. */
+export type AttemptTaskDto = QuizTaskDto | CodeTaskDto | OpenTaskDto
+
+export type TaskAnswerDto = NonNullable<AttemptTaskDto['answer']>
 
 export type AttemptDetailDto = AssessmentAttemptDto & {
   tasks: AttemptTaskDto[]
@@ -81,26 +108,53 @@ export type RunResultDto = {
 
 export type RunResponseDto = { results: RunResultDto[]; runsLeft: number }
 
+/** One specialization the candidate has tried: its own category and its own cooldown. */
+export type AssessmentTrackDto = {
+  specialization: string
+  /** `passed`: the grade is confirmed; `failed`: tried, nothing confirmed yet. */
+  status: Exclude<AssessmentStatus, 'not_taken'>
+  grade: string | null
+  score: number | null
+  /** Null = a test of this specialization may start right now. */
+  nextAttemptAt: string | null
+  /** The category employers see in search and feeds. */
+  isPrimary: boolean
+}
+
+/** What a platform grade test consists of, shown before the candidate starts it. */
+export type AssessmentTemplateDto = {
+  grade: string
+  /** Null = applies to every specialization without its own template. */
+  specialization: string | null
+  durationMinutes: number
+  passScore: number
+  tasks: Partial<Record<TaskKind, number>>
+  retryDays: number
+  gradeChangeDays: number
+}
+
 /** Candidate's categorisation state and what they may do next. */
 export type AssessmentStatusDto = {
+  /** The primary category; the fields are null until one is confirmed. */
   status: AssessmentStatus
   specialization: string | null
   grade: string | null
   score: number | null
-  activeAttemptId: string | null
-  /** Null = a new attempt may start right now. */
   nextAttemptAt: string | null
+  /** Every specialization the candidate has tried, confirmed ones first. */
+  tracks: AssessmentTrackDto[]
+  activeAttemptId: string | null
   /** False until the code runner key is configured on the server. */
   codeRunnerAvailable: boolean
   history: AssessmentAttemptDto[]
 }
 
-export type AnswerPayload =
-  { taskId: string; selected: number[] } | ({ taskId: string } & CodeAnswerDto)
+export type AnswerPayload = { taskId: string; answer: TaskAnswerDto }
 
 export const assessmentKeys = {
   all: ['assessments'] as const,
   status: () => [...assessmentKeys.all, 'status'] as const,
+  templates: () => [...assessmentKeys.all, 'templates'] as const,
   attempt: (id: string) => [...assessmentKeys.all, 'attempt', id] as const,
 }
 
@@ -109,6 +163,12 @@ export const assessmentQueries = {
     queryOptions({
       queryKey: assessmentKeys.status(),
       queryFn: ({ signal }) => http.get<AssessmentStatusDto>('/assessments/me', { signal }),
+    }),
+  templates: () =>
+    queryOptions({
+      queryKey: assessmentKeys.templates(),
+      queryFn: ({ signal }) =>
+        http.get<AssessmentTemplateDto[]>('/assessments/templates', { signal }),
     }),
   attempt: (id: string) =>
     queryOptions({
@@ -122,6 +182,8 @@ export const assessmentQueries = {
 }
 
 export const assessmentApi = {
+  setPrimary: (specialization: string) =>
+    http.put<AssessmentStatusDto>('/assessments/me/primary', { specialization }),
   start: (payload: { specialization: string; grade: string }) =>
     http.post<AttemptDetailDto>('/assessments/attempts', payload).then(withClockOffset),
   saveAnswer: (attemptId: string, payload: AnswerPayload) =>
@@ -149,17 +211,30 @@ export type CodePayloadDto = {
   reference: CodeAnswerDto | null
 }
 
-export type BankTaskWrite = {
-  kind: TaskKind
+export type OpenPayloadDto = {
+  maxLength: number
+  /** What a good answer covers: reviewers only, the candidate never sees it. */
+  guidance: string | null
+}
+
+export type TaskPayloadDto = QuizPayloadDto | CodePayloadDto | OpenPayloadDto
+
+type BankTaskBase = {
   difficulty: TaskDifficulty
   specializations: string[]
   topic: string
   title: string
   statement: string
-  quiz: QuizPayloadDto | null
-  code: CodePayloadDto | null
   isActive: boolean
 }
+
+/** A task as authors write it; also one item of a bank export or import file. */
+export type BankTaskWrite = BankTaskBase &
+  (
+    | { kind: 'quiz'; payload: QuizPayloadDto }
+    | { kind: 'code'; payload: CodePayloadDto }
+    | { kind: 'open'; payload: OpenPayloadDto }
+  )
 
 export type BankTaskDto = BankTaskWrite & { id: string; platform: boolean; createdAt: string }
 
@@ -177,10 +252,15 @@ export type CompositionDto =
 export type BankTestWrite = {
   title: string
   grade: string | null
+  /** Platform templates: null = the test of the grade for every specialization. */
+  specialization: string | null
   durationMinutes: number
   passScore: number
   quizWeight: number
   composition: CompositionDto
+  /** Null = the platform defaults. */
+  retryDays: number | null
+  gradeChangeDays: number | null
   isActive: boolean
 }
 
@@ -199,20 +279,29 @@ export type TaskCheckDto = {
 
 const BANK_ROOT: Record<BankScope, string> = { admin: '/admin', employer: '/companies/me' }
 
+export type BankTaskParams = PaginationParams & {
+  kind?: TaskKind
+  /** Title or topic. */
+  q?: string
+}
+
 export const bankKeys = {
   all: (scope: BankScope) => ['assessment-bank', scope] as const,
   tasks: (scope: BankScope) => [...bankKeys.all(scope), 'tasks'] as const,
+  taskPage: (scope: BankScope, params: BankTaskParams) =>
+    [...bankKeys.tasks(scope), params] as const,
   tests: (scope: BankScope) => [...bankKeys.all(scope), 'tests'] as const,
 }
 
 export const bankQueries = {
-  tasks: (scope: BankScope) =>
+  /** One page of the bank for the table. */
+  tasks: (scope: BankScope, params: BankTaskParams = {}) =>
     queryOptions({
-      queryKey: bankKeys.tasks(scope),
+      queryKey: bankKeys.taskPage(scope, params),
       queryFn: ({ signal }) =>
         http.get<Paginated<BankTaskDto>>(`${BANK_ROOT[scope]}/assessment-tasks`, {
           signal,
-          query: { perPage: 100 },
+          query: params,
         }),
     }),
   tests: (scope: BankScope) =>
@@ -224,6 +313,12 @@ export const bankQueries = {
 }
 
 export const bankApi = {
+  /** The whole bank in the import format. */
+  exportTasks: (scope: BankScope) =>
+    http.get<BankTaskWrite[]>(`${BANK_ROOT[scope]}/assessment-tasks/export`),
+  /** All tasks or none: the first bad one cancels the file. */
+  importTasks: (scope: BankScope, tasks: unknown[]) =>
+    http.post<{ created: number }>(`${BANK_ROOT[scope]}/assessment-tasks/import`, tasks),
   /** Without `id` the task is created, with it — replaced. */
   saveTask: (scope: BankScope, payload: BankTaskWrite, id?: string) =>
     id
@@ -239,4 +334,106 @@ export const bankApi = {
       : http.post<BankTestDto>(`${BANK_ROOT[scope]}/assessment-tests`, payload),
   deleteTest: (scope: BankScope, id: string) =>
     http.delete<void>(`${BANK_ROOT[scope]}/assessment-tests/${id}`),
+}
+
+// ── Tests a company sends to a candidate after a match («тестовые») ─────────────────────────
+
+export type AssignmentStatus = 'sent' | 'in_progress' | 'review' | 'done' | 'declined' | 'expired'
+
+type NamedRef = { id: string; name: string }
+
+export type AssignmentDto = {
+  id: string
+  title: string
+  status: AssignmentStatus
+  company: NamedRef
+  candidate: NamedRef
+  vacancy: NamedRef | null
+  message: string | null
+  durationMinutes: number
+  tasksCount: number
+  createdAt: string
+  /** The candidate may start until then. */
+  dueAt: string
+  attemptId: string | null
+  finishedAt: string | null
+  /** Null until every answer is graded. */
+  score: number | null
+  passScore: number | null
+}
+
+type ReviewTaskBase = {
+  id: string
+  title: string
+  statement: string
+  answered: boolean
+  /** Share of the task earned, 0..1; null = waits for the reviewer. */
+  points: number | null
+  /** True: graded by the reviewer, not by the platform. */
+  manual: boolean
+  comment: string | null
+}
+
+/** The answer next to what was expected. */
+export type ReviewTaskDto = ReviewTaskBase &
+  (
+    | { kind: 'quiz'; review: { options: string[]; correct: number[]; selected: number[] } }
+    | { kind: 'code'; review: { language: string | null; code: string | null } }
+    | { kind: 'open'; review: { text: string; guidance: string | null } }
+  )
+
+export type AssignmentDetailDto = AssignmentDto & {
+  /** Empty until the candidate finished. */
+  tasks: ReviewTaskDto[]
+  pasteCount: number
+  blurCount: number
+}
+
+export type AssignmentCreatePayload = {
+  testId: string
+  candidateId: string
+  vacancyId?: string | null
+  message?: string | null
+  dueAt?: string | null
+}
+
+export type ReviewGrade = { taskId: string; points: number; comment?: string | null }
+
+export const assignmentKeys = {
+  all: ['test-assignments'] as const,
+  incoming: () => [...assignmentKeys.all, 'incoming'] as const,
+  outgoing: () => [...assignmentKeys.all, 'outgoing'] as const,
+  detail: (id: string) => [...assignmentKeys.all, 'detail', id] as const,
+}
+
+const SENT_ROOT = '/companies/me/test-assignments'
+
+export const assignmentQueries = {
+  /** Candidate: tests companies sent to me. */
+  incoming: () =>
+    queryOptions({
+      queryKey: assignmentKeys.incoming(),
+      queryFn: ({ signal }) => http.get<AssignmentDto[]>('/assessments/assignments', { signal }),
+    }),
+  /** Employer: tests the company sent. */
+  outgoing: () =>
+    queryOptions({
+      queryKey: assignmentKeys.outgoing(),
+      queryFn: ({ signal }) => http.get<AssignmentDto[]>(SENT_ROOT, { signal }),
+    }),
+  detail: (id: string) =>
+    queryOptions({
+      queryKey: assignmentKeys.detail(id),
+      queryFn: ({ signal }) => http.get<AssignmentDetailDto>(`${SENT_ROOT}/${id}`, { signal }),
+    }),
+}
+
+export const assignmentApi = {
+  send: (payload: AssignmentCreatePayload) => http.post<AssignmentDto>(SENT_ROOT, payload),
+  revoke: (id: string) => http.delete<void>(`${SENT_ROOT}/${id}`),
+  review: (id: string, grades: ReviewGrade[]) =>
+    http.put<AssignmentDetailDto>(`${SENT_ROOT}/${id}/review`, { grades }),
+  start: (id: string) =>
+    http.post<AttemptDetailDto>(`/assessments/assignments/${id}/start`).then(withClockOffset),
+  decline: (id: string) => http.post<AssignmentDto>(`/assessments/assignments/${id}/decline`),
 }

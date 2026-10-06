@@ -38,6 +38,8 @@ class AssessmentTest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("duration_minutes > 0", name="duration_positive"),
         CheckConstraint("pass_score >= 0 AND pass_score <= 100", name="pass_score_range"),
         CheckConstraint("quiz_weight >= 0 AND quiz_weight <= 100", name="quiz_weight_range"),
+        CheckConstraint("retry_days >= 0", name="retry_days_positive"),
+        CheckConstraint("grade_change_days >= 0", name="grade_change_days_positive"),
     )
 
     owner_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -46,11 +48,18 @@ class AssessmentTest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     title: Mapped[str] = mapped_column(String(200))
     # Platform templates only: the grade this test confirms.
     grade: Mapped[Grade | None] = mapped_column(str_enum(Grade), index=True)
+    # Platform templates only: null = the test of the grade for every specialization; a set value
+    # overrides it for that one specialization.
+    specialization: Mapped[str | None] = mapped_column(String(64))
     duration_minutes: Mapped[int]
     pass_score: Mapped[int] = mapped_column(default=60)
     # Share of quiz questions in the score, percent; the rest belongs to code tasks.
     quiz_weight: Mapped[int] = mapped_column(default=40)
     composition: Mapped[dict[str, Any]] = mapped_column(JSON)
+    # Days before a failed test can be retaken / a confirmed grade can be changed.
+    # Null = the platform defaults from the settings.
+    retry_days: Mapped[int | None]
+    grade_change_days: Mapped[int | None]
     is_active: Mapped[bool] = mapped_column(default=True)
 
 
@@ -62,6 +71,10 @@ class AssessmentAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     test_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("assessment_tests.id", ondelete="SET NULL")
+    )
+    # Set when the attempt answers a test a company sent; null for a platform grade test.
+    assignment_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("test_assignments.id", ondelete="SET NULL"), index=True
     )
     # Copied from the template, so the history reads the same after the template changes.
     title: Mapped[str] = mapped_column(String(200))
@@ -75,13 +88,16 @@ class AssessmentAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Scoring rules are copied from the template: later edits do not change a running attempt.
     pass_score: Mapped[int]
     quiz_weight: Mapped[int]
+    # Cooldowns are copied too: they count from this attempt, whatever the template says later.
+    retry_days: Mapped[int] = mapped_column(default=7, server_default="7")
+    grade_change_days: Mapped[int] = mapped_column(default=90, server_default="90")
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # The variant handed to this candidate, in display order.
     task_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
-    # task id → order of quiz options as shown (position → index in the bank).
-    option_orders: Mapped[dict[str, list[int]]] = mapped_column(JSON, default=dict)
+    # task id → what the task's kind fixed for this attempt (e.g. the order of quiz options).
+    task_state: Mapped[dict[str, dict[str, Any]]] = mapped_column(JSON, default=dict)
     # Per-topic result, filled on finish.
     breakdown: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON)
     runs_count: Mapped[int] = mapped_column(default=0)
@@ -101,7 +117,10 @@ class AssessmentAnswer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     task_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("assessment_tasks.id", ondelete="CASCADE")
     )
-    # Quiz: {"selected": [bank indexes]}. Code: {"language": ..., "code": ...}.
+    # In the stored form of the task's kind, e.g. quiz: {"selected": [bank indexes]}.
     answer: Mapped[dict[str, Any]] = mapped_column(JSON)
-    # Filled on finish: share of the task earned, 0–1.
+    # Share of the task earned, 0–1. Filled on finish; an answer only a person can grade
+    # stays null until the review.
     points: Mapped[float | None]
+    # Reviewer's note to a hand-graded answer.
+    comment: Mapped[str | None] = mapped_column(Text)

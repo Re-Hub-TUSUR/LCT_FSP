@@ -4,6 +4,7 @@ import { CandidateCard, candidateQueries } from '@/entities/candidate'
 import { CompanyCard, companyQueries } from '@/entities/company'
 import { useSession } from '@/entities/session'
 import { InviteCandidateForm } from '@/features/invite-candidate'
+import { SendAssignmentForm } from '@/features/send-test-assignment'
 import { ROUTES } from '@/shared/config'
 import { EmptyState, Page, QueryState, Section } from '@/shared/ui'
 
@@ -25,6 +26,9 @@ function CandidateProfile({ id }: { id: string }) {
                 >
                   Назначить встречу в календаре →
                 </Link>
+              </Section>
+              <Section title="Тестовое задание">
+                <SendAssignmentForm candidateId={data.id} matched={data.matched === true} />
               </Section>
               <Section title="Пригласить кандидата">
                 <InviteCandidateForm candidateId={data.id} />

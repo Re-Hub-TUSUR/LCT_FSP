@@ -46,6 +46,11 @@ export type CandidateDto = {
   fspAchievements: FspAchievementDto[]
   fspLinked: boolean
   contacts: CandidateContactsDto | null
+  /**
+   * For an employer on a profile page: mutual interest (the recruiter saved the candidate, the
+   * candidate liked a vacancy of the company). Absent where it is not computed.
+   */
+  matched?: boolean | null
 }
 
 /** One card of the recruiter's feed with the explanation of its position. */

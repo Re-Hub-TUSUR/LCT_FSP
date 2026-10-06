@@ -53,6 +53,9 @@ class CandidateRead(ApiModel):
     fsp_linked: bool
     # Revealed only after the candidate accepted an invitation or applied (ТЗ 2.2, item 2).
     contacts: CandidateContacts | None
+    # For an employer viewing one profile: mutual interest (the recruiter liked the candidate,
+    # the candidate liked a vacancy of the company). Null where it is not computed.
+    matched: bool | None = None
 
 
 class CandidateMatch(ApiModel):

@@ -1,6 +1,7 @@
 import type {
   AssessmentAttemptStatus,
   AssessmentStatus,
+  AssignmentStatus,
   TaskDifficulty,
   TaskKind,
   Verdict,
@@ -17,9 +18,30 @@ export const ATTEMPT_STATUS_LABELS: Record<AssessmentAttemptStatus, string> = {
   passed: 'Пройден',
   failed: 'Не пройден',
   expired: 'Время вышло',
+  awaiting_review: 'Ждёт проверки',
 }
 
-export const TASK_KIND_LABELS: Record<TaskKind, string> = { quiz: 'Вопрос', code: 'Код' }
+export const ASSIGNMENT_STATUS_LABELS: Record<AssignmentStatus, string> = {
+  sent: 'Отправлено',
+  in_progress: 'Выполняется',
+  review: 'Ждёт проверки',
+  done: 'Проверено',
+  declined: 'Отклонено',
+  expired: 'Срок истёк',
+}
+
+export const TASK_KIND_LABELS: Record<TaskKind, string> = {
+  quiz: 'Вопрос',
+  code: 'Код',
+  open: 'Открытый ответ',
+}
+
+/** For «what the test consists of»: the label is followed by a count. */
+export const TASK_KIND_COUNT_LABELS: Record<TaskKind, string> = {
+  quiz: 'вопросов с выбором ответа',
+  code: 'задач на код',
+  open: 'вопросов с развёрнутым ответом',
+}
 
 export const DIFFICULTY_LABELS: Record<TaskDifficulty, string> = {
   easy: 'Лёгкая',

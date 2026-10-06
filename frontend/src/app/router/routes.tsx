@@ -111,7 +111,14 @@ export const routes: RouteObject[] = [
             path: ROUTES.testing,
             lazy: lazyPage(() => import('@/pages/testing').then((m) => m.TestingPage), {
               auth: true,
-              roles: ['candidate'],
+              roles: ['candidate', 'employer'],
+            }),
+          },
+          {
+            path: ROUTES.testBuilder,
+            lazy: lazyPage(() => import('@/pages/test-builder').then((m) => m.TestBuilderPage), {
+              auth: true,
+              roles: ['employer'],
             }),
           },
           {

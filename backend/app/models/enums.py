@@ -29,11 +29,29 @@ class AttemptStatus(StrEnum):
     FAILED = "failed"
     # Abandoned: the time ran out and the candidate never finished it.
     EXPIRED = "expired"
+    # Finished, but some answers wait for a person to grade them (employer's tests only).
+    AWAITING_REVIEW = "awaiting_review"
 
 
 class TaskKind(StrEnum):
+    """Behaviour of every kind is described in `app.services.task_kinds`."""
+
     QUIZ = "quiz"
     CODE = "code"
+    OPEN = "open"
+
+
+class AssignmentStatus(StrEnum):
+    """Life of a test a company sent to a candidate."""
+
+    SENT = "sent"
+    IN_PROGRESS = "in_progress"
+    # Taken; open answers wait for the company's grades.
+    REVIEW = "review"
+    DONE = "done"
+    DECLINED = "declined"
+    # Not started before the due date.
+    EXPIRED = "expired"
 
 
 class TaskDifficulty(StrEnum):

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import CandidateReaction, ReactionKind, VacancyReaction
+from app.models import CandidateReaction, ReactionKind, Vacancy, VacancyReaction
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,6 +32,39 @@ class ReactionRepository:
             select(CandidateReaction).where(CandidateReaction.user_id == user_id)
         )
         return {reaction.candidate_id: reaction for reaction in result}
+
+    async def is_match(
+        self,
+        *,
+        recruiter_id: uuid.UUID,
+        company_id: uuid.UUID,
+        candidate_id: uuid.UUID,
+        candidate_user_id: uuid.UUID,
+    ) -> bool:
+        """Mutual interest: the recruiter liked the candidate and the candidate liked at least
+        one vacancy of the recruiter's company."""
+        liked_by_recruiter = await self._session.scalar(
+            select(CandidateReaction.id)
+            .where(
+                CandidateReaction.user_id == recruiter_id,
+                CandidateReaction.candidate_id == candidate_id,
+                CandidateReaction.kind == ReactionKind.LIKE,
+            )
+            .limit(1)
+        )
+        if liked_by_recruiter is None:
+            return False
+        liked_by_candidate = await self._session.scalar(
+            select(VacancyReaction.id)
+            .join(Vacancy, Vacancy.id == VacancyReaction.vacancy_id)
+            .where(
+                VacancyReaction.user_id == candidate_user_id,
+                VacancyReaction.kind == ReactionKind.LIKE,
+                Vacancy.company_id == company_id,
+            )
+            .limit(1)
+        )
+        return liked_by_candidate is not None
 
     async def set_for_vacancy(
         self, user_id: uuid.UUID, vacancy_id: uuid.UUID, kind: ReactionKind

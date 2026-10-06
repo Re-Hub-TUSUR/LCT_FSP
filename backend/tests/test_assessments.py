@@ -12,10 +12,10 @@ from app.dependencies.services import get_code_runner
 from app.models import AssessmentAttempt, AssessmentStatus, CandidateProfile, Grade, TaskKind
 from app.schemas.assessment import RulesComposition
 from app.seed.assessment import code_tasks, grade_tests, quiz_tasks, seed_assessment_bank
-from app.services.assessment_bank import judge, normalize_output
 from app.services.assessments import _draw
 from app.services.categories import SPECIALIZATIONS
 from app.services.code_runner import Execution
+from app.services.task_kinds.code import judge, normalize_output
 from tests.conftest import API, bearer, create_admin, login, register_and_login
 
 HIDDEN_INPUT = "hidden-input-marker"
@@ -56,7 +56,7 @@ def quiz(question: str, **extra: Any) -> dict[str, Any]:
         "topic": "basics",
         "title": question,
         "statement": question,
-        "quiz": {"options": [f"right {question}", "wrong a", "wrong b"], "correct": [0]},
+        "payload": {"options": [f"right {question}", "wrong a", "wrong b"], "correct": [0]},
         **extra,
     }
 
@@ -68,7 +68,7 @@ def code(title: str = "Echo", **extra: Any) -> dict[str, Any]:
         "topic": "io",
         "title": title,
         "statement": "Print the input.",
-        "code": {
+        "payload": {
             "groups": [
                 {"input": "open", "expected": "open", "hidden": False},
                 {"input": HIDDEN_INPUT, "expected": HIDDEN_INPUT, "hidden": True},
@@ -80,9 +80,13 @@ def code(title: str = "Echo", **extra: Any) -> dict[str, Any]:
     }
 
 
-async def admin_token(client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession]) -> str:
-    await create_admin(sessionmaker, "admin@fsp.ru")
-    return await login(client, "admin@fsp.ru")
+async def admin_token(
+    client: AsyncClient,
+    sessionmaker: async_sessionmaker[AsyncSession],
+    email: str = "admin@fsp.ru",
+) -> str:
+    await create_admin(sessionmaker, email)
+    return await login(client, email)
 
 
 async def platform_test(
@@ -107,11 +111,11 @@ async def platform_test(
     assert created.status_code == 201, created.text
 
 
-async def start(client: AsyncClient, token: str) -> dict[str, Any]:
+async def start(client: AsyncClient, token: str, specialization: str = "backend") -> dict[str, Any]:
     response = await client.post(
         f"{API}/assessments/attempts",
         headers=bearer(token),
-        json={"specialization": "backend", "grade": "junior"},
+        json={"specialization": specialization, "grade": "junior"},
     )
     assert response.status_code == 201, response.text
     body: dict[str, Any] = response.json()
@@ -125,12 +129,15 @@ async def answer_all(
         if task["kind"] == "quiz":
             position = next(
                 index
-                for index, option in enumerate(task["options"])
+                for index, option in enumerate(task["content"]["options"])
                 if option.startswith("right") == right
             )
-            payload: dict[str, Any] = {"taskId": task["id"], "selected": [position]}
+            answer: dict[str, Any] = {"selected": [position]}
+        elif task["kind"] == "code":
+            answer = {"language": "python-3.14", "code": program}
         else:
-            payload = {"taskId": task["id"], "language": "python-3.14", "code": program}
+            answer = {"text": "Развёрнутый ответ"}
+        payload = {"taskId": task["id"], "answer": answer}
         saved = await client.post(
             f"{API}/assessments/attempts/{attempt['id']}/answers",
             headers=bearer(token),
@@ -146,7 +153,7 @@ async def test_passed_test_confirms_the_category(
     token = await register_and_login(client, "dev@fsp.ru")
 
     before = await client.get(f"{API}/assessments/me", headers=bearer(token))
-    assert before.json()["status"] == "not_taken"
+    assert (before.json()["status"], before.json()["tracks"]) == ("not_taken", [])
 
     attempt = await start(client, token)
     assert {task["kind"] for task in attempt["tasks"]} == {"quiz", "code"}
@@ -156,7 +163,8 @@ async def test_passed_test_confirms_the_category(
     assert HIDDEN_INPUT not in raw
     assert "reference" not in raw
     code_task = next(task for task in attempt["tasks"] if task["kind"] == "code")
-    assert code_task["samples"] == [{"input": "open", "expected": "open"}]
+    assert code_task["content"]["samples"] == [{"input": "open", "expected": "open"}]
+    assert code_task["content"]["timeLimit"] == 5
 
     await answer_all(client, token, attempt, right=True)
 
@@ -173,7 +181,7 @@ async def test_passed_test_confirms_the_category(
     reloaded = await client.get(
         f"{API}/assessments/attempts/{attempt['id']}", headers=bearer(token)
     )
-    assert all(task["selected"] or task["draft"] for task in reloaded.json()["tasks"]), (
+    assert all(task["answer"] for task in reloaded.json()["tasks"]), (
         "saved answers come back with the attempt"
     )
 
@@ -185,13 +193,21 @@ async def test_passed_test_confirms_the_category(
     assert sorted(runner.inputs[1:]) == [HIDDEN_INPUT, HIDDEN_INPUT + "2"]
 
     status = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+    (track,) = status["tracks"]
+    assert (track["status"], track["specialization"], track["grade"], track["isPrimary"]) == (
+        "passed",
+        "backend",
+        "junior",
+        True,
+    )
+    # The primary category is repeated at the top level for the profile page.
     assert (status["status"], status["specialization"], status["grade"]) == (
         "passed",
         "backend",
         "junior",
     )
     # A confirmed grade can be changed only after the cooldown.
-    assert status["nextAttemptAt"] is not None
+    assert track["nextAttemptAt"] == status["nextAttemptAt"] is not None
     again = await client.post(
         f"{API}/assessments/attempts",
         headers=bearer(token),
@@ -219,8 +235,10 @@ async def test_failed_test_assigns_nothing(
 
     assert (finished.json()["status"], finished.json()["score"]) == ("failed", 0.0)
     status = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+    (track,) = status["tracks"]
+    assert (track["status"], track["grade"], track["isPrimary"]) == ("failed", None, False)
     assert (status["status"], status["grade"], status["specialization"]) == ("failed", None, None)
-    assert status["nextAttemptAt"] is not None
+    assert track["nextAttemptAt"] is not None
     async with sessionmaker() as session:
         profile = (await session.scalars(select(CandidateProfile))).one()
         assert profile.assessment_status == AssessmentStatus.FAILED
@@ -261,7 +279,7 @@ async def test_answers_are_closed_after_the_deadline_but_finish_still_scores(
     late = await client.post(
         f"{API}/assessments/attempts/{attempt['id']}/answers",
         headers=bearer(token),
-        json={"taskId": attempt["tasks"][0]["id"], "selected": [0]},
+        json={"taskId": attempt["tasks"][0]["id"], "answer": {"selected": [0]}},
     )
     finished = await client.post(
         f"{API}/assessments/attempts/{attempt['id']}/finish", headers=bearer(token)
@@ -285,9 +303,9 @@ async def test_abandoned_attempt_expires_and_counts_as_failed(
 
     status = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
 
-    assert (status["status"], status["activeAttemptId"]) == ("failed", None)
+    assert (status["tracks"][0]["status"], status["activeAttemptId"]) == ("failed", None)
     assert status["history"][0]["status"] == "expired"
-    assert status["nextAttemptAt"] is not None
+    assert status["tracks"][0]["nextAttemptAt"] is not None
 
 
 async def test_runs_are_rate_limited(
@@ -312,21 +330,142 @@ async def test_runs_are_rate_limited(
 async def test_code_tasks_need_the_runner_key(
     client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession]
 ) -> None:
-    """Without ONLINECOMPILER_API_KEY the real runner refuses instead of guessing a verdict."""
+    """Without ONLINECOMPILER_API_KEY a test with a code task does not start at all."""
     await platform_test(client, sessionmaker)
     token = await register_and_login(client, "dev@fsp.ru")
-    attempt = await start(client, token)
-    task = next(task for task in attempt["tasks"] if task["kind"] == "code")
 
     status = await client.get(f"{API}/assessments/me", headers=bearer(token))
-    ran = await client.post(
-        f"{API}/assessments/attempts/{attempt['id']}/run",
+    started = await client.post(
+        f"{API}/assessments/attempts",
         headers=bearer(token),
-        json={"taskId": task["id"], "language": "python-3.14", "code": "print(1)"},
+        json={"specialization": "backend", "grade": "junior"},
     )
+    after = await client.get(f"{API}/assessments/me", headers=bearer(token))
 
     assert status.json()["codeRunnerAvailable"] is False
-    assert (ran.status_code, ran.json()["error"]["code"]) == (503, "code_runner_unavailable")
+    assert (started.status_code, started.json()["error"]["code"]) == (
+        503,
+        "code_runner_unavailable",
+    )
+    # The attempt is not burnt: nothing started, no cooldown.
+    assert (after.json()["activeAttemptId"], after.json()["history"]) == (None, [])
+
+
+async def finish(client: AsyncClient, token: str, attempt: dict[str, Any]) -> dict[str, Any]:
+    response = await client.post(
+        f"{API}/assessments/attempts/{attempt['id']}/finish", headers=bearer(token)
+    )
+    assert response.status_code == 200, response.text
+    body: dict[str, Any] = response.json()
+    return body
+
+
+async def test_specializations_keep_their_own_cooldowns(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker, with_code=False)
+    token = await register_and_login(client, "dev@fsp.ru")
+
+    failed = await start(client, token, "backend")
+    await answer_all(client, token, failed, right=False)
+    await finish(client, token, failed)
+    # Backend is on pause after the failure; frontend is a different clock.
+    blocked = await client.post(
+        f"{API}/assessments/attempts",
+        headers=bearer(token),
+        json={"specialization": "backend", "grade": "junior"},
+    )
+    passed = await start(client, token, "frontend")
+    await answer_all(client, token, passed, right=True)
+    assert (await finish(client, token, passed))["status"] == "passed"
+
+    status = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+    tracks = {track["specialization"]: track for track in status["tracks"]}
+
+    assert blocked.status_code == 409
+    assert list(tracks) == ["frontend", "backend"], "confirmed specializations come first"
+    assert (tracks["frontend"]["status"], tracks["frontend"]["isPrimary"]) == ("passed", True)
+    assert (tracks["backend"]["status"], tracks["backend"]["isPrimary"]) == ("failed", False)
+    backend_wait = datetime.fromisoformat(tracks["backend"]["nextAttemptAt"])
+    frontend_wait = datetime.fromisoformat(tracks["frontend"]["nextAttemptAt"])
+    assert timedelta(days=6) < backend_wait - datetime.now(UTC) < timedelta(days=8)
+    assert timedelta(days=89) < frontend_wait - datetime.now(UTC) < timedelta(days=91)
+
+
+async def test_candidate_chooses_the_primary_category(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker, with_code=False)
+    token = await register_and_login(client, "dev@fsp.ru")
+    for specialization in ("backend", "frontend"):
+        attempt = await start(client, token, specialization)
+        await answer_all(client, token, attempt, right=True)
+        await finish(client, token, attempt)
+
+    async def primary() -> list[str]:
+        status = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+        return [t["specialization"] for t in status["tracks"] if t["isPrimary"]]
+
+    async def profile_category() -> str | None:
+        async with sessionmaker() as session:
+            return (await session.scalars(select(CandidateProfile))).one().specialization
+
+    # The first confirmed category stays primary until the candidate says otherwise.
+    assert (await primary(), await profile_category()) == (["backend"], "backend")
+
+    switched = await client.put(
+        f"{API}/assessments/me/primary", headers=bearer(token), json={"specialization": "frontend"}
+    )
+    unknown = await client.put(
+        f"{API}/assessments/me/primary", headers=bearer(token), json={"specialization": "devops"}
+    )
+
+    assert switched.status_code == 200, switched.text
+    assert unknown.status_code == 404
+    assert (await primary(), await profile_category()) == (["frontend"], "frontend")
+
+
+async def test_template_of_a_specialization_overrides_the_general_one(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker, with_code=False)
+    headers = bearer(await admin_token(client, sessionmaker, "admin2@fsp.ru"))
+    own = {
+        "title": "Junior QA",
+        "grade": "junior",
+        "specialization": "qa",
+        "durationMinutes": 40,
+        "retryDays": 1,
+        "gradeChangeDays": 30,
+        "composition": {"mode": "rules", "rules": [{"kind": "quiz", "count": 1}]},
+    }
+    created = await client.post(f"{API}/admin/assessment-tests", headers=headers, json=own)
+    without_grade = await client.post(
+        f"{API}/admin/assessment-tests", headers=headers, json={**own, "grade": None}
+    )
+    token = await register_and_login(client, "dev@fsp.ru")
+
+    templates = (await client.get(f"{API}/assessments/templates", headers=bearer(token))).json()
+    qa = await start(client, token, "qa")
+    await answer_all(client, token, qa, right=False)
+    await finish(client, token, qa)
+    status = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+
+    assert (created.status_code, without_grade.status_code) == (201, 400)
+    by_scope = {template["specialization"]: template for template in templates}
+    assert by_scope["qa"] == {
+        "grade": "junior",
+        "specialization": "qa",
+        "durationMinutes": 40,
+        "passScore": 60,
+        "tasks": {"quiz": 1},
+        "retryDays": 1,
+        "gradeChangeDays": 30,
+    }
+    assert (by_scope[None]["tasks"], by_scope[None]["retryDays"]) == ({"quiz": 2}, 7)
+    assert len(qa["tasks"]) == 1
+    wait = datetime.fromisoformat(status["tracks"][0]["nextAttemptAt"]) - datetime.now(UTC)
+    assert timedelta(hours=23) < wait < timedelta(hours=25)
 
 
 async def test_attempt_of_another_candidate_is_not_found(
@@ -350,7 +489,7 @@ async def test_reference_solution_check(
     headers = bearer(await admin_token(client, sessionmaker))
     good = await client.post(f"{API}/admin/assessment-tasks", headers=headers, json=code())
     broken = code("Broken")
-    broken["code"]["reference"]["code"] = "wrong"
+    broken["payload"]["reference"]["code"] = "wrong"
     bad = await client.post(f"{API}/admin/assessment-tasks", headers=headers, json=broken)
 
     checked = await client.post(
@@ -371,14 +510,14 @@ async def test_task_payload_is_validated(
 ) -> None:
     headers = bearer(await admin_token(client, sessionmaker))
     no_hidden = code()
-    no_hidden["code"]["groups"] = [
+    no_hidden["payload"]["groups"] = [
         {"input": "a", "expected": "a", "hidden": False},
         {"input": "b", "expected": "b", "hidden": False},
     ]
     too_long = code()
-    too_long["code"]["groups"][0]["expected"] = "x" * 901
+    too_long["payload"]["groups"][0]["expected"] = "x" * 901
     two_correct = quiz("Q")
-    two_correct["quiz"]["correct"] = [0, 1]
+    two_correct["payload"]["correct"] = [0, 1]
 
     responses = [
         await client.post(f"{API}/admin/assessment-tasks", headers=headers, json=payload)
@@ -387,11 +526,14 @@ async def test_task_payload_is_validated(
             too_long,
             two_correct,
             quiz("Q", specializations=["astrology"]),
-            {**quiz("Q"), "code": code()["code"]},
+            # The content of another kind.
+            {**quiz("Q"), "payload": code()["payload"]},
+            # A hand-graded task has no place in a grade test.
+            {**quiz("Q"), "kind": "open", "payload": {}},
         )
     ]
 
-    assert [response.status_code for response in responses] == [422, 422, 422, 400, 422]
+    assert [response.status_code for response in responses] == [422, 422, 422, 400, 422, 400]
 
 
 async def test_employer_bank_is_isolated(
@@ -448,6 +590,54 @@ async def test_employer_bank_is_isolated(
     removed = await client.delete(task_url, headers=first)
     assert (stolen.status_code, removed_by_stranger.status_code) == (404, 404)
     assert (forbidden.status_code, removed.status_code) == (403, 204)
+
+
+async def test_bank_search_export_and_import(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession]
+) -> None:
+    admin = bearer(await admin_token(client, sessionmaker))
+    employer = bearer(await register_and_login(client, "hr@fsp.ru", role="employer"))
+    for payload in (quiz("Что такое индекс?", topic="sql"), quiz("Что такое HTTP?"), code()):
+        await client.post(f"{API}/admin/assessment-tasks", headers=admin, json=payload)
+
+    found = await client.get(f"{API}/admin/assessment-tasks", headers=admin, params={"q": "sql"})
+    by_kind = await client.get(
+        f"{API}/admin/assessment-tasks", headers=admin, params={"kind": "code", "q": "ech"}
+    )
+    exported = (await client.get(f"{API}/admin/assessment-tasks/export", headers=admin)).json()
+
+    assert [task["title"] for task in found.json()["items"]] == ["Что такое индекс?"]
+    assert [task["title"] for task in by_kind.json()["items"]] == ["Echo"]
+    # Grouped by kind, then topic.
+    assert [task["title"] for task in exported] == ["Echo", "Что такое HTTP?", "Что такое индекс?"]
+    assert "id" not in exported[0]
+    assert exported[0]["payload"]["timeLimit"] == 5
+
+    # The export of one bank is a valid import for another.
+    imported = await client.post(
+        f"{API}/companies/me/assessment-tasks/import", headers=employer, json=exported
+    )
+    own = await client.get(f"{API}/companies/me/assessment-tasks", headers=employer)
+    assert (imported.status_code, imported.json()) == (201, {"created": 3})
+    assert sorted(task["title"] for task in own.json()["items"]) == sorted(
+        task["title"] for task in exported
+    )
+    assert all(task["platform"] is False for task in own.json()["items"])
+
+    # One bad task cancels the whole file and names itself.
+    broken = [quiz("Новый вопрос"), quiz("Плохой", specializations=["astrology"])]
+    rejected = await client.post(f"{API}/admin/assessment-tasks/import", headers=admin, json=broken)
+    malformed = await client.post(
+        f"{API}/admin/assessment-tasks/import",
+        headers=admin,
+        json=[{**quiz("Q"), "payload": {"options": ["one"], "correct": [0]}}],
+    )
+    after = await client.get(f"{API}/admin/assessment-tasks", headers=admin)
+
+    assert rejected.status_code == 400
+    assert "№2" in rejected.json()["error"]["message"]
+    assert malformed.status_code == 422
+    assert after.json()["total"] == 3
 
 
 def test_judge_ignores_trailing_whitespace_only() -> None:

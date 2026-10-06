@@ -1,14 +1,22 @@
 """Task bank endpoints, mounted twice: for admins (platform bank) and for employers (own bank)."""
 
 import uuid
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Body, Query, status
 
 from app.dependencies.common import PaginationDep
 from app.dependencies.services import AssessmentBankServiceDep
 from app.models import TaskKind, User, UserRole
-from app.schemas.assessment import TaskCheck, TaskRead, TaskWrite, TestRead, TestWrite
+from app.schemas.assessment import (
+    MAX_IMPORT_TASKS,
+    ImportResult,
+    TaskCheck,
+    TaskRead,
+    TaskWrite,
+    TestRead,
+    TestWrite,
+)
 from app.schemas.common import Page
 
 
@@ -26,10 +34,31 @@ def bank_router(author: Any) -> APIRouter:
         pagination: PaginationDep,
         service: AssessmentBankServiceDep,
         kind: TaskKind | None = None,
+        q: Annotated[str | None, Query(max_length=200, description="Title or topic")] = None,
     ) -> Page[TaskRead]:
         return await service.list_tasks(
-            _owner(user), kind=kind, page=pagination.page, per_page=pagination.per_page
+            _owner(user), kind=kind, search=q, page=pagination.page, per_page=pagination.per_page
         )
+
+    @router.get(
+        "/assessment-tasks/export",
+        summary="The whole bank as a JSON list",
+        description="Every item has the shape of the task body, so the file imports back as is.",
+    )
+    async def export_tasks(user: author, service: AssessmentBankServiceDep) -> list[TaskWrite]:
+        return await service.export_tasks(_owner(user))
+
+    @router.post(
+        "/assessment-tasks/import",
+        status_code=status.HTTP_201_CREATED,
+        summary="Add tasks from a JSON list: all of them or none",
+    )
+    async def import_tasks(
+        user: author,
+        items: Annotated[list[TaskWrite], Body(min_length=1, max_length=MAX_IMPORT_TASKS)],
+        service: AssessmentBankServiceDep,
+    ) -> ImportResult:
+        return ImportResult(created=await service.import_tasks(_owner(user), items))
 
     @router.post("/assessment-tasks", status_code=status.HTTP_201_CREATED, summary="Add a task")
     async def create_task(
