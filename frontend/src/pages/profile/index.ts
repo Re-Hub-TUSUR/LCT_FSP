@@ -1,1 +1,6 @@
-export { ProfilePage } from './ui/profile-page'
+export { CabinetHomePage } from './ui/cabinet-home'
+export { CabinetLayout } from './ui/cabinet-layout'
+export { CategoryPage } from './ui/category-page'
+export { CompanyProfilePage } from './ui/company-profile-page'
+export { ResumePage } from './ui/resume-page'
+export { SettingsPage } from './ui/settings-page'

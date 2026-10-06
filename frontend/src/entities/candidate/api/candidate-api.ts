@@ -53,6 +53,29 @@ export type CandidateDto = {
   matched?: boolean | null
 }
 
+/** Cabinet view: the search switch and the FSP id the candidate entered. */
+export type OwnCandidateDto = CandidateDto & {
+  searching: boolean
+  fspMemberId: string | null
+  /** Kept before a grade exists, so the resume can be reopened. */
+  specialization: string | null
+}
+
+export type CandidateProfileUpdate = {
+  displayName: string
+  headline: string
+  about: string | null
+  stack: string[]
+  softSkills: string[]
+  experienceYears: number
+  city: string
+  workFormats: WorkFormat[]
+  salaryExpectation: number | null
+  phone: string | null
+  telegram: string | null
+  specialization: string
+}
+
 /** One card of the recruiter's feed with the explanation of its position. */
 export type CandidateMatchDto = {
   candidate: CandidateDto
@@ -88,6 +111,7 @@ export type CandidateSearchParams = PaginationParams & {
 export const candidateKeys = {
   all: ['candidates'] as const,
   detail: (id: string) => [...candidateKeys.all, 'detail', id] as const,
+  mine: () => [...candidateKeys.all, 'mine'] as const,
   search: (params: CandidateSearchParams) => [...candidateKeys.all, 'search', params] as const,
 }
 
@@ -105,10 +129,27 @@ export const candidateQueries = {
       queryFn: ({ signal }) =>
         http.get<CandidateSearchDto>('/candidates', { query: params, signal }),
     }),
+  mine: () =>
+    queryOptions({
+      queryKey: candidateKeys.mine(),
+      queryFn: ({ signal }) => http.get<OwnCandidateDto>('/candidates/me', { signal }),
+    }),
 }
 
 export const candidateApi = {
   react: (id: string, kind: Reaction, vacancyId?: string) =>
     http.put<unknown>(`/candidates/${id}/reaction`, { kind, vacancyId }),
   clearReaction: (id: string) => http.delete<void>(`/candidates/${id}/reaction`),
+  saveResume: (payload: CandidateProfileUpdate) =>
+    http.patch<OwnCandidateDto>('/candidates/me', payload),
+  uploadResume: (file: File) => {
+    const body = new FormData()
+    body.append('file', file)
+    return http.post<OwnCandidateDto>('/candidates/me/resume', body)
+  },
+  setSearching: (searching: boolean) =>
+    http.patch<OwnCandidateDto>('/candidates/me/searching', { searching }),
+  linkFsp: (fspMemberId: string) =>
+    http.post<OwnCandidateDto>('/candidates/me/fsp-link', { fspMemberId }),
+  unlinkFsp: () => http.delete<OwnCandidateDto>('/candidates/me/fsp-link'),
 }

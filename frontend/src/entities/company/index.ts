@@ -1,3 +1,3 @@
-export { companyKeys, companyQueries } from './api/company-api'
-export type { CompanyDto } from './api/company-api'
+export { companyApi, companyKeys, companyQueries } from './api/company-api'
+export type { CompanyDto, CompanyWrite } from './api/company-api'
 export { CompanyCard } from './ui/company-card'

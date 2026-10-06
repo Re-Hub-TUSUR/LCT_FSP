@@ -5,6 +5,7 @@ export {
   isSameDay,
   startOfDay,
   startOfWeek,
+  isInFuture,
   toDateInput,
   toTimeInput,
 } from './dates'

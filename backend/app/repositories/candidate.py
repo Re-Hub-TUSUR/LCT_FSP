@@ -31,6 +31,17 @@ class CandidateRepository:
         )
         return result.first()
 
+    async def get_by_fsp_member(self, member_id: str) -> CandidateProfile | None:
+        result = await self._session.scalars(
+            self._profiles().where(CandidateProfile.fsp_member_id == member_id)
+        )
+        return result.first()
+
+    async def add(self, profile: CandidateProfile) -> CandidateProfile:
+        self._session.add(profile)
+        await self._session.flush()
+        return profile
+
     async def by_ids(self, ids: Collection[uuid.UUID]) -> dict[uuid.UUID, CandidateProfile]:
         if not ids:
             return {}

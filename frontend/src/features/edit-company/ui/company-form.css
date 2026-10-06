@@ -1,0 +1,52 @@
+.company-form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.company-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px 28px;
+}
+
+.company-form__wide {
+  grid-column: 1 / -1;
+}
+
+.form-hint,
+.form-status {
+  margin: 22px 0 0;
+  max-width: 62ch;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.form-status {
+  margin: 0;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.form-banner {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  color: var(--error);
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .company-form__grid {
+    grid-template-columns: 1fr;
+  }
+}

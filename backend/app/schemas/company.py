@@ -19,7 +19,9 @@ class CompanyRead(ApiModel):
 
 class CompanyUpsert(ApiModel):
     name: str = Field(min_length=1, max_length=200)
-    industry: str | None = Field(default=None, max_length=200)
-    description: str | None = None
-    website: HttpUrl | None = None
-    contact_email: EmailStr | None = None
+    industry: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=100, max_length=3000)
+    city: str = Field(min_length=1, max_length=100)
+    size: str | None = Field(default=None, max_length=16)
+    website: HttpUrl
+    contact_email: EmailStr

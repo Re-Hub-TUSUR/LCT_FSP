@@ -149,6 +149,13 @@ body:has(.page--swipe) main {
   align-items: center;
 }
 
+/* Inside the cabinet grid the shell already provides width and padding. */
+.page--inset {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 .page-section {
   display: flex;
   flex-direction: column;

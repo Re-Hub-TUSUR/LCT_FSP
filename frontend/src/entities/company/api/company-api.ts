@@ -6,8 +6,20 @@ export type CompanyDto = {
   name: string
   industry: string | null
   description: string | null
+  city: string | null
+  size: string | null
   website: string | null
   contactEmail: string | null
+}
+
+export type CompanyWrite = {
+  name: string
+  industry: string
+  description: string
+  city: string
+  size: string | null
+  website: string
+  contactEmail: string
 }
 
 export const companyKeys = {
@@ -29,4 +41,8 @@ export const companyQueries = {
       queryKey: companyKeys.mine(),
       queryFn: ({ signal }) => http.get<CompanyDto>('/companies/me', { signal }),
     }),
+}
+
+export const companyApi = {
+  save: (payload: CompanyWrite) => http.put<CompanyDto>('/companies/me', payload),
 }

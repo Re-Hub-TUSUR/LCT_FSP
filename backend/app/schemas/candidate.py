@@ -78,13 +78,37 @@ class CandidateSearchPage(Page[CandidateMatch]):
     engine: SearchEngine
 
 
+class OwnCandidateRead(CandidateRead):
+    """The candidate's own cabinet: includes the search switch and the FSP id they typed.
+
+    `specialization` is kept even before a grade exists, so the resume form can reload it.
+    Employers still see a category only after the test confirms a grade.
+    """
+
+    searching: bool
+    fsp_member_id: str | None
+    specialization: str | None
+
+
 class CandidateProfileUpdate(ApiModel):
-    display_name: str | None = Field(default=None, max_length=200)
-    headline: str | None = Field(default=None, max_length=300)
-    about: str | None = None
-    stack: list[str] | None = None
-    experience_years: int | None = Field(default=None, ge=0, le=60)
-    is_visible_to_employers: bool | None = None
+    """Resume fields. The grade is never accepted here: only a passed test confirms it."""
+
+    display_name: str | None = Field(default=None, min_length=1, max_length=200)
+    headline: str | None = Field(default=None, min_length=1, max_length=300)
+    about: str | None = Field(default=None, max_length=2000)
+    stack: list[str] | None = Field(default=None, max_length=30)
+    soft_skills: list[str] | None = Field(default=None, max_length=20)
+    experience_years: int | None = Field(default=None, ge=0, le=50)
+    city: str | None = Field(default=None, min_length=1, max_length=100)
+    work_formats: list[WorkFormat] | None = None
+    salary_expectation: int | None = Field(default=None, gt=0)
+    phone: str | None = Field(default=None, max_length=32)
+    telegram: str | None = Field(default=None, max_length=64)
+    specialization: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+class CandidateSearchUpdate(ApiModel):
+    searching: bool
 
 
 class FspLinkRequest(ApiModel):

@@ -11,6 +11,11 @@ export function CompanyCard({ company, actions }: { company: CompanyDto; actions
         <h3 className="company-card__name">{company.name}</h3>
         {company.industry && <Tag>{company.industry}</Tag>}
       </header>
+      {(company.city || company.size) && (
+        <p className="company-card__meta">
+          {[company.city, company.size].filter(Boolean).join(' · ')}
+        </p>
+      )}
       {company.description && <p className="company-card__text">{company.description}</p>}
       {company.website && isHttpUrl(company.website) && (
         <a className="company-card__link" href={company.website} target="_blank" rel="noreferrer">

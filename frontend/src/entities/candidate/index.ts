@@ -3,10 +3,12 @@ export type {
   CandidateContactsDto,
   CandidateDto,
   CandidateMatchDto,
+  CandidateProfileUpdate,
   CandidateSearchDto,
   CandidateSearchParams,
   CandidateSort,
   FspAchievementDto,
+  OwnCandidateDto,
 } from './api/candidate-api'
 export { FSP_DISCIPLINE_LABELS } from './model/fsp'
 export { CandidateCard } from './ui/candidate-card'

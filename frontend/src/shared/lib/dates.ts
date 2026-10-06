@@ -31,6 +31,11 @@ export function toDateInput(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
+/** True when an ISO timestamp is still ahead of the current moment. */
+export function isInFuture(iso: string): boolean {
+  return new Date(iso).getTime() > Date.now()
+}
+
 /** Value of `<input type="time">`. */
 export function toTimeInput(date: Date): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`

@@ -15,3 +15,8 @@ class CompanyRepository:
 
     async def get_by_owner(self, user_id: uuid.UUID) -> Company | None:
         return await self._session.scalar(select(Company).where(Company.owner_id == user_id))
+
+    async def add(self, company: Company) -> Company:
+        self._session.add(company)
+        await self._session.flush()
+        return company

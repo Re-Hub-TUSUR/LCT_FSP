@@ -1,7 +1,12 @@
 """ORM rows → public API schemas. Only this layer decides which fields leave the backend."""
 
 from app.models import CandidateProfile, Company, Vacancy, WorkFormat
-from app.schemas.candidate import CandidateContacts, CandidateRead, FspAchievementRead
+from app.schemas.candidate import (
+    CandidateContacts,
+    CandidateRead,
+    FspAchievementRead,
+    OwnCandidateRead,
+)
 from app.schemas.category import Category
 from app.schemas.common import SalaryRange
 from app.schemas.company import CompanyRead
@@ -79,4 +84,20 @@ def candidate_read(
         ],
         fsp_linked=profile.fsp_member_id is not None,
         contacts=contacts,
+    )
+
+
+def own_candidate_read(profile: CandidateProfile, *, email: str) -> OwnCandidateRead:
+    """Full profile for the signed-in candidate, including contacts and cabinet switches."""
+    public = candidate_read(
+        profile,
+        contacts=CandidateContacts(email=email, phone=profile.phone, telegram=profile.telegram),
+    )
+    return OwnCandidateRead.model_validate(
+        {
+            **public.model_dump(),
+            "searching": profile.is_visible_to_employers,
+            "fsp_member_id": profile.fsp_member_id,
+            "specialization": profile.specialization,
+        }
     )

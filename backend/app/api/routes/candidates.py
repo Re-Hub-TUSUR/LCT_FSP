@@ -16,7 +16,9 @@ from app.schemas.candidate import (
     CandidateProfileUpdate,
     CandidateRead,
     CandidateSearchPage,
+    CandidateSearchUpdate,
     FspLinkRequest,
+    OwnCandidateRead,
 )
 from app.schemas.reaction import CandidateReactionRequest, FeedView, ReactionRead
 from app.search.base import CandidateSort
@@ -73,13 +75,24 @@ async def search_candidates(
 
 
 @router.get("/me", summary="Own candidate profile")
-async def read_my_profile(_: CandidateUser) -> CandidateRead:
-    not_implemented("candidates.read_me")
+async def read_my_profile(
+    user: CandidateUser, profiles: CandidateProfileServiceDep
+) -> OwnCandidateRead:
+    return await profiles.read_own(user)
 
 
-@router.patch("/me", summary="Update own profile (manual resume form)")
-async def update_my_profile(_: CandidateUser, data: CandidateProfileUpdate) -> CandidateRead:
-    not_implemented("candidates.update_me")
+@router.patch("/me", summary="Create or update the resume. Does not set the grade.")
+async def update_my_profile(
+    user: CandidateUser, data: CandidateProfileUpdate, profiles: CandidateProfileServiceDep
+) -> OwnCandidateRead:
+    return await profiles.save_resume(user, data)
+
+
+@router.patch("/me/searching", summary="Show or hide the profile in employer search")
+async def update_searching(
+    user: CandidateUser, data: CandidateSearchUpdate, profiles: CandidateProfileServiceDep
+) -> OwnCandidateRead:
+    return await profiles.set_searching(user, data.searching)
 
 
 @router.post(
@@ -92,8 +105,15 @@ async def upload_resume(_: CandidateUser, file: UploadFile) -> CandidateRead:
 
 
 @router.post("/me/fsp-link", summary="Link the profile to an FSP participant ID")
-async def link_fsp(_: CandidateUser, data: FspLinkRequest) -> CandidateRead:
-    not_implemented("candidates.link_fsp")
+async def link_fsp(
+    user: CandidateUser, data: FspLinkRequest, profiles: CandidateProfileServiceDep
+) -> OwnCandidateRead:
+    return await profiles.link_fsp(user, data.fsp_member_id)
+
+
+@router.delete("/me/fsp-link", summary="Unlink FSP and drop imported achievements")
+async def unlink_fsp(user: CandidateUser, profiles: CandidateProfileServiceDep) -> OwnCandidateRead:
+    return await profiles.unlink_fsp(user)
 
 
 @router.get(

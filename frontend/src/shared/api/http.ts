@@ -69,6 +69,7 @@ async function parseBody(response: Response): Promise<unknown> {
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, query, signal, headers = {} } = options
   const token = hooks.getAccessToken()
+  const isForm = typeof FormData !== 'undefined' && body instanceof FormData
 
   let response: Response
   try {
@@ -77,11 +78,11 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       signal,
       headers: {
         Accept: 'application/json',
-        ...(body !== undefined && { 'Content-Type': 'application/json' }),
+        ...(body !== undefined && !isForm && { 'Content-Type': 'application/json' }),
         ...(token && { Authorization: `Bearer ${token}` }),
         ...headers,
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
     })
   } catch (cause) {
     if (cause instanceof DOMException && cause.name === 'AbortError') throw cause

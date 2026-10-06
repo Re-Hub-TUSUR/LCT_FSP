@@ -4,11 +4,11 @@ import uuid
 
 from app.core.errors import NotFoundError
 from app.dependencies.common import Pagination
-from app.models import Grade, User, WorkFormat
+from app.models import Company, Grade, User, WorkFormat
 from app.repositories.company import CompanyRepository
 from app.repositories.vacancy import VacancyRepository
 from app.schemas.common import Page
-from app.schemas.company import CompanyRead
+from app.schemas.company import CompanyRead, CompanyUpsert
 from app.schemas.vacancy import VacancyRead
 from app.services.presenters import company_read, vacancy_read
 
@@ -72,4 +72,37 @@ class VacancyService:
         company = await self._companies.get(company_id)
         if company is None:
             raise NotFoundError("Компания не найдена")
+        return company_read(company)
+
+    async def read_mine(self, user: User) -> CompanyRead:
+        company = await self._companies.get_by_owner(user.id)
+        if company is None:
+            raise NotFoundError("Профиль компании ещё не заполнен")
+        return company_read(company)
+
+    async def upsert_mine(self, user: User, data: CompanyUpsert) -> CompanyRead:
+        company = await self._companies.get_by_owner(user.id)
+        website = str(data.website)
+        contact = str(data.contact_email)
+        size = data.size.strip() if data.size else None
+        if company is None:
+            company = Company(
+                owner_id=user.id,
+                name=data.name.strip(),
+                industry=data.industry.strip(),
+                description=data.description.strip(),
+                city=data.city.strip(),
+                size=size or None,
+                website=website,
+                contact_email=contact,
+            )
+            await self._companies.add(company)
+        else:
+            company.name = data.name.strip()
+            company.industry = data.industry.strip()
+            company.description = data.description.strip()
+            company.city = data.city.strip()
+            company.size = size or None
+            company.website = website
+            company.contact_email = contact
         return company_read(company)

@@ -22,6 +22,15 @@
   font-size: 28px;
 }
 
+.company-card__meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
 .company-card__text {
   margin: 0;
   font-family: var(--font-display);

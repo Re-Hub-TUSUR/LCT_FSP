@@ -67,9 +67,31 @@ export const routes: RouteObject[] = [
           {
             path: ROUTES.profile,
             lazy: lazyPage(
-              () => import('@/pages/profile').then((m) => m.ProfilePage),
+              () => import('@/pages/profile').then((m) => m.CabinetLayout),
               authRequired,
             ),
+            children: [
+              {
+                index: true,
+                lazy: lazyPage(() => import('@/pages/profile').then((m) => m.CabinetHomePage)),
+              },
+              {
+                path: 'resume',
+                lazy: lazyPage(() => import('@/pages/profile').then((m) => m.ResumePage)),
+              },
+              {
+                path: 'category',
+                lazy: lazyPage(() => import('@/pages/profile').then((m) => m.CategoryPage)),
+              },
+              {
+                path: 'settings',
+                lazy: lazyPage(() => import('@/pages/profile').then((m) => m.SettingsPage)),
+              },
+              {
+                path: 'company',
+                lazy: lazyPage(() => import('@/pages/profile').then((m) => m.CompanyProfilePage)),
+              },
+            ],
           },
           {
             path: ROUTES.calendar,

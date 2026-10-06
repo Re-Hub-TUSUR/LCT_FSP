@@ -8,6 +8,8 @@ type Props<T> = {
   /** Return true when loaded data should be rendered as the empty state. */
   isEmpty?: (data: T) => boolean
   emptyTitle?: string
+  /** Replaces the default empty title when the page knows the next step. */
+  empty?: ReactNode
   loadingLabel?: string
   children: (data: T) => ReactNode
 }
@@ -17,6 +19,7 @@ export function QueryState<T>({
   query,
   isEmpty,
   emptyTitle = 'Пока пусто',
+  empty,
   loadingLabel,
   children,
 }: Props<T>) {
@@ -30,6 +33,9 @@ export function QueryState<T>({
       <ErrorState message={getErrorMessage(query.error)} onRetry={() => void query.refetch()} />
     )
   }
-  if (isEmpty?.(query.data)) return <EmptyState title={emptyTitle} />
+  if (isEmpty?.(query.data)) {
+    if (empty) return <>{empty}</>
+    return <EmptyState title={emptyTitle} />
+  }
   return <>{children(query.data)}</>
 }

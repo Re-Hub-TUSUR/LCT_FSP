@@ -1,4 +1,4 @@
-export { Button } from './button/button'
+export { Button, ButtonLink } from './button/button'
 export { CodeEditor } from './code-editor/code-editor'
 export { SelectField, TextArea, TextField } from './text-field/text-field'
 export { EmptyState, ErrorState, Loader } from './feedback/feedback'
