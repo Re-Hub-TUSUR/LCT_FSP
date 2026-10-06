@@ -16,6 +16,7 @@ from app.models.enums import (
     FspEventLevel,
     Grade,
     InvitationStatus,
+    MeetingStatus,
     ReactionKind,
     TaskDifficulty,
     TaskKind,
@@ -24,6 +25,7 @@ from app.models.enums import (
 )
 from app.models.fsp_achievement import FspAchievement
 from app.models.invitation import Invitation
+from app.models.meeting import Meeting
 from app.models.reaction import CandidateReaction, VacancyReaction
 from app.models.user import User
 from app.models.vacancy import Vacancy
@@ -45,6 +47,8 @@ __all__ = [
     "Grade",
     "Invitation",
     "InvitationStatus",
+    "Meeting",
+    "MeetingStatus",
     "ReactionKind",
     "TaskDifficulty",
     "TaskKind",

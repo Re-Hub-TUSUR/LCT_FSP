@@ -55,6 +55,14 @@ class InvitationStatus(StrEnum):
     DECLINED = "declined"
 
 
+class MeetingStatus(StrEnum):
+    """The candidate's answer to a meeting the company scheduled."""
+
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    DECLINED = "declined"
+
+
 class FspDiscipline(StrEnum):
     """Disciplines of sport programming held by FSP."""
 

@@ -8,6 +8,7 @@ from app.repositories.candidate import CandidateRepository
 from app.repositories.company import CompanyRepository
 from app.repositories.email_verification import EmailVerificationRepository
 from app.repositories.invitation import InvitationRepository
+from app.repositories.meeting import MeetingRepository
 from app.repositories.reaction import ReactionRepository
 from app.repositories.user import UserRepository
 from app.repositories.vacancy import VacancyRepository
@@ -15,6 +16,7 @@ from app.search.elastic import ElasticSearchState
 from app.services.assessment_bank import AssessmentBankService
 from app.services.assessments import AssessmentService
 from app.services.auth import AuthService
+from app.services.calendar import CalendarService
 from app.services.candidate_search import CandidateSearchService
 from app.services.candidates import CandidateProfileService
 from app.services.code_runner import CodeRunner, OnlineCompilerRunner
@@ -89,6 +91,18 @@ def get_reaction_service(session: SessionDep) -> ReactionService:
 
 
 ReactionServiceDep = Annotated[ReactionService, Depends(get_reaction_service)]
+
+
+def get_calendar_service(session: SessionDep) -> CalendarService:
+    return CalendarService(
+        MeetingRepository(session),
+        CompanyRepository(session),
+        CandidateRepository(session),
+        VacancyRepository(session),
+    )
+
+
+CalendarServiceDep = Annotated[CalendarService, Depends(get_calendar_service)]
 
 
 def get_code_runner(settings: SettingsDep) -> CodeRunner:

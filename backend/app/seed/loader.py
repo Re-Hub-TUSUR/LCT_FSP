@@ -20,6 +20,8 @@ from app.models import (
     EmailVerificationCode,
     FspAchievement,
     Invitation,
+    Meeting,
+    MeetingStatus,
     User,
     UserRole,
     Vacancy,
@@ -170,6 +172,30 @@ def _candidate(candidate: CandidateFixture, now: datetime) -> CandidateProfile:
     )
 
 
+def _demo_meetings(data: SeedData, now: datetime) -> list[Meeting]:
+    """A few interviews of the demo company in the coming days, the demo candidate first."""
+    company = data.companies[0]
+    invited = [candidate for candidate in data.candidates if candidate.is_visible_to_employers][:3]
+    day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    meetings = []
+    for index, candidate in enumerate(invited):
+        # 11:00, 13:00 and 15:00 Moscow time on consecutive days.
+        starts_at = day + timedelta(days=index + 1, hours=8 + 2 * index)
+        meetings.append(
+            Meeting(
+                id=seed_id("meeting", f"{company.key}:{candidate.key}"),
+                company_id=seed_id("company", company.key),
+                candidate_id=seed_id("candidate", candidate.key),
+                title="Техническое собеседование" if index else "Знакомство с командой",
+                starts_at=starts_at,
+                ends_at=starts_at + timedelta(hours=1),
+                location="https://telemost.yandex.ru/j/00000000000000",
+                status=MeetingStatus.CONFIRMED if index == 1 else MeetingStatus.PENDING,
+            )
+        )
+    return meetings
+
+
 async def _ensure_no_foreign_accounts(
     session: AsyncSession, emails: list[str], user_ids: list[uuid.UUID]
 ) -> None:
@@ -212,6 +238,9 @@ async def _clear(session: AsyncSession, user_ids: list[uuid.UUID]) -> None:
         delete(Invitation).where(
             or_(Invitation.candidate_id.in_(profiles), Invitation.company_id.in_(companies))
         ),
+        delete(Meeting).where(
+            or_(Meeting.candidate_id.in_(profiles), Meeting.company_id.in_(companies))
+        ),
         delete(FspAchievement).where(FspAchievement.candidate_id.in_(profiles)),
         delete(Vacancy).where(Vacancy.company_id.in_(companies)),
         delete(CandidateProfile).where(CandidateProfile.user_id.in_(user_ids)),
@@ -251,6 +280,8 @@ async def seed_database(
     await session.flush()
     session.add_all(_vacancy(vacancy, order, now) for order, vacancy in enumerate(data.vacancies))
     session.add_all(_candidate(candidate, now) for candidate in data.candidates)
+    await session.flush()
+    session.add_all(_demo_meetings(data, now))
     await session.flush()
 
     return SeedSummary(

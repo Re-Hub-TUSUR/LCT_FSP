@@ -1,0 +1,211 @@
+.meeting-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Native date and time pickers follow the dark theme */
+.meeting-form input[type='date'],
+.meeting-form input[type='time'] {
+  color-scheme: dark;
+}
+
+.meeting-form__row {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1.2fr;
+  gap: 20px;
+}
+
+.meeting-form__candidate {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.meeting-form__label {
+  margin: 0 0 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.meeting-form__value {
+  margin: 0;
+  font-weight: 300;
+  font-size: 18px;
+}
+
+.meeting-form__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.meeting-form__status {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.meeting-form__status--error {
+  color: var(--error);
+}
+
+/* ── Candidate picker ──────────────────────────────── */
+
+.meeting-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.meeting-picker__chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.meeting-picker__list {
+  display: flex;
+  flex-direction: column;
+  max-height: 232px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.meeting-picker__list:empty {
+  display: none;
+}
+
+.meeting-picker__option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 16px;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.meeting-picker__option:hover,
+.meeting-picker__option:focus-visible {
+  outline: none;
+  background: var(--fill-brand);
+}
+
+.meeting-picker__hint {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* ── Details ───────────────────────────────────────── */
+
+.meeting-details {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 0;
+}
+
+.meeting-details dt {
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.meeting-details dd {
+  margin: 0;
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.meeting-details dd::first-letter {
+  text-transform: uppercase;
+}
+
+.meeting-details a {
+  text-underline-offset: 4px;
+}
+
+.meeting-details__note {
+  white-space: pre-wrap;
+}
+
+.meeting-details__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.meeting-details__actions .btn {
+  padding: 16px 12px;
+}
+
+.meeting-status {
+  display: inline-block;
+  padding: 5px 10px;
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.meeting-status--pending {
+  border-style: dashed;
+  border-color: var(--brand-blue-hover);
+}
+
+.meeting-status--confirmed {
+  border-color: var(--brand-blue);
+  background: var(--brand-blue);
+  color: #fff;
+}
+
+.meeting-status--declined {
+  color: var(--text-dim);
+  text-decoration: line-through;
+}
+
+@media (max-width: 560px) {
+  .meeting-form__row,
+  .meeting-details__actions {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .meeting-details__actions {
+    gap: 12px;
+  }
+}

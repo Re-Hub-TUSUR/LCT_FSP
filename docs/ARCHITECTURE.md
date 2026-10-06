@@ -33,8 +33,8 @@ app → pages → widgets → features → entities → shared
 | ---------- | ---------- | ------ |
 | `app`      | вход, провайдеры (QueryClient), роутер, guard'ы, layout, глобальные стили | — |
 | `pages`    | экран на маршрут, композиция виджетов/фич | `landing`, `auth` (выбор роли, `EmployerAuthPage`, `CandidateAuthPage`), `profile`, `vacancies`, `company`, `candidate`, `calendar`, `matching` (`MatchingSwipePage`, `MatchingProfilePage`), `testing`, `admin`, `not-found` |
-| `widgets`  | крупные самостоятельные блоки | `site-header`, `landing-hero`, `vacancies-table`, `invitations-inbox`, `candidate-deck` (свайпы) |
-| `features` | пользовательские действия | `start-signup`, `auth-by-email`, `invite-candidate`, `respond-to-invitation` |
+| `widgets`  | крупные самостоятельные блоки | `site-header`, `landing-hero`, `vacancies-table`, `invitations-inbox`, `candidate-deck` (свайпы), `meeting-calendar` (сетка недели и месяца) |
+| `features` | пользовательские действия | `start-signup`, `auth-by-email`, `invite-candidate`, `respond-to-invitation`, `manage-meeting` (назначить, перенести, подтвердить встречу) |
 | `entities` | бизнес-сущности: DTO, query-ключи, карточки | `user`, `session`, `category`, `candidate`, `company`, `vacancy`, `invitation`, `match`, `calendar-event`, `assessment` |
 | `shared`   | инфраструктура без бизнес-логики | `api` (http-клиент, `ApiError`, query-client), `config` (env, routes), `lib` (формат, валидация), `ui` (Button, TextField, Loader/Error/Empty, QueryState, Page) |
 
@@ -126,7 +126,7 @@ migrations/    Alembic (async), URL из настроек
 | invitations | создание, `incoming`, `outgoing`, `accept`/`decline` | 501 |
 | applications | отклики кандидата | 501 |
 | matching | `needs`, `recommendations` | 501 |
-| calendar | `/calendar/events?from&to` | 501 |
+| calendar | `/calendar/events`: список за период, создание, перенос и отмена встречи работодателем, `confirm`/`decline` кандидатом | ✅ |
 | assessments (testing) | статус, попытки, ответы, запуск кода, завершение; анкета — 501 | ✅ / 501 |
 | банк задач | `/admin/assessment-*` (платформа), `/companies/me/assessment-*` (работодатель) | ✅ |
 | admin | `/admin/users` | ✅ |

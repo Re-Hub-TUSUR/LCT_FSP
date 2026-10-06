@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { CandidateCard, candidateQueries } from '@/entities/candidate'
 import { CompanyCard, companyQueries } from '@/entities/company'
 import { useSession } from '@/entities/session'
 import { InviteCandidateForm } from '@/features/invite-candidate'
+import { ROUTES } from '@/shared/config'
 import { EmptyState, Page, QueryState, Section } from '@/shared/ui'
 
 function CandidateProfile({ id }: { id: string }) {
@@ -16,9 +17,19 @@ function CandidateProfile({ id }: { id: string }) {
         <>
           <CandidateCard candidate={data} />
           {user?.role === 'employer' && (
-            <Section title="Пригласить кандидата">
-              <InviteCandidateForm candidateId={data.id} />
-            </Section>
+            <>
+              <Section title="Встреча">
+                <Link
+                  className="feed__link"
+                  to={`${ROUTES.calendar}?candidateId=${encodeURIComponent(data.id)}`}
+                >
+                  Назначить встречу в календаре →
+                </Link>
+              </Section>
+              <Section title="Пригласить кандидата">
+                <InviteCandidateForm candidateId={data.id} />
+              </Section>
+            </>
           )}
         </>
       )}
