@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { MouseEvent, RefObject } from 'react'
-import { Link } from 'react-router'
+import { Link, NavLink } from 'react-router'
 import { BRAND, ROUTES } from '@/shared/config'
 import { scrollToId } from '../lib/scroll-to-hash'
 import { MENU } from '../model/types'
@@ -46,14 +46,17 @@ export function Navbar({ links, cta, menuOpen, onToggle, toggleRef, overlay = fa
       <div className="nav__right">
         <nav className="nav__links" aria-label="Основная навигация">
           {links.map((link) => (
-            <Link
+            <NavLink
               key={link.to}
-              className="nav__link"
+              className={({ isActive }) =>
+                !link.to.startsWith('#') && isActive ? 'nav__link is-active' : 'nav__link'
+              }
               to={link.to}
+              end
               onClick={(event) => onHashClick(event, link.to)}
             >
               {link.label}
-            </Link>
+            </NavLink>
           ))}
         </nav>
 

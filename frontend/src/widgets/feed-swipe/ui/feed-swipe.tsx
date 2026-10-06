@@ -55,7 +55,7 @@ export function VacancySwipe() {
     <SwipeDeck
       items={queue}
       getKey={vacancyKey}
-      renderCard={(match) => <VacancyMatchCard match={match} expanded />}
+      renderCard={(match) => <VacancyMatchCard match={match} frame />}
       onDecide={decide}
       likeLabel="Интересно"
       skipLabel="Пропустить"
@@ -91,7 +91,7 @@ export function CandidateSwipe() {
       getKey={candidateKey}
       renderCard={(match) => <CandidateMatchCard match={match} />}
       onDecide={decide}
-      likeLabel="В избранное"
+      likeLabel="Интересно"
       skipLabel="Пропустить"
       empty={
         <EmptyState title="Подборка закончилась">

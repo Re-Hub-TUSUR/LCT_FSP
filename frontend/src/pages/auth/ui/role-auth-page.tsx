@@ -43,7 +43,7 @@ function RoleAuthPage({ role }: { role: 'candidate' | 'employer' }) {
         initialMode={mode}
         onModeChange={setMode}
         onSuccess={() =>
-          navigate(isSafeInternalPath(redirect) ? redirect : ROUTES.profile, { replace: true })
+          navigate(isSafeInternalPath(redirect) ? redirect : ROUTES.feedSwipe, { replace: true })
         }
       />
     </Page>

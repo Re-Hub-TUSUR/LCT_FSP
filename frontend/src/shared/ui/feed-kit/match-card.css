@@ -154,6 +154,65 @@
   cursor: pointer;
 }
 
+.match-card__pay {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.match-card__pay .match-card__more {
+  margin-left: auto;
+  flex: none;
+}
+
+.vacancy-dossier {
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(78svh, 680px);
+  margin: auto;
+  padding: 28px 28px 24px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  background: #10121c;
+  color: var(--text);
+}
+
+.vacancy-dossier::backdrop {
+  background: rgba(5, 6, 13, 0.72);
+}
+
+.vacancy-dossier__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.vacancy-dossier__title {
+  margin: 6px 0 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+.vacancy-dossier__text {
+  margin: 16px 0 0;
+  font-weight: 300;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.vacancy-dossier__status,
+.vacancy-dossier__meta,
+.vacancy-dossier__link {
+  margin: 14px 0 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
 .match-card__actions {
   display: flex;
   flex-wrap: wrap;

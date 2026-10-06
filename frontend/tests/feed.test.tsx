@@ -152,11 +152,37 @@ describe('feeds', () => {
 
     renderApp('/feed/swipe')
     await screen.findAllByText('Go-разработчик в команду антифрода', {}, SLOW)
-    await user.click(screen.getByRole('button', { name: 'Интересно →' }))
+    await user.click(screen.getByRole('button', { name: 'Интересно' }))
 
-    await waitFor(() =>
-      expect(screen.queryByText('Go-разработчик в команду антифрода')).not.toBeInTheDocument(),
+    await waitFor(
+      () =>
+        expect(screen.queryByText('Go-разработчик в команду антифрода')).not.toBeInTheDocument(),
+      { timeout: 2500 },
     )
     expect(screen.getAllByText('Python-разработчик').length).toBeGreaterThan(0)
+  })
+
+  it('shows the finished queue inside the film frame without swipe controls', async () => {
+    signIn('candidate')
+    vi.stubGlobal(
+      'fetch',
+      mockFetch({
+        '/api/v1/vacancies/feed': {
+          body: { ...page([]), personalized: false, basis: null },
+        },
+      }),
+    )
+
+    renderApp('/feed/swipe')
+
+    expect(
+      await screen.findByText('Вы посмотрели все подходящие вакансии', {}, SLOW),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Понравившиеся — в избранном ленты. Новые появятся здесь сами.'),
+    ).toBeInTheDocument()
+    expect(document.querySelector('.reel__placeholder')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Интересно' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Пропустить' })).not.toBeInTheDocument()
   })
 })

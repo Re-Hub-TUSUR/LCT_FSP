@@ -1,5 +1,5 @@
 import type { CSSProperties, MouseEvent } from 'react'
-import { Link } from 'react-router'
+import { Link, NavLink } from 'react-router'
 import { scrollToId } from '../lib/scroll-to-hash'
 import { MENU } from '../model/types'
 import type { NavItem } from '../model/types'
@@ -34,10 +34,13 @@ export function MobileMenu({ links, cta, open, onClose }: Props) {
       {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
       <nav className="menu__list" onClick={onBackdrop}>
         {links.map((link, i) => (
-          <Link
+          <NavLink
             key={link.to}
-            className="menu__link"
+            className={({ isActive }) =>
+              !link.to.startsWith('#') && isActive ? 'menu__link is-active' : 'menu__link'
+            }
             to={link.to}
+            end
             style={stagger(i)}
             onClick={(event) => {
               onClose()
@@ -47,7 +50,7 @@ export function MobileMenu({ links, cta, open, onClose }: Props) {
             }}
           >
             {link.label}
-          </Link>
+          </NavLink>
         ))}
         <Link className="menu__cta" to={cta.to} style={stagger(links.length)} onClick={onClose}>
           {cta.label}
