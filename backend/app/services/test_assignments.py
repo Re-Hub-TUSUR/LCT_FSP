@@ -88,8 +88,8 @@ class TestAssignmentService:
         )
         if not matched:
             raise ConflictError(
-                "Тестовое можно отправить после взаимного интереса: вы добавили кандидата "
-                "в избранное, а он отметил вакансию вашей компании"
+                "Тестовое можно отправить после взаимного интереса: вы отобрали кандидата, "
+                "а он отметил вакансию вашей компании"
             )
         if data.vacancy_id is not None:
             row = await self._vacancies.get(data.vacancy_id)

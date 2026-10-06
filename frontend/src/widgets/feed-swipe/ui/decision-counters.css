@@ -1,0 +1,40 @@
+.decisions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+
+.decisions__link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--text-dim);
+  transition: color 0.2s ease;
+}
+
+.decisions__link:hover,
+.decisions__link:focus-visible {
+  color: var(--text);
+}
+
+.decisions__link:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 4px;
+}
+
+.decisions__count {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  color: var(--text);
+}
+
+/* Mutual interest is the number people come back for. */
+.decisions__link--matched .decisions__count {
+  color: #7be3b4;
+}

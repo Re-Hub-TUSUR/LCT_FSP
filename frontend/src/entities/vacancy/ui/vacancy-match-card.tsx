@@ -19,8 +19,14 @@ type Props = {
 
 const FRAME_REASONS = 5
 
+/**
+ * Everything about a vacancy on one sheet that fits the screen: nothing in it scrolls.
+ * The facts and the company are on the left, the description on the right.
+ */
 function VacancyDossier({ vacancy, onClose }: { vacancy: VacancyDto; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null)
+  const body = useRef<HTMLDivElement>(null)
+  const [clipped, setClipped] = useState(false)
   const company = useQuery(companyQueries.detail(vacancy.company.id))
   const website = company.data?.website
   const blocks = vacancy.description.split('\n\n').filter(Boolean)
@@ -28,74 +34,104 @@ function VacancyDossier({ vacancy, onClose }: { vacancy: VacancyDto; onClose: ()
 
   useEffect(() => {
     const dialog = ref.current
+    if (!dialog || dialog.open) return
+    // Environments without the modal API (old browsers, jsdom) still get an open dialog.
+    if (typeof dialog.showModal === 'function') dialog.showModal()
+    else dialog.setAttribute('open', '')
+  }, [])
+
+  // A click on the backdrop lands on the dialog itself; unmounting closes it.
+  useEffect(() => {
+    const dialog = ref.current
     if (!dialog) return
-    dialog.showModal()
     const onPointer = (event: MouseEvent) => {
-      if (event.target === dialog) dialog.close()
+      if (event.target === dialog) onClose()
     }
     dialog.addEventListener('click', onPointer)
-    return () => {
-      dialog.removeEventListener('click', onPointer)
-      if (dialog.open) dialog.close()
-    }
+    return () => dialog.removeEventListener('click', onPointer)
+  }, [onClose])
+
+  // An unusually long description is cut with a fade instead of getting a scrollbar.
+  useEffect(() => {
+    const element = body.current
+    if (!element) return
+    const measure = () => setClipped(element.scrollHeight > element.clientHeight + 1)
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer.disconnect()
   }, [])
 
   return (
     <dialog ref={ref} className="vacancy-dossier" aria-labelledby="dossier-title" onClose={onClose}>
-      <header className="vacancy-dossier__head">
-        <div>
+      <div className="vacancy-dossier__side">
+        <header className="vacancy-dossier__head">
           <p className="match-card__eyebrow">
             {vacancy.company.name}
             {vacancy.company.industry && <span> · {vacancy.company.industry}</span>}
           </p>
-          <h2 id="dossier-title" className="vacancy-dossier__title">
-            {vacancy.title}
-          </h2>
-          <p className="match-card__salary">
-            {formatRubRange(vacancy.salary.from, vacancy.salary.to)}
-          </p>
-        </div>
-        <button type="button" className="match-card__more" onClick={() => ref.current?.close()}>
-          Закрыть
-        </button>
-      </header>
-      <ul className="match-card__facts">
-        <li className="match-card__fact match-card__fact--accent">{vacancy.category.label}</li>
-        <li className="match-card__fact">{WORK_FORMAT_LABELS[vacancy.workFormat]}</li>
-        <li className="match-card__fact">{place}</li>
-        {vacancy.company.size && <li className="match-card__fact">{vacancy.company.size} чел.</li>}
-      </ul>
-      <ul className="match-card__stack" aria-label="Стек">
-        {vacancy.stack.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
-      {blocks.map((block) => (
-        <p key={block} className="vacancy-dossier__text">
-          {block}
+          <button type="button" className="match-card__more" onClick={onClose}>
+            Закрыть
+          </button>
+        </header>
+        <h2 id="dossier-title" className="vacancy-dossier__title">
+          {vacancy.title}
+        </h2>
+        <p className="match-card__salary">
+          {formatRubRange(vacancy.salary.from, vacancy.salary.to)}
         </p>
-      ))}
-      {company.isPending && <p className="vacancy-dossier__status">Загружаем карточку компании</p>}
-      {company.isError && (
-        <p className="vacancy-dossier__status">Не удалось загрузить карточку компании</p>
-      )}
-      {company.data?.description && (
-        <p className="vacancy-dossier__text">{company.data.description}</p>
-      )}
-      {company.data?.contactEmail && (
-        <p className="vacancy-dossier__meta">{company.data.contactEmail}</p>
-      )}
-      {website && isHttpUrl(website) && (
-        <a className="vacancy-dossier__link" href={website} target="_blank" rel="noreferrer">
-          {website}
-        </a>
-      )}
+        <ul className="match-card__facts">
+          <li className="match-card__fact match-card__fact--accent">{vacancy.category.label}</li>
+          <li className="match-card__fact">{WORK_FORMAT_LABELS[vacancy.workFormat]}</li>
+          <li className="match-card__fact">{place}</li>
+          {vacancy.company.size && (
+            <li className="match-card__fact">{vacancy.company.size} чел.</li>
+          )}
+        </ul>
+        <ul className="match-card__stack" aria-label="Стек">
+          {vacancy.stack.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+
+        <div className="vacancy-dossier__company">
+          {company.isPending && (
+            <p className="vacancy-dossier__meta">Загружаем карточку компании</p>
+          )}
+          {company.isError && (
+            <p className="vacancy-dossier__meta">Не удалось загрузить карточку компании</p>
+          )}
+          {company.data?.description && (
+            <p className="vacancy-dossier__about">{company.data.description}</p>
+          )}
+          {company.data?.contactEmail && (
+            <p className="vacancy-dossier__meta">{company.data.contactEmail}</p>
+          )}
+          {website && isHttpUrl(website) && (
+            <a className="vacancy-dossier__meta" href={website} target="_blank" rel="noreferrer">
+              {website}
+            </a>
+          )}
+        </div>
+      </div>
+
+      <div
+        ref={body}
+        className={clipped ? 'vacancy-dossier__body is-clipped' : 'vacancy-dossier__body'}
+      >
+        {blocks.map((block) => (
+          <p key={block} className="vacancy-dossier__text">
+            {block}
+          </p>
+        ))}
+      </div>
     </dialog>
   )
 }
 
 export function VacancyMatchCard({ match, actions, expanded = false, frame = false }: Props) {
-  const { vacancy, matchScore, reasons } = match
+  const { vacancy, matchScore, reasons, matched } = match
   const [open, setOpen] = useState(expanded)
   const [dossier, setDossier] = useState(false)
   const [lead, ...rest] = vacancy.description.split('\n\n')
@@ -114,6 +150,7 @@ export function VacancyMatchCard({ match, actions, expanded = false, frame = fal
             {vacancy.company.industry && <span> · {vacancy.company.industry}</span>}
           </p>
           <h3 className="match-card__title">{vacancy.title}</h3>
+          {matched && <p className="match-card__matched">Взаимно: компания отобрала вас</p>}
           {!frame && (
             <p className="match-card__salary">
               {formatRubRange(vacancy.salary.from, vacancy.salary.to)}

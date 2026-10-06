@@ -6,8 +6,15 @@ import { CandidateMatchCard, candidateQueries } from '@/entities/candidate'
 import type { CandidateSort } from '@/entities/candidate'
 import { categoryQueries, GRADE_LABELS, GRADES } from '@/entities/category'
 import type { Grade } from '@/entities/category'
-import { vacancyQueries, WORK_FORMAT_LABELS, WORK_FORMATS } from '@/entities/vacancy'
-import type { FeedView, WorkFormat } from '@/entities/vacancy'
+import {
+  DECISION_VIEW_LABELS,
+  DECISION_VIEWS,
+  parseListView,
+  vacancyQueries,
+  WORK_FORMAT_LABELS,
+  WORK_FORMATS,
+} from '@/entities/vacancy'
+import type { ListView, WorkFormat } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
 import { paths } from '@/shared/config'
 import { Chip, EmptyState, FeedSkeleton, Pagination, QueryState } from '@/shared/ui'
@@ -17,6 +24,22 @@ const SORTS: Record<CandidateSort, string> = {
   assessment: 'По баллу теста',
   salary: 'По ожиданиям ↑',
   experience: 'По опыту',
+}
+
+const EMPTY: Record<ListView, { title: string; text: string }> = {
+  all: { title: 'Никого не нашли', text: 'Уберите часть фильтров или переформулируйте запрос.' },
+  liked: {
+    title: 'Пока никто не отобран',
+    text: 'Отмечайте кандидатов звёздочкой или свайпом вправо.',
+  },
+  matched: {
+    title: 'Взаимных отметок пока нет',
+    text: 'Здесь появятся отобранные вами кандидаты, которые отметили вакансию вашей компании.',
+  },
+  skipped: {
+    title: 'Никто не вырезан',
+    text: 'Сюда попадают кандидаты, которых вы пропустили. Любого можно вернуть.',
+  },
 }
 
 const list = (value: string | null) =>
@@ -33,7 +56,7 @@ export function CandidateFeed() {
   const [params, setParams] = useSearchParams()
   const page = Math.max(1, Number(params.get('page')) || 1)
   const perPage = Number(params.get('perPage')) || 10
-  const view: FeedView = params.get('view') === 'liked' ? 'liked' : 'all'
+  const view = parseListView(params.get('view'))
   const q = params.get('q') ?? ''
   const grades = params.getAll('grade') as Grade[]
   const formats = params.getAll('workFormat') as WorkFormat[]
@@ -112,9 +135,11 @@ export function CandidateFeed() {
             <Chip active={view === 'all'} onClick={() => update({ view: null })}>
               Все
             </Chip>
-            <Chip active={view === 'liked'} onClick={() => update({ view: 'liked' })}>
-              Избранное
-            </Chip>
+            {DECISION_VIEWS.map((item) => (
+              <Chip key={item} active={view === item} onClick={() => update({ view: item })}>
+                {DECISION_VIEW_LABELS[item]}
+              </Chip>
+            ))}
           </div>
         </div>
 
@@ -260,11 +285,7 @@ export function CandidateFeed() {
 
         {data ? (
           data.items.length === 0 ? (
-            <EmptyState title={view === 'liked' ? 'В избранном пусто' : 'Никого не нашли'}>
-              {view === 'liked'
-                ? 'Отмечайте кандидатов звёздочкой или свайпом вправо.'
-                : 'Уберите часть фильтров или переформулируйте запрос.'}
-            </EmptyState>
+            <EmptyState title={EMPTY[view].title}>{EMPTY[view].text}</EmptyState>
           ) : (
             <>
               <ol className="feed__list">

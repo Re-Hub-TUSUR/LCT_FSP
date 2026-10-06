@@ -1,11 +1,11 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { CandidateMatchDto, CandidateSearchDto } from '@/entities/candidate'
 import { sessionStore } from '@/entities/session'
 import type { UserRole } from '@/entities/user'
 import type { VacancyFeedDto, VacancyMatchDto } from '@/entities/vacancy'
-import { mockFetch, renderApp } from './test-utils'
+import { mockFetch, renderApp, stubApi } from './test-utils'
 
 // The first render loads the lazy page chunk, which can take longer than the default 1 s.
 const SLOW = { timeout: 5000 }
@@ -41,6 +41,7 @@ function vacancyMatch(id: string, title: string, matchScore: number): VacancyMat
     matchScore,
     reasons: ['Ваша категория: Backend-разработка · Middle'],
     reaction: null,
+    matched: false,
   }
 }
 
@@ -98,6 +99,7 @@ const candidateMatch: CandidateMatchDto = {
   profileStrength: 0.85,
   reasons: ['Грейд подтверждён тестом: 91 из 100'],
   reaction: null,
+  matched: false,
 }
 
 const candidateSearch: CandidateSearchDto = { ...page([candidateMatch]), engine: 'elasticsearch' }
@@ -179,10 +181,121 @@ describe('feeds', () => {
       await screen.findByText('Вы посмотрели все подходящие вакансии', {}, SLOW),
     ).toBeInTheDocument()
     expect(
-      screen.getByText('Понравившиеся — в избранном ленты. Новые появятся здесь сами.'),
+      screen.getByText('Отобранные — в ленте, раздел «Отобрано». Новые появятся здесь сами.'),
     ).toBeInTheDocument()
     expect(document.querySelector('.reel__placeholder')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Интересно' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Пропустить' })).not.toBeInTheDocument()
+  })
+
+  it('skips with the arrow key and applies a decision at once under reduced motion', async () => {
+    signIn('candidate')
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('prefers-reduced-motion'),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }))
+    const calls = stubApi(({ method, path }) => {
+      if (path === '/vacancies/feed') return vacancyFeed
+      if (path === '/vacancies/reactions/counts') return { liked: 0, matched: 0, skipped: 0 }
+      return method === 'GET' ? [] : { kind: 'skip', updatedAt: '2026-10-06' }
+    })
+    const user = userEvent.setup()
+
+    renderApp('/feed/swipe')
+    await screen.findAllByText('Go-разработчик в команду антифрода', {}, SLOW)
+    await user.keyboard('{ArrowLeft}')
+
+    // No animation to wait for: the next card is the current one right away.
+    expect(screen.queryByText('Go-разработчик в команду антифрода')).not.toBeInTheDocument()
+    await waitFor(() => expect(calls.some((call) => call.method === 'PUT')).toBe(true))
+    const saved = calls.find((call) => call.method === 'PUT')
+    expect([saved?.path, saved?.body]).toEqual(['/vacancies/v1/reaction', { kind: 'skip' }])
+    // The deck is not left locked after a decision.
+    expect(screen.getByRole('button', { name: 'Пропустить' })).toBeEnabled()
+  })
+
+  it('opens the whole vacancy on one sheet from a frame of the reel', async () => {
+    signIn('candidate')
+    stubApi(({ method, path }) => {
+      if (path === '/vacancies/feed') return vacancyFeed
+      if (path === '/companies/c1')
+        return { id: 'c1', name: 'ПэйФлоу', description: 'Платёжный сервис для магазинов.' }
+      if (path === '/vacancies/reactions/counts') return { liked: 0, matched: 0, skipped: 0 }
+      return method === 'GET' ? [] : undefined
+    })
+    const user = userEvent.setup()
+
+    renderApp('/feed/swipe')
+    await screen.findAllByText('Go-разработчик в команду антифрода', {}, SLOW)
+    await user.click(screen.getByRole('button', { name: 'Изучить подробнее' }))
+
+    const sheet = await screen.findByRole('dialog', { name: 'Go-разработчик в команду антифрода' })
+    // Both blocks of the description, not only the lead shown on the frame.
+    expect(within(sheet).getByText('Команда процессинга.')).toBeInTheDocument()
+    expect(within(sheet).getByText(/— разработка сервисов/)).toBeInTheDocument()
+    expect(await within(sheet).findByText('Платёжный сервис для магазинов.')).toBeInTheDocument()
+
+    // Arrow keys belong to the sheet while it is open: the card behind stays.
+    await user.keyboard('{ArrowRight}')
+    await user.click(within(sheet).getByRole('button', { name: 'Закрыть' }))
+    expect(screen.getAllByText('Go-разработчик в команду антифрода').length).toBeGreaterThan(0)
+  })
+
+  it('counts the decisions above the reel and links each number to its list', async () => {
+    signIn('employer')
+    stubApi(({ method, path }) => {
+      if (path === '/candidates') return candidateSearch
+      if (path === '/candidates/reactions/counts') return { liked: 12, matched: 3, skipped: 40 }
+      return method === 'GET' ? [] : undefined
+    })
+
+    renderApp('/feed/swipe')
+    const counters = await screen.findByRole('navigation', { name: 'Мои решения' }, SLOW)
+
+    await waitFor(() => expect(within(counters).getByText('12')).toBeInTheDocument())
+    const links = within(counters).getAllByRole('link')
+    expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
+      ['Отобрано12', '/feed?view=liked'],
+      ['Взаимно3', '/feed?view=matched'],
+      ['Вырезано40', '/feed?view=skipped'],
+    ])
+  })
+
+  it('opens the lists of own decisions from the feed and marks mutual interest', async () => {
+    signIn('candidate')
+    const views: (string | null)[] = []
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
+      const url = new URL(String(input), 'http://localhost')
+      const view = url.searchParams.get('view')
+      views.push(view)
+      const items =
+        view === 'matched'
+          ? [{ ...vacancyMatch('v1', 'Go-разработчик в команду антифрода', 0.91), matched: true }]
+          : view === 'skipped'
+            ? []
+            : vacancyFeed.items
+      return new Response(JSON.stringify({ ...vacancyFeed, ...page(items) }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    })
+    const user = userEvent.setup()
+
+    renderApp('/feed')
+    await screen.findByText('Python-разработчик', {}, SLOW)
+    expect(screen.queryByText(/Взаимно: компания/)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Взаимно' }))
+    expect(await screen.findByText('Взаимно: компания отобрала вас')).toBeInTheDocument()
+    expect(screen.queryByText('Python-разработчик')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Вырезано' }))
+    expect(await screen.findByText('Ничего не вырезано')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Отобрано' }))
+    await screen.findByText('Python-разработчик')
+    expect(views).toEqual(['all', 'matched', 'skipped', 'liked'])
   })
 })

@@ -32,7 +32,7 @@ type Props = {
 
 /** Recruiter's feed card. Contacts are never shown here: only after an accepted invitation. */
 export function CandidateMatchCard({ match, actions }: Props) {
-  const { candidate, matchScore, profileStrength, reasons } = match
+  const { candidate, matchScore, profileStrength, reasons, matched } = match
   const best = bestResult(candidate.fspAchievements)
 
   return (
@@ -45,6 +45,9 @@ export function CandidateMatchCard({ match, actions }: Props) {
           <div className="match-card__titles">
             <h3 className="match-card__title">{candidate.displayName}</h3>
             {candidate.headline && <p className="match-card__eyebrow">{candidate.headline}</p>}
+            {matched && (
+              <p className="match-card__matched">Взаимно: кандидат отметил вашу вакансию</p>
+            )}
           </div>
         </div>
         <div className="match-card__meters">

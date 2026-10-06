@@ -29,8 +29,14 @@ export type VacancyDto = {
 
 export type Reaction = 'like' | 'skip'
 
-/** Which cards a feed returns: all except hidden, not decided yet (swipes) or favourites. */
-export type FeedView = 'all' | 'unseen' | 'liked'
+/**
+ * Which cards a feed returns: everything except skipped ones, the ones not decided on yet
+ * (swipe deck), or one of the lists of the user's own decisions. `matched` = liked and liked back.
+ */
+export type FeedView = 'all' | 'unseen' | 'liked' | 'matched' | 'skipped'
+
+/** Sizes of the three decision lists. */
+export type ReactionCountsDto = { liked: number; matched: number; skipped: number }
 
 /** One card of the candidate's feed with the explanation of its position. */
 export type VacancyMatchDto = {
@@ -39,6 +45,8 @@ export type VacancyMatchDto = {
   matchScore: number | null
   reasons: string[]
   reaction: Reaction | null
+  /** Mutual interest: the vacancy is liked and its recruiter liked the candidate back. */
+  matched: boolean
 }
 
 export type FeedBasisDto = {
@@ -73,6 +81,7 @@ export const vacancyKeys = {
   list: (params: VacancyListParams) => [...vacancyKeys.all, 'list', params] as const,
   feed: (params: VacancyFeedParams) => [...vacancyKeys.all, 'feed', params] as const,
   mine: () => [...vacancyKeys.all, 'mine'] as const,
+  reactionCounts: () => [...vacancyKeys.all, 'reaction-counts'] as const,
   detail: (id: string) => [...vacancyKeys.all, 'detail', id] as const,
 }
 
@@ -89,6 +98,13 @@ export const vacancyQueries = {
       queryKey: vacancyKeys.feed(params),
       queryFn: ({ signal }) =>
         http.get<VacancyFeedDto>('/vacancies/feed', { query: params, signal }),
+    }),
+  /** Candidate: how many vacancies are liked, matched and skipped. */
+  reactionCounts: () =>
+    queryOptions({
+      queryKey: vacancyKeys.reactionCounts(),
+      queryFn: ({ signal }) =>
+        http.get<ReactionCountsDto>('/vacancies/reactions/counts', { signal }),
     }),
   /** Employer's own vacancies (drafts included): the context for hiring by fit. */
   mine: () =>

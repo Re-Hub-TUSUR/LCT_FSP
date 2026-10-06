@@ -10,7 +10,7 @@ from app.models import CandidateProfile, ReactionKind, User, VacancyReaction, Wo
 from app.repositories.candidate import CandidateRepository
 from app.repositories.reaction import ReactionFilter, ReactionRepository
 from app.repositories.vacancy import VacancyRepository, VacancyRow
-from app.schemas.reaction import FeedView
+from app.schemas.reaction import FeedView, ReactionCounts
 from app.schemas.vacancy import FeedBasis, VacancyFeedPage, VacancyMatch
 from app.services.matching import (
     CandidateFacts,
@@ -28,6 +28,13 @@ from app.services.presenters import profile_category, vacancy_read
 _EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 
 Reactions = Mapping[uuid.UUID, VacancyReaction]
+
+# Lists of the user's own decisions: which reaction each of them is built from.
+_DECIDED: dict[FeedView, ReactionKind] = {
+    "liked": ReactionKind.LIKE,
+    "matched": ReactionKind.LIKE,
+    "skipped": ReactionKind.SKIP,
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,14 +78,17 @@ class VacancyFeedService:
         if candidate is not None and (candidate.specialization is None or candidate.grade is None):
             candidate = None  # no category yet: nothing to personalise by
         reactions = await self._reactions.for_vacancies(user.id)
+        matched = await self._matched(user, profile)
 
         rows = await self._load(user, candidate, view, filters)
+        if view == "matched":
+            rows = [row for row in rows if row[0].id in matched]
         ranked = [_Ranked(row, self._fit(candidate, row, now)) for row in rows]
         ordered = self._order(ranked, view, reactions)
 
         start = pagination.offset
         items = [
-            self._match(item, candidate, reactions, now)
+            self._match(item, candidate, reactions, matched, now)
             for item in ordered[start : start + pagination.per_page]
         ]
         return VacancyFeedPage.build(
@@ -90,6 +100,37 @@ class VacancyFeedService:
             basis=self._basis(profile),
         )
 
+    async def counts(self, user: User) -> ReactionCounts:
+        """Sizes of the lists `liked`, `matched` and `skipped` as the feed would show them."""
+        profile = await self._candidates.get_by_user(user.id)
+        matched = await self._matched(user, profile)
+        liked = await self._decided(user, ReactionKind.LIKE)
+        skipped = await self._decided(user, ReactionKind.SKIP)
+        return ReactionCounts(
+            liked=len(liked),
+            matched=sum(row[0].id in matched for row in liked),
+            skipped=len(skipped),
+        )
+
+    async def _matched(self, user: User, profile: CandidateProfile | None) -> set[uuid.UUID]:
+        # Recruiters like profiles: without one nobody could have liked this account back.
+        if profile is None:
+            return set()
+        return await self._reactions.matched_vacancy_ids(
+            candidate_user_id=user.id, candidate_id=profile.id
+        )
+
+    async def _decided(
+        self, user: User, kind: ReactionKind, filters: VacancyFeedFilters | None = None
+    ) -> list[VacancyRow]:
+        """Published vacancies the user reacted to this way, whatever the profile says now."""
+        filters = filters or VacancyFeedFilters()
+        return await self._vacancies.published(
+            work_formats=filters.work_formats,
+            salary_min=filters.salary_min,
+            reactions=ReactionFilter(user.id, (kind,), include=True),
+        )
+
     async def _load(
         self,
         user: User,
@@ -97,13 +138,8 @@ class VacancyFeedService:
         view: FeedView,
         filters: VacancyFeedFilters,
     ) -> list[VacancyRow]:
-        if view == "liked":
-            # Favourites stay visible whatever the profile says now.
-            return await self._vacancies.published(
-                work_formats=filters.work_formats,
-                salary_min=filters.salary_min,
-                reactions=ReactionFilter(user.id, (ReactionKind.LIKE,), include=True),
-            )
+        if view in _DECIDED:
+            return await self._decided(user, _DECIDED[view], filters)
 
         # The feed hides skipped cards; the swipe deck hides everything already decided on.
         hidden = (ReactionKind.SKIP,) if view == "all" else tuple(ReactionKind)
@@ -132,8 +168,8 @@ class VacancyFeedService:
 
     @staticmethod
     def _order(ranked: Sequence[_Ranked], view: FeedView, reactions: Reactions) -> list[_Ranked]:
-        if view == "liked":
-            # Most recently liked first.
+        if view in _DECIDED:
+            # The latest decision first.
             return sorted(
                 ranked,
                 key=lambda item: (
@@ -153,7 +189,11 @@ class VacancyFeedService:
 
     @staticmethod
     def _match(
-        item: _Ranked, candidate: CandidateFacts | None, reactions: Reactions, now: datetime
+        item: _Ranked,
+        candidate: CandidateFacts | None,
+        reactions: Reactions,
+        matched: set[uuid.UUID],
+        now: datetime,
     ) -> VacancyMatch:
         vacancy, company = item.row
         reaction = reactions.get(vacancy.id)
@@ -165,6 +205,7 @@ class VacancyFeedService:
             match_score=item.fit.score if item.fit else None,
             reasons=reasons,
             reaction=reaction.kind if reaction else None,
+            matched=vacancy.id in matched,
         )
 
     @staticmethod

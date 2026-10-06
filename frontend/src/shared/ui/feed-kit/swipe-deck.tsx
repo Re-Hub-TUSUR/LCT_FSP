@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
-import type { PointerEvent, ReactNode } from 'react'
-import { BurnDissolve } from './burn-dissolve'
-import { FilmBurn } from './film-burn'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react'
+import { EditorMark } from './editor-mark'
 import heartUrl from './icons/heart.png'
 import heartBrokenUrl from './icons/heart-broken.png'
+import { ReelEngine } from './reel-engine'
+import type { SwipeDecision } from './reel-engine'
 import './feed-kit.css'
 
-export type SwipeDecision = 'like' | 'skip'
+export type { SwipeDecision }
 
 type Props<T> = {
   items: T[]
@@ -18,23 +19,26 @@ type Props<T> = {
   empty: ReactNode
 }
 
-const THRESHOLD = 96
-const DRAG_START = 6
-const TRAVEL_MS = 1080
-const DEVELOP_MS = 420
-const COOLDOWN_MS = 2000
-/**
- * Five frames, each 75% of the gate, so the track is 375% wide.
- * Rest leaves 12.5% of a frame on each side. The spare frame on the left
- * stays in view when the strip rewinds right.
- */
-const REST_SHIFT = '-36.6667%'
-
-type Phase = 'idle' | 'develop' | SwipeDecision
+function Frame({ children }: { children?: ReactNode }) {
+  return (
+    <div className="reel__cell" aria-hidden="true">
+      <div className="reel__holes" />
+      <div className="reel__window">
+        {children ? <div className="reel__card reel__card--side">{children}</div> : null}
+      </div>
+      <div className="reel__holes" />
+    </div>
+  )
+}
 
 /**
- * Flat film gate. Skip carries the strip left and dissolves the card.
- * Like rewinds the strip right under a slow film burn. The arriving text just unblurs.
+ * A strip of film in a gate: the current card is the frame in the middle.
+ *
+ * Skipping burns the frame and runs the strip left; liking gets the frame circled and ticked
+ * by the editor's pencil and rewinds the strip right; the next frame then develops. The card
+ * follows the pointer, and arrow keys and the two buttons decide as well.
+ *
+ * Everything that moves is driven by `ReelEngine`, outside React.
  */
 export function SwipeDeck<T>({
   items,
@@ -45,64 +49,99 @@ export function SwipeDeck<T>({
   skipLabel,
   empty,
 }: Props<T>) {
-  const [offset, setOffset] = useState(0)
-  const [dragging, setDragging] = useState(false)
-  const [phase, setPhase] = useState<Phase>('idle')
-  const [locked, setLocked] = useState(false)
-  const start = useRef<number | null>(null)
-  const drag = useRef(0)
-  const trackRef = useRef<HTMLDivElement>(null)
-  const lockedRef = useRef(false)
+  const [busy, setBusy] = useState(false)
   const current = items[0]
   const next = items[1]
-  const traveling = phase === 'skip' || phase === 'like'
-  const blocked = phase !== 'idle' || locked
+  const key = current ? getKey(current) : null
 
-  const armCooldown = () => {
-    lockedRef.current = true
-    setLocked(true)
-    window.setTimeout(() => {
-      lockedRef.current = false
-      setLocked(false)
-    }, COOLDOWN_MS)
-  }
+  const gate = useRef<HTMLDivElement>(null)
+  const track = useRef<HTMLDivElement>(null)
+  const frame = useRef<HTMLDivElement>(null)
+  const card = useRef<HTMLDivElement>(null)
+  const grain = useRef<HTMLDivElement>(null)
+  const fx = useRef<HTMLCanvasElement>(null)
+  const embers = useRef<HTMLCanvasElement>(null)
+  const markSvg = useRef<SVGSVGElement>(null)
+  const markCircle = useRef<SVGPathElement>(null)
+  const markCheck = useRef<SVGPathElement>(null)
+  const markNib = useRef<SVGCircleElement>(null)
+  const skipButton = useRef<HTMLButtonElement>(null)
+  const skipRing = useRef<HTMLSpanElement>(null)
+  const skipIcon = useRef<HTMLImageElement>(null)
+  const likeButton = useRef<HTMLButtonElement>(null)
+  const likeRing = useRef<HTMLSpanElement>(null)
+  const likeIcon = useRef<HTMLImageElement>(null)
 
-  const commit = (decision: SwipeDecision) => {
-    if (!current || phase !== 'idle' || lockedRef.current) return
-    armCooldown()
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduce) {
-      onDecide(current, decision)
-      drag.current = 0
-      setOffset(0)
-      return
+  // The decision of the engine goes to whatever card and handler the latest render had.
+  const decide = useRef<(decision: SwipeDecision) => void>(() => {})
+  useLayoutEffect(() => {
+    decide.current = (decision) => {
+      if (current) onDecide(current, decision)
     }
-    setPhase(decision)
-    window.setTimeout(() => {
-      const track = trackRef.current
-      if (track) {
-        track.style.transition = 'none'
-        track.style.transform = `translateX(${REST_SHIFT})`
-        void track.offsetWidth
-        track.style.transition = ''
-      }
-      drag.current = 0
-      setOffset(0)
-      setPhase('develop')
-      onDecide(current, decision)
-    }, TRAVEL_MS)
-    window.setTimeout(() => setPhase('idle'), TRAVEL_MS + DEVELOP_MS)
-  }
-
-  const commitRef = useRef(commit)
-  const hasItemRef = useRef(false)
-  useEffect(() => {
-    commitRef.current = commit
-    hasItemRef.current = Boolean(current)
   })
+
+  // One engine for the life of the deck; it reads the DOM through the refs on every frame.
+  const engine = useRef<ReelEngine | null>(null)
+  useLayoutEffect(() => {
+    const created = new ReelEngine({
+      elements: () => ({
+        gate: gate.current,
+        track: track.current,
+        window: frame.current,
+        card: card.current,
+        grain: grain.current,
+        fx: fx.current,
+        embers: embers.current,
+        mark:
+          markSvg.current && markCircle.current && markCheck.current && markNib.current
+            ? {
+                svg: markSvg.current,
+                circle: markCircle.current,
+                check: markCheck.current,
+                nib: markNib.current,
+              }
+            : null,
+        skip:
+          skipButton.current && skipRing.current && skipIcon.current
+            ? { button: skipButton.current, ring: skipRing.current, icon: skipIcon.current }
+            : null,
+        like:
+          likeButton.current && likeRing.current && likeIcon.current
+            ? { button: likeButton.current, ring: likeRing.current, icon: likeIcon.current }
+            : null,
+      }),
+      onBusy: (value) => setBusy(value),
+      onDecide: (decision) => decide.current(decision),
+    })
+    engine.current = created
+    created.apply()
+    return () => {
+      created.destroy()
+      engine.current = null
+    }
+  }, [])
+
+  // A new card in the middle: before the browser paints, the strip is back at rest and the
+  // frame starts to develop. Otherwise the burnt frame would flash in the centre.
+  const shownKey = useRef(key)
+  useLayoutEffect(() => {
+    if (shownKey.current === key) return
+    shownKey.current = key
+    engine.current?.afterSwap()
+  }, [key])
+
   useEffect(() => {
+    const element = gate.current
+    if (!element || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => engine.current?.resized())
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+
+  const hasCard = Boolean(current)
+  useEffect(() => {
+    if (!hasCard) return
     const onKey = (event: KeyboardEvent) => {
-      if (!hasItemRef.current) return
       if (
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement ||
@@ -112,87 +151,56 @@ export function SwipeDeck<T>({
       }
       if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return
       event.preventDefault()
-      commitRef.current(event.key === 'ArrowRight' ? 'like' : 'skip')
+      engine.current?.commit(event.key === 'ArrowRight' ? 'like' : 'skip')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [hasCard])
 
-  const bind = {
-    onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
-      if (blocked || (event.target as HTMLElement).closest('.reel__act, button, a, dialog')) return
-      start.current = event.clientX
-      setDragging(true)
-    },
-    onPointerMove: (event: PointerEvent<HTMLDivElement>) => {
-      if (start.current === null || blocked) return
-      const dx = event.clientX - start.current
-      if (Math.abs(dx) < DRAG_START) return
-      if (!event.currentTarget.hasPointerCapture?.(event.pointerId)) {
-        event.currentTarget.setPointerCapture?.(event.pointerId)
+  const pointer = current
+    ? {
+        onPointerDown: (event: ReactPointerEvent) =>
+          engine.current?.onPointerDown(event.nativeEvent),
+        onPointerMove: (event: ReactPointerEvent) =>
+          engine.current?.onPointerMove(event.nativeEvent),
+        onPointerUp: (event: ReactPointerEvent) => engine.current?.onPointerUp(event.nativeEvent),
+        onPointerCancel: () => engine.current?.onPointerCancel(),
       }
-      const nextOffset = Math.max(-180, Math.min(120, dx))
-      drag.current = nextOffset
-      setOffset(nextOffset)
-    },
-    onPointerUp: () => {
-      start.current = null
-      setDragging(false)
-      if (drag.current >= THRESHOLD) commit('like')
-      else if (drag.current <= -THRESHOLD) commit('skip')
-      else {
-        drag.current = 0
-        setOffset(0)
-      }
-    },
-    onPointerCancel: () => {
-      start.current = null
-      setDragging(false)
-      drag.current = 0
-      setOffset(0)
-    },
+    : {}
+
+  const hover = (decision: SwipeDecision | null) => (event: ReactPointerEvent) => {
+    // Touch has no hover; a finger would leave the ring enlarged.
+    if (decision && event.pointerType !== 'mouse') return
+    engine.current?.setHover(decision)
   }
-
-  const travel = `translateX(calc(${REST_SHIFT} + ${offset}px))`
-  const currentEffect =
-    phase === 'skip'
-      ? ' is-burn'
-      : phase === 'like'
-        ? ' is-warm'
-        : phase === 'develop'
-          ? ' is-develop'
-          : ''
-  const motionClass = phase === 'skip' ? ' is-advancing' : phase === 'like' ? ' is-rewinding' : ''
 
   return (
     <div className="reel">
       <div
+        ref={gate}
         className={`reel__gate${current ? '' : ' reel__gate--still'}`}
-        {...(current ? bind : {})}
+        onDragStart={(event) => event.preventDefault()}
+        {...pointer}
       >
-        <div
-          ref={trackRef}
-          className={`reel__track${dragging ? '' : ' is-settling'}${motionClass}`}
-          style={traveling ? undefined : { transform: travel }}
-        >
-          <div className="reel__cell reel__cell--pad" aria-hidden="true">
-            <div className="reel__holes" />
-            <div className="reel__window" />
-            <div className="reel__holes" />
-          </div>
-          <div className="reel__cell reel__cell--leader" aria-hidden="true">
-            <div className="reel__holes" />
-            <div className="reel__window">{next ? renderCard(next) : null}</div>
-            <div className="reel__holes" />
-          </div>
-          <div key={current ? getKey(current) : 'empty'} className={`reel__cell${currentEffect}`}>
+        <div ref={track} className="reel__track">
+          <Frame />
+          <Frame>{next ? renderCard(next) : null}</Frame>
+          <div className="reel__cell">
             <div className="reel__holes" aria-hidden="true" />
-            <div className="reel__window">
+            <div ref={frame} className="reel__window">
               {current ? (
                 <>
-                  {renderCard(current)}
-                  {phase === 'skip' ? <BurnDissolve /> : null}
-                  {phase === 'like' ? <FilmBurn /> : null}
+                  <div key={key} ref={card} className="reel__card">
+                    {renderCard(current)}
+                  </div>
+                  <div ref={grain} className="reel__grain" aria-hidden="true" />
+                  <canvas ref={fx} className="reel__fx" aria-hidden="true" />
+                  <EditorMark
+                    svgRef={markSvg}
+                    circleRef={markCircle}
+                    checkRef={markCheck}
+                    nibRef={markNib}
+                  />
                 </>
               ) : (
                 <div className="reel__placeholder" role="status">
@@ -202,41 +210,46 @@ export function SwipeDeck<T>({
             </div>
             <div className="reel__holes" aria-hidden="true" />
           </div>
-          <div className="reel__cell reel__cell--next" aria-hidden="true">
-            <div className="reel__holes" />
-            <div className="reel__window">{next ? renderCard(next) : null}</div>
-            <div className="reel__holes" />
-          </div>
-          <div className="reel__cell reel__cell--ahead" aria-hidden="true">
-            <div className="reel__holes" />
-            <div className="reel__window" />
-            <div className="reel__holes" />
-          </div>
+          <Frame>{next ? renderCard(next) : null}</Frame>
+          <Frame />
         </div>
-
-        {current ? (
-          <>
-            <button
-              type="button"
-              className="reel__act reel__act--skip"
-              onClick={() => commit('skip')}
-              disabled={blocked}
-            >
-              <img src={heartBrokenUrl} alt="" />
-              {skipLabel}
-            </button>
-            <button
-              type="button"
-              className="reel__act reel__act--like"
-              onClick={() => commit('like')}
-              disabled={blocked}
-            >
-              <img src={heartUrl} alt="" />
-              {likeLabel}
-            </button>
-          </>
-        ) : null}
+        <canvas ref={embers} className="reel__embers" aria-hidden="true" />
       </div>
+
+      {current ? (
+        <div className="reel__acts">
+          <button
+            ref={skipButton}
+            type="button"
+            className="reel__act reel__act--skip"
+            disabled={busy}
+            onClick={() => engine.current?.commit('skip')}
+            onPointerEnter={hover('skip')}
+            onPointerLeave={hover(null)}
+          >
+            <span className="reel__disc">
+              <span ref={skipRing} className="reel__ring" />
+              <img ref={skipIcon} src={heartBrokenUrl} alt="" draggable={false} />
+            </span>
+            {skipLabel}
+          </button>
+          <button
+            ref={likeButton}
+            type="button"
+            className="reel__act reel__act--like"
+            disabled={busy}
+            onClick={() => engine.current?.commit('like')}
+            onPointerEnter={hover('like')}
+            onPointerLeave={hover(null)}
+          >
+            <span className="reel__disc">
+              <span ref={likeRing} className="reel__ring" />
+              <img ref={likeIcon} src={heartUrl} alt="" draggable={false} />
+            </span>
+            {likeLabel}
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }

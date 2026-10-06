@@ -20,7 +20,12 @@ from app.schemas.candidate import (
     FspLinkRequest,
     OwnCandidateRead,
 )
-from app.schemas.reaction import CandidateReactionRequest, FeedView, ReactionRead
+from app.schemas.reaction import (
+    CandidateReactionRequest,
+    FeedView,
+    ReactionCounts,
+    ReactionRead,
+)
 from app.search.base import CandidateSort
 from app.services.candidate_search import CandidateSearchParams
 
@@ -72,6 +77,16 @@ async def search_candidates(
         sort=sort,
     )
     return await search.search(user, params, pagination)
+
+
+@router.get(
+    "/reactions/counts",
+    summary="Employer: how many candidates are liked, matched and skipped",
+)
+async def candidate_reaction_counts(
+    user: EmployerUser, search: CandidateSearchServiceDep
+) -> ReactionCounts:
+    return await search.counts(user)
 
 
 @router.get("/me", summary="Own candidate profile")

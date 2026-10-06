@@ -140,6 +140,19 @@
   white-space: pre-line;
 }
 
+/* Mutual interest: the one mark worth a colour of its own. */
+.match-card__matched {
+  align-self: flex-start;
+  margin: 0;
+  padding: 4px 8px;
+  border: 1px solid #3dcc8a;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7be3b4;
+}
+
 .match-card__more {
   padding: 0;
   border: 0;
@@ -165,52 +178,142 @@
   flex: none;
 }
 
+/* ── Vacancy sheet («Изучить подробнее») ───────────── */
+/* Fits the screen and never scrolls: two columns, type that follows the window height, and a
+   fade for a description that is still too long. */
+
 .vacancy-dossier {
-  width: min(560px, calc(100vw - 32px));
-  max-height: min(78svh, 680px);
+  width: min(980px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
   margin: auto;
-  padding: 28px 28px 24px;
-  overflow: auto;
+  padding: clamp(18px, 3.2vh, 32px) clamp(18px, 2.6vw, 34px);
+  overflow: hidden;
   border: 1px solid var(--line);
   background: #10121c;
   color: var(--text);
+  /* Everything inside is sized in em: a lower window gets smaller type instead of a scrollbar. */
+  font-size: clamp(13px, 1.9vh, 16px);
+  /* It opens from a film frame where text selection is off. */
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* `[open]`: a closed dialog must stay `display: none`. */
+.vacancy-dossier[open] {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: clamp(18px, 3vw, 40px);
 }
 
 .vacancy-dossier::backdrop {
   background: rgba(5, 6, 13, 0.72);
 }
 
+.vacancy-dossier__side,
+.vacancy-dossier__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.vacancy-dossier__side {
+  gap: 0.85em;
+}
+
 .vacancy-dossier__head {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: baseline;
   gap: 16px;
-  margin-bottom: 16px;
 }
 
 .vacancy-dossier__title {
-  margin: 6px 0 0;
+  margin: 0;
   font-family: var(--font-display);
   font-weight: 300;
-  font-size: 32px;
+  font-size: clamp(22px, 3.6vh, 32px);
   line-height: 1.1;
 }
 
-.vacancy-dossier__text {
-  margin: 16px 0 0;
-  font-weight: 300;
-  line-height: 1.55;
-  white-space: pre-line;
+.vacancy-dossier .match-card__stack {
+  flex-wrap: wrap;
 }
 
-.vacancy-dossier__status,
-.vacancy-dossier__meta,
-.vacancy-dossier__link {
-  margin: 14px 0 0;
+/* The company closes the column; its description never takes more than three lines. */
+.vacancy-dossier__company {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin-top: auto;
+  padding-top: 0.9em;
+  border-top: 1px solid var(--line);
+}
+
+.vacancy-dossier__about {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-weight: 300;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
+.vacancy-dossier__meta {
+  margin: 0;
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.08em;
+  overflow-wrap: anywhere;
   color: var(--text-dim);
+}
+
+.vacancy-dossier__body {
+  gap: 0.8em;
+}
+
+.vacancy-dossier__body.is-clipped {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 3.5em), transparent);
+}
+
+.vacancy-dossier__text {
+  flex: none;
+  margin: 0;
+  font-weight: 300;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+@media (max-width: 720px) {
+  .vacancy-dossier {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    padding: 16px;
+    font-size: clamp(12.5px, 1.75vh, 15px);
+  }
+
+  /* One column: the facts keep their height, the description takes what is left. */
+  .vacancy-dossier[open] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .vacancy-dossier__side {
+    gap: 0.7em;
+  }
+
+  .vacancy-dossier__company {
+    margin-top: 0;
+  }
+
+  .vacancy-dossier__about {
+    -webkit-line-clamp: 2;
+  }
 }
 
 .match-card__actions {

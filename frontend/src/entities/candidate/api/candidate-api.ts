@@ -3,7 +3,12 @@ import { http } from '@/shared/api'
 import type { Paginated, PaginationParams } from '@/shared/api'
 import type { AssessmentStatus } from '@/entities/assessment/@x/candidate'
 import type { CategoryDto, Grade, SpecializationCode } from '@/entities/category/@x/candidate'
-import type { FeedView, Reaction, WorkFormat } from '@/entities/vacancy/@x/candidate'
+import type {
+  FeedView,
+  Reaction,
+  ReactionCountsDto,
+  WorkFormat,
+} from '@/entities/vacancy/@x/candidate'
 
 export type FspDiscipline = 'algorithmic' | 'product' | 'security' | 'robotics' | 'uav'
 
@@ -85,6 +90,8 @@ export type CandidateMatchDto = {
   profileStrength: number
   reasons: string[]
   reaction: Reaction | null
+  /** Mutual interest: the recruiter liked the candidate, who liked a vacancy of the company. */
+  matched: boolean
 }
 
 export type CandidateSearchDto = Paginated<CandidateMatchDto> & {
@@ -113,6 +120,7 @@ export const candidateKeys = {
   detail: (id: string) => [...candidateKeys.all, 'detail', id] as const,
   mine: () => [...candidateKeys.all, 'mine'] as const,
   search: (params: CandidateSearchParams) => [...candidateKeys.all, 'search', params] as const,
+  reactionCounts: () => [...candidateKeys.all, 'reaction-counts'] as const,
 }
 
 export const candidateQueries = {
@@ -121,6 +129,13 @@ export const candidateQueries = {
       queryKey: candidateKeys.detail(id),
       queryFn: ({ signal }) => http.get<CandidateDto>(`/candidates/${id}`, { signal }),
       enabled: Boolean(id),
+    }),
+  /** Employer: how many candidates are liked, matched and skipped. */
+  reactionCounts: () =>
+    queryOptions({
+      queryKey: candidateKeys.reactionCounts(),
+      queryFn: ({ signal }) =>
+        http.get<ReactionCountsDto>('/candidates/reactions/counts', { signal }),
     }),
   /** Recruiter's search over the categorised bank (Elasticsearch on the backend). */
   search: (params: CandidateSearchParams) =>

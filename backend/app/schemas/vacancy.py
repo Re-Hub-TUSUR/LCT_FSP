@@ -44,6 +44,8 @@ class VacancyMatch(ApiModel):
     match_score: float | None
     reasons: list[str]
     reaction: ReactionKind | None
+    # Mutual interest: the candidate liked the vacancy and its recruiter liked the candidate.
+    matched: bool = False
 
 
 class FeedBasis(ApiModel):

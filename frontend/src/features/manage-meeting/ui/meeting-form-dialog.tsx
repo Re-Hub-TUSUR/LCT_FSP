@@ -80,7 +80,7 @@ function CandidatePicker({ onPick, error }: { onPick: (c: Picked) => void; error
           Все
         </Chip>
         <Chip active={likedOnly} onClick={() => setLikedOnly(true)}>
-          Избранное
+          Отобранные
         </Chip>
       </div>
       <ul className="meeting-picker__list" aria-label="Найденные кандидаты">
@@ -107,7 +107,7 @@ function CandidatePicker({ onPick, error }: { onPick: (c: Picked) => void; error
       )}
       {found.data?.items.length === 0 && (
         <p className="meeting-form__status">
-          {likedOnly ? 'В избранном никого нет' : 'Никого не нашли'}
+          {likedOnly ? 'Среди отобранных никого нет' : 'Никого не нашли'}
         </p>
       )}
     </div>

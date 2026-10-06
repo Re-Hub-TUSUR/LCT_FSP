@@ -2,10 +2,17 @@ import uuid
 from collections.abc import Collection
 from dataclasses import dataclass
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import CandidateReaction, ReactionKind, Vacancy, VacancyReaction
+from app.models import (
+    CandidateProfile,
+    CandidateReaction,
+    Company,
+    ReactionKind,
+    Vacancy,
+    VacancyReaction,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,6 +72,45 @@ class ReactionRepository:
             .limit(1)
         )
         return liked_by_candidate is not None
+
+    async def matched_vacancy_ids(
+        self, *, candidate_user_id: uuid.UUID, candidate_id: uuid.UUID
+    ) -> set[uuid.UUID]:
+        """Vacancies the candidate liked whose company's recruiter liked the candidate."""
+        result = await self._session.scalars(
+            select(VacancyReaction.vacancy_id)
+            .join(Vacancy, Vacancy.id == VacancyReaction.vacancy_id)
+            .join(Company, Company.id == Vacancy.company_id)
+            .join(CandidateReaction, CandidateReaction.user_id == Company.owner_id)
+            .where(
+                VacancyReaction.user_id == candidate_user_id,
+                VacancyReaction.kind == ReactionKind.LIKE,
+                CandidateReaction.candidate_id == candidate_id,
+                CandidateReaction.kind == ReactionKind.LIKE,
+            )
+        )
+        return set(result)
+
+    async def matched_candidate_ids(
+        self, *, recruiter_id: uuid.UUID, company_id: uuid.UUID
+    ) -> set[uuid.UUID]:
+        """Candidates the recruiter liked who liked at least one vacancy of the company."""
+        liked_back = exists().where(
+            VacancyReaction.user_id == CandidateProfile.user_id,
+            VacancyReaction.kind == ReactionKind.LIKE,
+            VacancyReaction.vacancy_id == Vacancy.id,
+            Vacancy.company_id == company_id,
+        )
+        result = await self._session.scalars(
+            select(CandidateReaction.candidate_id)
+            .join(CandidateProfile, CandidateProfile.id == CandidateReaction.candidate_id)
+            .where(
+                CandidateReaction.user_id == recruiter_id,
+                CandidateReaction.kind == ReactionKind.LIKE,
+                liked_back,
+            )
+        )
+        return set(result)
 
     async def set_for_vacancy(
         self, user_id: uuid.UUID, vacancy_id: uuid.UUID, kind: ReactionKind

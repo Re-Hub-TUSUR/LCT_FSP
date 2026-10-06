@@ -36,13 +36,7 @@ type Props = {
   likeLabel?: string
 }
 
-export function ReactionButtons({
-  target,
-  id,
-  initial,
-  vacancyId,
-  likeLabel = 'В избранное',
-}: Props) {
+export function ReactionButtons({ target, id, initial, vacancyId, likeLabel = 'Отобрать' }: Props) {
   const [reaction, setReaction] = useState<Reaction | null>(initial)
   const mutation = useReaction()
 
@@ -60,7 +54,7 @@ export function ReactionButtons({
         className={`reaction-buttons__btn reaction-buttons__btn--like${reaction === 'like' ? ' is-on' : ''}`}
         onClick={() => toggle('like')}
       >
-        {reaction === 'like' ? '★ В избранном' : `☆ ${likeLabel}`}
+        {reaction === 'like' ? '★ Отобрано' : `☆ ${likeLabel}`}
       </button>
       <button
         type="button"
@@ -68,7 +62,7 @@ export function ReactionButtons({
         className={`reaction-buttons__btn${reaction === 'skip' ? ' is-on' : ''}`}
         onClick={() => toggle('skip')}
       >
-        {reaction === 'skip' ? 'Скрыто · вернуть' : 'Не интересно'}
+        {reaction === 'skip' ? 'Вырезано · вернуть' : 'Не интересно'}
       </button>
     </div>
   )

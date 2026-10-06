@@ -68,6 +68,8 @@ class CandidateMatch(ApiModel):
     profile_strength: float
     reasons: list[str]
     reaction: ReactionKind | None
+    # Mutual interest: the recruiter liked the candidate, who liked a vacancy of the company.
+    matched: bool = False
 
 
 SearchEngine = Literal["elasticsearch", "database"]

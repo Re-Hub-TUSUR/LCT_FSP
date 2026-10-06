@@ -13,7 +13,7 @@ from app.dependencies.services import (
 )
 from app.models.enums import Grade, WorkFormat
 from app.schemas.common import Page
-from app.schemas.reaction import FeedView, ReactionRead, ReactionRequest
+from app.schemas.reaction import FeedView, ReactionCounts, ReactionRead, ReactionRequest
 from app.schemas.vacancy import VacancyCreate, VacancyFeedPage, VacancyRead
 from app.services.vacancy_feed import VacancyFeedFilters
 
@@ -44,8 +44,9 @@ async def list_vacancies(
     summary="Candidate: relevant vacancies ranked by fit to the profile, with reasons",
     description=(
         "Only the candidate's and related specializations, the same or a neighbouring grade. "
-        "`view=all` hides skipped cards, `unseen` hides every decided card (swipe deck), "
-        "`liked` returns favourites."
+        "`view=all` hides skipped cards, `unseen` hides every decided card (swipe deck). "
+        "`liked`, `matched` and `skipped` are the candidate's own decisions, the latest first, "
+        "whatever the profile says now; `matched` = liked and liked back by the recruiter."
     ),
 )
 async def vacancy_feed(
@@ -59,6 +60,16 @@ async def vacancy_feed(
 ) -> VacancyFeedPage:
     filters = VacancyFeedFilters(work_formats=tuple(work_format or ()), salary_min=salary_min)
     return await feed.feed(user, view=view, filters=filters, pagination=pagination)
+
+
+@router.get(
+    "/reactions/counts",
+    summary="Candidate: how many vacancies are liked, matched and skipped",
+)
+async def vacancy_reaction_counts(
+    user: CandidateUser, feed: VacancyFeedServiceDep
+) -> ReactionCounts:
+    return await feed.counts(user)
 
 
 @router.get("/mine", summary="Employer: own company's vacancies, drafts first")

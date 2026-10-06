@@ -1,7 +1,7 @@
 import { useSession } from '@/entities/session'
 import { Page } from '@/shared/ui'
 import { CandidateFeed } from '@/widgets/candidate-feed'
-import { CandidateSwipe, VacancySwipe } from '@/widgets/feed-swipe'
+import { CandidateSwipe, DecisionCounters, VacancySwipe } from '@/widgets/feed-swipe'
 import { VacancyFeed } from '@/widgets/vacancy-feed'
 
 export function FeedPage() {
@@ -31,6 +31,7 @@ export function FeedSwipePage() {
       className="page--swipe"
       title={employer ? 'Подбор свайпами' : 'Вакансии свайпами'}
       lead="Вправо — интересно, влево — пропустить. Клавиши ← и → тоже работают"
+      actions={<DecisionCounters role={employer ? 'employer' : 'candidate'} />}
     >
       {employer ? <CandidateSwipe /> : <VacancySwipe />}
     </Page>

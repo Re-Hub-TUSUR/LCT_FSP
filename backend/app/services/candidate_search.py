@@ -12,7 +12,7 @@ from app.repositories.company import CompanyRepository
 from app.repositories.reaction import ReactionRepository, ids_with
 from app.repositories.vacancy import VacancyRepository
 from app.schemas.candidate import CandidateMatch, CandidateSearchPage, SearchEngine
-from app.schemas.reaction import FeedView
+from app.schemas.reaction import FeedView, ReactionCounts
 from app.search.base import CandidateSearchQuery, CandidateSort, SearchHits, SearchUnavailableError
 from app.search.database import DatabaseCandidateSearch
 from app.search.elastic import ElasticCandidateSearch, ElasticErrors, ElasticSearchState
@@ -61,7 +61,8 @@ class CandidateSearchService:
     ) -> CandidateSearchPage:
         vacancy = await self._own_vacancy(user, params.vacancy_id)
         reactions = await self._reactions.for_candidates(user.id)
-        query = self._query(params, vacancy, reactions)
+        matched = await self._matched(user)
+        query = self._query(params, vacancy, reactions, matched)
 
         engine, hits = await self._run(query, pagination)
         profiles = await self._candidates.by_ids(hits.ids)
@@ -82,6 +83,7 @@ class CandidateSearchService:
                         facts, result, vacancy=vacancy, stack_filter=params.stack
                     ),
                     reaction=reaction.kind if reaction else None,
+                    matched=candidate_id in matched,
                 )
             )
         return CandidateSearchPage.build(
@@ -90,6 +92,29 @@ class CandidateSearchService:
             page=pagination.page,
             per_page=pagination.per_page,
             engine=engine,
+        )
+
+    async def counts(self, user: User) -> ReactionCounts:
+        """Sizes of the lists `liked`, `matched` and `skipped` as the search would show them."""
+        reactions = await self._reactions.for_candidates(user.id)
+        matched = await self._matched(user)
+
+        async def shown(ids: tuple[uuid.UUID, ...]) -> int:
+            # Hidden and uncategorised profiles never appear in a list, so they do not count.
+            return len(await self._candidates.searchable(include_ids=ids)) if ids else 0
+
+        return ReactionCounts(
+            liked=await shown(ids_with(reactions, (ReactionKind.LIKE,))),
+            matched=await shown(tuple(matched)),
+            skipped=await shown(ids_with(reactions, (ReactionKind.SKIP,))),
+        )
+
+    async def _matched(self, user: User) -> set[uuid.UUID]:
+        company = await self._companies.get_by_owner(user.id)
+        if company is None:
+            return set()
+        return await self._reactions.matched_candidate_ids(
+            recruiter_id=user.id, company_id=company.id
         )
 
     async def _own_vacancy(self, user: User, vacancy_id: uuid.UUID | None) -> VacancyFacts | None:
@@ -106,6 +131,7 @@ class CandidateSearchService:
         params: CandidateSearchParams,
         vacancy: VacancyFacts | None,
         reactions: dict[uuid.UUID, CandidateReaction],
+        matched: set[uuid.UUID],
     ) -> CandidateSearchQuery:
         query = CandidateSearchQuery(
             text=params.text.strip() if params.text and params.text.strip() else None,
@@ -121,8 +147,13 @@ class CandidateSearchService:
             vacancy=vacancy,
             sort=params.sort,
         )
+        # Lists of the recruiter's own decisions.
         if params.view == "liked":
             return replace(query, include_ids=ids_with(reactions, (ReactionKind.LIKE,)))
+        if params.view == "skipped":
+            return replace(query, include_ids=ids_with(reactions, (ReactionKind.SKIP,)))
+        if params.view == "matched":
+            return replace(query, include_ids=tuple(matched))
         # The feed hides skipped candidates; the swipe deck hides everyone already decided on.
         hidden = (ReactionKind.SKIP,) if params.view == "all" else tuple(ReactionKind)
         return replace(query, exclude_ids=ids_with(reactions, hidden))

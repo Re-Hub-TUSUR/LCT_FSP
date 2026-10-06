@@ -238,6 +238,102 @@ async def test_recruiter_favourites(client: AsyncClient, data: SeedData) -> None
     assert [item["candidate"]["id"] for item in favourites["items"]] == [liked]
 
 
+# --- lists of own decisions: liked, matched, skipped ---------------------------------------------
+
+
+async def test_decisions_are_listed_by_kind_and_counted(
+    client: AsyncClient, data: SeedData
+) -> None:
+    candidate = await login(client, DEMO_CANDIDATE_EMAIL)
+    employer = await login(client, DEMO_EMPLOYER_EMAIL)
+    demo_id = str(seed_id("candidate", data.candidates[0].key))
+    mine = await get(client, "/vacancies/mine", employer, perPage=100)
+    own = [item["id"] for item in mine["items"] if item["publishedAt"]]
+    foreign = str(seed_id("vacancy", "korzinka-01"))
+    feed = await get(client, "/vacancies/feed", candidate, perPage=100)
+    skipped = next(
+        item["vacancy"]["id"] for item in feed["items"] if item["vacancy"]["id"] not in own
+    )
+
+    async def react(token: str, path: str, kind: str) -> None:
+        response = await client.put(
+            f"{API}{path}/reaction", json={"kind": kind}, headers=bearer(token)
+        )
+        assert response.status_code == 200, response.text
+
+    # The candidate likes a vacancy of the demo company and one of another, and skips a third.
+    await react(candidate, f"/vacancies/{own[0]}", "like")
+    await react(candidate, f"/vacancies/{foreign}", "like")
+    await react(candidate, f"/vacancies/{skipped}", "skip")
+
+    async def ids(view: str) -> list[str]:
+        page = await get(client, "/vacancies/feed", candidate, view=view, perPage=100)
+        return [item["vacancy"]["id"] for item in page["items"]]
+
+    assert set(await ids("liked")) == {own[0], foreign}
+    assert await ids("skipped") == [skipped]
+    # Nobody has liked the candidate back yet.
+    assert await ids("matched") == []
+    assert await get(client, "/vacancies/reactions/counts", candidate) == {
+        "liked": 2,
+        "matched": 0,
+        "skipped": 1,
+    }
+
+    # The recruiter of the demo company likes the candidate: one of the two likes is mutual.
+    await react(employer, f"/candidates/{demo_id}", "like")
+    liked = await get(client, "/vacancies/feed", candidate, view="liked", perPage=100)
+
+    assert await ids("matched") == [own[0]]
+    assert {item["vacancy"]["id"]: item["matched"] for item in liked["items"]} == {
+        own[0]: True,
+        foreign: False,
+    }
+    assert (await get(client, "/vacancies/reactions/counts", candidate))["matched"] == 1
+
+    # The same match from the recruiter's side.
+    for view in ("liked", "matched"):
+        found = await get(client, "/candidates", employer, view=view)
+        assert [(i["candidate"]["id"], i["matched"]) for i in found["items"]] == [(demo_id, True)]
+    assert await get(client, "/candidates/reactions/counts", employer) == {
+        "liked": 1,
+        "matched": 1,
+        "skipped": 0,
+    }
+
+    # A skipped card comes back to the feed once the decision is undone.
+    undo = await client.delete(f"{API}/vacancies/{skipped}/reaction", headers=bearer(candidate))
+    assert undo.status_code == 204
+    assert await ids("skipped") == []
+    assert skipped in await ids("all")
+
+
+async def test_recruiter_sees_skipped_candidates_and_can_restore_them(
+    client: AsyncClient, data: SeedData
+) -> None:
+    employer = await login(client, DEMO_EMPLOYER_EMAIL)
+    candidate = await login(client, DEMO_CANDIDATE_EMAIL)
+    first, second = (await get(client, "/candidates", employer, perPage=2))["items"]
+    liked, skipped = first["candidate"]["id"], second["candidate"]["id"]
+    for candidate_id, kind in ((liked, "like"), (skipped, "skip")):
+        await client.put(
+            f"{API}/candidates/{candidate_id}/reaction",
+            json={"kind": kind},
+            headers=bearer(employer),
+        )
+
+    hidden = await get(client, "/candidates", employer, view="skipped")
+    matched = await get(client, "/candidates", employer, view="matched")
+    counts = await get(client, "/candidates/reactions/counts", employer)
+    by_candidate = await client.get(f"{API}/candidates/reactions/counts", headers=bearer(candidate))
+
+    assert [item["candidate"]["id"] for item in hidden["items"]] == [skipped]
+    assert hidden["items"][0]["reaction"] == "skip"
+    assert matched["items"] == []
+    assert counts == {"liked": 1, "matched": 0, "skipped": 1}
+    assert by_candidate.status_code == 403
+
+
 # --- single profile ------------------------------------------------------------------------------
 
 

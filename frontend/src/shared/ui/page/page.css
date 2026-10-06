@@ -93,6 +93,10 @@ body:has(.page--swipe) main {
   box-sizing: border-box;
 }
 
+.page--swipe .page__actions {
+  align-self: flex-end;
+}
+
 .page--swipe .page__title {
   font-size: clamp(28px, 3vw, 42px);
 }
@@ -118,6 +122,17 @@ body:has(.page--swipe) main {
 .page--swipe .reel {
   flex: 1;
   min-height: 0;
+}
+
+@media (max-width: 720px) {
+  /* One line is cut off on a phone: let the hint wrap. */
+  .page--swipe .page__lead {
+    white-space: normal;
+  }
+
+  .page--swipe .page__body {
+    padding-top: 16px;
+  }
 }
 
 .page--auth {

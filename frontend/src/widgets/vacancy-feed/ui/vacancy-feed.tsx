@@ -1,16 +1,35 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router'
 import {
+  DECISION_VIEW_LABELS,
+  DECISION_VIEWS,
+  parseListView,
   VacancyMatchCard,
   vacancyQueries,
   WORK_FORMAT_LABELS,
   WORK_FORMATS,
 } from '@/entities/vacancy'
-import type { FeedView, WorkFormat } from '@/entities/vacancy'
+import type { ListView, WorkFormat } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
 import { Chip, EmptyState, FeedSkeleton, Notice, Pagination, QueryState } from '@/shared/ui'
 
 const rub = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 })
+
+const EMPTY: Record<ListView, { title: string; text: string }> = {
+  all: { title: 'Подходящих вакансий нет', text: 'Ослабьте фильтры или загляните позже.' },
+  liked: {
+    title: 'Пока ничего не отобрано',
+    text: 'Отмечайте вакансии звёздочкой в ленте или свайпом вправо.',
+  },
+  matched: {
+    title: 'Взаимных отметок пока нет',
+    text: 'Здесь появятся отобранные вами вакансии, чьи компании отобрали вас.',
+  },
+  skipped: {
+    title: 'Ничего не вырезано',
+    text: 'Сюда попадают вакансии, которые вы пропустили. Любую можно вернуть.',
+  },
+}
 
 /**
  * Candidate's feed: only vacancies relevant to the profile, ranked by fit.
@@ -20,7 +39,7 @@ export function VacancyFeed() {
   const [params, setParams] = useSearchParams()
   const page = Math.max(1, Number(params.get('page')) || 1)
   const perPage = Number(params.get('perPage')) || 10
-  const view: FeedView = params.get('view') === 'liked' ? 'liked' : 'all'
+  const view = parseListView(params.get('view'))
   const formats = params.getAll('workFormat') as WorkFormat[]
   const salaryMin = Number(params.get('salaryMin')) || undefined
 
@@ -57,9 +76,11 @@ export function VacancyFeed() {
             <Chip active={view === 'all'} onClick={() => update({ view: null })}>
               Подходящие
             </Chip>
-            <Chip active={view === 'liked'} onClick={() => update({ view: 'liked' })}>
-              Избранное
-            </Chip>
+            {DECISION_VIEWS.map((item) => (
+              <Chip key={item} active={view === item} onClick={() => update({ view: item })}>
+                {DECISION_VIEW_LABELS[item]}
+              </Chip>
+            ))}
           </div>
         </div>
         <div className="feed__group">
@@ -107,11 +128,7 @@ export function VacancyFeed() {
         )}
         {data ? (
           data.items.length === 0 ? (
-            <EmptyState title={view === 'liked' ? 'В избранном пусто' : 'Подходящих вакансий нет'}>
-              {view === 'liked'
-                ? 'Отмечайте вакансии звёздочкой в ленте или свайпом вправо.'
-                : 'Ослабьте фильтры или загляните позже.'}
-            </EmptyState>
+            <EmptyState title={EMPTY[view].title}>{EMPTY[view].text}</EmptyState>
           ) : (
             <>
               <ol className="feed__list">
