@@ -26,7 +26,7 @@ ProfilesLoader = Callable[[], Awaitable[Sequence[CandidateProfile]]]
 
 
 def create_client(settings: Settings) -> AsyncElasticsearch:
-    # Short timeouts: when the cluster is slow the API falls back to the database instead of hanging.
+    # Short timeouts: a slow cluster falls back to the database instead of hanging.
     return AsyncElasticsearch(settings.elasticsearch_url, request_timeout=5, max_retries=1)
 
 

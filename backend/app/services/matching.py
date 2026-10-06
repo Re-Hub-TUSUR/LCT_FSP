@@ -220,7 +220,7 @@ class Fit:
 
 
 def normalize_term(value: str) -> str:
-    """Case- and «ё»-insensitive comparison of technologies and cities (as the search index does)."""
+    """Case- and «ё»-insensitive comparison, the same way the search index does it."""
     return value.lower().replace("ё", "е")
 
 
@@ -233,26 +233,56 @@ def _same_city(left: str | None, right: str | None) -> bool:
     return left is not None and right is not None and normalize_term(left) == normalize_term(right)
 
 
+def _specialization_fit(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[Relation, float]:
+    if candidate.specialization == vacancy.specialization:
+        return "same", WEIGHTS.specialization
+    related = candidate.specialization in related_specializations(vacancy.specialization)
+    if related:
+        return "related", WEIGHTS.specialization * HALF
+    return "other", 0.0
+
+
+def _grade_fit(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[int | None, float]:
+    if candidate.grade is None:
+        return None, 0.0
+    gap = GRADES.index(candidate.grade) - GRADES.index(vacancy.grade)
+    if gap == 0:
+        return gap, WEIGHTS.grade
+    if abs(gap) == 1:
+        return gap, WEIGHTS.grade * HALF
+    return gap, 0.0
+
+
+def _location_fit(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[Location, float]:
+    if vacancy.work_format == WorkFormat.REMOTE:
+        return "remote", WEIGHTS.location
+    if _same_city(candidate.city, vacancy.city):
+        return "same_city", WEIGHTS.location
+    if candidate.relocation_ready:
+        return "relocation", WEIGHTS.location * RELOCATION_SHARE
+    return "other", 0.0
+
+
+def _salary_fit(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[SalaryFit, float]:
+    expectation = candidate.salary_expectation
+    if expectation is None:
+        return "unknown", WEIGHTS.salary * HALF
+    if expectation <= vacancy.salary_to:
+        return "fits", WEIGHTS.salary
+    if expectation <= vacancy.salary_to * SALARY_TOLERANCE:
+        return "close", WEIGHTS.salary * HALF
+    return "above", 0.0
+
+
 def fit(candidate: CandidateFacts, vacancy: VacancyFacts, *, bonus: float) -> Fit:
     """How well a candidate and a vacancy suit each other; `bonus` is a 0–1 side-specific signal."""
     w = WEIGHTS
-    points = w.bonus * bonus
-
-    relation: Relation = "other"
-    if candidate.specialization == vacancy.specialization:
-        relation = "same"
-        points += w.specialization
-    elif candidate.specialization in related_specializations(vacancy.specialization):
-        relation = "related"
-        points += w.specialization * HALF
-
-    gap = None
-    if candidate.grade is not None:
-        gap = GRADES.index(candidate.grade) - GRADES.index(vacancy.grade)
-        if gap == 0:
-            points += w.grade
-        elif abs(gap) == 1:
-            points += w.grade * HALF
+    relation, specialization_points = _specialization_fit(candidate, vacancy)
+    gap, grade_points = _grade_fit(candidate, vacancy)
+    location, location_points = _location_fit(candidate, vacancy)
+    salary, salary_points = _salary_fit(candidate, vacancy)
+    points = w.bonus * bonus + specialization_points + grade_points
+    points += location_points + salary_points
 
     owned = {normalize_term(item) for item in candidate.stack}
     matched = tuple(item for item in vacancy.stack if normalize_term(item) in owned)
@@ -262,29 +292,6 @@ def fit(candidate: CandidateFacts, vacancy: VacancyFacts, *, bonus: float) -> Fi
     format_ok = vacancy.work_format in candidate.work_formats
     if format_ok:
         points += w.work_format
-
-    location: Location = "other"
-    if vacancy.work_format == WorkFormat.REMOTE:
-        location = "remote"
-        points += w.location
-    elif _same_city(candidate.city, vacancy.city):
-        location = "same_city"
-        points += w.location
-    elif candidate.relocation_ready:
-        location = "relocation"
-        points += w.location * RELOCATION_SHARE
-
-    salary: SalaryFit = "unknown"
-    if candidate.salary_expectation is None:
-        points += w.salary * HALF
-    elif candidate.salary_expectation <= vacancy.salary_to:
-        salary = "fits"
-        points += w.salary
-    elif candidate.salary_expectation <= vacancy.salary_to * SALARY_TOLERANCE:
-        salary = "close"
-        points += w.salary * HALF
-    else:
-        salary = "above"
 
     return Fit(
         points=round_points(points),
@@ -385,6 +392,39 @@ def _fsp_reason(result: FspResult) -> str:
     return f"ФСП: финал, {result.place}-е место — {details}"
 
 
+def _match_reasons(candidate: CandidateFacts, vacancy: VacancyFacts, result: Fit) -> list[str]:
+    reasons: list[str] = []
+    if result.specialization == "related" and candidate.specialization:
+        label = SPECIALIZATIONS.get(candidate.specialization, candidate.specialization)
+        reasons.append(f"Смежная специализация: {label}")
+    if result.grade_gap in (-1, 1):
+        side = "выше" if result.grade_gap == 1 else "ниже"
+        reasons.append(f"Грейд на ступень {side} вакансии")
+    if result.matched_stack:
+        reasons.append(f"Стек вакансии: {_technologies(result.matched_stack, result.stack_size)}")
+    if result.format_ok:
+        reasons.append(f"Подходит формат: {WORK_FORMAT_LABELS[vacancy.work_format].lower()}")
+    if result.location == "same_city":
+        reasons.append(f"Город вакансии: {vacancy.city}")
+    elif result.location == "relocation":
+        reasons.append("Рассматривает переезд")
+    expectation = candidate.salary_expectation
+    if result.salary == "fits" and expectation is not None:
+        reasons.append(f"Ожидания {rub(expectation)} — в пределах вилки")
+    elif result.salary == "close" and expectation is not None:
+        reasons.append(f"Ожидания {rub(expectation)} — чуть выше вилки")
+    return reasons
+
+
+def _stack_filter_reason(candidate: CandidateFacts, stack_filter: Sequence[str]) -> str | None:
+    owned = {normalize_term(item) for item in candidate.stack}
+    matched = [item for item in stack_filter if normalize_term(item) in owned]
+    if not matched:
+        return None
+    listed = ", ".join(matched[:MAX_LISTED_TECHNOLOGIES])
+    return f"Стек: {listed}"
+
+
 def candidate_reasons(
     candidate: CandidateFacts,
     result: Fit | None,
@@ -403,29 +443,9 @@ def candidate_reasons(
         reasons.append(_fsp_reason(best))
 
     if result is not None and vacancy is not None:
-        if result.specialization == "related" and candidate.specialization:
-            label = SPECIALIZATIONS.get(candidate.specialization, candidate.specialization)
-            reasons.append(f"Смежная специализация: {label}")
-        if result.grade_gap in (-1, 1):
-            side = "выше" if result.grade_gap == 1 else "ниже"
-            reasons.append(f"Грейд на ступень {side} вакансии")
-        if result.matched_stack:
-            reasons.append(
-                f"Стек вакансии: {_technologies(result.matched_stack, result.stack_size)}"
-            )
-        if result.format_ok:
-            reasons.append(f"Подходит формат: {WORK_FORMAT_LABELS[vacancy.work_format].lower()}")
-        if result.location == "same_city":
-            reasons.append(f"Город вакансии: {vacancy.city}")
-        elif result.location == "relocation":
-            reasons.append("Рассматривает переезд")
-        if result.salary == "fits" and candidate.salary_expectation is not None:
-            reasons.append(f"Ожидания {rub(candidate.salary_expectation)} — в пределах вилки")
-        elif result.salary == "close" and candidate.salary_expectation is not None:
-            reasons.append(f"Ожидания {rub(candidate.salary_expectation)} — чуть выше вилки")
+        reasons.extend(_match_reasons(candidate, vacancy, result))
     elif stack_filter:
-        owned = {normalize_term(item) for item in candidate.stack}
-        matched = [item for item in stack_filter if normalize_term(item) in owned]
-        if matched:
-            reasons.append(f"Стек: {', '.join(matched[:MAX_LISTED_TECHNOLOGIES])}")
+        stack_reason = _stack_filter_reason(candidate, stack_filter)
+        if stack_reason is not None:
+            reasons.append(stack_reason)
     return reasons[:MAX_REASONS]

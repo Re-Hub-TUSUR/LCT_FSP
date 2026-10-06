@@ -149,7 +149,7 @@
   outline-offset: 3px;
 }
 
-@supports (animation-timeline: view()) {
+@supports (animation-timeline: auto) {
   .chapter__copy {
     animation: chapter-pass linear both;
     animation-timeline: --chapter;
