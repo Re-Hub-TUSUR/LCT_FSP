@@ -61,7 +61,7 @@ describe('application routing', () => {
       }),
     )
     renderApp('/vacancies')
-    expect(await screen.findByText('Раздел ещё в разработке.')).toBeInTheDocument()
+    expect(await screen.findByText('Раздел в разработке')).toBeInTheDocument()
   })
 
   it('renders not found for unknown URLs', async () => {

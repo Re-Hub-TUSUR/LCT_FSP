@@ -3,7 +3,13 @@ from typing import Literal
 
 from pydantic import Field
 
-from app.models.enums import FspDiscipline, FspEventLevel, ReactionKind, WorkFormat
+from app.models.enums import (
+    AssessmentStatus,
+    FspDiscipline,
+    FspEventLevel,
+    ReactionKind,
+    WorkFormat,
+)
 from app.schemas.category import Category
 from app.schemas.common import ApiModel, Page
 
@@ -32,6 +38,8 @@ class CandidateRead(ApiModel):
     # False: the test was skipped and the grade in `category` is self-declared.
     grade_verified: bool
     assessment_score: float | None
+    # Three states for the employer: passed, failed, or the test was never taken.
+    assessment_status: AssessmentStatus
     stack: list[str]
     soft_skills: list[str]
     experience_years: int | None

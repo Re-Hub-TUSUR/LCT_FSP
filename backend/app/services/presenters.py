@@ -58,6 +58,7 @@ def candidate_read(
         category=profile_category(profile),
         grade_verified=profile.assessment_score is not None,
         assessment_score=profile.assessment_score,
+        assessment_status=profile.assessment_status,
         stack=list(profile.stack),
         soft_skills=list(profile.soft_skills),
         experience_years=profile.experience_years,

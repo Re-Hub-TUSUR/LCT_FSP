@@ -1,0 +1,28 @@
+.code-editor {
+  border: 1px solid var(--line-strong);
+  font-size: 14px;
+}
+
+.code-editor:focus-within {
+  border-color: var(--brand-blue);
+}
+
+.code-editor .cm-editor {
+  font-family: var(--font-mono);
+}
+
+.code-editor .cm-editor.cm-focused {
+  outline: none;
+}
+
+.code-editor__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}

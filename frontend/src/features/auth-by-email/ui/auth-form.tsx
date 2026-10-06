@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { getErrorMessage } from '@/shared/api'
 import { Button, TextField } from '@/shared/ui'
@@ -12,12 +12,19 @@ type Props = {
   role: 'candidate' | 'employer'
   initialEmail?: string
   initialMode?: AuthMode
+  onModeChange?: (mode: AuthMode) => void
   onSuccess: () => void
 }
 
 const MODE_LABELS: Record<AuthMode, string> = { 'sign-in': 'Вход', 'sign-up': 'Регистрация' }
 
-export function AuthForm({ role, initialEmail = '', initialMode = 'sign-in', onSuccess }: Props) {
+export function AuthForm({
+  role,
+  initialEmail = '',
+  initialMode = 'sign-in',
+  onModeChange,
+  onSuccess,
+}: Props) {
   const [mode, setMode] = useState<AuthMode>(initialMode)
   const [values, setValues] = useState<AuthFormValues>({
     email: initialEmail,
@@ -25,6 +32,12 @@ export function AuthForm({ role, initialEmail = '', initialMode = 'sign-in', onS
     personalDataConsent: false,
   })
   const [errors, setErrors] = useState<AuthFieldErrors>({})
+  const passwordRef = useRef<HTMLInputElement>(null)
+
+  // The email already came from the landing form: continue from the next empty field.
+  useEffect(() => {
+    if (initialEmail) passwordRef.current?.focus()
+  }, [initialEmail])
   const { submit, verification, closeVerification, finishVerification } = useAuthSubmit(
     role,
     onSuccess,
@@ -52,7 +65,10 @@ export function AuthForm({ role, initialEmail = '', initialMode = 'sign-in', onS
             role="tab"
             aria-selected={mode === item}
             className={`auth-form__tab${mode === item ? ' is-active' : ''}`}
-            onClick={() => setMode(item)}
+            onClick={() => {
+              setMode(item)
+              onModeChange?.(item)
+            }}
           >
             {MODE_LABELS[item]}
           </button>
@@ -74,6 +90,7 @@ export function AuthForm({ role, initialEmail = '', initialMode = 'sign-in', onS
           label="Пароль"
           type="password"
           autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
+          ref={passwordRef}
           value={values.password}
           error={errors.password}
           onChange={(e) => update('password', e.target.value)}

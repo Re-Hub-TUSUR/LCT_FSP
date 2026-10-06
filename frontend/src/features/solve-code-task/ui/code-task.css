@@ -1,0 +1,122 @@
+.code-task {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(24px, 3vw, 48px);
+  align-items: start;
+}
+
+.code-task__brief,
+.code-task__work {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.code-task__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(22px, 2.2vw, 30px);
+  line-height: 1.2;
+}
+
+.code-task__statement {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  line-height: 1.55;
+  white-space: pre-line;
+  color: var(--text);
+}
+
+.code-task__limit,
+.code-task__runs,
+.code-task__label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+.code-task__sample {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.code-task__sample pre {
+  max-height: 180px;
+  margin: 6px 0 0;
+  padding: 12px;
+  overflow: auto;
+  background: var(--fill-ghost-solid);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text);
+}
+
+.code-task__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.code-task__note,
+.code-task__error {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-mute);
+}
+
+.code-task__error {
+  color: var(--error);
+}
+
+.code-task__results {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.code-task__result {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.code-task__verdict {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.code-task__verdict--ok {
+  color: #7be3b4;
+}
+
+.code-task__verdict--fail {
+  color: var(--error);
+}
+
+@media (max-width: 960px) {
+  .code-task {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
-import { assessmentQueries } from '@/entities/assessment'
+import { AssessmentStatusBadge, assessmentQueries } from '@/entities/assessment'
 import { CompanyCard, companyQueries } from '@/entities/company'
 import { sessionStore, useSession } from '@/entities/session'
 import { ROLE_LABELS } from '@/entities/user'
 import { ROUTES } from '@/shared/config'
 import { formatDate } from '@/shared/lib'
 import { Button, Page, QueryState, Section } from '@/shared/ui'
+import { AssessmentBank } from '@/widgets/assessment-bank'
 import { InvitationsInbox } from '@/widgets/invitations-inbox'
 
 function CandidateProfile() {
@@ -17,15 +18,16 @@ function CandidateProfile() {
       <Section title="Категория и грейд">
         <QueryState query={status}>
           {(data) =>
-            data.grade ? (
+            data.status === 'passed' ? (
               <p>
+                <AssessmentStatusBadge status={data.status} score={data.score} />{' '}
                 {data.specialization} · {data.grade}
-                {data.nextGradeChangeAt &&
-                  ` · сменить грейд можно с ${formatDate(data.nextGradeChangeAt)}`}
+                {data.nextAttemptAt && ` · сменить грейд можно с ${formatDate(data.nextAttemptAt)}`}
               </p>
             ) : (
               <p>
-                Категория ещё не присвоена. <Link to={ROUTES.testing}>Пройти опрос и тест</Link>
+                <AssessmentStatusBadge status={data.status} /> Категория ещё не присвоена.{' '}
+                <Link to={ROUTES.testing}>Перейти к тесту</Link>
               </p>
             )
           }
@@ -51,6 +53,8 @@ function EmployerProfile() {
         <InvitationsInbox direction="outgoing" />
       </Section>
       <Link to={ROUTES.feed}>Перейти к подбору кандидатов</Link>
+      {/* Own tasks and tests of the company; assigning them to candidates is a later step. */}
+      <AssessmentBank scope="employer" />
     </>
   )
 }

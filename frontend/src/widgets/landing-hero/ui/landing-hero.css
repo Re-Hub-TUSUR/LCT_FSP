@@ -1,56 +1,26 @@
 /* ── Shell ─────────────────────────────────────────── */
 
-.hero {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  height: 100svh;
-  min-height: 640px;
+html:has(.landing) {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+.landing__film {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
   overflow: hidden;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  isolation: isolate;
-}
-
-.hero__media {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: #000;
-}
-
-.hero__video {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-
-.hero__scrim {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
   pointer-events: none;
-  background:
-    linear-gradient(
-      to right,
-      transparent 0%,
-      transparent 45%,
-      rgba(0, 0, 0, 0.45) 72%,
-      rgba(0, 0, 0, 0.72) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.55) 0%,
-      transparent 22%,
-      transparent 78%,
-      rgba(0, 0, 0, 0.65) 100%
-    );
+  background: #000;
+  --tint-alpha: 0.28;
 }
 
-/* Brand tint: recolours the video towards FSP blue without touching the darkening gradients */
-.hero__media::after {
+.landing__reel {
+  position: absolute;
+  inset: 0;
+}
+
+.landing__film::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -60,9 +30,50 @@
   pointer-events: none;
 }
 
-/* ── Right panel ───────────────────────────────────── */
+.hero {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
+  min-height: 640px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  isolation: isolate;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.hero__bar {
+  height: var(--nav-offset);
+}
+
+.hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(5, 7, 26, 0.55), transparent 16% 84%, rgba(5, 7, 26, 0.72)),
+    linear-gradient(
+      to right,
+      transparent 0%,
+      transparent 36%,
+      rgba(5, 7, 26, 0.45) 58%,
+      rgba(5, 7, 26, 0.92) 100%
+    );
+}
 
 .hero__body {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -76,7 +87,10 @@
 /* ── Legal ─────────────────────────────────────────── */
 
 .legal {
+  position: relative;
+  z-index: 1;
   border-top: 1px solid var(--line);
+  background: rgba(5, 6, 13, 0.72);
   padding: clamp(18px, 1.7vw, 30px) var(--gutter);
   padding-bottom: max(clamp(18px, 1.7vw, 30px), env(safe-area-inset-bottom));
   text-align: center;
@@ -85,13 +99,14 @@
 .legal p {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(12px, 0.82vw, 16px);
+  font-weight: 400;
+  font-size: clamp(13px, 0.82vw, 16px);
   line-height: 1.5;
-  color: var(--text-dim);
+  color: var(--text-mute);
 }
 
 .legal a {
+  position: relative;
   color: var(--text);
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -99,35 +114,55 @@
   transition: color 0.25s ease;
 }
 
+.legal a::after {
+  content: '';
+  position: absolute;
+  inset: -12px 0;
+}
+
 .legal a:hover {
   color: var(--text-dim);
 }
 
 .legal a:focus-visible {
-  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 
 /* ── Responsive ────────────────────────────────────── */
 
 @media (max-width: 720px) {
+  .hero__body {
+    justify-content: center;
+  }
+
   .hero__scrim {
     background: linear-gradient(
       to bottom,
-      rgba(0, 0, 0, 0.6) 0%,
-      rgba(0, 0, 0, 0.25) 30%,
-      rgba(0, 0, 0, 0.75) 100%
+      rgba(5, 7, 26, 0.55) 0%,
+      rgba(5, 7, 26, 0.78) 42%,
+      rgba(5, 7, 26, 0.9) 100%
     );
   }
 
-  .hero__body {
-    justify-content: center;
+  .legal p {
+    line-height: 1.9;
+  }
+
+  .legal a::after {
+    inset: -6px 0;
   }
 }
 
 @media (max-height: 640px) {
   .hero {
     min-height: 100svh;
+  }
+
+  .hero__body {
+    overflow: visible;
+    padding-top: 12px;
+    padding-bottom: 12px;
   }
 
   .legal {
@@ -143,7 +178,12 @@
 /* ── Reduced motion ────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  .hero__video {
+  html:has(.landing) {
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+  }
+
+  .film-glitch {
     display: none;
   }
 

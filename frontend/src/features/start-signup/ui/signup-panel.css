@@ -8,8 +8,8 @@
 
 .chip {
   font-family: var(--font-mono);
-  font-weight: 400;
-  font-size: clamp(11px, 0.72vw, 14px);
+  font-weight: 600;
+  font-size: clamp(12px, 0.8vw, 14px);
   letter-spacing: 0.2em;
   line-height: 1;
   text-transform: uppercase;
@@ -35,28 +35,39 @@
 .panel__tagline {
   margin: clamp(14px, 1.4vw, 24px) 0 0;
   font-family: var(--font-mono);
-  font-weight: 300;
-  font-size: clamp(11px, 0.94vw, 17px);
+  font-weight: 500;
+  font-size: clamp(12.5px, 0.94vw, 17px);
   letter-spacing: 0.14em;
   line-height: 1.4;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--text-mute);
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: clamp(14px, 1.3vw, 22px);
+  gap: clamp(22px, 1.5vw, 26px);
   width: 100%;
   margin-top: clamp(38px, 4.6vw, 82px);
 }
 
+/* The email field and the invite link stay in the layout so the panel does not reflow. */
+.panel .field__input,
+.panel .field__error,
+.panel .panel__invite {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .panel__invite {
   align-self: center;
-  margin-top: clamp(26px, 2.6vw, 46px);
+  /* 44px tap target without changing the visual rhythm */
+  margin-top: clamp(11px, 1.6vw, 31px);
+  padding: 15px 8px;
   font-family: var(--font-mono);
-  font-weight: 400;
-  font-size: clamp(11px, 0.74vw, 14px);
+  font-weight: 600;
+  font-size: clamp(12.5px, 0.8vw, 14px);
+  line-height: 14px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   text-decoration: none;
@@ -72,7 +83,7 @@
 }
 
 .panel__invite:focus-visible {
-  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 
@@ -116,10 +127,9 @@
 
   .form {
     margin-top: 22px;
-    gap: 12px;
   }
 
   .panel__invite {
-    margin-top: 16px;
+    margin-top: 4px;
   }
 }

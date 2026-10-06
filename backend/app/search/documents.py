@@ -70,6 +70,7 @@ MAPPINGS: dict[str, Any] = {
         "english_level": {"type": "keyword"},
         "assessment_score": {"type": "double"},
         "verified": {"type": "boolean"},
+        "assessment_status": {"type": "keyword"},
         "has_fsp": {"type": "boolean"},
         "profile_strength": {"type": "double"},
         # Hidden and not yet categorised profiles are indexed but never returned to recruiters.
@@ -117,6 +118,7 @@ def candidate_document(profile: CandidateProfile) -> dict[str, Any]:
         "english_level": profile.english_level,
         "assessment_score": profile.assessment_score,
         "verified": profile.assessment_score is not None,
+        "assessment_status": profile.assessment_status.value,
         "has_fsp": bool(profile.fsp_achievements),
         "profile_strength": CandidateFacts.of(profile).strength,
         "visible": profile.is_visible_to_employers,

@@ -1,5 +1,6 @@
 import type { CSSProperties, MouseEvent } from 'react'
 import { Link } from 'react-router'
+import { scrollToId } from '../lib/scroll-to-hash'
 import { MENU } from '../model/types'
 import type { NavItem } from '../model/types'
 
@@ -38,7 +39,12 @@ export function MobileMenu({ links, cta, open, onClose }: Props) {
             className="menu__link"
             to={link.to}
             style={stagger(i)}
-            onClick={onClose}
+            onClick={(event) => {
+              onClose()
+              if (!link.to.startsWith('#')) return
+              event.preventDefault()
+              requestAnimationFrame(() => scrollToId(link.to))
+            }}
           >
             {link.label}
           </Link>

@@ -30,7 +30,7 @@
   margin: 14px 0 0;
   max-width: 64ch;
   font-family: var(--font-mono);
-  font-weight: 300;
+  font-weight: 400;
   font-size: 13px;
   letter-spacing: 0.1em;
   line-height: 1.5;
@@ -54,6 +54,11 @@
   justify-content: center;
   align-items: center;
   width: min(100%, 460px);
+}
+
+/* Role choice: same centred shell, wide enough for two cards */
+.page--auth-wide {
+  width: min(100%, 880px);
 }
 
 .page--auth .page__header {
@@ -94,7 +99,7 @@
   padding: 6px 10px;
   background: var(--fill-solid);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text);

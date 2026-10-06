@@ -1,4 +1,10 @@
-import type { InputHTMLAttributes, ReactNode, Ref, TextareaHTMLAttributes } from 'react'
+import type {
+  InputHTMLAttributes,
+  ReactNode,
+  Ref,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from 'react'
 import './text-field.css'
 
 type FieldProps = {
@@ -72,6 +78,34 @@ export function TextArea({ id, label, hideLabel, error, className, ref, ...rest 
         {...a11y(id, error)}
         {...rest}
       />
+    </FieldShell>
+  )
+}
+
+type SelectFieldProps = FieldProps &
+  Omit<SelectHTMLAttributes<HTMLSelectElement>, 'id'> & { ref?: Ref<HTMLSelectElement> }
+
+export function SelectField({
+  id,
+  label,
+  hideLabel,
+  error,
+  className,
+  ref,
+  children,
+  ...rest
+}: SelectFieldProps) {
+  return (
+    <FieldShell id={id} label={label} hideLabel={hideLabel} error={error}>
+      <select
+        ref={ref}
+        id={id}
+        className={['field__input', 'field__input--select', className].filter(Boolean).join(' ')}
+        {...a11y(id, error)}
+        {...rest}
+      >
+        {children}
+      </select>
     </FieldShell>
   )
 }

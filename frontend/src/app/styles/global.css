@@ -4,10 +4,14 @@
   box-sizing: border-box;
 }
 
+/* The ground lives on the root only, so fixed decorative layers can sit between it and the content */
+html {
+  background: var(--bg);
+}
+
 html,
 body {
   margin: 0;
-  background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -37,6 +41,20 @@ a {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+/* Quiet echo of the landing glow so inner pages don't sit on a flat ground */
+.app-glow {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    55% 50% at 15% 64%,
+    rgba(52, 40, 200, 0.2),
+    rgba(20, 16, 90, 0.08) 55%,
+    transparent 78%
+  );
 }
 
 /* ── Reduced motion ────────────────────────────────── */

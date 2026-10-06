@@ -73,6 +73,7 @@ const candidateMatch: CandidateMatchDto = {
     category,
     gradeVerified: true,
     assessmentScore: 91.4,
+    assessmentStatus: 'passed',
     stack: ['Python', 'FastAPI'],
     softSkills: [],
     experienceYears: 5,

@@ -1,14 +1,24 @@
 """ORM models. Importing this package registers every table on `Base.metadata` (used by Alembic)."""
 
+from app.models.assessment import (
+    AssessmentAnswer,
+    AssessmentAttempt,
+    AssessmentTask,
+    AssessmentTest,
+)
 from app.models.candidate import CandidateProfile
 from app.models.company import Company
 from app.models.email_verification import EmailVerificationCode
 from app.models.enums import (
+    AssessmentStatus,
+    AttemptStatus,
     FspDiscipline,
     FspEventLevel,
     Grade,
     InvitationStatus,
     ReactionKind,
+    TaskDifficulty,
+    TaskKind,
     UserRole,
     WorkFormat,
 )
@@ -19,6 +29,12 @@ from app.models.user import User
 from app.models.vacancy import Vacancy
 
 __all__ = [
+    "AssessmentAnswer",
+    "AssessmentAttempt",
+    "AssessmentStatus",
+    "AssessmentTask",
+    "AssessmentTest",
+    "AttemptStatus",
     "CandidateProfile",
     "CandidateReaction",
     "Company",
@@ -30,6 +46,8 @@ __all__ = [
     "Invitation",
     "InvitationStatus",
     "ReactionKind",
+    "TaskDifficulty",
+    "TaskKind",
     "User",
     "UserRole",
     "Vacancy",

@@ -15,7 +15,7 @@ from app.schemas.candidate import CandidateMatch, CandidateSearchPage, SearchEng
 from app.schemas.reaction import FeedView
 from app.search.base import CandidateSearchQuery, CandidateSort, SearchHits, SearchUnavailableError
 from app.search.database import DatabaseCandidateSearch
-from app.search.elastic import ElasticCandidateSearch, ElasticSearchState
+from app.search.elastic import ElasticCandidateSearch, ElasticErrors, ElasticSearchState
 from app.services.matching import CandidateFacts, VacancyFacts, candidate_reasons, fit
 from app.services.presenters import candidate_read
 
@@ -133,8 +133,9 @@ class CandidateSearchService:
         window = {"offset": pagination.offset, "limit": pagination.per_page}
         if self._elastic is not None and await self._elastic.ready(self._candidates.all):
             try:
+                await self._elastic.sync(self._candidates.updated_since)
                 hits = await ElasticCandidateSearch(self._elastic.index).search(query, **window)
-            except SearchUnavailableError as exc:
+            except (SearchUnavailableError, *ElasticErrors) as exc:
                 self._elastic.mark_unavailable()
                 logger.warning("Elasticsearch search failed, using the database: %s", exc)
             else:

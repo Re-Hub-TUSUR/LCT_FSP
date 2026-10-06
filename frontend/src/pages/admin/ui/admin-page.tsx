@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ROLE_LABELS, userQueries } from '@/entities/user'
 import { formatDate } from '@/shared/lib'
 import { Page, QueryState, Section } from '@/shared/ui'
+import { AssessmentBank } from '@/widgets/assessment-bank'
 
 /** TODO(admin): moderation of vacancies/companies (anti-fraud, out of MVP scope). */
 export function AdminPage() {
@@ -35,6 +36,7 @@ export function AdminPage() {
           )}
         </QueryState>
       </Section>
+      <AssessmentBank scope="admin" />
     </Page>
   )
 }

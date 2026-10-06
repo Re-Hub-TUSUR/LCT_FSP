@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 from app.db.types import str_enum
-from app.models.enums import Grade
+from app.models.enums import AssessmentStatus, Grade
 from app.models.fsp_achievement import FspAchievement
 
 
@@ -48,6 +48,12 @@ class CandidateProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # 0–100 for the current grade. Null = the test was skipped and the grade is self-declared.
     assessment_score: Mapped[float | None]
     grade_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Passed = the category above is confirmed; failed = tried and has no confirmed category.
+    assessment_status: Mapped[AssessmentStatus] = mapped_column(
+        str_enum(AssessmentStatus),
+        default=AssessmentStatus.NOT_TAKEN,
+        server_default=AssessmentStatus.NOT_TAKEN.value,
+    )
 
     # Link to the FSP participant registry (future Keycloak-based FSP ID). Null = no FSP history.
     fsp_member_id: Mapped[str | None] = mapped_column(String(64), unique=True)

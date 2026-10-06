@@ -17,9 +17,9 @@ from app.repositories.candidate import CandidateRepository
 from app.repositories.vacancy import VacancyRepository
 from app.search.base import CandidateSearchQuery
 from app.search.database import DatabaseCandidateSearch
-from app.search.elastic import CandidateIndex, ElasticCandidateSearch
+from app.search.elastic import CandidateIndex, ElasticCandidateSearch, ElasticSearchState
 from app.seed.fixtures import load_seed_data
-from app.seed.loader import seed_database
+from app.seed.loader import seed_database, seed_id
 from app.services.matching import VacancyFacts
 
 ES_URL = os.environ.get("TEST_ELASTICSEARCH_URL", "")
@@ -102,3 +102,41 @@ async def test_text_search_handles_slang_and_morphology(engines: Engines) -> Non
     assert slang.total > 0
     assert morphology.total > 0
     assert typo.total > 0
+
+
+async def test_sync_brings_new_test_results_into_search(
+    sessionmaker: async_sessionmaker[AsyncSession],
+) -> None:
+    data = load_seed_data()
+    async with sessionmaker() as session:
+        await seed_database(session, data, password_hash="not-a-real-hash")
+        await session.commit()
+    untested = next(
+        c for c in data.candidates if c.assessment_score is None and c.is_visible_to_employers
+    )
+    candidate_id = seed_id("candidate", untested.key)
+    verified = CandidateSearchQuery(verified_only=True)
+
+    client = AsyncElasticsearch(ES_URL)
+    state = ElasticSearchState(client, f"kadry-test-{uuid.uuid4().hex[:8]}")
+    search = ElasticCandidateSearch(state.index)
+    try:
+        async with sessionmaker() as session:
+            assert await state.ready(CandidateRepository(session).all)
+            before = await search.search(verified, offset=0, limit=500)
+
+            # What the testing service does when the candidate passes the test.
+            profile = await CandidateRepository(session).get(candidate_id)
+            assert profile is not None
+            profile.assessment_score = 88.0
+            await session.commit()
+
+            state.SYNC_SECONDS = 0
+            assert await state.sync(CandidateRepository(session).updated_since) >= 1
+            after = await search.search(verified, offset=0, limit=500)
+    finally:
+        await client.indices.delete(index=f"{state.index.alias}-*")
+        await client.close()
+
+    assert candidate_id not in before.ids
+    assert candidate_id in after.ids

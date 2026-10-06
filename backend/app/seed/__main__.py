@@ -10,6 +10,7 @@ from app.core.security import hash_password
 from app.db.session import get_engine, get_sessionmaker
 from app.search.elastic import ElasticErrors
 from app.search.reindex import rebuild_search_index
+from app.seed.assessment import seed_assessment_bank
 from app.seed.fixtures import load_seed_data
 from app.seed.loader import (
     DEFAULT_PASSWORD,
@@ -25,6 +26,8 @@ async def _seed(password: str) -> SeedSummary:
     try:
         async with get_sessionmaker()() as session:
             summary = await seed_database(session, data, password_hash=hash_password(password))
+            # The task bank is not demo data, but a stand without it cannot run a single test.
+            await seed_assessment_bank(session)
             await session.commit()
         await _reindex()
     finally:

@@ -6,7 +6,7 @@
   display: block;
   margin-bottom: 10px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-dim);
@@ -53,7 +53,7 @@
 }
 
 .field__input:focus-visible {
-  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 
@@ -62,12 +62,27 @@
   position: absolute;
   top: 100%;
   left: 2px;
-  margin: 3px 0 0;
+  margin: 4px 0 0;
   font-family: var(--font-mono);
   font-weight: 400;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  line-height: 1;
-  text-transform: uppercase;
-  color: #ff5a6e;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  color: var(--error);
+}
+
+/* `appearance: none` drops the native arrow, so the select draws its own */
+.field__input--select {
+  padding-right: 28px;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--text-dim) 50%) right 12px top 9px / 6px 6px
+      no-repeat,
+    linear-gradient(-45deg, transparent 50%, var(--text-dim) 50%) right 6px top 9px / 6px 6px
+      no-repeat;
+  cursor: pointer;
+}
+
+.field__input--select option {
+  background: var(--fill-ghost-solid);
+  color: var(--text);
 }

@@ -9,6 +9,11 @@ from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
+    AssessmentAnswer,
+    AssessmentAttempt,
+    AssessmentStatus,
+    AssessmentTask,
+    AssessmentTest,
     CandidateProfile,
     CandidateReaction,
     Company,
@@ -141,6 +146,9 @@ def _candidate(candidate: CandidateFixture, now: datetime) -> CandidateProfile:
         specialization=candidate.specialization,
         grade=candidate.grade,
         assessment_score=candidate.assessment_score,
+        assessment_status=AssessmentStatus.NOT_TAKEN
+        if candidate.assessment_score is None
+        else AssessmentStatus.PASSED,
         grade_changed_at=assessed,
         fsp_member_id=candidate.fsp_member_id,
         fsp_achievements=[
@@ -185,6 +193,7 @@ async def _clear(session: AsyncSession, user_ids: list[uuid.UUID]) -> None:
     profiles = select(CandidateProfile.id).where(CandidateProfile.user_id.in_(user_ids))
     companies = select(Company.id).where(Company.owner_id.in_(user_ids))
     vacancies = select(Vacancy.id).where(Vacancy.company_id.in_(companies))
+    attempts = select(AssessmentAttempt.id).where(AssessmentAttempt.candidate_id.in_(profiles))
     statements = (
         # Feed decisions by demo accounts and on demo cards, by anyone.
         delete(VacancyReaction).where(
@@ -196,6 +205,10 @@ async def _clear(session: AsyncSession, user_ids: list[uuid.UUID]) -> None:
                 CandidateReaction.candidate_id.in_(profiles),
             )
         ),
+        delete(AssessmentAnswer).where(AssessmentAnswer.attempt_id.in_(attempts)),
+        delete(AssessmentAttempt).where(AssessmentAttempt.candidate_id.in_(profiles)),
+        delete(AssessmentTest).where(AssessmentTest.owner_id.in_(user_ids)),
+        delete(AssessmentTask).where(AssessmentTask.owner_id.in_(user_ids)),
         delete(Invitation).where(
             or_(Invitation.candidate_id.in_(profiles), Invitation.company_id.in_(companies))
         ),

@@ -1,5 +1,6 @@
 import uuid
 from collections.abc import Collection, Sequence
+from datetime import datetime
 
 from sqlalchemy import ColumnElement, Select, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,6 +40,13 @@ class CandidateRepository:
     async def all(self) -> Sequence[CandidateProfile]:
         """Every profile, hidden ones included: the search index filters by visibility itself."""
         result = await self._session.scalars(self._profiles().order_by(CandidateProfile.id))
+        return result.all()
+
+    async def updated_since(self, moment: datetime) -> Sequence[CandidateProfile]:
+        """Profiles changed after `moment`: what the search index has to catch up on."""
+        result = await self._session.scalars(
+            self._profiles().where(CandidateProfile.updated_at > moment)
+        )
         return result.all()
 
     async def searchable(

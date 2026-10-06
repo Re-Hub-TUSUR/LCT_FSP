@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import { http } from '@/shared/api'
 import type { Paginated, PaginationParams } from '@/shared/api'
+import type { AssessmentStatus } from '@/entities/assessment/@x/candidate'
 import type { CategoryDto, Grade, SpecializationCode } from '@/entities/category/@x/candidate'
 import type { FeedView, Reaction, WorkFormat } from '@/entities/vacancy/@x/candidate'
 
@@ -31,6 +32,8 @@ export type CandidateDto = {
   /** False: the test was skipped, the grade is self-declared. */
   gradeVerified: boolean
   assessmentScore: number | null
+  /** Platform grade test: passed, failed or never taken. */
+  assessmentStatus: AssessmentStatus
   stack: string[]
   softSkills: string[]
   experienceYears: number | null
