@@ -115,9 +115,9 @@ migrations/    Alembic (async), URL из настроек
 | auth | `/auth/register`, `/auth/login`, `/auth/verify-email`, `/auth/resend-verification`; `/auth/refresh` | ✅ / 501 |
 | users | `/users/me` | ✅ |
 | categories | `/categories/dictionary` | ✅ (статический MVP-словарь) |
-| candidates (employees) | поиск, `/me`, резюме PDF, `fsp-link`, `/{id}` | 501 |
-| companies (employers) | `/me` GET/PUT, `/{id}` | 501 |
-| vacancies | список, создание, `/{id}` | 501 |
+| candidates (employees) | поиск (Elasticsearch), `/{id}`, реакции ✅; `/me`, резюме PDF, `fsp-link` — 501 | ✅ / 501 |
+| companies (employers) | `/{id}` ✅; `/me` GET/PUT — 501 | ✅ / 501 |
+| vacancies | список, `feed`, `mine`, `/{id}`, реакции ✅; создание и правка — 501 | ✅ / 501 |
 | invitations | создание, `incoming`, `outgoing`, `accept`/`decline` | 501 |
 | applications | отклики кандидата | 501 |
 | matching | `needs`, `recommendations` | 501 |
@@ -134,6 +134,12 @@ migrations/    Alembic (async), URL из настроек
 `FspAchievement` (результаты соревнований ФСП по FSP ID), `Company`, `Vacancy`, `Invitation`
 (CHECK на вилку `0 < from ≤ to`). Таблицы для откликов, потребностей мэтчинга, событий
 календаря и попыток тестирования появятся вместе с их сервисами.
+
+Ленты подбора: соискатель видит только релевантные вакансии (`/vacancies/feed`), рекрутер
+ищет по банку кандидатов (`/candidates`) — Elasticsearch с резервным поиском по базе, одна
+объяснимая модель ранжирования (`app/services/matching.py`), лайки/пропуски для свайпов и
+избранного (`vacancy_reactions`, `candidate_reactions`). Пагинация во всём API —
+`page`/`perPage`. Подробности — `backend/README.md`.
 
 Демо-данные (`app/seed`, `python -m app.seed`): 20 компаний, 97 вакансий, 124 соискателя всех
 специализаций и грейдов. JSON собирает детерминированный генератор; поле `track` в фикстурах —

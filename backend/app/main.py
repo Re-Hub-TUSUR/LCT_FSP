@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -8,18 +9,37 @@ from app.api.router import api_router
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging, request_logging_middleware
-from app.db.session import get_engine
+from app.db.session import get_engine, get_sessionmaker
+from app.repositories.candidate import CandidateRepository
+from app.search.elastic import ElasticSearchState, create_client
+
+logger = logging.getLogger(__name__)
 
 
-@asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    yield
-    await get_engine().dispose()
+async def _prepare_search(elastic: ElasticSearchState) -> None:
+    """Builds the index on the first start; failures only delay it (the API stays up)."""
+    try:
+        async with get_sessionmaker()() as session:
+            await elastic.ready(CandidateRepository(session).all)
+    except Exception:
+        logger.exception("Search index preparation failed; the database search is used for now")
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        elastic = None
+        if settings.elasticsearch_url:
+            elastic = ElasticSearchState(create_client(settings), settings.elasticsearch_index)
+            app.state.elastic = elastic
+            await _prepare_search(elastic)
+        yield
+        if elastic is not None:
+            await elastic.close()
+        await get_engine().dispose()
 
     app = FastAPI(
         title=settings.app_name,

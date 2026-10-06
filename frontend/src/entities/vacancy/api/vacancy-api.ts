@@ -72,6 +72,7 @@ export const vacancyKeys = {
   all: ['vacancies'] as const,
   list: (params: VacancyListParams) => [...vacancyKeys.all, 'list', params] as const,
   feed: (params: VacancyFeedParams) => [...vacancyKeys.all, 'feed', params] as const,
+  mine: () => [...vacancyKeys.all, 'mine'] as const,
   detail: (id: string) => [...vacancyKeys.all, 'detail', id] as const,
 }
 
@@ -88,6 +89,13 @@ export const vacancyQueries = {
       queryKey: vacancyKeys.feed(params),
       queryFn: ({ signal }) =>
         http.get<VacancyFeedDto>('/vacancies/feed', { query: params, signal }),
+    }),
+  /** Employer's own vacancies (drafts included): the context for hiring by fit. */
+  mine: () =>
+    queryOptions({
+      queryKey: vacancyKeys.mine(),
+      queryFn: ({ signal }) =>
+        http.get<Paginated<VacancyDto>>('/vacancies/mine', { query: { perPage: 100 }, signal }),
     }),
   detail: (id: string) =>
     queryOptions({

@@ -8,6 +8,8 @@ import sys
 from app.core.config import get_settings
 from app.core.security import hash_password
 from app.db.session import get_engine, get_sessionmaker
+from app.search.elastic import ElasticErrors
+from app.search.reindex import rebuild_search_index
 from app.seed.fixtures import load_seed_data
 from app.seed.loader import (
     DEFAULT_PASSWORD,
@@ -24,9 +26,24 @@ async def _seed(password: str) -> SeedSummary:
         async with get_sessionmaker()() as session:
             summary = await seed_database(session, data, password_hash=hash_password(password))
             await session.commit()
+        await _reindex()
     finally:
         await get_engine().dispose()
     return summary
+
+
+async def _reindex() -> None:
+    """Demo profiles get new rows, so the search index is rebuilt right away."""
+    try:
+        indexed = await rebuild_search_index(get_settings())
+    except ElasticErrors as exc:
+        print(
+            f"Search index not rebuilt ({exc}); run `python -m app.search` later.",
+            file=sys.stderr,
+        )
+        return
+    if indexed is not None:
+        print(f"Search index rebuilt: {indexed} candidates.")
 
 
 def main(argv: list[str] | None = None) -> int:

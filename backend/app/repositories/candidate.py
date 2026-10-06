@@ -15,7 +15,7 @@ class CandidateRepository:
         self._session = session
 
     @staticmethod
-    def _profiles() -> Select[tuple[CandidateProfile]]:
+    def _profiles() -> Select[CandidateProfile]:
         return select(CandidateProfile).options(selectinload(CandidateProfile.fsp_achievements))
 
     async def get(self, candidate_id: uuid.UUID) -> CandidateProfile | None:

@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
     CandidateProfile,
+    CandidateReaction,
     Company,
     EmailVerificationCode,
     FspAchievement,
@@ -17,6 +18,7 @@ from app.models import (
     User,
     UserRole,
     Vacancy,
+    VacancyReaction,
 )
 from app.seed.fixtures import CandidateFixture, CompanyFixture, SeedData, VacancyFixture
 
@@ -182,7 +184,18 @@ async def _clear(session: AsyncSession, user_ids: list[uuid.UUID]) -> None:
     """
     profiles = select(CandidateProfile.id).where(CandidateProfile.user_id.in_(user_ids))
     companies = select(Company.id).where(Company.owner_id.in_(user_ids))
+    vacancies = select(Vacancy.id).where(Vacancy.company_id.in_(companies))
     statements = (
+        # Feed decisions by demo accounts and on demo cards, by anyone.
+        delete(VacancyReaction).where(
+            or_(VacancyReaction.user_id.in_(user_ids), VacancyReaction.vacancy_id.in_(vacancies))
+        ),
+        delete(CandidateReaction).where(
+            or_(
+                CandidateReaction.user_id.in_(user_ids),
+                CandidateReaction.candidate_id.in_(profiles),
+            )
+        ),
         delete(Invitation).where(
             or_(Invitation.candidate_id.in_(profiles), Invitation.company_id.in_(companies))
         ),
