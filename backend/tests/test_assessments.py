@@ -1,5 +1,6 @@
+import time
 import uuid
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -10,9 +11,27 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.dependencies.services import get_code_runner
-from app.models import AssessmentAttempt, AssessmentStatus, CandidateProfile, Grade, TaskKind
-from app.schemas.assessment import RulesComposition
-from app.seed.assessment import code_tasks, grade_tests, quiz_tasks, seed_assessment_bank
+from app.models import (
+    AssessmentAttempt,
+    AssessmentStatus,
+    AssessmentTask,
+    AssessmentTest,
+    CandidateProfile,
+    Grade,
+    TaskKind,
+)
+from app.schemas.assessment import CompositionRule, RulesComposition
+from app.seed.assessment import (
+    TEMPLATE_VERSION,
+    _rows,
+    _template_id,
+    code_tasks,
+    grade_tests,
+    quiz_tasks,
+    seed_assessment_bank,
+)
+from app.seed.code_bank import run
+from app.seed.code_bank.__main__ import main as build_code_bank
 from app.services.assessments import _draw
 from app.services.categories import SPECIALIZATIONS
 from app.services.code_runner import CodeRunnerUnavailableError, Execution
@@ -889,8 +908,30 @@ def test_judge_ignores_trailing_whitespace_only() -> None:
     )
 
 
+def _strict_pool(
+    rule: CompositionRule, pool: Sequence[AssessmentTask], specialization: str
+) -> list[AssessmentTask]:
+    """Tasks a rule may take without widening its scope or difficulty."""
+
+    def in_scope(task: AssessmentTask) -> bool:
+        if rule.scope == "specialization":
+            return specialization in task.specializations
+        if rule.scope == "general":
+            return not task.specializations
+        return not task.specializations or specialization in task.specializations
+
+    return [
+        task
+        for task in pool
+        if task.kind == rule.kind
+        and (not rule.topics or task.topic in rule.topics)
+        and (not rule.difficulty or task.difficulty in rule.difficulty)
+        and in_scope(task)
+    ]
+
+
 def test_starter_bank_covers_every_category() -> None:
-    """Every specialization × grade gets a full variant with a code task of the right level."""
+    """Every specialization × grade gets a full variant, and no rule has to widen for it."""
     pool = [*quiz_tasks(), *code_tasks()]
     assert len({task.id for task in pool}) == len(pool), "questions and task keys are unique"
     expected_code = {
@@ -898,23 +939,59 @@ def test_starter_bank_covers_every_category() -> None:
         Grade.JUNIOR: "easy",
         Grade.MIDDLE: "medium",
         Grade.SENIOR: "hard",
-        Grade.LEAD: "medium",
+        Grade.LEAD: "hard",
     }
     templates = grade_tests()
     assert {test.grade for test in templates} == set(Grade)
 
     for test in templates:
-        assert 25 <= test.duration_minutes <= 35
+        assert 25 <= test.duration_minutes <= 40
         composition = RulesComposition.model_validate(test.composition)
         wanted = sum(rule.count for rule in composition.rules)
         for specialization in SPECIALIZATIONS:
+            allowed = set()
+            for rule in composition.rules:
+                matching = _strict_pool(rule, pool, specialization)
+                # A retake must be able to differ: two full sets of questions, five code tasks.
+                spare = 5 if rule.kind == TaskKind.CODE else 2 * rule.count
+                assert len(matching) >= spare, (test.grade, specialization, rule)
+                allowed |= {task.id for task in matching}
             variant = _draw(composition, pool, specialization, set())
             assert len(variant) == wanted, (test.grade, specialization)
+            assert {task.id for task in variant} <= allowed, (test.grade, specialization)
             tasks = [task for task in variant if task.kind == TaskKind.CODE]
             assert len(tasks) == 1
-            assert specialization in tasks[0].specializations, (test.grade, specialization)
             assert test.grade is not None
             assert tasks[0].difficulty == expected_code[test.grade], (test.grade, specialization)
+
+
+def test_starter_bank_questions_are_well_formed() -> None:
+    rows = _rows("quiz")
+    assert len(rows) >= 600
+    for specialization, _topic, level, question, *options in rows:
+        assert specialization is None or specialization in SPECIALIZATIONS, question
+        assert level in ("e", "m", "h"), question
+        assert len(question) <= 200, question
+        assert len(options) == len(set(options)) == 4, question
+
+    # The right option must not give itself away by being the longest one.
+    longest = sum(len(row[4]) > max(len(option) for option in row[5:]) for row in rows)
+    assert longest < len(rows) / 2
+
+
+def test_reference_solutions_pass_their_own_tests() -> None:
+    for item in _rows("code"):
+        reference = item["reference"]
+        assert reference["language"] == "python-3.14", item["key"]
+        for group in item["groups"]:
+            started = time.perf_counter()
+            output = run(reference["code"], group["input"])
+            assert normalize_output(output) == group["expected"], item["key"]
+            assert time.perf_counter() - started < item["time_limit"] / 2, item["key"]
+
+
+def test_code_bank_files_are_built_from_their_sources() -> None:
+    assert build_code_bank(check=True) == 0
 
 
 def test_variant_prefers_tasks_the_candidate_has_not_seen() -> None:
@@ -938,6 +1015,37 @@ async def test_starter_bank_loads_once(sessionmaker: async_sessionmaker[AsyncSes
         await session.commit()
         attempts = await session.scalars(select(AssessmentAttempt))
 
-    assert (first.code, first.tests) == (15, 5)
-    assert first.quiz > 120
+    assert (first.quiz, first.code, first.tests) == (
+        len(quiz_tasks()),
+        len(code_tasks()),
+        len(Grade),
+    )
+    assert first.quiz >= 600
+    assert first.code >= 55
     assert attempts.all() == []
+
+
+async def test_starter_bank_switches_off_superseded_templates(
+    sessionmaker: async_sessionmaker[AsyncSession],
+) -> None:
+    current = _template_id("middle", TEMPLATE_VERSION)
+    async with sessionmaker() as session:
+        session.add(
+            AssessmentTest(
+                id=_template_id("middle", 1),
+                title="Тест на грейд: Middle",
+                grade=Grade.MIDDLE,
+                duration_minutes=30,
+                composition={"mode": "rules", "rules": [{"kind": "quiz", "count": 1}]},
+            )
+        )
+        await session.commit()
+        await seed_assessment_bank(session)
+        await session.commit()
+        active = await session.scalars(
+            select(AssessmentTest.id).where(
+                AssessmentTest.grade == Grade.MIDDLE, AssessmentTest.is_active.is_(True)
+            )
+        )
+
+    assert active.all() == [current]
