@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { companyQueries } from '@/entities/company/@x/vacancy'
-import { formatRubRange, isHttpUrl } from '@/shared/lib'
+import { useState } from 'react'
+import { formatRubRange, useOverflows } from '@/shared/lib'
 import { MatchMeter } from '@/shared/ui'
-import type { VacancyDto, VacancyMatchDto } from '../api/vacancy-api'
+import type { VacancyMatchDto } from '../api/vacancy-api'
 import { WORK_FORMAT_LABELS } from '../model/work-format'
 
 type Props = {
@@ -13,136 +11,91 @@ type Props = {
   actions?: ReactNode
   /** Swipe deck shows the full description right away. */
   expanded?: boolean
-  /** One film frame: the short card, details live in a company dialog. */
+  /** One film frame. The details button appears only when the text does not fit. */
   frame?: boolean
+  /** Opens the side sheet. Used by the film frame. */
+  onStudy?: () => void
 }
 
-const FRAME_REASONS = 5
-
-/**
- * Everything about a vacancy on one sheet that fits the screen: nothing in it scrolls.
- * The facts and the company are on the left, the description on the right.
- */
-function VacancyDossier({ vacancy, onClose }: { vacancy: VacancyDto; onClose: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null)
-  const body = useRef<HTMLDivElement>(null)
-  const [clipped, setClipped] = useState(false)
-  const company = useQuery(companyQueries.detail(vacancy.company.id))
-  const website = company.data?.website
-  const blocks = vacancy.description.split('\n\n').filter(Boolean)
-  const place = vacancy.city ?? 'Любой город'
-
-  useEffect(() => {
-    const dialog = ref.current
-    if (!dialog || dialog.open) return
-    // Environments without the modal API (old browsers, jsdom) still get an open dialog.
-    if (typeof dialog.showModal === 'function') dialog.showModal()
-    else dialog.setAttribute('open', '')
-  }, [])
-
-  // A click on the backdrop lands on the dialog itself; unmounting closes it.
-  useEffect(() => {
-    const dialog = ref.current
-    if (!dialog) return
-    const onPointer = (event: MouseEvent) => {
-      if (event.target === dialog) onClose()
-    }
-    dialog.addEventListener('click', onPointer)
-    return () => dialog.removeEventListener('click', onPointer)
-  }, [onClose])
-
-  // An unusually long description is cut with a fade instead of getting a scrollbar.
-  useEffect(() => {
-    const element = body.current
-    if (!element) return
-    const measure = () => setClipped(element.scrollHeight > element.clientHeight + 1)
-    measure()
-    if (typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(measure)
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [])
-
-  return (
-    <dialog ref={ref} className="vacancy-dossier" aria-labelledby="dossier-title" onClose={onClose}>
-      <div className="vacancy-dossier__side">
-        <header className="vacancy-dossier__head">
-          <p className="match-card__eyebrow">
-            {vacancy.company.name}
-            {vacancy.company.industry && <span> · {vacancy.company.industry}</span>}
-          </p>
-          <button type="button" className="match-card__more" onClick={onClose}>
-            Закрыть
-          </button>
-        </header>
-        <h2 id="dossier-title" className="vacancy-dossier__title">
-          {vacancy.title}
-        </h2>
-        <p className="match-card__salary">
-          {formatRubRange(vacancy.salary.from, vacancy.salary.to)}
-        </p>
-        <ul className="match-card__facts">
-          <li className="match-card__fact match-card__fact--accent">{vacancy.category.label}</li>
-          <li className="match-card__fact">{WORK_FORMAT_LABELS[vacancy.workFormat]}</li>
-          <li className="match-card__fact">{place}</li>
-          {vacancy.company.size && (
-            <li className="match-card__fact">{vacancy.company.size} чел.</li>
-          )}
-        </ul>
-        <ul className="match-card__stack" aria-label="Стек">
-          {vacancy.stack.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-
-        <div className="vacancy-dossier__company">
-          {company.isPending && (
-            <p className="vacancy-dossier__meta">Загружаем карточку компании</p>
-          )}
-          {company.isError && (
-            <p className="vacancy-dossier__meta">Не удалось загрузить карточку компании</p>
-          )}
-          {company.data?.description && (
-            <p className="vacancy-dossier__about">{company.data.description}</p>
-          )}
-          {company.data?.contactEmail && (
-            <p className="vacancy-dossier__meta">{company.data.contactEmail}</p>
-          )}
-          {website && isHttpUrl(website) && (
-            <a className="vacancy-dossier__meta" href={website} target="_blank" rel="noreferrer">
-              {website}
-            </a>
-          )}
-        </div>
-      </div>
-
-      <div
-        ref={body}
-        className={clipped ? 'vacancy-dossier__body is-clipped' : 'vacancy-dossier__body'}
-      >
-        {blocks.map((block) => (
-          <p key={block} className="vacancy-dossier__text">
-            {block}
-          </p>
-        ))}
-      </div>
-    </dialog>
-  )
-}
-
-export function VacancyMatchCard({ match, actions, expanded = false, frame = false }: Props) {
+export function VacancyMatchCard({
+  match,
+  actions,
+  expanded = false,
+  frame = false,
+  onStudy,
+}: Props) {
   const { vacancy, matchScore, reasons, matched } = match
   const [open, setOpen] = useState(expanded)
-  const [dossier, setDossier] = useState(false)
-  const [lead, ...rest] = vacancy.description.split('\n\n')
+  const blocks = vacancy.description.split('\n\n').filter(Boolean)
+  const [lead, ...rest] = blocks
   const place = vacancy.city ?? 'Любой город'
-  const shownReasons = frame ? reasons.slice(0, FRAME_REASONS) : reasons
+  const [bodyRef, overflows] = useOverflows(frame ? `${vacancy.id}:${blocks.length}` : '')
+
+  const facts = (
+    <ul className="match-card__facts">
+      <li className="match-card__fact match-card__fact--accent">{vacancy.category.label}</li>
+      <li className="match-card__fact">{WORK_FORMAT_LABELS[vacancy.workFormat]}</li>
+      <li className="match-card__fact">{place}</li>
+      {vacancy.company.size && <li className="match-card__fact">{vacancy.company.size} чел.</li>}
+    </ul>
+  )
+
+  if (frame) {
+    return (
+      <article className="match-card match-card--frame" aria-label={vacancy.title}>
+        <div
+          ref={bodyRef}
+          className={overflows ? 'match-card__frame-body is-clipped' : 'match-card__frame-body'}
+        >
+          <header className="match-card__head">
+            <div className="match-card__titles">
+              <p className="match-card__eyebrow">
+                {vacancy.company.name}
+                {vacancy.company.industry && <span> · {vacancy.company.industry}</span>}
+              </p>
+              <h3 className="match-card__title">{vacancy.title}</h3>
+              {matched && <p className="match-card__matched">Взаимно: компания отобрала вас</p>}
+            </div>
+            {matchScore !== null && <MatchMeter value={matchScore} label="Соответствие" />}
+          </header>
+          <p className="match-card__salary">
+            {formatRubRange(vacancy.salary.from, vacancy.salary.to)}
+          </p>
+          {facts}
+          <ul className="match-card__stack" aria-label="Стек">
+            {vacancy.stack.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          {reasons.length > 0 && (
+            <section className="match-card__why" aria-label="Почему эта вакансия в ленте">
+              <p className="match-card__why-title">Почему в ленте</p>
+              <ul>
+                {reasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {blocks.length > 0 && (
+            <div className="match-card__lead">
+              {blocks.map((block) => (
+                <p key={block}>{block}</p>
+              ))}
+            </div>
+          )}
+        </div>
+        {overflows && onStudy && (
+          <button type="button" className="match-card__more match-card__study" onClick={onStudy}>
+            Изучить подробнее
+          </button>
+        )}
+      </article>
+    )
+  }
 
   return (
-    <article
-      className={frame ? 'match-card match-card--frame' : 'match-card'}
-      aria-label={vacancy.title}
-    >
+    <article className="match-card" aria-label={vacancy.title}>
       <header className="match-card__head">
         <div className="match-card__titles">
           <p className="match-card__eyebrow">
@@ -151,32 +104,14 @@ export function VacancyMatchCard({ match, actions, expanded = false, frame = fal
           </p>
           <h3 className="match-card__title">{vacancy.title}</h3>
           {matched && <p className="match-card__matched">Взаимно: компания отобрала вас</p>}
-          {!frame && (
-            <p className="match-card__salary">
-              {formatRubRange(vacancy.salary.from, vacancy.salary.to)}
-            </p>
-          )}
+          <p className="match-card__salary">
+            {formatRubRange(vacancy.salary.from, vacancy.salary.to)}
+          </p>
         </div>
         {matchScore !== null && <MatchMeter value={matchScore} label="Соответствие" />}
       </header>
 
-      {frame && (
-        <div className="match-card__pay">
-          <p className="match-card__salary">
-            {formatRubRange(vacancy.salary.from, vacancy.salary.to)}
-          </p>
-          <button type="button" className="match-card__more" onClick={() => setDossier(true)}>
-            Изучить подробнее
-          </button>
-        </div>
-      )}
-
-      <ul className="match-card__facts">
-        <li className="match-card__fact match-card__fact--accent">{vacancy.category.label}</li>
-        <li className="match-card__fact">{WORK_FORMAT_LABELS[vacancy.workFormat]}</li>
-        <li className="match-card__fact">{place}</li>
-        {vacancy.company.size && <li className="match-card__fact">{vacancy.company.size} чел.</li>}
-      </ul>
+      {facts}
 
       <ul className="match-card__stack" aria-label="Стек">
         {vacancy.stack.map((item) => (
@@ -184,34 +119,30 @@ export function VacancyMatchCard({ match, actions, expanded = false, frame = fal
         ))}
       </ul>
 
-      {frame && lead && (
-        <p className="match-card__lead">{[lead, rest[0]].filter(Boolean).join('\n\n')}</p>
-      )}
-
-      {shownReasons.length > 0 && (
+      {reasons.length > 0 && (
         <section className="match-card__why" aria-label="Почему эта вакансия в ленте">
           <p className="match-card__why-title">Почему в ленте</p>
           <ul>
-            {shownReasons.map((reason) => (
+            {reasons.map((reason) => (
               <li key={reason}>{reason}</li>
             ))}
           </ul>
         </section>
       )}
 
-      {!frame && (
-        <div className="match-card__text">
-          <p>{lead}</p>
-          {open && rest.map((block) => <p key={block}>{block}</p>)}
-          {rest.length > 0 && !expanded && (
-            <button type="button" className="match-card__more" onClick={() => setOpen((v) => !v)}>
-              {open ? 'Свернуть' : 'Подробнее о вакансии'}
-            </button>
-          )}
-        </div>
-      )}
-
-      {frame && dossier && <VacancyDossier vacancy={vacancy} onClose={() => setDossier(false)} />}
+      <div className="match-card__text">
+        {lead && <p>{lead}</p>}
+        {open && rest.map((block) => <p key={block}>{block}</p>)}
+        {rest.length > 0 && !expanded && (
+          <button
+            type="button"
+            className="match-card__more"
+            onClick={() => setOpen((value) => !value)}
+          >
+            {open ? 'Свернуть' : 'Подробнее о вакансии'}
+          </button>
+        )}
+      </div>
 
       {actions && <footer className="match-card__actions">{actions}</footer>}
     </article>

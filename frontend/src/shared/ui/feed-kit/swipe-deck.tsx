@@ -145,7 +145,7 @@ export function SwipeDeck<T>({
       if (
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement ||
-        document.querySelector('dialog[open]')
+        document.querySelector('dialog[open], [role="dialog"]')
       ) {
         return
       }

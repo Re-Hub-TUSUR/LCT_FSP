@@ -11,5 +11,6 @@ export {
 } from './dates'
 export { downloadJson } from './download'
 export { formatDate, formatDateTime, formatRubRange } from './format'
+export { useOverflows } from './overflow'
 export { useSheetWidth } from './sheet-width'
 export { emailSchema, isEmail, isHttpUrl, isSafeInternalPath } from './validation'

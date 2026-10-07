@@ -1,8 +1,11 @@
+import { useState } from 'react'
+import type { CandidateMatchDto } from '@/entities/candidate'
 import { useSession } from '@/entities/session'
+import type { VacancyMatchDto } from '@/entities/vacancy'
 import { Page } from '@/shared/ui'
-import { CandidateFeed } from '@/widgets/candidate-feed'
+import { CandidateFeed, CandidatePanel } from '@/widgets/candidate-feed'
 import { CandidateSwipe, DecisionCounters, VacancySwipe } from '@/widgets/feed-swipe'
-import { VacancyFeed } from '@/widgets/vacancy-feed'
+import { VacancyFeed, VacancyPanel } from '@/widgets/vacancy-feed'
 
 export function FeedPage() {
   const { user } = useSession()
@@ -25,6 +28,9 @@ export function FeedPage() {
 export function FeedSwipePage() {
   const { user } = useSession()
   const employer = user?.role === 'employer'
+  const [vacancy, setVacancy] = useState<VacancyMatchDto | null>(null)
+  const [profileStack, setProfileStack] = useState<readonly string[]>([])
+  const [candidate, setCandidate] = useState<CandidateMatchDto | null>(null)
 
   return (
     <Page
@@ -33,7 +39,24 @@ export function FeedSwipePage() {
       lead="Вправо — интересно, влево — пропустить. Клавиши ← и → тоже работают"
       actions={<DecisionCounters role={employer ? 'employer' : 'candidate'} />}
     >
-      {employer ? <CandidateSwipe /> : <VacancySwipe />}
+      {employer ? (
+        <CandidateSwipe onStudy={setCandidate} />
+      ) : (
+        <VacancySwipe
+          onStudy={(match, stack) => {
+            setVacancy(match)
+            setProfileStack(stack)
+          }}
+        />
+      )}
+      {vacancy && (
+        <VacancyPanel
+          match={vacancy}
+          profileStack={profileStack}
+          onClose={() => setVacancy(null)}
+        />
+      )}
+      {candidate && <CandidatePanel match={candidate} onClose={() => setCandidate(null)} />}
     </Page>
   )
 }

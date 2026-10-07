@@ -39,10 +39,15 @@ function useQueue<T>(
 const vacancyKey = (match: VacancyMatchDto) => match.vacancy.id
 const candidateKey = (match: CandidateMatchDto) => match.candidate.id
 
-export function VacancySwipe() {
+export function VacancySwipe({
+  onStudy,
+}: {
+  onStudy?: (match: VacancyMatchDto, profileStack: readonly string[]) => void
+}) {
   const query = useQuery(vacancyQueries.feed({ page: 1, perPage: BATCH, view: 'unseen' }))
   const { queue, pop } = useQueue(query, vacancyKey)
   const reaction = useReaction()
+  const stack = query.data?.basis?.stack ?? []
 
   const decide = (match: VacancyMatchDto, decision: SwipeDecision) => {
     pop(match)
@@ -55,7 +60,13 @@ export function VacancySwipe() {
     <SwipeDeck
       items={queue}
       getKey={vacancyKey}
-      renderCard={(match) => <VacancyMatchCard match={match} frame />}
+      renderCard={(match) => (
+        <VacancyMatchCard
+          match={match}
+          frame
+          onStudy={onStudy ? () => onStudy(match, stack) : undefined}
+        />
+      )}
       onDecide={decide}
       likeLabel="Интересно"
       skipLabel="Пропустить"
@@ -69,7 +80,7 @@ export function VacancySwipe() {
 }
 
 /** Recruiter's deck; with `?vacancyId=` the cards are ranked by fit to that vacancy. */
-export function CandidateSwipe() {
+export function CandidateSwipe({ onStudy }: { onStudy?: (match: CandidateMatchDto) => void }) {
   const [params] = useSearchParams()
   const vacancyId = params.get('vacancyId') ?? undefined
   const query = useQuery(
@@ -89,7 +100,13 @@ export function CandidateSwipe() {
     <SwipeDeck
       items={queue}
       getKey={candidateKey}
-      renderCard={(match) => <CandidateMatchCard match={match} />}
+      renderCard={(match) => (
+        <CandidateMatchCard
+          match={match}
+          frame
+          onStudy={onStudy ? () => onStudy(match) : undefined}
+        />
+      )}
       onDecide={decide}
       likeLabel="Интересно"
       skipLabel="Пропустить"
