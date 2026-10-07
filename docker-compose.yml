@@ -60,6 +60,10 @@ services:
       SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-}
       ELASTICSEARCH_URL: http://elasticsearch:9200
       UPLOAD_DIR: /data/uploads
+      ROUTERAI_API_KEY: ${ROUTERAI_API_KEY:-}
+      RESUME_PARSER_MODEL: ${RESUME_PARSER_MODEL:-openai/gpt-6-luna}
+      # No colon: an empty value is passed on and switches reasoning off.
+      RESUME_PARSER_REASONING: ${RESUME_PARSER_REASONING-low}
     volumes:
       - upload-data:/data/uploads
     depends_on:

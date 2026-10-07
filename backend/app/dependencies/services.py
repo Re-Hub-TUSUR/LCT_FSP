@@ -28,6 +28,8 @@ from app.services.email import ResendEmailSender
 from app.services.notifications import NotificationHub
 from app.services.reactions import ReactionService
 from app.services.responses import ResponsesService
+from app.services.resume_import import ResumeImportService
+from app.services.resume_reader import ResumeReader, RouterAiResumeReader
 from app.services.test_assignments import TestAssignmentService
 from app.services.vacancies import VacancyService
 from app.services.vacancy_feed import VacancyFeedService
@@ -167,6 +169,20 @@ def get_code_runner(settings: SettingsDep) -> CodeRunner:
 
 
 CodeRunnerDep = Annotated[CodeRunner, Depends(get_code_runner)]
+
+
+def get_resume_reader(settings: SettingsDep) -> ResumeReader:
+    return RouterAiResumeReader(settings)
+
+
+ResumeReaderDep = Annotated[ResumeReader, Depends(get_resume_reader)]
+
+
+def get_resume_import_service(reader: ResumeReaderDep) -> ResumeImportService:
+    return ResumeImportService(reader)
+
+
+ResumeImportServiceDep = Annotated[ResumeImportService, Depends(get_resume_import_service)]
 
 
 def get_assessment_service(

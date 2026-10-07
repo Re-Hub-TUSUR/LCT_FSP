@@ -5,6 +5,8 @@ os.environ["APP_ENV"] = "test"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 os.environ["JWT_SECRET"] = "test-only-secret-that-is-long-enough-123456"
 os.environ["CORS_ORIGINS"] = ""
+# A key in a developer's .env must never make the tests call the paid model.
+os.environ["ROUTERAI_API_KEY"] = ""
 
 from collections.abc import AsyncIterator
 

@@ -59,6 +59,14 @@ class Settings(BaseSettings):
     upload_dir: str = "/data/uploads"
     chat_attachment_limit: int = Field(default=10 * 1024 * 1024, ge=1)
 
+    # Resume recognition through RouterAI (OpenAI-compatible API, https://routerai.ru/models).
+    # Empty key: the upload answers 503 and the candidate fills the form by hand.
+    routerai_api_key: SecretStr = SecretStr("")
+    routerai_url: str = "https://routerai.ru/api/v1"
+    resume_parser_model: str = "openai/gpt-6-luna"
+    # Sent as `reasoning.effort`; leave empty for a model without reasoning.
+    resume_parser_reasoning: str = "low"
+
     @field_validator("resend_from")
     @classmethod
     def _default_from(cls, value: str) -> str:

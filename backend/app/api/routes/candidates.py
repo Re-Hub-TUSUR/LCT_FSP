@@ -3,13 +3,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query, Response, UploadFile, status
 
-from app.api.stub import not_implemented
 from app.dependencies.auth import CandidateUser, CurrentUser, EmployerUser
 from app.dependencies.common import PaginationDep
 from app.dependencies.services import (
     CandidateProfileServiceDep,
     CandidateSearchServiceDep,
     ReactionServiceDep,
+    ResumeImportServiceDep,
 )
 from app.models.enums import Grade, WorkFormat
 from app.schemas.candidate import (
@@ -20,6 +20,7 @@ from app.schemas.candidate import (
     FspLinkRequest,
     OwnCandidateRead,
     ResumeCreate,
+    ResumeDraft,
 )
 from app.schemas.reaction import (
     CandidateReactionRequest,
@@ -29,7 +30,7 @@ from app.schemas.reaction import (
 )
 from app.search.base import CandidateSort
 from app.services.candidate_search import CandidateSearchParams
-from app.services.uploads import PHOTO_LIMIT
+from app.services.uploads import PHOTO_LIMIT, RESUME_LIMIT
 
 router = APIRouter(prefix="/candidates", tags=["candidates"])
 
@@ -114,11 +115,12 @@ async def update_searching(
 
 @router.post(
     "/me/resume",
-    status_code=status.HTTP_202_ACCEPTED,
-    summary="Upload a PDF resume for automatic field recognition",
+    summary="Recognise the fields of a PDF or DOCX resume (up to 5 MB). Nothing is saved",
 )
-async def upload_resume(_: CandidateUser, file: UploadFile) -> CandidateRead:
-    not_implemented("candidates.upload_resume")
+async def upload_resume(
+    _: CandidateUser, file: UploadFile, resumes: ResumeImportServiceDep
+) -> ResumeDraft:
+    return await resumes.draft(await file.read(RESUME_LIMIT + 1))
 
 
 @router.post("/me/resumes", summary="Add a second profession profile. It is not the priority one.")

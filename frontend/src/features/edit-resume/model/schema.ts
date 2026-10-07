@@ -1,4 +1,9 @@
-import type { CandidateProfileUpdate, OwnCandidateDto, ResumeCreate } from '@/entities/candidate'
+import type {
+  CandidateProfileUpdate,
+  OwnCandidateDto,
+  ResumeCreate,
+  ResumeDraftDto,
+} from '@/entities/candidate'
 import type { WorkFormat } from '@/entities/vacancy'
 import { WORK_FORMATS } from '@/entities/vacancy'
 
@@ -134,6 +139,36 @@ export function toResumePayload(values: ResumeValues): CandidateProfileUpdate {
     phone: values.phone.trim() || null,
     telegram: values.telegram.trim().replace(/^@+/, '') || null,
     salaryExpectation: salary,
+  }
+}
+
+function draftText(value: string | null, current: string): string {
+  return value?.trim() || current
+}
+
+function draftList<T>(value: T[], current: T[]): T[] {
+  return value.length > 0 ? value : current
+}
+
+function draftNumber(value: number | null, current: string): string {
+  return value == null ? current : String(value)
+}
+
+/** Fills the form from a recognised resume; what the file does not say keeps its current value. */
+export function applyResumeDraft(values: ResumeValues, draft: ResumeDraftDto): ResumeValues {
+  return {
+    displayName: draftText(draft.displayName, values.displayName),
+    headline: draftText(draft.headline, values.headline),
+    specialization: draftText(draft.specialization, values.specialization),
+    city: draftText(draft.city, values.city),
+    experienceYears: draftNumber(draft.experienceYears, values.experienceYears),
+    workFormats: draftList(draft.workFormats, values.workFormats),
+    stack: draftList(draft.stack, values.stack),
+    softSkills: draftList(draft.softSkills, values.softSkills),
+    about: draftText(draft.about, values.about),
+    phone: draftText(draft.phone, values.phone),
+    telegram: draftText(draft.telegram, values.telegram),
+    salary: draftNumber(draft.salaryExpectation, values.salary),
   }
 }
 

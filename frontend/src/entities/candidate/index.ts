@@ -11,6 +11,7 @@ export type {
   FspAchievementDto,
   OwnCandidateDto,
   ResumeCreate,
+  ResumeDraftDto,
   ResumeDto,
 } from './api/candidate-api'
 export { FSP_DISCIPLINE_LABELS } from './model/fsp'

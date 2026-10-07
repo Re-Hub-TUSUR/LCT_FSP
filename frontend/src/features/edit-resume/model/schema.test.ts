@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { splitList, toResumePayload, validateResume } from './schema'
+import { applyResumeDraft, splitList, toResumePayload, validateResume } from './schema'
 import type { ResumeValues } from './schema'
 
 const valid: ResumeValues = {
@@ -34,5 +34,32 @@ describe('validateResume', () => {
 
   it('drops duplicate skills', () => {
     expect(splitList('Python, python, PostgreSQL')).toEqual(['Python', 'PostgreSQL'])
+  })
+})
+
+describe('applyResumeDraft', () => {
+  it('fills what the resume says and keeps the rest', () => {
+    const next = applyResumeDraft(valid, {
+      displayName: 'Пётр Петров',
+      headline: null,
+      specialization: 'frontend',
+      city: ' ',
+      experienceYears: 6,
+      workFormats: [],
+      stack: ['React'],
+      softSkills: [],
+      about: null,
+      salaryExpectation: 250000,
+      phone: null,
+      telegram: null,
+    })
+    expect(next).toEqual({
+      ...valid,
+      displayName: 'Пётр Петров',
+      specialization: 'frontend',
+      experienceYears: '6',
+      stack: ['React'],
+      salary: '250000',
+    })
   })
 })

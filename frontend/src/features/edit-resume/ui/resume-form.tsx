@@ -7,11 +7,12 @@ import type { OwnCandidateDto, ResumeDto } from '@/entities/candidate'
 import { categoryQueries } from '@/entities/category'
 import { WORK_FORMAT_LABELS, WORK_FORMATS } from '@/entities/vacancy'
 import type { WorkFormat } from '@/entities/vacancy'
-import { ApiError, getErrorMessage } from '@/shared/api'
+import { getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
 import { Button, SelectField, TextArea, TextField } from '@/shared/ui'
 import { photoFileError, resumeFileError } from '../model/files'
 import {
+  applyResumeDraft,
   EMPTY_RESUME,
   resumeValuesFrom,
   toExtraResume,
@@ -90,11 +91,12 @@ export function ResumeForm({ profile }: Props) {
     onError: (error) => setFormError(getErrorMessage(error)),
   })
 
+  // The server only recognises the fields: nothing is stored until the candidate saves the form.
   const upload = useMutation({
     mutationFn: candidateApi.uploadResume,
-    onSuccess: (next) => {
-      remember(next)
-      setValues(resumeValuesFrom(next))
+    onSuccess: (draft) => {
+      setValues((prev) => applyResumeDraft(prev, draft))
+      setErrors({})
       setManual(true)
       setFileError('')
       setSaved(false)
@@ -103,11 +105,7 @@ export function ResumeForm({ profile }: Props) {
     },
     onError: (error) => {
       setManual(true)
-      setFileError(
-        error instanceof ApiError && error.status === 501
-          ? 'Файл прошёл проверку, но автораспознавание пока недоступно. Заполните поля вручную — файл не сохранён.'
-          : getErrorMessage(error),
-      )
+      setFileError(getErrorMessage(error))
     },
   })
 
@@ -240,7 +238,10 @@ export function ResumeForm({ profile }: Props) {
               Заполнить вручную
             </Button>
           </div>
-          <p className="form-hint">PDF или DOCX, не больше 5 МБ.</p>
+          <p className="form-hint">
+            PDF или DOCX, не больше 5 МБ. Файл не сохраняется: текст без контактов читает нейросеть,
+            а вы проверяете поля перед сохранением.
+          </p>
           {fileError && (
             <p className="form-banner" role="alert">
               {fileError}

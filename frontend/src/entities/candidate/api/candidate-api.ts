@@ -103,6 +103,22 @@ export type CandidateProfileUpdate = {
   specialization: string
 }
 
+/** Fields recognised in an uploaded resume. Nothing is saved until the candidate saves the form. */
+export type ResumeDraftDto = {
+  displayName: string | null
+  headline: string | null
+  specialization: string | null
+  city: string | null
+  experienceYears: number | null
+  workFormats: WorkFormat[]
+  stack: string[]
+  softSkills: string[]
+  about: string | null
+  salaryExpectation: number | null
+  phone: string | null
+  telegram: string | null
+}
+
 /** One card of the recruiter's feed with the explanation of its position. */
 export type CandidateMatchDto = {
   candidate: CandidateDto
@@ -193,7 +209,7 @@ export const candidateApi = {
   uploadResume: (file: File) => {
     const body = new FormData()
     body.append('file', file)
-    return http.post<OwnCandidateDto>('/candidates/me/resume', body)
+    return http.post<ResumeDraftDto>('/candidates/me/resume', body)
   },
   setSearching: (searching: boolean) =>
     http.patch<OwnCandidateDto>('/candidates/me/searching', { searching }),

@@ -86,6 +86,9 @@ Pre-commit (husky + lint-staged) прогоняет oxlint и prettier по из
 | `SEED_USER_PASSWORD`       | backend (seed)    | нет         | пароль демо-аккаунтов `python -m app.seed`; пусто — пароль из backend/README |
 | `ELASTICSEARCH_URL`        | backend           | нет         | поиск кандидатов; в compose задан, пусто — поиск по базе |
 | `UPLOAD_DIR`               | backend           | нет         | каталог вложений чата, по умолчанию `/data/uploads`; в compose — том `upload-data` |
+| `ROUTERAI_API_KEY`         | backend           | нет         | ключ [RouterAI](https://routerai.ru/settings/keys) для распознавания резюме; пусто — поля заполняются вручную |
+| `RESUME_PARSER_MODEL`      | backend           | нет         | модель распознавания, по умолчанию `openai/gpt-6-luna` |
+| `RESUME_PARSER_REASONING`  | backend           | нет         | усилие рассуждений (`low`); пусто — для модели без рассуждений |
 | `VITE_API_URL`             | frontend (build)  | нет         | база API, по умолчанию `/api/v1`          |
 | `DEV_API_PROXY_TARGET`     | frontend (dev)    | нет         | цель прокси `/api` dev-сервера            |
 

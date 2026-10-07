@@ -2,6 +2,7 @@
 
 PHOTO_LIMIT = 2 * 1024 * 1024
 CHAT_ATTACHMENT_LIMIT = 10 * 1024 * 1024
+RESUME_LIMIT = 5 * 1024 * 1024
 
 _JPEG = b"\xff\xd8\xff"
 _PNG = b"\x89PNG\r\n\x1a\n"

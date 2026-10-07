@@ -134,6 +134,23 @@ class CandidateProfileUpdate(ApiModel):
     specialization: str | None = Field(default=None, min_length=1, max_length=64)
 
 
+class ResumeDraft(ApiModel):
+    """Fields recognised in an uploaded resume. Nothing is saved: the candidate checks them."""
+
+    display_name: str | None
+    headline: str | None
+    specialization: str | None
+    city: str | None
+    experience_years: int | None
+    work_formats: list[WorkFormat]
+    stack: list[str]
+    soft_skills: list[str]
+    about: str | None
+    salary_expectation: int | None
+    phone: str | None
+    telegram: str | None
+
+
 class CandidateSearchUpdate(ApiModel):
     searching: bool
 
