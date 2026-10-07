@@ -10,7 +10,7 @@ import asyncio
 import sys
 from typing import Final
 
-from pydantic import SecretStr
+from pydantic import EmailStr, SecretStr, TypeAdapter, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,6 +22,7 @@ from app.models import User, UserRole
 EMAIL_ENV: Final = "ADMIN_EMAIL"
 PASSWORD_ENV: Final = "ADMIN_PASSWORD"  # noqa: S105 - variable name, not a secret
 MIN_PASSWORD: Final = 12
+_EMAIL: Final = TypeAdapter(EmailStr)
 
 
 class AdminSetupError(Exception):
@@ -40,8 +41,11 @@ class _AdminEnv(BaseSettings):
 async def ensure_admin(session: AsyncSession, email: str, password: str) -> bool:
     """True when the account was created, False when its password was updated."""
     email = email.strip().lower()
-    if "@" not in email:
-        raise AdminSetupError(f"{EMAIL_ENV} is not an email")
+    try:
+        # The same rules as the login form: an address it rejects could never sign in.
+        _EMAIL.validate_python(email)
+    except ValidationError as exc:
+        raise AdminSetupError(f"{EMAIL_ENV} is not a valid email: {email}") from exc
     if len(password) < MIN_PASSWORD:
         raise AdminSetupError(f"{PASSWORD_ENV} must be at least {MIN_PASSWORD} characters")
     user = await session.scalar(select(User).where(User.email == email))

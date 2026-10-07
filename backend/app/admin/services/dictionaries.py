@@ -9,6 +9,7 @@ import uuid
 from typing import Any
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.audit import AuditLog
@@ -37,6 +38,14 @@ class DictionaryService:
     async def _ensure_defaults(self) -> None:
         if await self._session.scalar(select(func.count()).select_from(AdminSpecialization)):
             return
+        try:
+            # A savepoint: two first requests may race here, the loser keeps the winner's rows.
+            async with self._session.begin_nested():
+                await self._fill_defaults()
+        except IntegrityError:
+            return
+
+    async def _fill_defaults(self) -> None:
         for order, (code, label) in enumerate(SPECIALIZATIONS.items()):
             self._session.add(AdminSpecialization(code=code, label=label, sort_order=order))
         await self._session.flush()
