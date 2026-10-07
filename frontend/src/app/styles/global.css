@@ -57,6 +57,24 @@ a {
   );
 }
 
+/* Lazy pages keep the previous screen until their chunk arrives: dim it and show the loader */
+.route-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: rgba(5, 6, 13, 0.72);
+  animation: route-loader-in 0.3s var(--ease-premium) 0.15s both;
+}
+
+@keyframes route-loader-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* ── Reduced motion ────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
