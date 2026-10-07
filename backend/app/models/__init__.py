@@ -5,6 +5,7 @@ from app.models.assessment import (
     AssessmentAnswer,
     AssessmentAttempt,
     AssessmentTask,
+    AssessmentTaskTime,
     AssessmentTest,
 )
 from app.models.candidate import CandidateProfile
@@ -42,6 +43,7 @@ __all__ = [
     "AssessmentAttempt",
     "AssessmentStatus",
     "AssessmentTask",
+    "AssessmentTaskTime",
     "AssessmentTest",
     "AssignmentStatus",
     "AttemptStatus",

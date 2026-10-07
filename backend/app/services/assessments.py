@@ -22,6 +22,7 @@ from app.models import (
     AssessmentAttempt,
     AssessmentStatus,
     AssessmentTask,
+    AssessmentTaskTime,
     AssessmentTest,
     AssignmentStatus,
     AttemptStatus,
@@ -42,6 +43,7 @@ from app.schemas.assessment import (
     AttemptSignal,
     AttemptStart,
     AttemptTask,
+    AttemptTime,
     FixedComposition,
     Recommendation,
     RulesComposition,
@@ -372,6 +374,17 @@ class AssessmentService:
                 for group, execution in zip(groups, executions, strict=True)
             ]
         return RunResponse(results=results, runs_left=MAX_RUNS - attempt.runs_count)
+
+    async def track_time(self, user: User, attempt_id: uuid.UUID, data: AttemptTime) -> None:
+        """Adds the time a task was on screen. A task cannot take longer than the attempt so far."""
+        attempt = await self._running_attempt(user, attempt_id, grace=ANSWER_GRACE)
+        task = _task(attempt, data.task_id)
+        elapsed = (datetime.now(UTC) - _aware(attempt.started_at)).total_seconds()
+        row = await self._repository.task_time(attempt.id, task.id)
+        if row is None:
+            row = AssessmentTaskTime(attempt_id=attempt.id, task_id=task.id, seconds=0.0)
+        row.seconds = round(min(row.seconds + data.seconds, max(elapsed, 0.0)), 3)
+        await self._repository.add(row)
 
     async def signal(self, user: User, attempt_id: uuid.UUID, data: AttemptSignal) -> None:
         attempt = await self._attempt(user, attempt_id)

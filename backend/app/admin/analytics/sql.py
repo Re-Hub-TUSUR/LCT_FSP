@@ -9,7 +9,6 @@ from typing import Any
 from sqlalchemy import (
     ColumnElement,
     Date,
-    Float,
     FromClause,
     Integer,
     Select,
@@ -50,12 +49,6 @@ class Dialect:
             return cast(text, Uuid)
         # SQLAlchemy keeps UUIDs in SQLite as 32 hex digits without hyphens.
         return func.replace(text, "-", "")
-
-    def seconds_between(self, start: Expr, end: Expr) -> Expr:
-        if self.postgres:
-            return cast(func.extract("epoch", end - start), Float)
-        # Julian days are floats: rounded to milliseconds, 600 s stays 600 s, not 599.99995.
-        return func.round((func.julianday(end) - func.julianday(start)) * 86400.0, 3)
 
     def whole_minutes(self, seconds: Expr) -> Expr:
         """Full minutes in a non-negative number of seconds."""

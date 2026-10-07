@@ -5,7 +5,8 @@ A "fact" is one task inside one settled attempt. Its outcome:
 - full / partial: the answer earned the whole task / a part of it;
 - unsolved: answered and earned nothing.
 
-Time is the duration of the attempt the task was in: the platform does not record time per task.
+Time is how long the task was on the candidate's screen (ssessment_task_times), counted for
+answered tasks only; attempts recorded before the runner reported it have no time.
 A variant is `task_state[task]["variant"]` of the attempt; attempts without it count as the
 base variant.
 """
@@ -24,7 +25,13 @@ from app.admin.analytics.metrics import FlagRules, TaskFlag, outcome_shares, tas
 from app.admin.analytics.sql import Dialect, Expr, medians
 from app.admin.models import AdminTaskMeta
 from app.admin.tasks_status import status_of
-from app.models import AssessmentAnswer, AssessmentAttempt, AssessmentTask, AttemptStatus
+from app.models import (
+    AssessmentAnswer,
+    AssessmentAttempt,
+    AssessmentTask,
+    AssessmentTaskTime,
+    AttemptStatus,
+)
 
 SETTLED: Final = (AttemptStatus.PASSED, AttemptStatus.FAILED, AttemptStatus.EXPIRED)
 # Points are a float share: anything this close to 1 is the whole task.
@@ -47,12 +54,14 @@ _KEY_NAMES: Final = {
 def task_facts(dialect: Dialect, since: datetime | None, task_id: uuid.UUID | None) -> Subquery:
     attempt = AssessmentAttempt
     answer = aliased(AssessmentAnswer)
+    spent = aliased(AssessmentTaskTime)
     elements = dialect.json_elements(attempt.task_ids)
     key: Expr = elements.c.value
     task_uuid = dialect.uuid_of_text(key)
     expired = attempt.status == AttemptStatus.EXPIRED
     abandoned = or_(expired, answer.id.is_(None))
-    duration = dialect.seconds_between(attempt.started_at, attempt.finished_at)
+    # Time to an answer: a task left without one has no solving time to compare.
+    duration = case((abandoned, None), else_=spent.seconds)
 
     statement = (
         select(
@@ -62,9 +71,9 @@ def task_facts(dialect: Dialect, since: datetime | None, task_id: uuid.UUID | No
             dialect.json_member_text(attempt.task_state, key, "variant").label("variant"),
             dialect.week(attempt.started_at).label("week"),
             dialect.month(attempt.started_at).label("month"),
-            case((expired, None), else_=duration).label("duration"),
+            duration.label("duration"),
             case(
-                (expired, None),
+                (duration.is_(None), None),
                 (duration >= HISTOGRAM_MINUTES * 60, HISTOGRAM_MINUTES),
                 else_=dialect.whole_minutes(duration),
             ).label("bucket"),
@@ -81,6 +90,7 @@ def task_facts(dialect: Dialect, since: datetime | None, task_id: uuid.UUID | No
             and_(AssessmentTask.id == task_uuid, AssessmentTask.owner_id.is_(None)),
         )
         .outerjoin(answer, and_(answer.attempt_id == attempt.id, answer.task_id == task_uuid))
+        .outerjoin(spent, and_(spent.attempt_id == attempt.id, spent.task_id == task_uuid))
         .where(attempt.status.in_(SETTLED), attempt.finished_at.is_not(None))
     )
     if since is not None:

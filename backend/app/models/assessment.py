@@ -139,6 +139,23 @@ class AssessmentAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     blur_count: Mapped[int] = mapped_column(default=0)
 
 
+class AssessmentTaskTime(TimestampMixin, Base):
+    """Seconds one task of an attempt was on the candidate's screen, summed over visits.
+
+    The runner reports the time when the candidate leaves the task (another task, a hidden
+    tab, the finish); the total never exceeds the time since the attempt started.
+    """
+
+    __tablename__ = "assessment_task_times"
+
+    attempt_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("assessment_attempts.id", ondelete="CASCADE"), primary_key=True
+    )
+    # Id of a task in the attempt's own copy of the variant, like `AssessmentAnswer.task_id`.
+    task_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, index=True)
+    seconds: Mapped[float] = mapped_column(default=0.0)
+
+
 class AssessmentAnswer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "assessment_answers"
     __table_args__ = (UniqueConstraint("attempt_id", "task_id", name="attempt_task"),)

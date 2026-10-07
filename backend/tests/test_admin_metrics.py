@@ -25,6 +25,7 @@ from app.core.security import hash_password
 from app.models import (
     AssessmentAnswer,
     AssessmentAttempt,
+    AssessmentTaskTime,
     AttemptStatus,
     CandidateProfile,
     Grade,
@@ -176,6 +177,13 @@ async def _attempts(
             )
             session.add(attempt)
             await session.flush()
+            if not is_expired:
+                # The runner reports the time the task was on screen.
+                session.add(
+                    AssessmentTaskTime(
+                        attempt_id=attempt.id, task_id=uuid.UUID(task_id), seconds=minutes * 60
+                    )
+                )
             if value is not None:
                 session.add(
                     AssessmentAnswer(
@@ -272,9 +280,9 @@ async def test_task_analytics_metrics_and_flags(
     assert row["partialShare"] == 9.8
     assert row["abandonedShare"] == 11.5
     assert row["unsolvedShare"] == 49.2
-    # The expired attempt has no time; 30 × 600 s and 30 × 1500 s remain.
-    assert row["avgTimeSec"] == 1050
-    assert row["medianTimeSec"] == 1050
+    # Time counts for answered tasks only: 24 × 600 s and 30 × 1500 s.
+    assert row["avgTimeSec"] == 1100
+    assert row["medianTimeSec"] == 1500
     assert row["variantSpreadPp"] == 40.3
     assert row["maxWeeklyJumpPp"] == 40.3
     assert row["flags"] == ["out_of_target", "variant_spread", "possible_leak"]
@@ -305,7 +313,7 @@ async def test_task_analytics_metrics_and_flags(
     assert {g["grade"]: g["attempts"] for g in result["grades"]} == {"junior": 31, "middle": 30}
     assert [w["fullShare"] for w in result["weekly"]] == [9.7, 50.0]
     assert sum(m["attempts"] for m in result["monthly"]) == 61
-    assert {h["minute"]: h["count"] for h in result["histogram"]} == {10: 30, 25: 30}
+    assert {h["minute"]: h["count"] for h in result["histogram"]} == {10: 24, 25: 30}
     assert result["flags"] == ["out_of_target", "variant_spread", "possible_leak"]
 
 
