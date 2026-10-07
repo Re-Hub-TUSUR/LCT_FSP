@@ -14,6 +14,9 @@ EXPECTED_TAGS = {
     "applications",
     "matching",
     "calendar",
+    "responses",
+    "conversations",
+    "notifications",
     "assessments",
     "admin",
 }

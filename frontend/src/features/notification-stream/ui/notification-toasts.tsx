@@ -1,0 +1,38 @@
+import { useCallback, useState } from 'react'
+import { useSession } from '@/entities/session'
+import { useNotificationStream } from '../model/use-notification-stream'
+import './notification-toasts.css'
+
+type Toast = { id: number; text: string }
+
+export function NotificationToasts() {
+  const { user } = useSession()
+  const [toasts, setToasts] = useState<Toast[]>([])
+
+  const push = useCallback((text: string) => {
+    const id = Date.now()
+    setToasts((prev) => [...prev, { id, text }])
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((item) => item.id !== id))
+    }, 5200)
+  }, [])
+
+  useNotificationStream({
+    onCompanyLiked: (event) => {
+      if (user?.role !== 'candidate') return
+      push(`${event.companyName} вас оценила!`)
+    },
+  })
+
+  if (!toasts.length) return null
+
+  return (
+    <div className="notify-stack" aria-live="polite">
+      {toasts.map((toast) => (
+        <p key={toast.id} className="notify-stack__item">
+          {toast.text}
+        </p>
+      ))}
+    </div>
+  )
+}

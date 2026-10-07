@@ -8,6 +8,8 @@ from app.repositories.candidate import CandidateRepository
 from app.repositories.company import CompanyRepository
 from app.repositories.email_verification import EmailVerificationRepository
 from app.repositories.invitation import InvitationRepository
+from app.repositories.conversation import ConversationRepository
+from app.repositories.inbound import InboundRepository
 from app.repositories.meeting import MeetingRepository
 from app.repositories.reaction import ReactionRepository
 from app.repositories.refresh_token import RefreshTokenRepository
@@ -22,7 +24,10 @@ from app.services.candidate_search import CandidateSearchService
 from app.services.candidates import CandidateProfileService
 from app.services.code_runner import CodeRunner, OnlineCompilerRunner
 from app.services.email import ResendEmailSender
+from app.services.chat import ChatService
+from app.services.notifications import NotificationHub
 from app.services.reactions import ReactionService
+from app.services.responses import ResponsesService
 from app.services.test_assignments import TestAssignmentService
 from app.services.vacancies import VacancyService
 from app.services.vacancy_feed import VacancyFeedService
@@ -95,13 +100,55 @@ CandidateProfileServiceDep = Annotated[
 ]
 
 
-def get_reaction_service(session: SessionDep) -> ReactionService:
+def get_notification_hub(request: Request) -> NotificationHub:
+    return request.app.state.notifications
+
+
+NotificationHubDep = Annotated[NotificationHub, Depends(get_notification_hub)]
+
+
+def get_reaction_service(
+    session: SessionDep, hub: NotificationHubDep
+) -> ReactionService:
     return ReactionService(
-        ReactionRepository(session), VacancyRepository(session), CandidateRepository(session)
+        ReactionRepository(session),
+        VacancyRepository(session),
+        CandidateRepository(session),
+        CompanyRepository(session),
+        hub,
     )
 
 
 ReactionServiceDep = Annotated[ReactionService, Depends(get_reaction_service)]
+
+
+def get_responses_service(
+    session: SessionDep, reactions: ReactionServiceDep
+) -> ResponsesService:
+    return ResponsesService(
+        InboundRepository(session),
+        reactions,
+        CompanyRepository(session),
+    )
+
+
+ResponsesServiceDep = Annotated[ResponsesService, Depends(get_responses_service)]
+
+
+def get_chat_service(session: SessionDep, hub: NotificationHubDep, settings: SettingsDep) -> ChatService:
+    return ChatService(
+        ConversationRepository(session),
+        ReactionRepository(session),
+        CompanyRepository(session),
+        CandidateRepository(session),
+        VacancyRepository(session),
+        MeetingRepository(session),
+        settings,
+        hub,
+    )
+
+
+ChatServiceDep = Annotated[ChatService, Depends(get_chat_service)]
 
 
 def get_calendar_service(session: SessionDep) -> CalendarService:

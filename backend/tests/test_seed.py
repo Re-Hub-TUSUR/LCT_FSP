@@ -12,6 +12,7 @@ from app.models import CandidateProfile, Company, FspAchievement, Grade, User, U
 from app.seed.fixtures import DATA_DIR, SeedData, load_seed_data
 from app.seed.generate import (
     DEMO_CANDIDATE_EMAIL,
+    DEMO_EMPLOYER2_EMAIL,
     DEMO_EMPLOYER_EMAIL,
     EXPERIENCE_YEARS,
     build_dataset,
@@ -116,7 +117,11 @@ async def test_demo_accounts_can_sign_in(
         await seed_database(session, data, password_hash=hash_password(PASSWORD))
         await session.commit()
 
-    for email, role in ((DEMO_CANDIDATE_EMAIL, "candidate"), (DEMO_EMPLOYER_EMAIL, "employer")):
+    for email, role in (
+        (DEMO_CANDIDATE_EMAIL, "candidate"),
+        (DEMO_EMPLOYER_EMAIL, "employer"),
+        (DEMO_EMPLOYER2_EMAIL, "employer"),
+    ):
         response = await client.post(
             f"{API}/auth/login", json={"email": email, "password": PASSWORD}
         )

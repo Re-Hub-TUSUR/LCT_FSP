@@ -11,6 +11,7 @@ export const ROUTES = {
   vacancies: '/vacancies',
   feed: '/feed',
   feedSwipe: '/feed/swipe',
+  responses: '/responses',
   company: '/companies/:companyId',
   candidate: '/candidates/:candidateId',
   calendar: '/calendar',

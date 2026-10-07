@@ -91,6 +91,27 @@ class ReactionRepository:
         )
         return set(result)
 
+    async def matched_company_ids_for_candidate(
+        self, *, candidate_user_id: uuid.UUID, candidate_id: uuid.UUID
+    ) -> set[uuid.UUID]:
+        """Companies whose recruiter liked the candidate and the candidate liked back."""
+        liked_back = exists().where(
+            VacancyReaction.user_id == candidate_user_id,
+            VacancyReaction.kind == ReactionKind.LIKE,
+            VacancyReaction.vacancy_id == Vacancy.id,
+            Vacancy.company_id == Company.id,
+        )
+        result = await self._session.scalars(
+            select(Company.id)
+            .join(CandidateReaction, CandidateReaction.user_id == Company.owner_id)
+            .where(
+                CandidateReaction.candidate_id == candidate_id,
+                CandidateReaction.kind == ReactionKind.LIKE,
+                liked_back,
+            )
+        )
+        return set(result)
+
     async def matched_candidate_ids(
         self, *, recruiter_id: uuid.UUID, company_id: uuid.UUID
     ) -> set[uuid.UUID]:

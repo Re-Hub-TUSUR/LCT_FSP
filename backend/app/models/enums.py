@@ -111,3 +111,9 @@ class ReactionKind(StrEnum):
 
     LIKE = "like"
     SKIP = "skip"
+
+
+class MessageKind(StrEnum):
+    TEXT = "text"
+    ATTACHMENT = "attachment"
+    MEETING = "meeting"

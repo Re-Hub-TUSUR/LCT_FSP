@@ -1,0 +1,206 @@
+import type { ReactNode } from 'react'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router'
+import { useSession } from '@/entities/session'
+import {
+  type CandidateInboundDto,
+  type EmployerInboundDto,
+  responseApi,
+  responseKeys,
+  responseQueries,
+} from '@/entities/response'
+import { CandidateMatchCard, candidateQueries } from '@/entities/candidate'
+import { VacancyMatchCard, vacancyQueries } from '@/entities/vacancy'
+import { Button, Chip, EmptyState, QueryState } from '@/shared/ui'
+import './responses-hub.css'
+
+type Props = {
+  messagesPanel: ReactNode
+}
+
+export type ResponsesTab = 'skipped' | 'liked' | 'inbound' | 'messages'
+
+const TAB_LABELS: Record<ResponsesTab, string> = {
+  skipped: 'Не понравились',
+  liked: 'Мне понравились',
+  inbound: 'Я понравился',
+  messages: 'Сообщения',
+}
+
+const TABS: ResponsesTab[] = ['skipped', 'liked', 'inbound', 'messages']
+
+function parseTab(value: string | null): ResponsesTab {
+  return TABS.includes(value as ResponsesTab) ? (value as ResponsesTab) : 'liked'
+}
+
+function isCandidateInbound(item: unknown): item is CandidateInboundDto {
+  return typeof item === 'object' && item !== null && 'companyId' in item
+}
+
+export function ResponsesHub({ messagesPanel }: Props) {
+  const { user } = useSession()
+  const employer = user?.role === 'employer'
+  const [params, setParams] = useSearchParams()
+  const tab = parseTab(params.get('tab'))
+  const setTab = (next: ResponsesTab) => {
+    const copy = new URLSearchParams(params)
+    copy.set('tab', next)
+    if (next !== 'messages') copy.delete('chat')
+    setParams(copy, { replace: true })
+  }
+
+  const feedView = tab === 'skipped' || tab === 'liked' ? tab : 'liked'
+  const vacancyQuery = useQuery({
+    ...vacancyQueries.feed({ page: 1, perPage: 20, view: feedView }),
+    enabled: !employer && (tab === 'skipped' || tab === 'liked'),
+    placeholderData: keepPreviousData,
+  })
+  const candidateQuery = useQuery({
+    ...candidateQueries.search({ page: 1, perPage: 20, view: feedView }),
+    enabled: employer && (tab === 'skipped' || tab === 'liked'),
+    placeholderData: keepPreviousData,
+  })
+  const inboundQuery = useQuery({
+    ...responseQueries.inbound(),
+    enabled: tab === 'inbound',
+    placeholderData: keepPreviousData,
+  })
+
+  const queryClient = useQueryClient()
+  const respond = useMutation({
+    mutationFn: async (payload: {
+      companyId?: string
+      candidateId?: string
+      vacancyId?: string
+    }) => {
+      if (payload.companyId) {
+        await responseApi.respondCompany(payload.companyId, payload.vacancyId)
+      } else if (payload.candidateId) {
+        await responseApi.respondCandidate(payload.candidateId, payload.vacancyId)
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: responseKeys.inbound() })
+      void queryClient.invalidateQueries({ queryKey: ['vacancies'] })
+      void queryClient.invalidateQueries({ queryKey: ['candidates'] })
+    },
+  })
+
+  return (
+    <div className="responses">
+      <div className="responses__tabs" role="tablist" aria-label="Мои отклики">
+        {TABS.map((item) => (
+          <Chip key={item} active={tab === item} onClick={() => setTab(item)}>
+            {TAB_LABELS[item]}
+          </Chip>
+        ))}
+      </div>
+
+      {tab === 'messages' ? (
+        messagesPanel
+      ) : tab === 'inbound' ? (
+        <QueryState query={inboundQuery}>
+          {(data) =>
+            data.length ? (
+              <ul className="responses__list">
+                {data.map((item) =>
+                  isCandidateInbound(item) ? (
+                    <li key={item.companyId} className="responses__card">
+                      <div>
+                        <p className="responses__eyebrow">{item.industry ?? 'Компания'}</p>
+                        <h3 className="responses__title">{item.companyName}</h3>
+                      </div>
+                      <Button
+                        size="inline"
+                        disabled={respond.isPending}
+                        onClick={() =>
+                          respond.mutate({
+                            companyId: item.companyId,
+                            vacancyId: item.vacancyId ?? undefined,
+                          })
+                        }
+                      >
+                        Ответить
+                      </Button>
+                    </li>
+                  ) : (
+                    <li key={(item as EmployerInboundDto).candidateId} className="responses__card">
+                      <div>
+                        <p className="responses__eyebrow">
+                          {(item as EmployerInboundDto).vacancyTitle}
+                        </p>
+                        <h3 className="responses__title">
+                          {(item as EmployerInboundDto).displayName}
+                        </h3>
+                        {(item as EmployerInboundDto).headline ? (
+                          <p className="responses__lead">{(item as EmployerInboundDto).headline}</p>
+                        ) : null}
+                      </div>
+                      <Button
+                        size="inline"
+                        disabled={respond.isPending}
+                        onClick={() =>
+                          respond.mutate({
+                            candidateId: (item as EmployerInboundDto).candidateId,
+                            vacancyId: (item as EmployerInboundDto).vacancyId,
+                          })
+                        }
+                      >
+                        Ответить
+                      </Button>
+                    </li>
+                  ),
+                )}
+              </ul>
+            ) : (
+              <EmptyState title="Пока пусто">
+                Здесь появятся компании и кандидаты, которым вы понравились, но вы ещё не ответили
+                взаимностью.
+              </EmptyState>
+            )
+          }
+        </QueryState>
+      ) : employer ? (
+        <QueryState query={candidateQuery} loadingLabel="Загрузка…">
+          {(data) =>
+            data.items.length ? (
+              <ul className="responses__feed">
+                {data.items.map((match) => (
+                  <li key={match.candidate.id}>
+                    <CandidateMatchCard match={match} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState title="Список пуст">
+                {tab === 'skipped'
+                  ? 'Пропущенные кандидаты появятся здесь после свайпа влево.'
+                  : 'Лайкнутые кандидаты появятся после «Интересно» или избранного.'}
+              </EmptyState>
+            )
+          }
+        </QueryState>
+      ) : (
+        <QueryState query={vacancyQuery} loadingLabel="Загрузка…">
+          {(data) =>
+            data.items.length ? (
+              <ul className="responses__feed">
+                {data.items.map((match) => (
+                  <li key={match.vacancy.id}>
+                    <VacancyMatchCard match={match} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState title="Список пуст">
+                {tab === 'skipped'
+                  ? 'Пропущенные вакансии появятся здесь после свайпа влево.'
+                  : 'Понравившиеся вакансии появятся после «Интересно» или избранного.'}
+              </EmptyState>
+            )
+          }
+        </QueryState>
+      )}
+    </div>
+  )
+}

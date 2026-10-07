@@ -9,6 +9,7 @@ from app.models.assessment import (
 from app.models.candidate import CandidateProfile
 from app.models.candidate_category import CandidateCategory
 from app.models.company import Company
+from app.models.conversation import Conversation, Message, MessageAttachment
 from app.models.email_verification import EmailVerificationCode
 from app.models.enums import (
     AssessmentStatus,
@@ -19,6 +20,7 @@ from app.models.enums import (
     Grade,
     InvitationStatus,
     MeetingStatus,
+    MessageKind,
     ReactionKind,
     TaskDifficulty,
     TaskKind,
@@ -53,8 +55,12 @@ __all__ = [
     "Grade",
     "Invitation",
     "InvitationStatus",
+    "Conversation",
     "Meeting",
     "MeetingStatus",
+    "Message",
+    "MessageAttachment",
+    "MessageKind",
     "ReactionKind",
     "RefreshToken",
     "TaskDifficulty",

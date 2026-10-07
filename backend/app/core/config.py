@@ -55,6 +55,10 @@ class Settings(BaseSettings):
     # Alias that points at the current versioned candidates index.
     elasticsearch_index: str = "kadry-candidates"
 
+    # Chat attachments land here; mount a volume in production.
+    upload_dir: str = "/data/uploads"
+    chat_attachment_limit: int = Field(default=10 * 1024 * 1024, ge=1)
+
     @field_validator("resend_from")
     @classmethod
     def _default_from(cls, value: str) -> str:

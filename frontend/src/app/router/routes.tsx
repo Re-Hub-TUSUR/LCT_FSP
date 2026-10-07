@@ -115,6 +115,13 @@ export const routes: RouteObject[] = [
             }),
           },
           {
+            path: ROUTES.responses,
+            lazy: lazyPage(() => import('@/pages/responses').then((m) => m.ResponsesPage), {
+              auth: true,
+              roles: ['candidate', 'employer'],
+            }),
+          },
+          {
             // Legacy entry point of the employer's swipe deck.
             path: ROUTES.matching,
             lazy: lazyPage(() => import('@/pages/feed').then((m) => m.FeedSwipePage), {

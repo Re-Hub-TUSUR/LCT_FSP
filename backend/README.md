@@ -56,6 +56,7 @@ Swagger: <http://localhost:8000/api/docs>, OpenAPI: `/api/openapi.json`.
 
 - `candidate@example.com` — соискатель: Middle Python-разработчик из Москвы с результатами ФСП;
 - `employer@example.com` — работодатель, компания «ПэйФлоу»;
+- `employer2@example.com` — работодатель, компания «Северный код»;
 - остальные работодатели — `recruiter@<key>.example.com`, соискатели — поле `email` в
   `candidates.json`.
 

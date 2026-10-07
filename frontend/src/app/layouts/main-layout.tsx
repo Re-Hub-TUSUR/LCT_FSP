@@ -2,6 +2,7 @@ import { Outlet } from 'react-router'
 import { useSession } from '@/entities/session'
 import type { UserRole } from '@/entities/user'
 import { ROUTES } from '@/shared/config'
+import { NotificationToasts } from '@/features/notification-stream'
 import { SiteHeader } from '@/widgets/site-header'
 import type { NavItem } from '@/widgets/site-header'
 import { CabinetGate, useCabinetSetup } from '../router/cabinet-gate'
@@ -11,12 +12,14 @@ const NAV_BY_ROLE: Record<UserRole | 'guest', NavItem[]> = {
   candidate: [
     { label: 'Свайпы', to: ROUTES.feedSwipe },
     { label: 'Лента', to: ROUTES.feed },
+    { label: 'Мои отклики', to: ROUTES.responses },
     { label: 'Тестирование', to: ROUTES.testing },
     { label: 'Календарь', to: ROUTES.calendar },
   ],
   employer: [
     { label: 'Свайпы', to: ROUTES.feedSwipe },
     { label: 'Лента', to: ROUTES.feed },
+    { label: 'Мои отклики', to: ROUTES.responses },
     { label: 'Вакансии', to: ROUTES.vacancies },
     { label: 'Тестовые', to: ROUTES.testing },
     { label: 'Календарь', to: ROUTES.calendar },
@@ -45,6 +48,7 @@ export function MainLayout() {
         cta={cta}
         home={setup.phase === 'required' ? setup.setupPath : undefined}
       />
+      <NotificationToasts />
       <main>
         <CabinetGate>
           <Outlet />

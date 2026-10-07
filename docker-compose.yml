@@ -59,6 +59,9 @@ services:
       # Password of the demo accounts created by `python -m app.seed`.
       SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-}
       ELASTICSEARCH_URL: http://elasticsearch:9200
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - upload-data:/data/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -87,3 +90,4 @@ services:
 volumes:
   db-data:
   es-data:
+  upload-data:

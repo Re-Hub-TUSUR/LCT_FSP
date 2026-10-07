@@ -13,6 +13,7 @@ from app.core.logging import configure_logging, request_logging_middleware
 from app.db.session import get_engine, get_sessionmaker
 from app.repositories.candidate import CandidateRepository
 from app.search.elastic import ElasticSearchState, create_client
+from app.services.notifications import NotificationHub
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.middleware("http")(security_headers_middleware)
     app.middleware("http")(request_logging_middleware)
     register_exception_handlers(app)
+    app.state.notifications = NotificationHub()
     app.include_router(api_router)
     return app
 

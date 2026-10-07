@@ -26,6 +26,8 @@ EMAIL_DOMAIN: Final = "example.com"
 # The demo candidate is the first record: python-backend, middle, Moscow, with FSP results.
 DEMO_CANDIDATE_EMAIL: Final = "candidate@example.com"
 DEMO_EMPLOYER_EMAIL: Final = "employer@example.com"
+DEMO_EMPLOYER2_EMAIL: Final = "employer2@example.com"
+DEMO_EMPLOYER_EMAILS: Final = (DEMO_EMPLOYER_EMAIL, DEMO_EMPLOYER2_EMAIL)
 DEMO_TRACK: Final = "python-backend"
 
 HIDDEN_CANDIDATES: Final = 4
@@ -599,7 +601,10 @@ def build_companies(rng: random.Random) -> tuple[list[Record], list[Record]]:
     companies: list[Record] = []
     vacancies: list[Record] = []
     for position, company in enumerate(content.COMPANIES):
-        owner = DEMO_EMPLOYER_EMAIL if position == 0 else f"recruiter@{company.key}.{EMAIL_DOMAIN}"
+        if position < len(DEMO_EMPLOYER_EMAILS):
+            owner = DEMO_EMPLOYER_EMAILS[position]
+        else:
+            owner = f"recruiter@{company.key}.{EMAIL_DOMAIN}"
         companies.append(
             {
                 "key": company.key,
