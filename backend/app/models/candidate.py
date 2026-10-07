@@ -1,13 +1,28 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import JSON, CheckConstraint, DateTime, ForeignKey, LargeBinary, String, Text
-from sqlalchemy.orm import Mapped, deferred, mapped_column, relationship
+from sqlalchemy import (
+    JSON,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    LargeBinary,
+    String,
+    Text,
+    Uuid,
+    column,
+    select,
+    table,
+)
+from sqlalchemy.orm import Mapped, column_property, deferred, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 from app.db.types import str_enum
-from app.models.enums import AssessmentStatus, Grade
+from app.models.enums import AssessmentStatus, FspSync, Grade, JobStatus
 from app.models.fsp_achievement import FspAchievement
+
+_users = table("users", column("id", Uuid), column("last_active_at", DateTime(timezone=True)))
 
 
 class CandidateProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -23,6 +38,10 @@ class CandidateProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), unique=True
+    )
+    # The owner's last sign-in: recruiters filter by «активен за 30 дней».
+    last_active_at: Mapped[datetime | None] = column_property(
+        select(_users.c.last_active_at).where(_users.c.id == user_id).scalar_subquery()
     )
     display_name: Mapped[str] = mapped_column(String(200))
     headline: Mapped[str | None] = mapped_column(String(300))
@@ -69,7 +88,24 @@ class CandidateProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     phone: Mapped[str | None] = mapped_column(String(32))
     telegram: Mapped[str | None] = mapped_column(String(64))
 
+    # Mirrors `job_status != not_looking`; search filters by this column.
     is_visible_to_employers: Mapped[bool] = mapped_column(default=True)
+    job_status: Mapped[JobStatus] = mapped_column(
+        str_enum(JobStatus), default=JobStatus.OPEN, server_default=JobStatus.OPEN.value
+    )
+    employment_types: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+    # Never shown to employers: only the «до 18» mark derived from it.
+    birth_date: Mapped[date | None] = mapped_column(Date)
+    # Items: {company, position, start: "YYYY-MM", end: "YYYY-MM" | null, stack: [..]}.
+    experience_entries: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    no_experience: Mapped[bool] = mapped_column(default=False)
+    # Items: {institution, specialty, year}.
+    education: Mapped[list[dict[str, object]]] = mapped_column(JSON, default=list)
+    github_url: Mapped[str | None] = mapped_column(String(300))
+    # Separate from the personal-data consent given at sign-up.
+    profile_display_consent: Mapped[bool] = mapped_column(default=False)
+    fsp_sync: Mapped[FspSync | None] = mapped_column(str_enum(FspSync))
 
     # Resumes besides the priority one stored in the columns above. The priority resume is what
     # search and the vacancy feed rank first; these stay visible on the card.

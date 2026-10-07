@@ -22,6 +22,14 @@ export function NotificationToasts() {
       if (user?.role !== 'candidate') return
       push(`${event.companyName} вас оценила!`)
     },
+    onCompanyVerification: (event) => {
+      if (user?.role !== 'employer') return
+      push(
+        event.status === 'approved'
+          ? 'IT-аккредитация подтверждена'
+          : `Выписка отклонена${event.reason ? `: ${event.reason}` : ''}`,
+      )
+    },
   })
 
   if (!toasts.length) return null

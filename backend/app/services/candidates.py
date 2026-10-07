@@ -1,9 +1,12 @@
 """Read and edit a candidate profile under the visibility rules of ТЗ 2.1–2.2."""
 
 import uuid
+from datetime import date
+from urllib.parse import urlsplit
 
 from app.core.errors import AppError, ConflictError, NotFoundError
 from app.models import AssessmentStatus, CandidateProfile, User, UserRole
+from app.models.enums import JobStatus
 from app.repositories.candidate import CandidateRepository
 from app.repositories.company import CompanyRepository
 from app.repositories.invitation import InvitationRepository
@@ -15,6 +18,7 @@ from app.schemas.candidate import (
     OwnCandidateRead,
     ResumeCreate,
 )
+from app.services.age import MIN_AGE, age_on, experience_years
 from app.services.categories import SPECIALIZATIONS
 from app.services.presenters import (
     candidate_read,
@@ -27,6 +31,7 @@ from app.services.uploads import PHOTO_LIMIT, sniff_image
 
 MAX_RESUMES = 3
 MAX_SKILL_LENGTH = 40
+MIN_STACK = 3
 
 
 class CandidateProfileService:
@@ -89,9 +94,13 @@ class CandidateProfileService:
                 display_name=data.display_name.strip() if data.display_name else "",
                 assessment_status=AssessmentStatus.NOT_TAKEN,
                 is_visible_to_employers=True,
+                job_status=JobStatus.OPEN,
                 stack=[],
                 soft_skills=[],
                 work_formats=[],
+                employment_types=[],
+                experience_entries=[],
+                education=[],
                 additional_resumes=[],
             )
             profile.fsp_achievements = []
@@ -101,9 +110,9 @@ class CandidateProfileService:
             _apply_resume(profile, data)
         return own_candidate_read(profile, email=user.email)
 
-    async def set_searching(self, user: User, searching: bool) -> OwnCandidateRead:
+    async def set_searching(self, user: User, status: JobStatus) -> OwnCandidateRead:
         profile = await self._require(user)
-        profile.is_visible_to_employers = searching
+        set_job_status(profile, status)
         return own_candidate_read(profile, email=user.email)
 
     async def link_fsp(self, user: User, member_id: str) -> OwnCandidateRead:
@@ -215,7 +224,14 @@ class CandidateProfileService:
         return profile
 
 
+def set_job_status(profile: CandidateProfile, status: JobStatus) -> None:
+    """`is_visible_to_employers` follows the status: search still filters by that column."""
+    profile.job_status = status
+    profile.is_visible_to_employers = status != JobStatus.NOT_LOOKING
+
+
 def _require_resume(data: CandidateProfileUpdate) -> None:
+    """What the ТЗ makes mandatory for a new resume."""
     missing: list[str] = []
     if not data.display_name:
         missing.append("имя")
@@ -225,19 +241,96 @@ def _require_resume(data: CandidateProfileUpdate) -> None:
         missing.append("специализацию")
     if not data.city:
         missing.append("город")
-    if "experience_years" not in data.model_fields_set or data.experience_years is None:
-        missing.append("стаж")
+    if not (_blank(data.phone) or _telegram(data.telegram)):
+        missing.append("телефон или Telegram")
+    has_years = "experience_years" in data.model_fields_set and data.experience_years is not None
+    if not (has_years or data.experience_entries or data.no_experience):
+        missing.append("опыт работы или «Нет опыта»")
     if not data.stack:
         missing.append("стек")
     if not data.work_formats:
         missing.append("формат работы")
+    if not data.employment_types:
+        missing.append("тип занятости")
     if missing:
         raise AppError("Заполните: " + ", ".join(missing))
+    if len(_skills(data.stack or [], limit=30, label="Стек")) < MIN_STACK:
+        raise AppError(f"Укажите не меньше {MIN_STACK} технологий в стеке")
 
 
 def _apply_resume(profile: CandidateProfile, data: CandidateProfileUpdate) -> None:
     _apply_texts(profile, data)
     _apply_terms(profile, data)
+    _apply_person(profile, data)
+    _apply_experience(profile, data)
+
+
+def _apply_person(profile: CandidateProfile, data: CandidateProfileUpdate) -> None:
+    fields = data.model_fields_set
+    if "birth_date" in fields:
+        if data.birth_date is not None:
+            if data.birth_date > date.today():
+                raise AppError("Дата рождения в будущем")
+            if age_on(data.birth_date) < MIN_AGE:
+                raise AppError(f"Регистрация доступна с {MIN_AGE} лет")
+        profile.birth_date = data.birth_date
+    if "relocation_ready" in fields and data.relocation_ready is not None:
+        profile.relocation_ready = data.relocation_ready
+    if "job_status" in fields and data.job_status is not None:
+        set_job_status(profile, data.job_status)
+    if "employment_types" in fields:
+        if not data.employment_types:
+            raise AppError("Выберите тип занятости")
+        profile.employment_types = list(dict.fromkeys(item.value for item in data.employment_types))
+    if "github_url" in fields:
+        profile.github_url = _github(data.github_url)
+    if "profile_display_consent" in fields and data.profile_display_consent is not None:
+        profile.profile_display_consent = data.profile_display_consent
+    if "fsp_sync" in fields:
+        profile.fsp_sync = data.fsp_sync
+    if "education" in fields:
+        profile.education = [item.model_dump() for item in data.education or []]
+
+
+def _apply_experience(profile: CandidateProfile, data: CandidateProfileUpdate) -> None:
+    """Job periods replace the typed number of years: the years are counted from them."""
+    fields = data.model_fields_set
+    if "no_experience" in fields and data.no_experience is not None:
+        profile.no_experience = data.no_experience
+    if "experience_entries" in fields:
+        entries = data.experience_entries or []
+        current = f"{date.today():%Y-%m}"
+        if any(entry.start > current for entry in entries):
+            raise AppError("Начало работы не может быть в будущем")
+        profile.experience_entries = [
+            {**entry.model_dump(), "stack": _skills(entry.stack, limit=20, label="Стек работы")}
+            for entry in entries
+        ]
+    if profile.no_experience:
+        profile.experience_entries = []
+        profile.experience_years = 0
+    elif profile.experience_entries and (
+        "experience_entries" in fields or "no_experience" in fields
+    ):
+        profile.experience_years = experience_years(
+            (str(item["start"]), _month(item.get("end"))) for item in profile.experience_entries
+        )
+
+
+def _month(value: object) -> str | None:
+    return value if isinstance(value, str) else None
+
+
+def _github(value: str | None) -> str | None:
+    text = _blank(value)
+    if text is None:
+        return None
+    if not text.startswith(("http://", "https://")):
+        text = f"https://{text}"
+    host = urlsplit(text).hostname or ""
+    if host not in {"github.com", "www.github.com"}:
+        raise AppError("Ссылка на GitHub должна вести на github.com")
+    return text
 
 
 def _apply_texts(profile: CandidateProfile, data: CandidateProfileUpdate) -> None:

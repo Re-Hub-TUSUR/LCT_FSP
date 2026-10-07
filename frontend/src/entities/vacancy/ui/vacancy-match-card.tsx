@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { formatRubRange, useOverflows } from '@/shared/lib'
-import { MatchMeter } from '@/shared/ui'
+import { MatchMeter, VerifiedMark } from '@/shared/ui'
 import type { VacancyMatchDto } from '../api/vacancy-api'
+import { SALARY_NOTE } from '../model/employment'
 import { WORK_FORMAT_LABELS } from '../model/work-format'
 
 type Props = {
@@ -51,6 +52,7 @@ export function VacancyMatchCard({
             <div className="match-card__titles">
               <p className="match-card__eyebrow">
                 {vacancy.company.name}
+                {vacancy.company.itAccredited && <VerifiedMark />}
                 {vacancy.company.industry && <span> · {vacancy.company.industry}</span>}
               </p>
               <h3 className="match-card__title">{vacancy.title}</h3>
@@ -60,6 +62,7 @@ export function VacancyMatchCard({
           </header>
           <p className="match-card__salary">
             {formatRubRange(vacancy.salary.from, vacancy.salary.to)}
+            <span className="match-card__salary-note"> {SALARY_NOTE}</span>
           </p>
           {facts}
           <ul className="match-card__stack" aria-label="Стек">
@@ -100,12 +103,14 @@ export function VacancyMatchCard({
         <div className="match-card__titles">
           <p className="match-card__eyebrow">
             {vacancy.company.name}
+            {vacancy.company.itAccredited && <VerifiedMark />}
             {vacancy.company.industry && <span> · {vacancy.company.industry}</span>}
           </p>
           <h3 className="match-card__title">{vacancy.title}</h3>
           {matched && <p className="match-card__matched">Взаимно: компания отобрала вас</p>}
           <p className="match-card__salary">
             {formatRubRange(vacancy.salary.from, vacancy.salary.to)}
+            <span className="match-card__salary-note"> {SALARY_NOTE}</span>
           </p>
         </div>
         {matchScore !== null && <MatchMeter value={matchScore} label="Соответствие" />}

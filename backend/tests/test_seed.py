@@ -20,6 +20,7 @@ from app.seed.generate import (
 )
 from app.seed.loader import SeedConflictError, demo_data_loaded, seed_database, seed_id
 from app.services.categories import SPECIALIZATIONS
+from app.services.inn import is_valid_inn
 from tests.conftest import API, PASSWORD
 
 GRADE_ORDER = list(Grade)
@@ -108,6 +109,35 @@ async def test_seeding_twice_keeps_one_copy(
         assert demo is not None
         assert demo.fsp_member_id is not None
         assert len(demo.fsp_achievements) == len(data.candidates[0].fsp_achievements)
+        assert demo.employment_types
+        assert demo.last_active_at is not None
+
+
+async def test_demo_rows_have_the_registration_fields(
+    sessionmaker: async_sessionmaker[AsyncSession], data: SeedData
+) -> None:
+    async with sessionmaker() as session:
+        await seed_database(session, data, password_hash="not-a-real-hash")
+        await session.commit()
+
+    async with sessionmaker() as session:
+        companies = list(await session.scalars(select(Company)))
+        accredited = [company for company in companies if company.it_accredited]
+        assert seed_id("company", data.companies[0].key) in {item.id for item in accredited}
+        assert 0 < len(accredited) < len(companies)
+        assert all(is_valid_inn(company.inn or "") for company in companies)
+
+        vacancies = list(await session.scalars(select(Vacancy)))
+        for vacancy in vacancies:
+            assert vacancy.grades[0] == vacancy.grade
+            assert vacancy.stack_required + vacancy.stack_nice == vacancy.stack
+            assert vacancy.employment_types
+        assert any(len(vacancy.grades) == 2 for vacancy in vacancies)
+
+        profiles = list(await session.scalars(select(CandidateProfile)))
+        for profile in profiles:
+            assert profile.is_visible_to_employers == (profile.job_status != "not_looking")
+            assert profile.no_experience == (profile.experience_years == 0)
 
 
 async def test_demo_accounts_can_sign_in(

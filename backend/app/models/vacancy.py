@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 from app.db.types import str_enum
-from app.models.enums import Grade, WorkFormat
+from app.models.enums import FspDiscipline, FspResult, Grade, WorkFormat
 
 
 class Vacancy(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -22,7 +22,9 @@ class Vacancy(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text)
     specialization: Mapped[str] = mapped_column(String(64), index=True)
+    # The first of `grades`; kept for ranking until the matching formula reads `grades`.
     grade: Mapped[Grade] = mapped_column(str_enum(Grade), index=True)
+    # `stack_required` + `stack_nice`; kept for ranking until the formula reads both.
     stack: Mapped[list[str]] = mapped_column(JSON, default=list)
     salary_from: Mapped[int]
     salary_to: Mapped[int]
@@ -31,3 +33,18 @@ class Vacancy(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     city: Mapped[str | None] = mapped_column(String(100))
     # Null = draft, not shown in feeds.
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+
+    # One grade or two neighbouring ones.
+    grades: Mapped[list[str]] = mapped_column(JSON, default=list)
+    stack_required: Mapped[list[str]] = mapped_column(JSON, default=list)
+    stack_nice: Mapped[list[str]] = mapped_column(JSON, default=list)
+    relocation_help: Mapped[bool] = mapped_column(default=False)
+    employment_types: Mapped[list[str]] = mapped_column(JSON, default=list)
+    benefits: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+    # Recruiter's defaults for the candidate search opened from this vacancy.
+    verified_grade_only: Mapped[bool] = mapped_column(default=True)
+    fsp_best_result: Mapped[FspResult | None] = mapped_column(str_enum(FspResult))
+    fsp_discipline: Mapped[FspDiscipline | None] = mapped_column(str_enum(FspDiscipline))
+    # 0 = any, otherwise 1, 3 or 5 years of commercial experience.
+    min_experience_years: Mapped[int] = mapped_column(default=0)

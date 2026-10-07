@@ -10,6 +10,7 @@ from app.admin.csv_export import csv_response
 from app.admin.dependencies import VerificationDep
 from app.admin.enums import VerificationStatus
 from app.admin.schemas import Reason, VerificationApprove, VerificationDetail, VerificationRow
+from app.admin.services.verification import MEDIA_TYPES, DocumentKind, document_kind
 from app.dependencies.auth import AdminUser
 from app.schemas.common import Page
 
@@ -24,14 +25,16 @@ STATUS_LABELS = {
 Search = Annotated[str | None, Query(max_length=200, description="Название компании")]
 
 
-def pdf_response(filename: str, data: bytes) -> Response:
-    """Shown inline in the browser's PDF viewer; the name is RFC 5987-encoded (Cyrillic)."""
+def document_response(filename: str, data: bytes, kind: DocumentKind) -> Response:
+    """A PDF opens in the browser's viewer, a DOCX downloads. The name is RFC 5987-encoded
+    (Cyrillic)."""
+    disposition = "inline" if kind == "pdf" else "attachment"
     return Response(
         content=data,
-        media_type="application/pdf",
+        media_type=MEDIA_TYPES[kind],
         headers={
             "Content-Disposition": (
-                f"inline; filename=\"document.pdf\"; filename*=UTF-8''{quote(filename)}"
+                f"{disposition}; filename=\"document.{kind}\"; filename*=UTF-8''{quote(filename)}"
             ),
             "X-Content-Type-Options": "nosniff",
         },
@@ -93,12 +96,12 @@ async def read_request(
     return await service.detail(company_id)
 
 
-@router.get("/{company_id}/documents/{document_id}", summary="The PDF itself")
+@router.get("/{company_id}/documents/{document_id}", summary="The document itself")
 async def read_document(
     company_id: uuid.UUID, document_id: uuid.UUID, _: AdminUser, service: VerificationDep
 ) -> Response:
     document, data = await service.document_bytes(company_id, document_id)
-    return pdf_response(document.filename, data)
+    return document_response(document.filename, data, document_kind(document))
 
 
 @router.post("/{company_id}/approve", summary="Confirm the company is real")

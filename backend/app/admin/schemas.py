@@ -416,6 +416,7 @@ class CompanyDocumentRead(ApiModel):
     filename: str
     size_bytes: int
     uploaded_at: datetime
+    kind: Literal["pdf", "docx"] = "pdf"
 
 
 class VerificationRead(ApiModel):

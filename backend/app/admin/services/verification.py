@@ -1,14 +1,16 @@
-"""A company proves it is real: it uploads official documents (PDF), an admin approves or
-rejects the request.
+"""A company proves its IT accreditation: it uploads the Минцифры registry extract (PDF or
+DOCX), an admin approves or rejects the request.
 
 Uploading the first document opens a request; a new upload after a rejection reopens it. An
 approved company may add documents without losing its status.
 """
 
+import io
 import uuid
+import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 
 from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,11 +30,38 @@ from app.core.config import Settings
 from app.core.errors import AppError, ConflictError, NotFoundError
 from app.models import Company, User
 from app.schemas.common import Page
+from app.services.notifications import NotificationHub
 
 DOCUMENT_LIMIT: Final = 10 * 1024 * 1024
 MAX_DOCUMENTS: Final = 10
 _PDF: Final = b"%PDF-"
+_ZIP: Final = b"PK\x03\x04"
+_DOCX_BODY: Final = "word/document.xml"
 STORAGE_DIR: Final = "company-documents"
+
+DocumentKind = Literal["pdf", "docx"]
+MEDIA_TYPES: Final[dict[DocumentKind, str]] = {
+    "pdf": "application/pdf",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+
+
+def sniff_document(data: bytes) -> DocumentKind | None:
+    """The bytes decide: a PDF, or a Word file (a ZIP with the document body inside)."""
+    if data.startswith(_PDF):
+        return "pdf"
+    if data.startswith(_ZIP):
+        try:
+            with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                if _DOCX_BODY in archive.namelist():
+                    return "docx"
+        except zipfile.BadZipFile:
+            return None
+    return None
+
+
+def document_kind(document: CompanyDocument) -> DocumentKind:
+    return "docx" if document.storage_key.endswith(".docx") else "pdf"
 
 
 def _document(document: CompanyDocument) -> CompanyDocumentRead:
@@ -41,22 +70,30 @@ def _document(document: CompanyDocument) -> CompanyDocumentRead:
         filename=document.filename,
         size_bytes=document.size_bytes,
         uploaded_at=document.created_at,
+        kind=document_kind(document),
     )
 
 
-def clean_filename(name: str | None) -> str:
-    """Only the last path part, no control characters, `.pdf` at the end."""
+def clean_filename(name: str | None, kind: DocumentKind = "pdf") -> str:
+    """Only the last path part, no control characters, the extension of the detected type."""
     base = Path((name or "").replace("\\", "/")).name
     base = "".join(char for char in base if char.isprintable() and char not in '"<>|')
     base = base.strip()[:200] or "document"
-    return base if base.lower().endswith(".pdf") else f"{base}.pdf"
+    suffix = f".{kind}"
+    return base if base.lower().endswith(suffix) else f"{base}{suffix}"
 
 
 class VerificationService:
-    def __init__(self, session: AsyncSession, settings: Settings) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        settings: Settings,
+        notifications: NotificationHub | None = None,
+    ) -> None:
         self._session = session
         self._root = Path(settings.upload_dir) / STORAGE_DIR
         self._audit = AuditLog(session)
+        self._notifications = notifications
 
     # ── Employer ──────────────────────────────────────────────────────────────────────────
 
@@ -78,12 +115,13 @@ class VerificationService:
         company = await self._own_company(user)
         if len(data) > DOCUMENT_LIMIT:
             raise AppError("Файл больше 10 МБ")
-        if not data.startswith(_PDF):
-            raise AppError("Нужен документ в формате PDF")
+        kind = sniff_document(data)
+        if kind is None:
+            raise AppError("Нужна выписка в формате PDF или DOCX")
         if len(await self._documents(company.id)) >= MAX_DOCUMENTS:
             raise ConflictError(f"Можно загрузить не больше {MAX_DOCUMENTS} документов")
 
-        storage_key = f"{company.id}/{uuid.uuid4()}.pdf"
+        storage_key = f"{company.id}/{uuid.uuid4()}.{kind}"
         path = self._root / storage_key
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
@@ -91,7 +129,7 @@ class VerificationService:
             CompanyDocument(
                 company_id=company.id,
                 uploader_id=user.id,
-                filename=clean_filename(filename),
+                filename=clean_filename(filename, kind),
                 size_bytes=len(data),
                 storage_key=storage_key,
             )
@@ -267,9 +305,28 @@ class VerificationService:
             {"status": [before.value, target.value]},
             reason=reason,
         )
-        return await self.detail(company_id)
+        detail = await self.detail(company_id)
+        await self._notify(company_id, target, reason)
+        return detail
 
     # ── Helpers ───────────────────────────────────────────────────────────────────────────
+
+    async def _notify(
+        self, company_id: uuid.UUID, status: VerificationStatus, reason: str | None
+    ) -> None:
+        if self._notifications is None:
+            return
+        company = await self._session.get(Company, company_id)
+        if company is None:
+            return
+        await self._notifications.publish(
+            company.owner_id,
+            {
+                "type": "company_verification",
+                "status": status.value,
+                "reason": reason if status == VerificationStatus.REJECTED else None,
+            },
+        )
 
     async def _own_company(self, user: User) -> Company:
         company = await self._session.scalar(select(Company).where(Company.owner_id == user.id))

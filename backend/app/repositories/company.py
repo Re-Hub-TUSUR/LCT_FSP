@@ -19,4 +19,22 @@ class CompanyRepository:
     async def add(self, company: Company) -> Company:
         self._session.add(company)
         await self._session.flush()
+        # A computed column is not set on a new row, and a lazy load is not allowed in async.
+        await self._session.refresh(company, ["it_accredited"])
         return company
+
+    async def logo_of(self, company_id: uuid.UUID) -> tuple[bytes, str] | None:
+        row = (
+            await self._session.execute(
+                select(Company.logo, Company.logo_type).where(Company.id == company_id)
+            )
+        ).first()
+        if row is None or row.logo is None or row.logo_type is None:
+            return None
+        return row.logo, row.logo_type
+
+    async def inn_taken(self, inn: str, *, except_id: uuid.UUID | None) -> bool:
+        query = select(Company.id).where(Company.inn == inn)
+        if except_id is not None:
+            query = query.where(Company.id != except_id)
+        return await self._session.scalar(query.limit(1)) is not None

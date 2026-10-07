@@ -30,7 +30,7 @@
 
 .match-card__eyebrow {
   margin: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -43,7 +43,7 @@
 
 .match-card__title {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-weight: 300;
   font-size: clamp(22px, 2vw, 30px);
   line-height: 1.15;
@@ -51,10 +51,16 @@
 
 .match-card__salary {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-weight: 400;
   font-size: 18px;
   color: var(--text);
+}
+
+.match-card__salary-note {
+  font-weight: 300;
+  font-size: 14px;
+  color: var(--text-dim);
 }
 
 .match-card__facts,
@@ -70,7 +76,7 @@
 .match-card__fact {
   padding: 6px 10px;
   border: 1px solid var(--line);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -89,7 +95,7 @@
 .match-card__stack li {
   padding: 5px 9px;
   background: var(--fill-solid);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 12px;
   color: var(--text);
 }
@@ -102,7 +108,7 @@
 
 .match-card__why-title {
   margin: 0 0 8px;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 10px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -122,7 +128,7 @@
 .match-card__why li::before {
   content: '+ ';
   color: #8f86ff;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
 }
 
 .match-card__text {
@@ -146,7 +152,7 @@
   margin: 0;
   padding: 4px 8px;
   border: 1px solid #3dcc8a;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -157,7 +163,7 @@
   padding: 0;
   border: 0;
   background: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -232,7 +238,7 @@
 
 .vacancy-dossier__title {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-weight: 300;
   font-size: clamp(22px, 3.6vh, 32px);
   line-height: 1.1;
@@ -265,7 +271,7 @@
 
 .vacancy-dossier__meta {
   margin: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.08em;
   overflow-wrap: anywhere;
@@ -339,7 +345,7 @@
   width: 56px;
   height: 56px;
   background: var(--fill-brand);
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-weight: 300;
   font-size: 20px;
 }

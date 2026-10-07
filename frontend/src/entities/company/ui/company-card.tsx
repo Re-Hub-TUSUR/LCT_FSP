@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { isHttpUrl } from '@/shared/lib'
-import { Tag } from '@/shared/ui'
+import { Tag, VerifiedMark } from '@/shared/ui'
 import type { CompanyDto } from '../api/company-api'
 import './company-card.css'
 
@@ -8,7 +8,10 @@ export function CompanyCard({ company, actions }: { company: CompanyDto; actions
   return (
     <article className="company-card" aria-label={company.name}>
       <header className="company-card__header">
-        <h3 className="company-card__name">{company.name}</h3>
+        <h3 className="company-card__name">
+          {company.name}
+          {company.itAccredited && <VerifiedMark />}
+        </h3>
         {company.industry && <Tag>{company.industry}</Tag>}
       </header>
       {(company.city || company.size) && (

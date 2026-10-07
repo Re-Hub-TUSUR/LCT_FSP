@@ -14,6 +14,66 @@
   grid-column: 1 / -1;
 }
 
+.company-form__group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.company-form__legend {
+  margin: 0 0 22px;
+  padding: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.logo-field {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.logo-field__preview {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--fill-ghost);
+  font-family: var(--font-display), sans-serif;
+  font-size: 34px;
+  color: var(--text-dim);
+}
+
+.logo-field__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.logo-field__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.logo-field__body .form-hint {
+  margin: 0;
+}
+
+.logo-field__title {
+  margin: 0;
+  font-weight: 500;
+  font-size: 16px;
+}
+
 .form-hint,
 .form-status {
   margin: 22px 0 0;
@@ -32,7 +92,7 @@
 
 .form-banner {
   margin: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 13px;
   letter-spacing: 0.02em;
   line-height: 1.4;
@@ -43,6 +103,25 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.company-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.company-panels__text {
+  margin: 0;
+  max-width: 72ch;
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.company-panels__text--dim {
+  color: var(--text-dim);
 }
 
 @media (max-width: 720px) {

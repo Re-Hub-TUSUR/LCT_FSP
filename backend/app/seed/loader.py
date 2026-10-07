@@ -8,6 +8,8 @@ from typing import Final
 from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.admin.enums import VerificationStatus
+from app.admin.models import CompanyDocument, CompanyVerification
 from app.models import (
     AssessmentAnswer,
     AssessmentAttempt,
@@ -28,6 +30,14 @@ from app.models import (
     UserRole,
     Vacancy,
     VacancyReaction,
+)
+from app.seed.details import (
+    ACCREDITED_COMPANIES,
+    candidate_details,
+    company_details,
+    last_active,
+    person,
+    vacancy_details,
 )
 from app.seed.fixtures import CandidateFixture, CompanyFixture, SeedData, VacancyFixture
 
@@ -66,6 +76,7 @@ def _ago(now: datetime, days: int) -> datetime:
 
 def _employer(company: CompanyFixture, password_hash: str, now: datetime) -> User:
     registered = _ago(now, company.registered_days_ago)
+    first_name, last_name = person(company.key)
     return User(
         id=seed_id("user", company.key),
         email=company.owner_email,
@@ -73,12 +84,15 @@ def _employer(company: CompanyFixture, password_hash: str, now: datetime) -> Use
         role=UserRole.EMPLOYER,
         is_email_verified=True,
         personal_data_consent=True,
+        first_name=first_name,
+        last_name=last_name,
+        last_active_at=last_active(company.key, now),
         created_at=registered,
         updated_at=registered,
     )
 
 
-def _company(company: CompanyFixture, now: datetime) -> Company:
+def _company(company: CompanyFixture, index: int, now: datetime) -> Company:
     registered = _ago(now, company.registered_days_ago)
     return Company(
         id=seed_id("company", company.key),
@@ -90,9 +104,24 @@ def _company(company: CompanyFixture, now: datetime) -> Company:
         size=company.size,
         website=company.website,
         contact_email=company.contact_email,
+        **company_details(company, index),
         created_at=registered,
         updated_at=registered,
     )
+
+
+def _verifications(data: SeedData, now: datetime) -> list[CompanyVerification]:
+    """Approved Минцифры extracts of the first companies. No file: the admin sees the decision."""
+    return [
+        CompanyVerification(
+            company_id=seed_id("company", company.key),
+            status=VerificationStatus.APPROVED,
+            submitted_at=_ago(now, company.registered_days_ago),
+            decided_at=_ago(now, max(company.registered_days_ago - 1, 0)),
+            decision_reason="Выписка из реестра Минцифры проверена",
+        )
+        for company in data.companies[:ACCREDITED_COMPANIES]
+    ]
 
 
 def _vacancy(vacancy: VacancyFixture, order: int, now: datetime) -> Vacancy:
@@ -113,6 +142,7 @@ def _vacancy(vacancy: VacancyFixture, order: int, now: datetime) -> Vacancy:
         salary_to=vacancy.salary_to,
         work_format=vacancy.work_format,
         city=vacancy.city,
+        **vacancy_details(vacancy),
         published_at=published,
         created_at=created,
         updated_at=created,
@@ -128,6 +158,7 @@ def _candidate_user(candidate: CandidateFixture, password_hash: str, now: dateti
         role=UserRole.CANDIDATE,
         is_email_verified=True,
         personal_data_consent=True,
+        last_active_at=last_active(candidate.key, now),
         created_at=registered,
         updated_at=registered,
     )
@@ -174,6 +205,7 @@ def _candidate(candidate: CandidateFixture, now: datetime) -> CandidateProfile:
         phone=candidate.phone,
         telegram=candidate.telegram,
         is_visible_to_employers=candidate.is_visible_to_employers,
+        **candidate_details(candidate, now),
         created_at=registered,
         updated_at=assessed or registered,
     )
@@ -276,6 +308,8 @@ async def _clear(session: AsyncSession, user_ids: list[uuid.UUID]) -> None:
         delete(CandidateCategory).where(CandidateCategory.candidate_id.in_(profiles)),
         delete(FspAchievement).where(FspAchievement.candidate_id.in_(profiles)),
         delete(Vacancy).where(Vacancy.company_id.in_(companies)),
+        delete(CompanyDocument).where(CompanyDocument.company_id.in_(companies)),
+        delete(CompanyVerification).where(CompanyVerification.company_id.in_(companies)),
         delete(CandidateProfile).where(CandidateProfile.user_id.in_(user_ids)),
         delete(Company).where(Company.owner_id.in_(user_ids)),
         delete(EmailVerificationCode).where(EmailVerificationCode.user_id.in_(user_ids)),
@@ -309,8 +343,9 @@ async def seed_database(
     # Flushed level by level: the tables have foreign keys but no ORM relationships between them.
     session.add_all(users)
     await session.flush()
-    session.add_all(_company(company, now) for company in data.companies)
+    session.add_all(_company(company, index, now) for index, company in enumerate(data.companies))
     await session.flush()
+    session.add_all(_verifications(data, now))
     session.add_all(_vacancy(vacancy, order, now) for order, vacancy in enumerate(data.vacancies))
     session.add_all(_candidate(candidate, now) for candidate in data.candidates)
     await session.flush()

@@ -40,6 +40,8 @@ class CandidateRepository:
     async def add(self, profile: CandidateProfile) -> CandidateProfile:
         self._session.add(profile)
         await self._session.flush()
+        # A computed column is not set on a new row, and a lazy load is not allowed in async.
+        await self._session.refresh(profile, ["last_active_at"])
         return profile
 
     async def by_ids(self, ids: Collection[uuid.UUID]) -> dict[uuid.UUID, CandidateProfile]:

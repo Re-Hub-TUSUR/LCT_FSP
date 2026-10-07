@@ -301,6 +301,8 @@ export type CompanyDocument = {
   filename: string
   sizeBytes: number
   uploadedAt: string
+  /** A PDF opens in the viewer, a DOCX downloads. */
+  kind: 'pdf' | 'docx'
 }
 
 export type VerificationRow = {

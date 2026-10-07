@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button, Chip, EmptyState, ErrorState, Loader } from '@/shared/ui'
 import { adminApi, adminKeys, adminQueries } from '../../api/admin-api'
-import type { VerificationStatus } from '../../api/types'
-import { openPdf } from '../../lib/download'
+import type { CompanyDocument, VerificationStatus } from '../../api/types'
+import { openPdf, saveBlob } from '../../lib/download'
 import { errorText, formatBytes, formatStamp } from '../../lib/format'
 import { VERIFICATION_LABELS } from '../../lib/labels'
 import { useParam } from '../../lib/use-param'
@@ -30,11 +30,13 @@ function RequestCard({ companyId, onBack }: { companyId: string; onBack: () => v
     },
   })
 
-  const open = async (documentId: string) => {
-    setOpening(documentId)
+  const open = async (file: CompanyDocument) => {
+    setOpening(file.id)
     setOpenError(null)
     try {
-      openPdf(await adminApi.documentBlob(companyId, documentId))
+      const blob = await adminApi.documentBlob(companyId, file.id)
+      if (file.kind === 'docx') saveBlob(blob, file.filename)
+      else openPdf(blob)
     } catch (cause) {
       setOpenError(errorText(cause))
     } finally {
@@ -94,9 +96,9 @@ function RequestCard({ companyId, onBack }: { companyId: string; onBack: () => v
 
       <div className="admin-columns">
         <article className="admin-card">
-          <h2 className="admin-card__title">Документы ({data.files.length})</h2>
+          <h2 className="admin-card__title">Выписка Минцифры ({data.files.length})</h2>
           {data.files.length === 0 ? (
-            <p className="admin-hint">Компания удалила все документы.</p>
+            <p className="admin-hint">Компания удалила все файлы.</p>
           ) : (
             <ul className="documents">
               {data.files.map((file) => (
@@ -105,11 +107,12 @@ function RequestCard({ companyId, onBack }: { companyId: string; onBack: () => v
                     type="button"
                     className="admin-link"
                     disabled={opening === file.id}
-                    onClick={() => void open(file.id)}
+                    onClick={() => void open(file)}
                   >
                     {file.filename}
                   </button>
                   <span className="admin-sub">
+                    {file.kind === 'docx' ? 'DOCX, скачается' : 'PDF'} ·{' '}
                     {formatBytes(file.sizeBytes)} · {formatStamp(file.uploadedAt)}
                   </span>
                 </li>
@@ -137,9 +140,7 @@ function RequestCard({ companyId, onBack }: { companyId: string; onBack: () => v
 
       {decision && (
         <ReasonDialog
-          title={
-            decision === 'approve' ? 'Подтвердить, что компания настоящая' : 'Отклонить заявку'
-          }
+          title={decision === 'approve' ? 'Подтвердить IT-аккредитацию' : 'Отклонить выписку'}
           confirmLabel={decision === 'approve' ? 'Согласовать' : 'Отклонить'}
           required={decision === 'reject'}
           label={decision === 'approve' ? 'Комментарий' : 'Причина (её увидит компания)'}
@@ -167,7 +168,7 @@ export function VerificationSection() {
   return (
     <section className="admin-section">
       <header className="admin-section__head">
-        <h1 className="admin-section__title">Проверка компаний</h1>
+        <h1 className="admin-section__title">IT-аккредитация компаний</h1>
         <div className="admin-section__actions">
           <ExportButton
             path="/admin/verifications/export.csv"
@@ -177,8 +178,9 @@ export function VerificationSection() {
         </div>
       </header>
       <p className="admin-hint">
-        Компания загружает официальные документы (PDF) в профиле. Откройте их, сверьте с данными
-        профиля и согласуйте или отклоните заявку — причину отказа компания увидит.
+        Компания загружает выписку из реестра аккредитованных IT-компаний Минцифры (PDF или DOCX).
+        Сверьте название и ИНН с профилем и согласуйте или отклоните заявку. После согласования у
+        компании появится отметка в ленте, причину отказа компания увидит.
       </p>
       <div className="admin-chips" role="group" aria-label="Статус">
         {([undefined, 'pending', 'approved', 'rejected'] as const).map((value) => (

@@ -1,1 +1,6 @@
 export { CompanyForm } from './ui/company-form'
+export { CompanyPanels, validateCompanyPanel } from './ui/company-panels'
+export { LegalForm } from './ui/legal-form'
+export { LogoField } from './ui/logo-field'
+export { EMPTY_LEGAL } from './model/schema'
+export type { LegalValues } from './model/schema'

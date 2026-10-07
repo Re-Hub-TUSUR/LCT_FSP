@@ -9,6 +9,15 @@ export type UserDto = {
   role: UserRole
   isEmailVerified: boolean
   createdAt: string
+  firstName?: string | null
+  lastName?: string | null
+  phone?: string | null
+}
+
+export type UserWrite = {
+  firstName: string
+  lastName: string
+  phone: string | null
 }
 
 export const userKeys = {
@@ -24,4 +33,9 @@ export const userQueries = {
       queryFn: ({ signal }) =>
         http.get<Paginated<UserDto>>('/admin/users', { query: params, signal }),
     }),
+}
+
+export const userApi = {
+  /** Name and phone of the account owner (the recruiter, for employers). */
+  updateMe: (payload: UserWrite) => http.patch<UserDto>('/users/me', payload),
 }

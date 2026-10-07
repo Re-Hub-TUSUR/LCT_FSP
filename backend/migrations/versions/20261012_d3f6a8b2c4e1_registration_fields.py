@@ -4,7 +4,7 @@ Existing rows are backfilled: a vacancy's single grade and stack become `grades`
 `stack_required`, and the old visibility switch becomes the job status.
 
 Revision ID: d3f6a8b2c4e1
-Revises: c7d2e9f4a6b1
+Revises: d4f8a2c6e9b3
 Create Date: 2026-10-12 10:00:00.000000
 """
 
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "d3f6a8b2c4e1"
-down_revision: str | None = "c7d2e9f4a6b1"
+down_revision: str | None = "d4f8a2c6e9b3"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

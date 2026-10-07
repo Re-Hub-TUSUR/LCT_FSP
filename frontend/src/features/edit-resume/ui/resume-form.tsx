@@ -2,11 +2,23 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router'
-import { candidateApi, candidateKeys, dropPhotoUrl } from '@/entities/candidate'
-import type { OwnCandidateDto, ResumeDto } from '@/entities/candidate'
+import {
+  candidateApi,
+  candidateKeys,
+  dropPhotoUrl,
+  JOB_STATUS_LABELS,
+  JOB_STATUSES,
+} from '@/entities/candidate'
+import type { JobStatus, OwnCandidateDto, ResumeDto } from '@/entities/candidate'
 import { categoryQueries } from '@/entities/category'
-import { WORK_FORMAT_LABELS, WORK_FORMATS } from '@/entities/vacancy'
-import type { WorkFormat } from '@/entities/vacancy'
+import {
+  EMPLOYMENT_LABELS,
+  EMPLOYMENT_TYPES,
+  SALARY_NOTE,
+  WORK_FORMAT_LABELS,
+  WORK_FORMATS,
+} from '@/entities/vacancy'
+import type { EmploymentType, WorkFormat } from '@/entities/vacancy'
 import { getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
 import { Button, SelectField, TextArea, TextField } from '@/shared/ui'
@@ -14,6 +26,7 @@ import { photoFileError, resumeFileError } from '../model/files'
 import {
   applyResumeDraft,
   EMPTY_RESUME,
+  RESUME_FIELD_IDS,
   resumeValuesFrom,
   toExtraResume,
   toResumePayload,
@@ -22,25 +35,20 @@ import {
 } from '../model/schema'
 import type { ResumeErrors, ResumeValues } from '../model/schema'
 import { SOFT_SKILLS, STACK_SKILLS } from '../model/skills'
+import { EducationField } from './education-field'
+import { ExperienceField } from './experience-field'
 import { PhotoField } from './photo-field'
+import { consentsGiven, EMPTY_CONSENTS, ResumeConsents } from './resume-consents'
+import type { ConsentValues } from './resume-consents'
 import { SkillField } from './skill-field'
 import './resume-form.css'
 
 const MAX_RESUMES = 3
 
-const FIELD_IDS: Record<keyof ResumeValues, string> = {
-  displayName: 'resume-name',
-  headline: 'resume-headline',
-  specialization: 'resume-specialization',
-  city: 'resume-city',
-  experienceYears: 'resume-experience',
-  workFormats: 'resume-format-office',
-  stack: 'resume-stack',
-  softSkills: 'resume-soft',
-  about: 'resume-about',
-  phone: 'resume-phone',
-  telegram: 'resume-telegram',
-  salary: 'resume-salary',
+const FIELD_IDS = RESUME_FIELD_IDS
+
+function toggle<T>(items: T[], item: T): T[] {
+  return items.includes(item) ? items.filter((value) => value !== item) : [...items, item]
 }
 
 const EXTRA_IDS: Partial<Record<keyof ResumeValues, string>> = {
@@ -74,10 +82,17 @@ export function ResumeForm({ profile }: Props) {
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState('')
+  const [consents, setConsents] = useState<ConsentValues>(EMPTY_CONSENTS)
 
   const remember = (next: OwnCandidateDto) => {
     queryClient.setQueryData(candidateKeys.mine(), next)
   }
+
+  const linkFsp = useMutation({
+    mutationFn: candidateApi.linkFsp,
+    onSuccess: remember,
+    onError: (error) => setNotice(`ID ФСП не сохранён: ${getErrorMessage(error)}`),
+  })
 
   const save = useMutation({
     mutationFn: candidateApi.saveResume,
@@ -87,6 +102,10 @@ export function ResumeForm({ profile }: Props) {
       setFormError('')
       setAskAnother(true)
       if (pendingPhoto) uploadPhoto.mutate(pendingPhoto)
+      const fspId = consents.fspMemberId.trim()
+      if (createdHere && consents.fspSync === 'yes' && fspId && !next.fspMemberId) {
+        linkFsp.mutate(fspId)
+      }
     },
     onError: (error) => setFormError(getErrorMessage(error)),
   })
@@ -151,12 +170,10 @@ export function ResumeForm({ profile }: Props) {
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }))
   }
 
-  const toggleFormat = (format: WorkFormat) => {
-    const next = values.workFormats.includes(format)
-      ? values.workFormats.filter((item) => item !== format)
-      : [...values.workFormats, format]
-    update('workFormats', next)
-  }
+  const toggleFormat = (format: WorkFormat) =>
+    update('workFormats', toggle(values.workFormats, format))
+  const toggleEmployment = (type: EmploymentType) =>
+    update('employmentTypes', toggle(values.employmentTypes, type))
 
   const onFile = async (file: File | undefined) => {
     setFileError('')
@@ -193,7 +210,14 @@ export function ResumeForm({ profile }: Props) {
       document.getElementById(FIELD_IDS[first])?.focus()
       return
     }
-    save.mutate(toResumePayload(values))
+    save.mutate(
+      toResumePayload(
+        values,
+        profile
+          ? undefined
+          : { profileDisplayConsent: consents.profileDisplay, fspSync: consents.fspSync },
+      ),
+    )
   }
 
   const onExtra = (event: FormEvent<HTMLFormElement>) => {
@@ -218,26 +242,37 @@ export function ResumeForm({ profile }: Props) {
     <div className="resume-form">
       {!showForm && (
         <div className="resume-start">
+          <ResumeConsents values={consents} onChange={setConsents} />
           <p className="resume-start__lead">
             Есть готовое резюме? Приложите его, а мы попробуем вытащить из него нужные данные!
           </p>
           <div className="resume-start__actions">
-            <label className="btn btn--solid btn--inline file-btn">
+            <label
+              className={`btn btn--solid btn--inline file-btn${consentsGiven(consents) ? '' : ' is-disabled'}`}
+            >
               {upload.isPending ? 'Читаем файл…' : 'Приложить резюме'}
               <input
                 type="file"
                 accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                disabled={upload.isPending}
+                disabled={upload.isPending || !consentsGiven(consents)}
                 onChange={(event) => {
                   void onFile(event.target.files?.[0])
                   event.target.value = ''
                 }}
               />
             </label>
-            <Button variant="ghost" size="inline" onClick={() => setManual(true)}>
+            <Button
+              variant="ghost"
+              size="inline"
+              disabled={!consentsGiven(consents)}
+              onClick={() => setManual(true)}
+            >
               Заполнить вручную
             </Button>
           </div>
+          {!consentsGiven(consents) && (
+            <p className="form-hint">Отметьте оба согласия и ответьте про ФСП, чтобы продолжить.</p>
+          )}
           <p className="form-hint">
             PDF или DOCX, не больше 5 МБ. Файл не сохраняется: текст без контактов читает нейросеть,
             а вы проверяете поля перед сохранением.
@@ -340,22 +375,53 @@ export function ResumeForm({ profile }: Props) {
               error={errors.city}
               onChange={(event) => update('city', event.target.value)}
             />
-            <TextField
-              id="resume-experience"
-              label="Стаж, лет"
-              inputMode="numeric"
-              value={values.experienceYears}
-              error={errors.experienceYears}
-              onChange={(event) => update('experienceYears', event.target.value)}
-            />
-            <TextField
-              id="resume-salary"
-              label="Ожидаемая зарплата от, ₽"
-              inputMode="numeric"
-              value={values.salary}
-              error={errors.salary}
-              onChange={(event) => update('salary', event.target.value)}
-            />
+            <div>
+              <TextField
+                id="resume-birth"
+                label="Дата рождения"
+                type="date"
+                autoComplete="bday"
+                value={values.birthDate}
+                error={errors.birthDate}
+                onChange={(event) => update('birthDate', event.target.value)}
+              />
+              <p className="form-hint resume-form__note">
+                Не показываем работодателю. Если вам нет 18, он увидит только пометку
+                «несовершеннолетний».
+              </p>
+            </div>
+            <SelectField
+              id="resume-status"
+              label="Статус поиска"
+              value={values.jobStatus}
+              onChange={(event) => update('jobStatus', event.target.value as JobStatus)}
+            >
+              {JOB_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {JOB_STATUS_LABELS[status]}
+                </option>
+              ))}
+            </SelectField>
+            <div>
+              <TextField
+                id="resume-salary"
+                label="Ожидаемая зарплата от, ₽"
+                inputMode="numeric"
+                value={values.salary}
+                error={errors.salary}
+                onChange={(event) => update('salary', event.target.value)}
+              />
+              <p className="form-hint resume-form__note">{SALARY_NOTE}</p>
+            </div>
+            <label className="check resume-form__relocation">
+              <input
+                id="resume-relocation"
+                type="checkbox"
+                checked={values.relocationReady}
+                onChange={(event) => update('relocationReady', event.target.checked)}
+              />
+              Готов к переезду
+            </label>
             <fieldset className="check-group resume-form__wide">
               <legend className="check-group__legend">Формат работы</legend>
               <div className="check-group__options">
@@ -377,6 +443,37 @@ export function ResumeForm({ profile }: Props) {
                 </p>
               )}
             </fieldset>
+            <fieldset className="check-group resume-form__wide">
+              <legend className="check-group__legend">Тип занятости</legend>
+              <div className="check-group__options">
+                {EMPLOYMENT_TYPES.map((type) => (
+                  <label key={type} className="check">
+                    <input
+                      id={`resume-employment-${type}`}
+                      type="checkbox"
+                      checked={values.employmentTypes.includes(type)}
+                      onChange={() => toggleEmployment(type)}
+                    />
+                    {EMPLOYMENT_LABELS[type]}
+                  </label>
+                ))}
+              </div>
+              {errors.employmentTypes && (
+                <p className="check-group__error" role="alert">
+                  {errors.employmentTypes}
+                </p>
+              )}
+            </fieldset>
+            <ExperienceField
+              rows={values.experience}
+              noExperience={values.noExperience}
+              years={values.experienceYears}
+              error={errors.experience}
+              yearsError={errors.experienceYears}
+              onRows={(rows) => update('experience', rows)}
+              onNoExperience={(value) => update('noExperience', value)}
+              onYears={(value) => update('experienceYears', value)}
+            />
             <div className="resume-form__wide">
               <SkillField
                 id="resume-stack"
@@ -387,8 +484,8 @@ export function ResumeForm({ profile }: Props) {
                 onChange={(next) => update('stack', next)}
               />
               <p className="form-hint">
-                Начните вводить название или выберите готовый навык. Грейд резюме не задаёт — его
-                подтверждает тест.
+                Не меньше трёх технологий. Начните вводить название или выберите готовый навык.
+                Грейд резюме не задаёт — его подтверждает тест.
               </p>
             </div>
             <div className="resume-form__wide">
@@ -401,6 +498,11 @@ export function ResumeForm({ profile }: Props) {
                 onChange={(next) => update('softSkills', next)}
               />
             </div>
+            <EducationField
+              rows={values.education}
+              error={errors.education}
+              onRows={(rows) => update('education', rows)}
+            />
             <div className="resume-form__wide">
               <TextArea
                 id="resume-about"
@@ -429,10 +531,20 @@ export function ResumeForm({ profile }: Props) {
               error={errors.telegram}
               onChange={(event) => update('telegram', event.target.value)}
             />
+            <TextField
+              id="resume-github"
+              label="GitHub (необязательно)"
+              type="url"
+              placeholder="github.com/login"
+              value={values.githubUrl}
+              error={errors.githubUrl}
+              onChange={(event) => update('githubUrl', event.target.value)}
+            />
           </div>
 
           <p className="form-hint">
-            Телефон и Telegram увидит работодатель только после того, как вы примете приглашение.
+            Нужен телефон или Telegram. Работодатель увидит их только после того, как вы примете
+            приглашение или откликнетесь.
           </p>
 
           {notice && <p className="form-status">{notice}</p>}

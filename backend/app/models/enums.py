@@ -78,6 +78,43 @@ class WorkFormat(StrEnum):
     REMOTE = "remote"
 
 
+class EmploymentType(StrEnum):
+    FULL = "full"
+    PART = "part"
+    PROJECT = "project"
+    INTERNSHIP = "internship"
+
+
+class JobStatus(StrEnum):
+    """The candidate's own answer to «are you looking»; `not_looking` hides them from search."""
+
+    ACTIVE = "active"
+    OPEN = "open"
+    NOT_LOOKING = "not_looking"
+
+
+class FspSync(StrEnum):
+    """Answer to «Синхронизировать с ФСП?» on the resume start screen."""
+
+    YES = "yes"
+    LATER = "later"
+    NEVER = "never"
+
+
+class FspResult(StrEnum):
+    """Best FSP result a vacancy asks for, derived from the place in the registry."""
+
+    PARTICIPANT = "participant"
+    FINALIST = "finalist"
+    PRIZEWINNER = "prizewinner"
+
+
+class VacancyBenefit(StrEnum):
+    DMS = "dms"
+    FLEXIBLE_START = "flexible_start"
+    LABOR_CODE = "labor_code"
+
+
 class InvitationStatus(StrEnum):
     SENT = "sent"
     VIEWED = "viewed"

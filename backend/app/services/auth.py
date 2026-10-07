@@ -30,6 +30,8 @@ from app.services.email import CODE_TTL_MINUTES, EmailSender
 CODE_LENGTH = 6
 RESEND_COOLDOWN = timedelta(seconds=60)
 MAX_ATTEMPTS = 5
+# Activity is a filter by days: one write per hour is precise enough.
+ACTIVITY_STEP = timedelta(hours=1)
 
 
 def _aware(value: datetime) -> datetime:
@@ -138,6 +140,9 @@ class AuthService:
             stored.revoked_at = datetime.now(UTC)
 
     async def _open_session(self, user: User) -> IssuedSession:
+        now = datetime.now(UTC)
+        if user.last_active_at is None or now - _aware(user.last_active_at) >= ACTIVITY_STEP:
+            user.last_active_at = now
         token, expires_in = create_access_token(
             subject=str(user.id), email=user.email, roles=[user.role.value], settings=self._settings
         )

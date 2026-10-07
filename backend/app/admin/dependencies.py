@@ -10,7 +10,7 @@ from app.admin.services.parameters import ParameterService
 from app.admin.services.snapshots import SnapshotService
 from app.admin.services.verification import VerificationService
 from app.dependencies.common import SessionDep, SettingsDep
-from app.dependencies.services import AssessmentBankServiceDep
+from app.dependencies.services import AssessmentBankServiceDep, NotificationHubDep
 
 
 def get_admin_bank(session: SessionDep, bank: AssessmentBankServiceDep) -> AdminBankService:
@@ -37,8 +37,10 @@ def get_banlist(session: SessionDep) -> BanlistService:
     return BanlistService(session)
 
 
-def get_verification(session: SessionDep, settings: SettingsDep) -> VerificationService:
-    return VerificationService(session, settings)
+def get_verification(
+    session: SessionDep, settings: SettingsDep, hub: NotificationHubDep
+) -> VerificationService:
+    return VerificationService(session, settings, hub)
 
 
 AdminBankDep = Annotated[AdminBankService, Depends(get_admin_bank)]

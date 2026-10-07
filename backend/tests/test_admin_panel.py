@@ -1,7 +1,10 @@
 """Workflows of the admin panel: bank statuses, journal, parameters, dictionaries, moderation,
 banlist and the company document check."""
 
+import io
+import json
 import uuid
+import zipfile
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -14,11 +17,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.admin.create_admin import AdminSetupError, ensure_admin
 from app.admin.dependencies import get_verification
-from app.admin.services.verification import VerificationService, clean_filename
+from app.admin.services.verification import VerificationService, clean_filename, sniff_document
 from app.core.config import get_settings
 from app.dependencies.common import SessionDep
+from app.dependencies.services import NotificationHubDep
 from app.models import AssessmentAttempt, AssessmentTask, CandidateProfile, User, UserRole
-from tests.conftest import API, bearer, create_admin, login, register_and_login
+from app.services.notifications import NotificationHub
+from tests.conftest import API, bearer, create_admin, login, make_inn, register_and_login
 
 PDF = b"%PDF-1.7\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n"
 COMPANY = {
@@ -59,8 +64,8 @@ async def uploads(client: AsyncClient, tmp_path: Path) -> AsyncIterator[Path]:
     """Documents go to a temporary folder instead of UPLOAD_DIR."""
     settings = get_settings().model_copy(update={"upload_dir": str(tmp_path)})
 
-    def service(session: SessionDep) -> VerificationService:
-        return VerificationService(session, settings)
+    def service(session: SessionDep, hub: NotificationHubDep) -> VerificationService:
+        return VerificationService(session, settings, hub)
 
     app = client._transport.app  # type: ignore[attr-defined]
     app.dependency_overrides[get_verification] = service
@@ -70,7 +75,9 @@ async def uploads(client: AsyncClient, tmp_path: Path) -> AsyncIterator[Path]:
 
 async def employer_with_company(client: AsyncClient, email: str = "boss@fsp.ru") -> dict[str, str]:
     headers = bearer(await register_and_login(client, email, role="employer"))
-    saved = await client.put(f"{API}/companies/me", headers=headers, json=COMPANY)
+    saved = await client.put(
+        f"{API}/companies/me", headers=headers, json={**COMPANY, "inn": make_inn(email)}
+    )
     assert saved.status_code == 200, saved.text
     return headers
 
@@ -499,6 +506,9 @@ async def test_company_verification_flow(
     request = queue["items"][0]
     assert (request["companyName"], request["documents"]) == ("ООО Проверка", 1)
     company_id = request["companyId"]
+    owner = (await client.get(f"{API}/users/me", headers=employer)).json()["id"]
+    hub: NotificationHub = client._transport.app.state.notifications  # type: ignore[attr-defined]
+    events = hub.subscribe(uuid.UUID(owner))
 
     detail = (await client.get(f"{API}/admin/verifications/{company_id}", headers=admin)).json()
     document_id = detail["files"][0]["id"]
@@ -523,6 +533,11 @@ async def test_company_verification_flow(
     )
     assert no_reason.status_code == 422
     assert rejected.json()["status"] == "rejected"
+    assert json.loads(events.get_nowait()) == {
+        "type": "company_verification",
+        "status": "rejected",
+        "reason": "Выписка старше 30 дней",
+    }
     seen = (await client.get(f"{API}/companies/me/verification", headers=employer)).json()
     assert (seen["status"], seen["reason"]) == ("rejected", "Выписка старше 30 дней")
 
@@ -540,20 +555,79 @@ async def test_company_verification_flow(
     assert approved.json()["status"] == "approved"
     assert approved.json()["decidedByEmail"] == "admin@fsp.ru"
     assert [entry["action"] for entry in approved.json()["history"]] == ["approve", "reject"]
+    assert json.loads(events.get_nowait())["status"] == "approved"
     locked = await client.delete(
         f"{API}/companies/me/verification/documents/{document_id}", headers=employer
     )
     assert locked.status_code == 409
 
+    company = (await client.get(f"{API}/companies/{company_id}")).json()
+    assert company["itAccredited"] is True
+
+
+def docx_bytes() -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("[Content_Types].xml", "<Types/>")
+        archive.writestr("word/document.xml", "<w:document/>")
+    return buffer.getvalue()
+
+
+async def test_registry_extract_may_be_docx(
+    client: AsyncClient, admin: dict[str, str], uploads: Path
+) -> None:
+    employer = await employer_with_company(client, "docx@fsp.ru")
+    plain_zip = io.BytesIO()
+    with zipfile.ZipFile(plain_zip, "w") as archive:
+        archive.writestr("readme.txt", "not a document")
+    refused = await client.post(
+        f"{API}/companies/me/verification/documents",
+        headers=employer,
+        files={"file": ("extract.docx", plain_zip.getvalue(), "application/zip")},
+    )
+    assert refused.status_code == 400
+
+    data = docx_bytes()
+    uploaded = await client.post(
+        f"{API}/companies/me/verification/documents",
+        headers=employer,
+        files={"file": ("Выписка Минцифры.pdf", data, "application/pdf")},
+    )
+    assert uploaded.status_code == 201, uploaded.text
+    document = uploaded.json()["documents"][0]
+    assert (document["filename"], document["kind"]) == ("Выписка Минцифры.pdf.docx", "docx")
+    assert stored_files(uploads, "docx") == 1
+
+    company_id = (await client.get(f"{API}/companies/me", headers=employer)).json()["id"]
+    file = await client.get(
+        f"{API}/admin/verifications/{company_id}/documents/{document['id']}", headers=admin
+    )
+    assert file.headers["content-type"].startswith("application/vnd.openxmlformats")
+    assert file.headers["content-disposition"].startswith("attachment;")
+    assert file.headers["x-content-type-options"] == "nosniff"
+    assert file.content == data
+
+
+def stored_files(root: Path, kind: str) -> int:
+    return len(list(root.rglob(f"*.{kind}")))
+
 
 def stored_pdfs(root: Path) -> int:
-    return len(list(root.rglob("*.pdf")))
+    return stored_files(root, "pdf")
 
 
 def test_clean_filename() -> None:
     assert clean_filename("../../etc/passwd") == "passwd.pdf"
     assert clean_filename('C:\\docs\\"устав".PDF') == "устав.PDF"
     assert clean_filename(None) == "document.pdf"
+    assert clean_filename("выписка.docx", "docx") == "выписка.docx"
+
+
+def test_sniff_document() -> None:
+    assert sniff_document(PDF) == "pdf"
+    assert sniff_document(docx_bytes()) == "docx"
+    assert sniff_document(b"PK\x03\x04broken") is None
+    assert sniff_document(b"\x89PNG\r\n\x1a\n") is None
 
 
 # ── Admin account ───────────────────────────────────────────────────────────────────────────────

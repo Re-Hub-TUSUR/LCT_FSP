@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { companyKeys } from '@/entities/company'
 import { conversationKeys } from '@/entities/conversation'
 import { responseKeys } from '@/entities/response'
 import { useSession } from '@/entities/session'
@@ -17,14 +18,22 @@ export type MessageEvent = {
   message: unknown
 }
 
-export type NotificationEvent = CompanyLikedEvent | MessageEvent
+/** An admin decided on the company's Минцифры extract. */
+export type CompanyVerificationEvent = {
+  type: 'company_verification'
+  status: 'approved' | 'rejected'
+  reason: string | null
+}
+
+export type NotificationEvent = CompanyLikedEvent | MessageEvent | CompanyVerificationEvent
 
 type Handlers = {
   onCompanyLiked?: (event: CompanyLikedEvent) => void
   onMessage?: (event: MessageEvent) => void
+  onCompanyVerification?: (event: CompanyVerificationEvent) => void
 }
 
-/** SSE for employer likes and new chat messages. */
+/** SSE for employer likes, new chat messages and the IT accreditation decision. */
 export function useNotificationStream(handlers: Handlers) {
   const { session } = useSession()
   const accessToken = session?.accessToken
@@ -72,6 +81,11 @@ export function useNotificationStream(handlers: Handlers) {
             if (payload.type === 'message') {
               handlersRef.current.onMessage?.(payload)
               void queryClient.invalidateQueries({ queryKey: conversationKeys.all })
+            }
+            if (payload.type === 'company_verification') {
+              handlersRef.current.onCompanyVerification?.(payload)
+              // The extract status and `itAccredited` of the company profile.
+              void queryClient.invalidateQueries({ queryKey: companyKeys.all })
             }
           }
         }

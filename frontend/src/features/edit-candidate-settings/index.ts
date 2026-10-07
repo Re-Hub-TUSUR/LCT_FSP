@@ -1,1 +1,1 @@
-export { CandidateSettingsForm } from './ui/settings-form'
+export { FspLinkForm, JobStatusForm } from './ui/settings-form'

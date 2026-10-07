@@ -1,17 +1,47 @@
 import uuid
+from datetime import date, datetime
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from app.models.enums import (
     AssessmentStatus,
+    EmploymentType,
     FspDiscipline,
     FspEventLevel,
+    FspSync,
+    JobStatus,
     ReactionKind,
     WorkFormat,
 )
 from app.schemas.category import Category
 from app.schemas.common import ApiModel, Page
+
+_MONTH = r"^\d{4}-(0[1-9]|1[0-2])$"
+
+
+class ExperienceEntry(ApiModel):
+    """One job. Months are "YYYY-MM"; no end means the candidate still works there."""
+
+    company: str = Field(min_length=1, max_length=200)
+    position: str = Field(min_length=1, max_length=200)
+    start: str = Field(pattern=_MONTH)
+    end: str | None = Field(default=None, pattern=_MONTH)
+    stack: list[str] = Field(default_factory=list, max_length=20)
+
+    @model_validator(mode="after")
+    def _period(self) -> "ExperienceEntry":
+        if self.end is not None and self.end < self.start:
+            msg = "Окончание работы раньше начала"
+            raise ValueError(msg)
+        return self
+
+
+class EducationEntry(ApiModel):
+    institution: str = Field(min_length=1, max_length=300)
+    specialty: str | None = Field(default=None, max_length=200)
+    # Graduation year, or the expected one.
+    year: int | None = Field(default=None, ge=1950, le=2100)
 
 
 class FspAchievementRead(ApiModel):
@@ -76,6 +106,16 @@ class CandidateRead(ApiModel):
     # Priority resume first, then the others.
     resumes: list[ResumeRead] = Field(default_factory=list)
     has_photo: bool = False
+    job_status: JobStatus = JobStatus.OPEN
+    employment_types: list[EmploymentType] = Field(default_factory=list)
+    experience_entries: list[ExperienceEntry] = Field(default_factory=list)
+    no_experience: bool = False
+    education: list[EducationEntry] = Field(default_factory=list)
+    github_url: str | None = None
+    # 14–17 years old: the «до 18» mark. The birth date itself never reaches an employer.
+    is_minor: bool = False
+    # The owner's last sign-in, for the «активен за 30 дней» filter.
+    last_active_at: datetime | None = None
     # Revealed only after the candidate accepted an invitation or applied (ТЗ 2.2, item 2).
     contacts: CandidateContacts | None
     # For an employer viewing one profile: mutual interest (the recruiter liked the candidate,
@@ -115,10 +155,16 @@ class OwnCandidateRead(CandidateRead):
     searching: bool
     fsp_member_id: str | None
     specialization: str | None
+    birth_date: date | None = None
+    profile_display_consent: bool = False
+    fsp_sync: FspSync | None = None
 
 
 class CandidateProfileUpdate(ApiModel):
-    """Resume fields. The grade is never accepted here: only a passed test confirms it."""
+    """Resume fields. The grade is never accepted here: only a passed test confirms it.
+
+    Salaries are RUB per month, net («на руки»).
+    """
 
     display_name: str | None = Field(default=None, min_length=1, max_length=200)
     headline: str | None = Field(default=None, min_length=1, max_length=300)
@@ -132,6 +178,16 @@ class CandidateProfileUpdate(ApiModel):
     phone: str | None = Field(default=None, max_length=32)
     telegram: str | None = Field(default=None, max_length=64)
     specialization: str | None = Field(default=None, min_length=1, max_length=64)
+    relocation_ready: bool | None = None
+    birth_date: date | None = None
+    job_status: JobStatus | None = None
+    employment_types: list[EmploymentType] | None = None
+    experience_entries: list[ExperienceEntry] | None = Field(default=None, max_length=30)
+    no_experience: bool | None = None
+    education: list[EducationEntry] | None = Field(default=None, max_length=10)
+    github_url: str | None = Field(default=None, max_length=300)
+    profile_display_consent: bool | None = None
+    fsp_sync: FspSync | None = None
 
 
 class ResumeDraft(ApiModel):
@@ -152,7 +208,22 @@ class ResumeDraft(ApiModel):
 
 
 class CandidateSearchUpdate(ApiModel):
-    searching: bool
+    """Either the old switch or the job status; the status wins when both are sent."""
+
+    searching: bool | None = None
+    job_status: JobStatus | None = None
+
+    @model_validator(mode="after")
+    def _one(self) -> "CandidateSearchUpdate":
+        if self.searching is None and self.job_status is None:
+            msg = "Укажите статус поиска"
+            raise ValueError(msg)
+        return self
+
+    def status(self) -> JobStatus:
+        if self.job_status is not None:
+            return self.job_status
+        return JobStatus.OPEN if self.searching else JobStatus.NOT_LOOKING
 
 
 class FspLinkRequest(ApiModel):

@@ -106,11 +106,15 @@ async def update_my_profile(
     return await profiles.save_resume(user, data)
 
 
-@router.patch("/me/searching", summary="Show or hide the profile in employer search")
+@router.patch(
+    "/me/searching",
+    summary="Job status: actively looking, open to offers, or not looking (hidden from search)",
+    description="`searching` (true = open, false = not looking) is still accepted.",
+)
 async def update_searching(
     user: CandidateUser, data: CandidateSearchUpdate, profiles: CandidateProfileServiceDep
 ) -> OwnCandidateRead:
-    return await profiles.set_searching(user, data.searching)
+    return await profiles.set_searching(user, data.status())
 
 
 @router.post(

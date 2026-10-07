@@ -4,11 +4,28 @@ import type { Paginated, PaginationParams } from '@/shared/api'
 import type { AssessmentStatus } from '@/entities/assessment/@x/candidate'
 import type { CategoryDto, Grade, SpecializationCode } from '@/entities/category/@x/candidate'
 import type {
+  EmploymentType,
   FeedView,
   Reaction,
   ReactionCountsDto,
   WorkFormat,
 } from '@/entities/vacancy/@x/candidate'
+import type { FspSync, JobStatus } from '../model/job-status'
+
+/** A place of work; months are "YYYY-MM", no end = still there. */
+export type ExperienceEntryDto = {
+  company: string
+  position: string
+  start: string
+  end: string | null
+  stack: string[]
+}
+
+export type EducationEntryDto = {
+  institution: string
+  specialty: string | null
+  year: number | null
+}
 
 export type FspDiscipline = 'algorithmic' | 'product' | 'security' | 'robotics' | 'uav'
 
@@ -53,6 +70,15 @@ export type CandidateDto = {
   resumes?: ResumeDto[]
   hasPhoto?: boolean
   contacts: CandidateContactsDto | null
+  jobStatus: JobStatus
+  employmentTypes: EmploymentType[]
+  experienceEntries: ExperienceEntryDto[]
+  noExperience: boolean
+  education: EducationEntryDto[]
+  githubUrl: string | null
+  /** Under 18: the employer sees it, the birth date itself stays private. */
+  isMinor: boolean
+  lastActiveAt: string | null
   /**
    * For an employer on a profile page: mutual interest (the recruiter saved the candidate, the
    * candidate liked a vacancy of the company). Absent where it is not computed.
@@ -66,6 +92,9 @@ export type OwnCandidateDto = CandidateDto & {
   fspMemberId: string | null
   /** Kept before a grade exists, so the resume can be reopened. */
   specialization: string | null
+  birthDate: string | null
+  profileDisplayConsent: boolean
+  fspSync: FspSync | null
 }
 
 export type ResumeDto = {
@@ -101,6 +130,16 @@ export type CandidateProfileUpdate = {
   phone: string | null
   telegram: string | null
   specialization: string
+  relocationReady?: boolean
+  birthDate?: string | null
+  jobStatus?: JobStatus
+  employmentTypes?: EmploymentType[]
+  experienceEntries?: ExperienceEntryDto[]
+  noExperience?: boolean
+  education?: EducationEntryDto[]
+  githubUrl?: string | null
+  profileDisplayConsent?: boolean
+  fspSync?: FspSync | null
 }
 
 /** Fields recognised in an uploaded resume. Nothing is saved until the candidate saves the form. */
@@ -196,6 +235,9 @@ export const candidateApi = {
   clearReaction: (id: string) => http.delete<void>(`/candidates/${id}/reaction`),
   saveResume: (payload: CandidateProfileUpdate) =>
     http.patch<OwnCandidateDto>('/candidates/me', payload),
+  /** An existing profile: the server changes only the fields that were sent. */
+  updateProfile: (patch: Partial<CandidateProfileUpdate>) =>
+    http.patch<OwnCandidateDto>('/candidates/me', patch),
   addResume: (payload: ResumeCreate) =>
     http.post<OwnCandidateDto>('/candidates/me/resumes', payload),
   makePrimary: (resumeId: string) =>
@@ -211,8 +253,8 @@ export const candidateApi = {
     body.append('file', file)
     return http.post<ResumeDraftDto>('/candidates/me/resume', body)
   },
-  setSearching: (searching: boolean) =>
-    http.patch<OwnCandidateDto>('/candidates/me/searching', { searching }),
+  setJobStatus: (jobStatus: JobStatus) =>
+    http.patch<OwnCandidateDto>('/candidates/me/searching', { jobStatus }),
   linkFsp: (fspMemberId: string) =>
     http.post<OwnCandidateDto>('/candidates/me/fsp-link', { fspMemberId }),
   unlinkFsp: () => http.delete<OwnCandidateDto>('/candidates/me/fsp-link'),

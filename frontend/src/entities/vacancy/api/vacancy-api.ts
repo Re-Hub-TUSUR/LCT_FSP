@@ -2,6 +2,7 @@ import { queryOptions } from '@tanstack/react-query'
 import { http } from '@/shared/api'
 import type { Paginated, PaginationParams, SalaryRangeDto } from '@/shared/api'
 import type { CategoryDto, Grade, SpecializationCode } from '@/entities/category/@x/vacancy'
+import type { EmploymentType, FspResult, VacancyBenefit } from '../model/employment'
 import type { WorkFormat } from '../model/work-format'
 
 export type CompanyBriefDto = {
@@ -10,6 +11,9 @@ export type CompanyBriefDto = {
   industry: string | null
   city: string | null
   size: string | null
+  /** An admin approved the Минцифры registry extract: the check mark next to the name. */
+  itAccredited: boolean
+  hasLogo: boolean
 }
 
 export type VacancyDto = {
@@ -25,6 +29,19 @@ export type VacancyDto = {
   description: string
   /** Null for a draft, visible only to its company. */
   publishedAt: string | null
+  /** One grade or two neighbouring ones. */
+  grades: Grade[]
+  stackRequired: string[]
+  stackNice: string[]
+  relocationHelp: boolean
+  employmentTypes: EmploymentType[]
+  benefits: VacancyBenefit[]
+  /** Only candidates whose grade the test confirmed. */
+  verifiedGradeOnly: boolean
+  fspBestResult: FspResult | null
+  fspDiscipline: string | null
+  /** 0, 1, 3 or 5: «без опыта», «от года», «от 3», «от 5». */
+  minExperienceYears: number | null
 }
 
 export type Reaction = 'like' | 'skip'

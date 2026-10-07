@@ -4,6 +4,7 @@ export const ROUTES = {
   employerAuth: '/auth/employer',
   candidateAuth: '/auth/candidate',
   profile: '/profile',
+  profileInvitations: '/profile/invitations',
   profileResume: '/profile/resume',
   profileCategory: '/profile/category',
   profileSettings: '/profile/settings',

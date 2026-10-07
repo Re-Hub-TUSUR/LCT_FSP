@@ -1,4 +1,6 @@
-from sqlalchemy import String
+from datetime import datetime
+
+from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -15,3 +17,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     is_email_verified: Mapped[bool] = mapped_column(default=False)
     is_active: Mapped[bool] = mapped_column(default=True)
     personal_data_consent: Mapped[bool] = mapped_column(default=False)
+
+    first_name: Mapped[str | None] = mapped_column(String(100))
+    last_name: Mapped[str | None] = mapped_column(String(100))
+    phone: Mapped[str | None] = mapped_column(String(32))
+    # Set on sign-in and token refresh, at most hourly: recruiters filter by recent activity.
+    last_active_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)

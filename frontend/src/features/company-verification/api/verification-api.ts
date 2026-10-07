@@ -1,4 +1,5 @@
 import { queryOptions } from '@tanstack/react-query'
+import { companyKeys } from '@/entities/company'
 import { http } from '@/shared/api'
 
 export type VerificationStatus = 'pending' | 'approved' | 'rejected'
@@ -10,10 +11,16 @@ export type CompanyVerificationDto = {
   decidedAt: string | null
   /** The admin's reason, shown after a rejection. */
   reason: string | null
-  documents: { id: string; filename: string; sizeBytes: number; uploadedAt: string }[]
+  documents: {
+    id: string
+    filename: string
+    sizeBytes: number
+    uploadedAt: string
+    kind: 'pdf' | 'docx'
+  }[]
 }
 
-export const verificationKeys = { mine: ['company-verification'] as const }
+export const verificationKeys = { mine: companyKeys.verification() }
 
 export const verificationQueries = {
   mine: () =>

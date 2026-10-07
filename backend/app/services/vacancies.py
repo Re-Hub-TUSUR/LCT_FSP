@@ -2,7 +2,7 @@
 
 import uuid
 
-from app.core.errors import NotFoundError
+from app.core.errors import AppError, ConflictError, NotFoundError
 from app.dependencies.common import Pagination
 from app.models import Company, Grade, User, WorkFormat
 from app.repositories.company import CompanyRepository
@@ -10,7 +10,9 @@ from app.repositories.vacancy import VacancyRepository
 from app.schemas.common import Page
 from app.schemas.company import CompanyRead, CompanyUpsert
 from app.schemas.vacancy import VacancyRead
+from app.services.inn import ORGANISATION_LENGTH as ORGANISATION_INN_LENGTH
 from app.services.presenters import company_read, vacancy_read
+from app.services.uploads import PHOTO_LIMIT, sniff_image
 
 
 class VacancyService:
@@ -82,27 +84,56 @@ class VacancyService:
 
     async def upsert_mine(self, user: User, data: CompanyUpsert) -> CompanyRead:
         company = await self._companies.get_by_owner(user.id)
-        website = str(data.website)
-        contact = str(data.contact_email)
+        if await self._companies.inn_taken(data.inn, except_id=company.id if company else None):
+            raise ConflictError("Компания с таким ИНН уже зарегистрирована")
         size = data.size.strip() if data.size else None
+        address = data.legal_address.strip() if data.legal_address else None
+        fields = {
+            "name": data.name.strip(),
+            "industry": data.industry.strip(),
+            "description": data.description.strip(),
+            "city": data.city.strip(),
+            "size": size or None,
+            "website": str(data.website),
+            "contact_email": str(data.contact_email),
+            "inn": data.inn,
+            "ogrn": data.ogrn,
+            # A sole trader (12-digit INN) has no KPP.
+            "kpp": data.kpp if len(data.inn) == ORGANISATION_INN_LENGTH else None,
+            "legal_address": address or None,
+        }
         if company is None:
-            company = Company(
-                owner_id=user.id,
-                name=data.name.strip(),
-                industry=data.industry.strip(),
-                description=data.description.strip(),
-                city=data.city.strip(),
-                size=size or None,
-                website=website,
-                contact_email=contact,
-            )
-            await self._companies.add(company)
+            company = await self._companies.add(Company(owner_id=user.id, **fields))
         else:
-            company.name = data.name.strip()
-            company.industry = data.industry.strip()
-            company.description = data.description.strip()
-            company.city = data.city.strip()
-            company.size = size or None
-            company.website = website
-            company.contact_email = contact
+            for name, value in fields.items():
+                setattr(company, name, value)
         return company_read(company)
+
+    async def set_logo(self, user: User, data: bytes) -> CompanyRead:
+        company = await self._require_mine(user)
+        if len(data) > PHOTO_LIMIT:
+            raise AppError("Логотип больше 2 МБ")
+        media = sniff_image(data)
+        if media is None:
+            raise AppError("Нужен логотип JPEG, PNG или WebP")
+        company.logo = data
+        company.logo_type = media
+        return company_read(company)
+
+    async def clear_logo(self, user: User) -> CompanyRead:
+        company = await self._require_mine(user)
+        company.logo = None
+        company.logo_type = None
+        return company_read(company)
+
+    async def open_logo(self, company_id: uuid.UUID) -> tuple[bytes, str]:
+        logo = await self._companies.logo_of(company_id)
+        if logo is None:
+            raise NotFoundError("Логотип не загружен")
+        return logo
+
+    async def _require_mine(self, user: User) -> Company:
+        company = await self._companies.get_by_owner(user.id)
+        if company is None:
+            raise NotFoundError("Сначала заполните и сохраните профиль компании")
+        return company

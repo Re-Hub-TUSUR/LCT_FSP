@@ -8,6 +8,7 @@ os.environ["CORS_ORIGINS"] = ""
 # A key in a developer's .env must never make the tests call the paid model.
 os.environ["ROUTERAI_API_KEY"] = ""
 
+import zlib
 from collections.abc import AsyncIterator
 
 import pytest
@@ -100,3 +101,11 @@ async def create_admin(sessionmaker: async_sessionmaker[AsyncSession], email: st
 
 def bearer(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
+
+
+def make_inn(seed: str) -> str:
+    """A valid 10-digit organisation INN, different for different seeds."""
+    digits = [int(char) for char in f"77{zlib.crc32(seed.encode()) % 10**7:07d}"]
+    weights = (2, 4, 10, 3, 5, 9, 4, 6, 8)
+    check = sum(d * w for d, w in zip(digits, weights, strict=True)) % 11 % 10
+    return "".join(map(str, digits)) + str(check)
