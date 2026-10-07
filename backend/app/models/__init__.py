@@ -1,9 +1,11 @@
 """ORM models. Importing this package registers every table on `Base.metadata` (used by Alembic)."""
 
+import app.admin.models  # noqa: F401  # tables of the admin panel
 from app.models.assessment import (
     AssessmentAnswer,
     AssessmentAttempt,
     AssessmentTask,
+    AssessmentTaskTime,
     AssessmentTest,
 )
 from app.models.candidate import CandidateProfile
@@ -41,6 +43,7 @@ __all__ = [
     "AssessmentAttempt",
     "AssessmentStatus",
     "AssessmentTask",
+    "AssessmentTaskTime",
     "AssessmentTest",
     "AssignmentStatus",
     "AttemptStatus",

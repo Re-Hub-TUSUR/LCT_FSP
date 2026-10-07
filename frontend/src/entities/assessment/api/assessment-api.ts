@@ -204,6 +204,9 @@ export const assessmentApi = {
     http.post<RunResponseDto>(`/assessments/attempts/${attemptId}/run`, payload),
   signal: (attemptId: string, kind: 'paste' | 'blur') =>
     http.post<void>(`/assessments/attempts/${attemptId}/signals`, { kind }),
+  /** Time a task was on screen since the last report; the server sums it per task. */
+  trackTime: (attemptId: string, taskId: string, seconds: number) =>
+    http.post<void>(`/assessments/attempts/${attemptId}/time`, { taskId, seconds }),
   finish: (attemptId: string) =>
     http.post<AssessmentAttemptDto>(`/assessments/attempts/${attemptId}/finish`),
 }

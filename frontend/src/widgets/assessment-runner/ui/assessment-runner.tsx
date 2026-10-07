@@ -18,6 +18,7 @@ import { ApiError, getErrorMessage } from '@/shared/api'
 import { Button, QueryState } from '@/shared/ui'
 import { TASK_TRAITS, TaskView, isAnswered } from '../config/task-views'
 import { createDraftSaver } from '../lib/draft-saver'
+import { createTaskClock } from '../lib/task-clock'
 import './assessment-runner.css'
 
 type Props = {
@@ -99,11 +100,33 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
   // Leaving the page mid-typing saves the draft at once instead of dropping the pending save.
   useEffect(() => () => void drafts.flush().catch(() => {}), [drafts])
 
+  // Time on every task, for the analytics of the task bank: reported when the candidate leaves
+  // the task. A hidden tab does not count.
+  const [clock] = useState(() =>
+    createTaskClock((taskId, seconds) => assessmentApi.trackTime(attempt.id, taskId, seconds)),
+  )
+  const shownId = tasks[index]?.id
+  useEffect(() => {
+    if (shownId) clock.show(shownId)
+  }, [clock, shownId])
+  useEffect(() => {
+    const onVisibility = () =>
+      document.visibilityState === 'hidden' ? clock.pause() : clock.resume()
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      clock.pause()
+    }
+  }, [clock])
+
   const finish = useMutation({
     mutationFn: async () => {
+      // Time is accepted only while the attempt runs: it goes before the finish.
+      await clock.flush().catch(() => {})
       await drafts.flush()
       return assessmentApi.finish(attempt.id)
     },
+    onError: () => clock.resume(),
     onSuccess: (result) => {
       void queryClient.invalidateQueries({ queryKey: assessmentKeys.status() })
       // A test a company sent changes its line in the inbox too.

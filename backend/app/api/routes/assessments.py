@@ -13,6 +13,7 @@ from app.schemas.assessment import (
     AttemptRead,
     AttemptSignal,
     AttemptStart,
+    AttemptTime,
     PrimaryCategory,
     RunRequest,
     RunResponse,
@@ -79,6 +80,17 @@ async def run_code(
     attempt_id: uuid.UUID, user: CandidateUser, data: RunRequest, service: AssessmentServiceDep
 ) -> RunResponse:
     return await service.run(user, attempt_id, data)
+
+
+@router.post(
+    "/attempts/{attempt_id}/time",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Add the time a task was on screen (sent when the candidate leaves it)",
+)
+async def report_time(
+    attempt_id: uuid.UUID, user: CandidateUser, data: AttemptTime, service: AssessmentServiceDep
+) -> None:
+    await service.track_time(user, attempt_id, data)
 
 
 @router.post(

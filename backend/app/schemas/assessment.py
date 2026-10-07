@@ -326,6 +326,13 @@ class RunResponse(ApiModel):
     runs_left: int
 
 
+class AttemptTime(ApiModel):
+    """Time spent on one task since the last report, in seconds."""
+
+    task_id: uuid.UUID
+    seconds: float = Field(gt=0, le=24 * 3600)
+
+
 class AttemptSignal(ApiModel):
     kind: Literal["paste", "blur"]
 
