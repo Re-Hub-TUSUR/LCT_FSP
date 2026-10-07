@@ -6,7 +6,7 @@ import { companyQueries } from '@/entities/company'
 import { useSession } from '@/entities/session'
 import { ApiError, getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
-import { ErrorState, Loader } from '@/shared/ui'
+import { ErrorState, Loader, Splash } from '@/shared/ui'
 
 function isMissingProfile(error: unknown) {
   return error instanceof ApiError && error.status === 404
@@ -57,7 +57,15 @@ export function CabinetGate({ children }: { children: ReactNode }) {
   const location = useLocation()
   const setup = useCabinetSetup()
 
-  if (setup.phase === 'loading') return <Loader />
+  if (setup.phase === 'loading') {
+    // On a cold start the splash is still up and covers this; later the loader shows on its own.
+    return (
+      <>
+        <Splash />
+        <Loader />
+      </>
+    )
+  }
   if (setup.phase === 'error') {
     return <ErrorState message={setup.message} onRetry={setup.retry} />
   }

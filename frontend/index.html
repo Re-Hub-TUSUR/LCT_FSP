@@ -17,8 +17,122 @@
       href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+
+    <!-- The splash is painted before any bundle arrives, so its colours repeat tokens.css by value. -->
+    <style>
+      html {
+        background: #05060d;
+      }
+
+      .splash {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        background: #05060d;
+        transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .splash--done {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* A short delay keeps the splash from flashing when everything is already cached. */
+      .splash__mark,
+      .splash__label {
+        animation: splash-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+      }
+
+      .splash__mark {
+        width: 56px;
+        height: 56px;
+        color: #ededed;
+      }
+
+      .splash__hole {
+        fill: #05060d;
+        animation: splash-hole 1.4s ease-in-out infinite;
+      }
+
+      .splash__hole:nth-of-type(4n + 2) {
+        animation-delay: 0.16s;
+      }
+
+      .splash__hole:nth-of-type(4n + 3) {
+        animation-delay: 0.32s;
+      }
+
+      .splash__hole:nth-of-type(4n + 4) {
+        animation-delay: 0.48s;
+      }
+
+      .splash__label {
+        font-family: 'IBM Plex Mono', ui-monospace, monospace;
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        text-indent: 0.2em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.42);
+      }
+
+      @keyframes splash-in {
+        from {
+          opacity: 0;
+        }
+      }
+
+      @keyframes splash-hole {
+        0%,
+        55%,
+        100% {
+          fill: #05060d;
+        }
+        20% {
+          fill: #5646ff;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .splash__mark,
+        .splash__label,
+        .splash__hole {
+          animation: none;
+        }
+      }
+    </style>
+    <noscript>
+      <style>
+        .splash {
+          display: none;
+        }
+      </style>
+    </noscript>
   </head>
   <body>
+    <!-- Held and dismissed by Splash in src/shared/ui/splash; the glyph is LogoMark with the sprocket holes split out. -->
+    <div id="splash" class="splash" role="status">
+      <svg class="splash__mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path
+          fill="currentColor"
+          fill-rule="evenodd"
+          d="M7,3H25A3,3 0 0 1 28,6V26A3,3 0 0 1 25,29H7A3,3 0 0 1 4,26V6A3,3 0 0 1 7,3ZM11.7,7.6H20.3A0.4,0.4 0 0 1 20.7,8V24A0.4,0.4 0 0 1 20.3,24.4H11.7A0.4,0.4 0 0 1 11.3,24V8A0.4,0.4 0 0 1 11.7,7.6Z"
+        />
+        <rect class="splash__hole" x="6.15" y="6.4" width="2.7" height="3.15" rx="0.55" />
+        <rect class="splash__hole" x="6.15" y="11.15" width="2.7" height="3.15" rx="0.55" />
+        <rect class="splash__hole" x="6.15" y="15.9" width="2.7" height="3.15" rx="0.55" />
+        <rect class="splash__hole" x="6.15" y="20.65" width="2.7" height="3.15" rx="0.55" />
+        <rect class="splash__hole" x="23.15" y="6.4" width="2.7" height="3.15" rx="0.55" />
+        <rect class="splash__hole" x="23.15" y="11.15" width="2.7" height="3.15" rx="0.55" />
+        <rect class="splash__hole" x="23.15" y="15.9" width="2.7" height="3.15" rx="0.55" />
+        <rect class="splash__hole" x="23.15" y="20.65" width="2.7" height="3.15" rx="0.55" />
+      </svg>
+      <span class="splash__label">Загрузка…</span>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/app/main.tsx"></script>
   </body>

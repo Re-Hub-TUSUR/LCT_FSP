@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { refreshSession, useSession } from '@/entities/session'
-import { Loader } from '@/shared/ui'
+import { Splash } from '@/shared/ui'
 
 /** Restores the account from the refresh cookie before the landing page decides Войти / Кабинет. */
 export function SessionRestore({ children }: { children: ReactNode }) {
@@ -13,6 +13,6 @@ export function SessionRestore({ children }: { children: ReactNode }) {
     retry: false,
   })
 
-  if (!user && restore.isPending) return <Loader />
+  if (!user && restore.isPending) return <Splash />
   return children
 }

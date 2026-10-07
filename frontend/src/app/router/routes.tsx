@@ -2,7 +2,7 @@ import type { ComponentType } from 'react'
 import type { RouteObject } from 'react-router'
 import type { UserRole } from '@/entities/user'
 import { ROUTES } from '@/shared/config'
-import { Loader } from '@/shared/ui'
+import { Splash } from '@/shared/ui'
 import { MainLayout } from '../layouts/main-layout'
 import { RequireAuth } from './guards'
 import { RouteError } from './route-error'
@@ -31,7 +31,7 @@ const authRequired: Access = { auth: true }
 export const routes: RouteObject[] = [
   {
     errorElement: <RouteError />,
-    hydrateFallbackElement: <Loader />,
+    hydrateFallbackElement: <Splash />,
     children: [
       {
         path: ROUTES.landing,
