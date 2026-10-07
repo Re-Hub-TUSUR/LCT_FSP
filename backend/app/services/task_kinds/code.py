@@ -8,6 +8,7 @@ from app.models import TaskKind
 from app.schemas.assessment import (
     CodeAnswer,
     CodeContent,
+    CodeContext,
     CodePayload,
     LanguageOption,
     SampleTest,
@@ -101,6 +102,25 @@ class CodeKind(TaskKindSpec[CodePayload]):
             "language": COMPILERS.get(stored["language"], stored["language"]) if stored else None,
             "code": stored["code"] if stored else None,
         }
+
+    def context(
+        self, payload: CodePayload, state: Stored | None, stored: Stored | None, points: float
+    ) -> CodeContext:
+        hidden = sum(group.hidden for group in payload.groups)
+        sample = next((group for group in payload.groups if not group.hidden), None)
+        reference = payload.reference
+        return CodeContext(
+            language=COMPILERS.get(stored["language"], stored["language"]) if stored else None,
+            code=stored["code"] if stored else None,
+            tests_passed=round(points * hidden),
+            tests_total=hidden,
+            time_limit=payload.time_limit,
+            sample=SampleTest(input=sample.input, expected=sample.expected) if sample else None,
+            reference_language=(
+                COMPILERS.get(reference.language, reference.language) if reference else None
+            ),
+            reference_code=reference.code if reference else None,
+        )
 
     @staticmethod
     def check_language(payload: CodePayload, language: str) -> None:
