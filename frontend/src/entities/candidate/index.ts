@@ -16,5 +16,6 @@ export type {
 } from './api/candidate-api'
 export { FSP_DISCIPLINE_LABELS } from './model/fsp'
 export { CandidateCard } from './ui/candidate-card'
+export { CandidateResumes } from './ui/candidate-resumes'
 export { useCandidatePhoto } from './ui/use-candidate-photo'
 export { CandidateMatchCard } from './ui/candidate-match-card'
