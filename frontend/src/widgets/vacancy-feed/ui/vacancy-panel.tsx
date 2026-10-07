@@ -10,8 +10,9 @@ import {
 } from 'react'
 import { companyQueries } from '@/entities/company'
 import type { VacancyMatchDto } from '@/entities/vacancy'
-import { WORK_FORMAT_LABELS } from '@/entities/vacancy'
+import { SALARY_NOTE, WORK_FORMAT_LABELS } from '@/entities/vacancy'
 import { formatDate, formatRubRange, isHttpUrl, useSheetWidth } from '@/shared/lib'
+import { VerifiedMark } from '@/shared/ui'
 import './vacancy-sheet.css'
 
 type Props = {
@@ -122,6 +123,7 @@ export function VacancyPanel({ match, profileStack, onClose, actions }: Props) {
           <div className="vacancy-panel__facts" data-fit="">
             <p className="vacancy-panel__company">
               <b>{vacancy.company.name}</b>
+              {vacancy.company.itAccredited && <VerifiedMark />}
               {vacancy.company.industry && <span> · {vacancy.company.industry}</span>}
             </p>
             <h2 id={titleId} className="vacancy-panel__title">
@@ -129,7 +131,7 @@ export function VacancyPanel({ match, profileStack, onClose, actions }: Props) {
             </h2>
             <p className="vacancy-panel__salary">
               {formatRubRange(vacancy.salary.from, vacancy.salary.to)}
-              <span> в месяц</span>
+              <span> {SALARY_NOTE}</span>
             </p>
             <ul className="vacancy-row__chips">
               <li>{vacancy.category.label}</li>

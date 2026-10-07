@@ -1,0 +1,103 @@
+.verified-mark {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  margin-inline-start: 0.3em;
+  vertical-align: -0.12em;
+  line-height: 1;
+}
+
+.verified-mark__icon {
+  display: block;
+  width: 1em;
+  min-width: 14px;
+  height: 1em;
+  min-height: 14px;
+}
+
+.verified-mark__icon circle {
+  fill: var(--brand-blue);
+}
+
+.verified-mark__icon path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.verified-mark__button {
+  position: relative;
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: help;
+}
+
+/* The visible mark stays small; the touch target is 44 px around it. */
+.verified-mark__button::before {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+
+.verified-mark__button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Two classes: card styles like `.eyebrow span` must not restyle the hint. */
+.verified-mark .verified-mark__tip {
+  position: absolute;
+  z-index: 30;
+  inset: calc(100% + 8px) auto auto 50%;
+  width: max-content;
+  max-width: min(260px, 70vw);
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--fill-ghost-solid);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.35;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, -4px);
+  transition:
+    opacity 0.16s var(--ease-premium),
+    transform 0.16s var(--ease-premium),
+    visibility 0s linear 0.16s;
+}
+
+.verified-mark .verified-mark__tip[data-open],
+.verified-mark--static:hover .verified-mark__tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition:
+    opacity 0.16s var(--ease-premium),
+    transform 0.16s var(--ease-premium);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .verified-mark .verified-mark__tip {
+    transition: none;
+  }
+}

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { VacancyMatchDto } from '@/entities/vacancy'
 import { WORK_FORMAT_LABELS } from '@/entities/vacancy'
 import { formatDate, formatRubRange } from '@/shared/lib'
+import { VerifiedMark } from '@/shared/ui'
 import './vacancy-sheet.css'
 
 type Props = {
@@ -52,7 +53,10 @@ export function VacancyRow({ match, profileStack, selected, onOpen, actions }: P
           {vacancy.city && <li>{vacancy.city}</li>}
         </ul>
         <p className="vacancy-row__company">
-          <span className="vacancy-row__company-name">{vacancy.company.name}</span>
+          <span className="vacancy-row__company-name">
+            {vacancy.company.name}
+            {vacancy.company.itAccredited && <VerifiedMark interactive={false} />}
+          </span>
           {vacancy.company.industry && (
             <span className="vacancy-row__company-ind">{vacancy.company.industry}</span>
           )}

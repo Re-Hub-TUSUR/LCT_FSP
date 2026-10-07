@@ -1,9 +1,18 @@
 import uuid
 from datetime import datetime
+from typing import Literal, Self
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
-from app.models.enums import Grade, ReactionKind, WorkFormat
+from app.models.enums import (
+    EmploymentType,
+    FspDiscipline,
+    FspResult,
+    Grade,
+    ReactionKind,
+    VacancyBenefit,
+    WorkFormat,
+)
 from app.schemas.category import Category
 from app.schemas.common import ApiModel, Page, SalaryRange
 
@@ -19,6 +28,9 @@ class CompanyBrief(CompanyRef):
     industry: str | None
     city: str | None
     size: str | None
+    # An admin approved the Минцифры registry extract: the check mark next to the name.
+    it_accredited: bool = False
+    has_logo: bool = False
 
 
 class VacancyRead(ApiModel):
@@ -34,6 +46,20 @@ class VacancyRead(ApiModel):
     description: str
     # Null for a draft, which only its company sees.
     published_at: datetime | None
+    # One grade or two neighbouring ones; `category` carries the first.
+    grades: list[Grade] = Field(default_factory=list)
+    # `stack` above is both lists together.
+    stack_required: list[str] = Field(default_factory=list)
+    stack_nice: list[str] = Field(default_factory=list)
+    relocation_help: bool = False
+    employment_types: list[EmploymentType] = Field(default_factory=list)
+    benefits: list[VacancyBenefit] = Field(default_factory=list)
+    # Only candidates whose grade a test confirmed.
+    verified_grade_only: bool = True
+    fsp_best_result: FspResult | None = None
+    fsp_discipline: FspDiscipline | None = None
+    # 0 = any, otherwise 1, 3 or 5 years and more.
+    min_experience_years: int = 0
 
 
 class VacancyMatch(ApiModel):
@@ -65,11 +91,39 @@ class VacancyFeedPage(Page[VacancyMatch]):
     basis: FeedBasis | None
 
 
+_GRADE_ORDER = list(Grade)
+MinExperience = Literal[0, 1, 3, 5]
+
+
 class VacancyCreate(ApiModel):
+    """The recruiter's vacancy form (ТЗ). Salary is RUB per month, net («на руки»)."""
+
     title: str = Field(min_length=3, max_length=200)
-    description: str = Field(min_length=20)
+    description: str = Field(min_length=150, max_length=5000)
     specialization: str
-    grade: Grade
-    stack: list[str] = Field(default_factory=list)
+    grades: list[Grade] = Field(min_length=1, max_length=2)
+    stack_required: list[str] = Field(min_length=1, max_length=20)
+    stack_nice: list[str] = Field(default_factory=list, max_length=20)
     salary: SalaryRange
     work_format: WorkFormat
+    # Required for office and hybrid work.
+    city: str | None = Field(default=None, max_length=100)
+    relocation_help: bool = False
+    employment_types: list[EmploymentType] = Field(min_length=1)
+    verified_grade_only: bool = True
+    fsp_best_result: FspResult | None = None
+    fsp_discipline: FspDiscipline | None = None
+    min_experience_years: MinExperience = 0
+    benefits: list[VacancyBenefit] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _rules(self) -> Self:
+        if len(self.grades) > 1:
+            first, *_, last = sorted(_GRADE_ORDER.index(grade) for grade in self.grades)
+            if last - first != 1:
+                msg = "Можно выбрать один грейд или два соседних"
+                raise ValueError(msg)
+        if self.work_format != WorkFormat.REMOTE and not (self.city and self.city.strip()):
+            msg = "Укажите город для офиса или гибрида"
+            raise ValueError(msg)
+        return self
