@@ -4,7 +4,7 @@ from pydantic import ValidationError
 
 from app.core.errors import AppError
 from app.models import TaskKind
-from app.schemas.assessment import OpenAnswer, OpenContent, OpenPayload
+from app.schemas.assessment import OpenAnswer, OpenContent, OpenContext, OpenPayload
 from app.services.code_runner import CodeRunner
 from app.services.task_kinds.base import Stored, TaskKindSpec
 
@@ -36,3 +36,8 @@ class OpenKind(TaskKindSpec[OpenPayload]):
 
     def review(self, payload: OpenPayload, state: Stored | None, stored: Stored | None) -> Stored:
         return {"text": stored.get("text", "") if stored else "", "guidance": payload.guidance}
+
+    def context(
+        self, payload: OpenPayload, state: Stored | None, stored: Stored | None, points: float
+    ) -> OpenContext:
+        return OpenContext(text=stored.get("text", "") if stored else "", guidance=payload.guidance)

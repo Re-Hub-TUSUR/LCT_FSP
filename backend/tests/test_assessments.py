@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.core.errors import ConflictError, NotFoundError
 from app.dependencies.services import get_code_runner
 from app.models import (
     AssessmentAttempt,
@@ -20,7 +21,14 @@ from app.models import (
     Grade,
     TaskKind,
 )
-from app.schemas.assessment import CompositionRule, RulesComposition
+from app.repositories.assessment import AssessmentRepository
+from app.schemas.assessment import (
+    AttemptContext,
+    CodeContext,
+    CompositionRule,
+    QuizContext,
+    RulesComposition,
+)
 from app.seed.assessment import (
     TEMPLATE_VERSION,
     _rows,
@@ -33,8 +41,9 @@ from app.seed.assessment import (
 from app.seed.code_bank import run
 from app.seed.code_bank.__main__ import main as build_code_bank
 from app.services.assessments import _draw
+from app.services.attempt_context import AttemptContextService, render_context
 from app.services.categories import SPECIALIZATIONS
-from app.services.code_runner import CodeRunnerUnavailableError, Execution
+from app.services.code_runner import COMPILERS, CodeRunnerUnavailableError, Execution
 from app.services.task_kinds.code import judge, normalize_output
 from tests.conftest import API, bearer, create_admin, login, register_and_login
 
@@ -1049,3 +1058,103 @@ async def test_starter_bank_switches_off_superseded_templates(
         )
 
     assert active.all() == [current]
+
+
+async def interview_context(
+    sessionmaker: async_sessionmaker[AsyncSession], attempt: dict[str, Any]
+) -> AttemptContext:
+    async with sessionmaker() as session:
+        service = AttemptContextService(AssessmentRepository(session))
+        return await service.build(uuid.UUID(attempt["id"]))
+
+
+def position(task: dict[str, Any], *, right: bool) -> int:
+    """Where the candidate saw the right (or a wrong) option of a question."""
+    options: list[str] = task["content"]["options"]
+    return next(i for i, option in enumerate(options) if option.startswith("right") == right)
+
+
+async def test_attempt_context_shows_answers_next_to_the_expected_ones(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker)
+    token = await register_and_login(client, "dev@fsp.ru")
+    attempt = await start(client, token)
+    first, second = (task for task in attempt["tasks"] if task["kind"] == "quiz")
+    program = next(task for task in attempt["tasks"] if task["kind"] == "code")
+    shown: list[str] = second["content"]["options"]
+    picked = position(second, right=False)
+    answers = {
+        first["id"]: {"selected": [position(first, right=True)]},
+        second["id"]: {"selected": [picked]},
+        program["id"]: {"language": "python-3.14", "code": "echo"},
+    }
+    for task_id, answer in answers.items():
+        saved = await client.post(
+            f"{API}/assessments/attempts/{attempt['id']}/answers",
+            headers=bearer(token),
+            json={"taskId": task_id, "answer": answer},
+        )
+        assert saved.status_code == 204, saved.text
+    result = await finish(client, token, attempt)
+
+    context = await interview_context(sessionmaker, attempt)
+
+    assert (context.specialization, context.grade) == ("backend", Grade.JUNIOR)
+    assert (context.score, context.passed) == (result["score"], result["status"] == "passed")
+    assert [task.number for task in context.tasks] == [1, 2, 3]
+    by_id = dict(zip((task["id"] for task in attempt["tasks"]), context.tasks, strict=True))
+    outcomes = [by_id[task["id"]].outcome for task in (first, second, program)]
+    assert outcomes == ["correct", "wrong", "correct"]
+
+    wrong = by_id[second["id"]].detail
+    assert isinstance(wrong, QuizContext)
+    # Options come as the candidate saw them, with both marks on the right positions.
+    assert [option.text for option in wrong.options] == shown
+    assert [option.chosen for option in wrong.options] == [i == picked for i in range(len(shown))]
+    assert [option.correct for option in wrong.options] == [
+        option.startswith("right") for option in shown
+    ]
+
+    solved = by_id[program["id"]].detail
+    assert isinstance(solved, CodeContext)
+    assert (solved.language, solved.code) == (COMPILERS["python-3.14"], "echo")
+    assert (solved.tests_passed, solved.tests_total) == (2, 2)
+    assert solved.reference_code == "echo"
+
+    text = render_context(context)
+    assert f"- [выбран] {shown[picked]}" in text
+    assert f"- [верный] {shown[position(second, right=True)]}" in text
+    assert "Ответ кандидата: right" in text
+    assert "2 из 2 закрытых тестов" in text
+    assert "    echo" in text
+
+    # A tight budget drops the correctly answered question and keeps the wrong one.
+    tight = render_context(context, max_chars=len(text) - 1)
+    assert len(tight) < len(text)
+    assert "Ещё верных ответов опущено: 1." in tight
+    assert f"- [выбран] {shown[picked]}" in tight
+    assert "Ответ кандидата: right" not in tight
+
+
+async def test_attempt_context_needs_a_finished_grade_test(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker)
+    token = await register_and_login(client, "dev@fsp.ru")
+    attempt = await start(client, token)
+
+    with pytest.raises(ConflictError):
+        await interview_context(sessionmaker, attempt)
+    with pytest.raises(NotFoundError):
+        await interview_context(sessionmaker, {"id": str(uuid.uuid4())})
+
+    await finish(client, token, attempt)
+    context = await interview_context(sessionmaker, attempt)
+
+    assert not context.passed
+    assert {task.outcome for task in context.tasks} == {"unanswered"}
+    text = render_context(context)
+    assert "Кандидат не ответил." in text
+    assert "Решение не отправлено." in text
+    assert len(render_context(context, max_chars=200)) <= 200

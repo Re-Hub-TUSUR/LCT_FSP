@@ -467,3 +467,75 @@ class ReviewGrade(ApiModel):
 
 class ReviewRequest(ApiModel):
     grades: list[ReviewGrade] = Field(min_length=1, max_length=60)
+
+
+# ── Attempt context for the follow-up interview ───────────────────────────────────────────────
+# Internal: it carries the correct answers, so no endpoint may return it to the candidate.
+
+Outcome = Literal["correct", "partial", "wrong", "unanswered"]
+
+
+class QuizOptionContext(ApiModel):
+    text: str
+    chosen: bool
+    correct: bool
+
+
+class QuizContext(ApiModel):
+    # In the order the candidate saw them.
+    options: list[QuizOptionContext]
+    multiple: bool
+
+
+class CodeContext(ApiModel):
+    # Name of the language and the last saved solution; null when nothing was submitted.
+    language: str | None
+    code: str | None
+    # Hidden test groups. Only their count survives the grading, not which of them failed.
+    tests_passed: int
+    tests_total: int
+    time_limit: float
+    # The first open test group, the one shown to the candidate.
+    sample: SampleTest | None
+    reference_language: str | None
+    reference_code: str | None
+
+
+class OpenContext(ApiModel):
+    text: str
+    # What a good answer covers, written by the author of the task.
+    guidance: str | None
+
+
+class TaskContext(ApiModel):
+    # Position in the test, from 1.
+    number: int
+    kind: TaskKind
+    topic: str
+    difficulty: TaskDifficulty
+    title: str
+    statement: str
+    outcome: Outcome
+    # Share of the task earned, 0–1.
+    points: float
+    detail: QuizContext | CodeContext | OpenContext
+
+
+class AttemptContext(ApiModel):
+    """A finished grade test as an interviewer needs it: every task, what the candidate
+    answered and what was expected. No personal data of the candidate."""
+
+    attempt_id: uuid.UUID
+    title: str
+    specialization: str
+    grade: Grade
+    score: float
+    pass_score: int
+    passed: bool
+    minutes_spent: int
+    breakdown: list[TopicResult]
+    # Signals for the interviewer; they never changed the score.
+    paste_count: int
+    blur_count: int
+    runs_count: int
+    tasks: list[TaskContext]

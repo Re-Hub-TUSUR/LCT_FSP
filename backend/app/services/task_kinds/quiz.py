@@ -5,7 +5,13 @@ from pydantic import ValidationError
 
 from app.core.errors import AppError
 from app.models import TaskKind
-from app.schemas.assessment import QuizAnswer, QuizContent, QuizPayload
+from app.schemas.assessment import (
+    QuizAnswer,
+    QuizContent,
+    QuizContext,
+    QuizOptionContext,
+    QuizPayload,
+)
 from app.services.code_runner import CodeRunner
 from app.services.task_kinds.base import Stored, TaskKindSpec
 
@@ -56,6 +62,22 @@ class QuizKind(TaskKindSpec[QuizPayload]):
             "correct": sorted(payload.correct),
             "selected": sorted(stored.get("selected", [])) if stored else [],
         }
+
+    def context(
+        self, payload: QuizPayload, state: Stored | None, stored: Stored | None, points: float
+    ) -> QuizContext:
+        chosen = set(stored.get("selected", [])) if stored else set()
+        return QuizContext(
+            options=[
+                QuizOptionContext(
+                    text=payload.options[index],
+                    chosen=index in chosen,
+                    correct=index in payload.correct,
+                )
+                for index in _order(payload, state)
+            ],
+            multiple=payload.multiple,
+        )
 
 
 def _order(payload: QuizPayload, state: Stored | None) -> list[int]:

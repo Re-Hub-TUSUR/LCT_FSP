@@ -18,6 +18,7 @@ from app.repositories.vacancy import VacancyRepository
 from app.search.elastic import ElasticSearchState
 from app.services.assessment_bank import AssessmentBankService
 from app.services.assessments import AssessmentService
+from app.services.attempt_context import AttemptContextService
 from app.services.auth import AuthService
 from app.services.calendar import CalendarService
 from app.services.candidate_search import CandidateSearchService
@@ -210,6 +211,13 @@ def get_test_assignment_service(
 
 
 TestAssignmentServiceDep = Annotated[TestAssignmentService, Depends(get_test_assignment_service)]
+
+
+def get_attempt_context_service(session: SessionDep) -> AttemptContextService:
+    return AttemptContextService(AssessmentRepository(session))
+
+
+AttemptContextServiceDep = Annotated[AttemptContextService, Depends(get_attempt_context_service)]
 
 
 def get_assessment_bank_service(
