@@ -20,6 +20,7 @@ export const ATTEMPT_STATUS_LABELS: Record<AssessmentAttemptStatus, string> = {
   expired: 'Время вышло',
   awaiting_review: 'Ждёт проверки',
   grading: 'Проверяется',
+  interview: 'Собеседование с ИИ',
 }
 
 export const ASSIGNMENT_STATUS_LABELS: Record<AssignmentStatus, string> = {

@@ -4,7 +4,11 @@ from fastapi import APIRouter, status
 
 from app.api.stub import not_implemented
 from app.dependencies.auth import CandidateUser
-from app.dependencies.services import AssessmentServiceDep, TestAssignmentServiceDep
+from app.dependencies.services import (
+    AssessmentServiceDep,
+    AttemptInterviewServiceDep,
+    TestAssignmentServiceDep,
+)
 from app.schemas.assessment import (
     AssessmentStatusRead,
     AssignmentRead,
@@ -14,6 +18,8 @@ from app.schemas.assessment import (
     AttemptSignal,
     AttemptStart,
     AttemptTime,
+    InterviewAnswers,
+    InterviewRead,
     PrimaryCategory,
     RunRequest,
     RunResponse,
@@ -109,6 +115,33 @@ async def finish_attempt(
     attempt_id: uuid.UUID, user: CandidateUser, service: AssessmentServiceDep
 ) -> AttemptRead:
     return await service.finish(user, attempt_id)
+
+
+@router.get(
+    "/attempts/{attempt_id}/interview",
+    summary="AI interview about the candidate's code: 2–3 questions",
+    description=(
+        "A grade test that passes on points with working code waits in `interview`. The "
+        "questions are asked on the first read, and the time to answer starts then."
+    ),
+)
+async def read_interview(
+    attempt_id: uuid.UUID, user: CandidateUser, service: AttemptInterviewServiceDep
+) -> InterviewRead:
+    return await service.read(user, attempt_id)
+
+
+@router.post(
+    "/attempts/{attempt_id}/interview",
+    summary="Answer the AI interview: the grade is confirmed when the answers show understanding",
+)
+async def answer_interview(
+    attempt_id: uuid.UUID,
+    user: CandidateUser,
+    data: InterviewAnswers,
+    service: AttemptInterviewServiceDep,
+) -> InterviewRead:
+    return await service.answer(user, attempt_id, data)
 
 
 @router.get("/assignments", summary="Tests companies sent to me")

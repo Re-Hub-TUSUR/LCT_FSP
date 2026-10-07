@@ -26,11 +26,13 @@ from app.services.candidates import CandidateProfileService
 from app.services.chat import ChatService
 from app.services.code_runner import CodeRunner, OnlineCompilerRunner
 from app.services.email import ResendEmailSender
+from app.services.interview import AttemptInterviewService, Interviewer
+from app.services.llm import RouterAiModel
 from app.services.notifications import NotificationHub
 from app.services.reactions import ReactionService
 from app.services.responses import ResponsesService
 from app.services.resume_import import ResumeImportService
-from app.services.resume_reader import ResumeReader, RouterAiResumeReader
+from app.services.resume_reader import LlmResumeReader, ResumeReader
 from app.services.test_assignments import TestAssignmentService
 from app.services.vacancies import VacancyService
 from app.services.vacancy_feed import VacancyFeedService
@@ -173,7 +175,7 @@ CodeRunnerDep = Annotated[CodeRunner, Depends(get_code_runner)]
 
 
 def get_resume_reader(settings: SettingsDep) -> ResumeReader:
-    return RouterAiResumeReader(settings)
+    return LlmResumeReader(RouterAiModel(settings, settings.resume_parser_model))
 
 
 ResumeReaderDep = Annotated[ResumeReader, Depends(get_resume_reader)]
@@ -186,11 +188,22 @@ def get_resume_import_service(reader: ResumeReaderDep) -> ResumeImportService:
 ResumeImportServiceDep = Annotated[ResumeImportService, Depends(get_resume_import_service)]
 
 
+def get_interviewer(settings: SettingsDep) -> Interviewer:
+    return Interviewer(RouterAiModel(settings, settings.interview_model), settings.interview_model)
+
+
+InterviewerDep = Annotated[Interviewer, Depends(get_interviewer)]
+
+
 def get_assessment_service(
-    session: SessionDep, runner: CodeRunnerDep, settings: SettingsDep
+    session: SessionDep, runner: CodeRunnerDep, settings: SettingsDep, interviewer: InterviewerDep
 ) -> AssessmentService:
     return AssessmentService(
-        AssessmentRepository(session), CandidateRepository(session), runner, settings
+        AssessmentRepository(session),
+        CandidateRepository(session),
+        runner,
+        settings,
+        interviews=interviewer.available,
     )
 
 
@@ -218,6 +231,28 @@ def get_attempt_context_service(session: SessionDep) -> AttemptContextService:
 
 
 AttemptContextServiceDep = Annotated[AttemptContextService, Depends(get_attempt_context_service)]
+
+
+def get_attempt_interview_service(
+    session: SessionDep,
+    contexts: AttemptContextServiceDep,
+    assessments: AssessmentServiceDep,
+    interviewer: InterviewerDep,
+    settings: SettingsDep,
+) -> AttemptInterviewService:
+    return AttemptInterviewService(
+        repository=AssessmentRepository(session),
+        candidates=CandidateRepository(session),
+        contexts=contexts,
+        assessments=assessments,
+        interviewer=interviewer,
+        settings=settings,
+    )
+
+
+AttemptInterviewServiceDep = Annotated[
+    AttemptInterviewService, Depends(get_attempt_interview_service)
+]
 
 
 def get_assessment_bank_service(

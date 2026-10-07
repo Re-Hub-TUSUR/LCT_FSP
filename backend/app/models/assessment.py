@@ -137,6 +137,8 @@ class AssessmentAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Signals for reviewers; they never change the score.
     paste_count: Mapped[int] = mapped_column(default=0)
     blur_count: Mapped[int] = mapped_column(default=0)
+    # The AI interview about the candidate's code (`InterviewState`); null when there was none.
+    interview: Mapped[dict[str, Any] | None] = mapped_column(JSON)
 
 
 class AssessmentTaskTime(TimestampMixin, Base):

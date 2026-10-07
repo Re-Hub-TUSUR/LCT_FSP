@@ -59,13 +59,18 @@ class Settings(BaseSettings):
     upload_dir: str = "/data/uploads"
     chat_attachment_limit: int = Field(default=10 * 1024 * 1024, ge=1)
 
-    # Resume recognition through RouterAI (OpenAI-compatible API, https://routerai.ru/models).
-    # Empty key: the upload answers 503 and the candidate fills the form by hand.
+    # Language models through RouterAI (OpenAI-compatible API, https://routerai.ru/models). Only
+    # Russian models are allowed: the Yandex family. Empty key: the resume upload answers 503
+    # and grade tests are confirmed without the AI interview.
     routerai_api_key: SecretStr = SecretStr("")
     routerai_url: str = "https://routerai.ru/api/v1"
-    resume_parser_model: str = "openai/gpt-6-luna"
-    # Sent as `reasoning.effort`; leave empty for a model without reasoning.
-    resume_parser_reasoning: str = "low"
+    resume_parser_model: str = "yandex/aliceai-llm-flash"
+    # The interviewer asks about the candidate's code once a grade test passes on points.
+    interview_model: str = "yandex/aliceai-llm-flash"
+    # Mark of the answers (0–100) that confirms the grade.
+    interview_pass_score: int = Field(default=60, ge=0, le=100)
+    # Time to answer the questions once they are shown.
+    interview_minutes: int = Field(default=15, ge=1, le=120)
 
     @field_validator("resend_from")
     @classmethod

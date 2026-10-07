@@ -8,9 +8,10 @@ export type AssessmentStatus = 'not_taken' | 'passed' | 'failed'
 /**
  * `awaiting_review`: finished, but open answers wait for the company's grades.
  * `grading`: finished while the code runner was down; the score appears once it is back.
+ * `interview`: passed on points with working code; the grade waits for the AI interview.
  */
 export type AssessmentAttemptStatus =
-  'in_progress' | 'passed' | 'failed' | 'expired' | 'awaiting_review' | 'grading'
+  'in_progress' | 'passed' | 'failed' | 'expired' | 'awaiting_review' | 'grading' | 'interview'
 
 /** Every kind has a view in the runner and an editor in the bank, see the kind registries. */
 export type TaskKind = 'quiz' | 'code' | 'open'
@@ -156,6 +157,8 @@ export type AssessmentStatusDto = {
   /** Every specialization the candidate has tried, confirmed ones first. */
   tracks: AssessmentTrackDto[]
   activeAttemptId: string | null
+  /** A grade test passed on points whose AI interview is not answered yet. */
+  interviewAttemptId?: string | null
   /** False until the code runner key is configured on the server. */
   codeRunnerAvailable: boolean
   history: AssessmentAttemptDto[]
@@ -163,11 +166,35 @@ export type AssessmentStatusDto = {
 
 export type AnswerPayload = { taskId: string; answer: TaskAnswerDto }
 
+/** A question of the AI interviewer about the candidate's working code. */
+export type InterviewQuestionDto = { number: number; taskTitle: string; text: string }
+
+export type InterviewMarkDto = { number: number; score: number; comment: string }
+
+export type InterviewResultDto = {
+  /** Mark of the answers, 0–100; null when the interview was skipped or the time ran out. */
+  score: number | null
+  passScore: number
+  passed: boolean
+  summary: string
+  marks: InterviewMarkDto[]
+}
+
+export type InterviewDto = {
+  attemptId: string
+  status: 'asked' | 'passed' | 'failed'
+  questions: InterviewQuestionDto[]
+  /** Answers are accepted until then; null once the interview is over. */
+  deadline: string | null
+  result: InterviewResultDto | null
+}
+
 export const assessmentKeys = {
   all: ['assessments'] as const,
   status: () => [...assessmentKeys.all, 'status'] as const,
   templates: () => [...assessmentKeys.all, 'templates'] as const,
   attempt: (id: string) => [...assessmentKeys.all, 'attempt', id] as const,
+  interview: (attemptId: string) => [...assessmentKeys.all, 'interview', attemptId] as const,
 }
 
 export const assessmentQueries = {
@@ -181,6 +208,15 @@ export const assessmentQueries = {
       queryKey: assessmentKeys.templates(),
       queryFn: ({ signal }) =>
         http.get<AssessmentTemplateDto[]>('/assessments/templates', { signal }),
+    }),
+  /** The first read asks the questions and starts the clock: never refetched on its own. */
+  interview: (attemptId: string) =>
+    queryOptions({
+      queryKey: assessmentKeys.interview(attemptId),
+      queryFn: ({ signal }) =>
+        http.get<InterviewDto>(`/assessments/attempts/${attemptId}/interview`, { signal }),
+      staleTime: Infinity,
+      retry: false,
     }),
   attempt: (id: string) =>
     queryOptions({
@@ -207,6 +243,8 @@ export const assessmentApi = {
   /** Time a task was on screen since the last report; the server sums it per task. */
   trackTime: (attemptId: string, taskId: string, seconds: number) =>
     http.post<void>(`/assessments/attempts/${attemptId}/time`, { taskId, seconds }),
+  answerInterview: (attemptId: string, answers: string[]) =>
+    http.post<InterviewDto>(`/assessments/attempts/${attemptId}/interview`, { answers }),
   finish: (attemptId: string) =>
     http.post<AssessmentAttemptDto>(`/assessments/attempts/${attemptId}/finish`),
 }

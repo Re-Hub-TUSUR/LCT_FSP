@@ -57,7 +57,12 @@ class AttemptContextService:
         attempt = await self._assessments.get_attempt(attempt_id)
         if attempt is None:
             raise NotFoundError("Попытка не найдена")
-        graded = attempt.status in (AttemptStatus.PASSED, AttemptStatus.FAILED)
+        # `interview`: passed on points, the AI interviewer is reading it right now.
+        graded = attempt.status in (
+            AttemptStatus.PASSED,
+            AttemptStatus.FAILED,
+            AttemptStatus.INTERVIEW,
+        )
         if (
             attempt.assignment_id is not None
             or attempt.specialization is None
@@ -100,7 +105,7 @@ class AttemptContextService:
             grade=attempt.grade,
             score=attempt.score,
             pass_score=attempt.pass_score,
-            passed=attempt.status == AttemptStatus.PASSED,
+            passed=attempt.status in (AttemptStatus.PASSED, AttemptStatus.INTERVIEW),
             minutes_spent=max(0, round(spent.total_seconds() / 60)),
             breakdown=[TopicResult.model_validate(item) for item in attempt.breakdown or []],
             paste_count=attempt.paste_count,

@@ -372,6 +372,8 @@ class AssessmentStatusRead(ApiModel):
     # Every specialization the candidate has tried, confirmed ones first.
     tracks: list[TrackRead]
     active_attempt_id: uuid.UUID | None
+    # A grade test passed on points whose AI interview is not answered yet.
+    interview_attempt_id: uuid.UUID | None = None
     # False while the code runner has no API key: code tasks cannot be checked.
     code_runner_available: bool
     history: list[AttemptRead]
@@ -546,3 +548,71 @@ class AttemptContext(ApiModel):
     blur_count: int
     runs_count: int
     tasks: list[TaskContext]
+
+
+# ── AI interview about the candidate's code (`app.services.interview`) ────────────────────────
+
+InterviewStatus = Literal["asked", "passed", "failed"]
+MAX_INTERVIEW_ANSWER = 2000
+
+
+class InterviewQuestion(ApiModel):
+    # Position in the interview, from 1.
+    number: int
+    # The code task the question is about.
+    task_title: str
+    text: str
+
+
+class InterviewMark(ApiModel):
+    number: int
+    score: int
+    comment: str
+
+
+class InterviewResult(ApiModel):
+    # Mark of the answers, 0–100; the grade is confirmed from `pass_score` up. Null when the
+    # interview was skipped or the time ran out.
+    score: float | None
+    pass_score: int
+    passed: bool
+    summary: str
+    marks: list[InterviewMark]
+
+
+class InterviewRead(ApiModel):
+    attempt_id: uuid.UUID
+    status: InterviewStatus
+    questions: list[InterviewQuestion]
+    # Answers are accepted until then.
+    deadline: datetime | None
+    result: InterviewResult | None
+
+
+class InterviewAnswers(ApiModel):
+    # One per question, in the order of the questions.
+    answers: list[Annotated[str, Field(max_length=MAX_INTERVIEW_ANSWER)]] = Field(
+        min_length=1, max_length=5
+    )
+
+
+class InterviewQuestionState(ApiModel):
+    # Number of the code task in the test.
+    task: int
+    task_title: str
+    text: str
+
+
+class InterviewState(ApiModel):
+    """What `AssessmentAttempt.interview` stores. Holds the candidate's answers: candidate's
+    own view and the model only."""
+
+    questions: list[InterviewQuestionState] = Field(default_factory=list)
+    asked_at: AwareDatetime | None = None
+    answers: list[str] | None = None
+    answered_at: AwareDatetime | None = None
+    marks: list[InterviewMark] = Field(default_factory=list)
+    score: float | None = None
+    summary: str = ""
+    passed: bool | None = None
+    model: str = ""

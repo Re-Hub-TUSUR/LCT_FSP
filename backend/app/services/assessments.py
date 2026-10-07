@@ -45,6 +45,7 @@ from app.schemas.assessment import (
     AttemptTask,
     AttemptTime,
     FixedComposition,
+    InterviewState,
     Recommendation,
     RulesComposition,
     RunRequest,
@@ -94,11 +95,15 @@ class AssessmentService:
         candidates: CandidateRepository,
         runner: CodeRunner,
         settings: Settings,
+        *,
+        interviews: bool = False,
     ) -> None:
         self._repository = repository
         self._candidates = candidates
         self._runner = runner
         self._settings = settings
+        # The AI interviewer is configured: a pass with working code waits for its interview.
+        self._interviews = interviews
 
     # ── Status and start ──────────────────────────────────────────────────────────────────
 
@@ -119,6 +124,7 @@ class AssessmentService:
         attempts = await self._settled_attempts(profile)
         categories = await self._repository.categories_of(profile.id)
         active = next((a for a in attempts if a.status == AttemptStatus.IN_PROGRESS), None)
+        interview = next((a for a in attempts if a.status == AttemptStatus.INTERVIEW), None)
         # Confirmed specializations first, then the ones tried without success.
         tried = [
             a.specialization for a in attempts if a.specialization and a.status in _SETTLED_BADLY
@@ -136,6 +142,7 @@ class AssessmentService:
             next_attempt_at=primary.next_attempt_at if primary else None,
             tracks=tracks,
             active_attempt_id=active.id if active else None,
+            interview_attempt_id=interview.id if interview else None,
             code_runner_available=self._runner.available,
             history=[_attempt_read(attempt) for attempt in attempts],
         )
@@ -199,6 +206,12 @@ class AssessmentService:
             for attempt in attempts
         ):
             raise ConflictError("Предыдущий тест по этой специализации ещё проверяется")
+        if any(
+            attempt.status == AttemptStatus.INTERVIEW
+            and attempt.specialization == data.specialization
+            for attempt in attempts
+        ):
+            raise ConflictError("Сначала ответьте на вопросы ИИ по прошлому тесту")
         categories = await self._repository.categories_of(profile.id)
         allowed_at = _next_attempt_at(
             data.specialization, categories.get(data.specialization), attempts, data.grade
@@ -441,7 +454,11 @@ class AssessmentService:
         if any(value is None for value in points.values()):
             attempt.status = AttemptStatus.AWAITING_REVIEW
         else:
-            settle(attempt, tasks, {task_id: value or 0.0 for task_id, value in points.items()})
+            earned_points = {task_id: value or 0.0 for task_id, value in points.items()}
+            settle(attempt, tasks, earned_points)
+            if self._interviews and needs_interview(attempt, tasks, earned_points):
+                # The questions are asked when the candidate opens the interview.
+                attempt.status = AttemptStatus.INTERVIEW
         await self._repository.add(attempt)
         await self.after_close(attempt)
 
@@ -497,9 +514,18 @@ class AssessmentService:
         if profile is not None and attempt.grade is not None and attempt.specialization:
             if attempt.status == AttemptStatus.PASSED:
                 await self._confirm(profile, attempt)
+            elif attempt.status == AttemptStatus.INTERVIEW:
+                return  # the grade waits for the AI interview
             elif profile.assessment_status != AssessmentStatus.PASSED:
                 # A failed test assigns nothing; confirmed categories stay as they were.
                 profile.assessment_status = AssessmentStatus.FAILED
+
+    async def conclude_interview(self, attempt: AssessmentAttempt, *, passed: bool) -> None:
+        """The AI interview decides what a pass on points becomes: a confirmed grade, or a
+        failure with the usual pause before the next try."""
+        attempt.status = AttemptStatus.PASSED if passed else AttemptStatus.FAILED
+        await self._repository.add(attempt)
+        await self.after_close(attempt)
 
     async def _confirm(self, profile: CandidateProfile, attempt: AssessmentAttempt) -> None:
         """Records the confirmed grade of the attempt's specialization."""
@@ -596,7 +622,26 @@ class AssessmentService:
                 await self._repository.add(attempt)
                 if profile.assessment_status != AssessmentStatus.PASSED:
                     profile.assessment_status = AssessmentStatus.FAILED
+            elif attempt.status == AttemptStatus.INTERVIEW and self._interview_overdue(
+                attempt, now
+            ):
+                state = InterviewState.model_validate(attempt.interview or {})
+                state.summary = "Время на ответы вышло: грейд не подтверждён"
+                state.passed = False
+                attempt.interview = state.model_dump(mode="json")
+                attempt.status = AttemptStatus.FAILED
+                await self._repository.add(attempt)
+                if profile.assessment_status != AssessmentStatus.PASSED:
+                    profile.assessment_status = AssessmentStatus.FAILED
         return attempts
+
+    def _interview_overdue(self, attempt: AssessmentAttempt, now: datetime) -> bool:
+        """Questions shown and left unanswered well past their time; not shown yet = no clock."""
+        asked_at = InterviewState.model_validate(attempt.interview or {}).asked_at
+        if asked_at is None:
+            return False
+        answer_time = timedelta(minutes=self._settings.interview_minutes)
+        return now > _aware(asked_at) + answer_time + ABANDON_AFTER
 
     def _retry_days(self, test: AssessmentTest) -> int:
         if test.retry_days is not None:
@@ -746,6 +791,18 @@ def _attempt_task(
         statement=task.statement,
         content=spec.content(payload, state).model_dump(mode="json", by_alias=True),
         answer=shown.model_dump(mode="json", by_alias=True) if shown else None,
+    )
+
+
+def needs_interview(
+    attempt: AssessmentAttempt, tasks: Sequence[TaskSnapshot], points: dict[uuid.UUID, float]
+) -> bool:
+    """A grade test passed on points with a code task whose hidden tests all passed: the AI
+    interviewer checks that the candidate understands that code before the grade is confirmed."""
+    return (
+        attempt.status == AttemptStatus.PASSED
+        and attempt.assignment_id is None
+        and any(task.kind == TaskKind.CODE and points.get(task.id, 0.0) >= 1 for task in tasks)
     )
 
 

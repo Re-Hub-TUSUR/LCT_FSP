@@ -20,6 +20,7 @@ import { ROUTES } from '@/shared/config'
 import { Page, QueryState, Section, Tag } from '@/shared/ui'
 import { AssessmentRunner } from '@/widgets/assessment-runner'
 import { AssignmentInbox } from '@/widgets/assignment-inbox'
+import { AttemptInterview } from '@/widgets/attempt-interview'
 import { AssignmentReview } from '@/widgets/assignment-review'
 import './testing-page.css'
 
@@ -49,6 +50,17 @@ function AttemptResult({
         <p className="test-result__note">
           Ответы сохранены, но сервис проверки кода сейчас не отвечает. Итог появится в истории
           попыток, как только он вернётся; пауза за это время не начисляется.
+        </p>
+      </div>
+    )
+  }
+
+  if (attempt.status === 'interview') {
+    return (
+      <div className="test-result" role="status">
+        <p className="test-result__title">Тест сдан по баллам</p>
+        <p className="test-result__note">
+          Осталось собеседование с ИИ: 2–3 вопроса по вашему коду. Грейд подтвердится после ответов.
         </p>
       </div>
     )
@@ -286,6 +298,7 @@ function Overview({
 
 /** Candidate's path to a category: pick specialization and grade, take the test, see the result. */
 function CandidateTesting() {
+  const queryClient = useQueryClient()
   const status = useQuery(assessmentQueries.status())
   const [result, setResult] = useState<AssessmentAttemptDto | null>(null)
 
@@ -297,6 +310,15 @@ function CandidateTesting() {
             attemptId={data.activeAttemptId}
             runnerAvailable={data.codeRunnerAvailable}
             onFinished={setResult}
+          />
+        ) : data.interviewAttemptId ? (
+          // The grade of a test passed on points waits for the AI interview about its code.
+          <AttemptInterview
+            attemptId={data.interviewAttemptId}
+            onDone={() => {
+              setResult(null)
+              void queryClient.invalidateQueries({ queryKey: assessmentKeys.status() })
+            }}
           />
         ) : (
           <Overview status={data} result={result} />

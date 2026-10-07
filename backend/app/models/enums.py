@@ -40,6 +40,9 @@ class AttemptStatus(StrEnum):
     AWAITING_REVIEW = "awaiting_review"
     # Finished, but the code runner was down: the answers are frozen and graded once it is back.
     GRADING = "grading"
+    # Passed on points with working code: the AI interviewer asks about that code, and the grade
+    # is confirmed once the answers show understanding (`app.services.interview`).
+    INTERVIEW = "interview"
 
 
 class TaskKind(StrEnum):
