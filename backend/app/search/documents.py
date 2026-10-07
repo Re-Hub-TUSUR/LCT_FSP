@@ -5,9 +5,10 @@ import json
 from typing import Any, Final
 
 from app.models import CandidateProfile
+from app.search.filters import fsp_marks
 from app.search.synonyms import elasticsearch_rules
 from app.services.categories import FSP_DISCIPLINE_LABELS
-from app.services.matching import CandidateFacts
+from app.services.matching import CandidateFacts, as_utc
 from app.services.presenters import profile_category
 
 # Russian morphology (stemming) at index and search time; IT slang synonyms at search time only,
@@ -76,6 +77,11 @@ MAPPINGS: dict[str, Any] = {
         "verified": {"type": "boolean"},
         "assessment_status": {"type": "keyword"},
         "has_fsp": {"type": "boolean"},
+        # `discipline:result` terms, see `app.search.filters.fsp_marks`.
+        "fsp_marks": {"type": "keyword"},
+        "employment_types": {"type": "keyword"},
+        "job_status": {"type": "keyword"},
+        "last_active_at": {"type": "date"},
         "profile_strength": {"type": "double"},
         # Hidden and not yet categorised profiles are indexed but never returned to recruiters.
         "visible": {"type": "boolean"},
@@ -132,6 +138,12 @@ def candidate_document(profile: CandidateProfile) -> dict[str, Any]:
         "verified": profile.assessment_score is not None,
         "assessment_status": profile.assessment_status.value,
         "has_fsp": bool(profile.fsp_achievements),
+        "fsp_marks": sorted(fsp_marks(profile.fsp_achievements)),
+        "employment_types": list(profile.employment_types),
+        "job_status": profile.job_status.value,
+        "last_active_at": as_utc(profile.last_active_at).isoformat()
+        if profile.last_active_at
+        else None,
         "profile_strength": facts.strength,
         "visible": profile.is_visible_to_employers,
         "categorized": category is not None,

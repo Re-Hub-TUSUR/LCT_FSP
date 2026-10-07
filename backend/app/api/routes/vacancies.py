@@ -6,6 +6,7 @@ from fastapi import APIRouter, Query, Response, status
 from app.api.stub import not_implemented
 from app.dependencies.auth import CandidateUser, EmployerUser, OptionalUser
 from app.dependencies.common import PaginationDep
+from app.dependencies.filters import VacancyFeedParamsDep
 from app.dependencies.services import (
     ReactionServiceDep,
     VacancyFeedServiceDep,
@@ -14,8 +15,13 @@ from app.dependencies.services import (
 from app.models.enums import Grade, WorkFormat
 from app.schemas.common import Page
 from app.schemas.reaction import FeedView, ReactionCounts, ReactionRead, ReactionRequest
-from app.schemas.vacancy import VacancyCreate, VacancyFeedPage, VacancyRead
-from app.services.vacancy_feed import VacancyFeedFilters
+from app.schemas.vacancy import (
+    VacancyCreate,
+    VacancyFacets,
+    VacancyFeedPage,
+    VacancyFeedPresets,
+    VacancyRead,
+)
 
 router = APIRouter(prefix="/vacancies", tags=["vacancies"])
 
@@ -43,23 +49,46 @@ async def list_vacancies(
     "/feed",
     summary="Candidate: relevant vacancies ranked by fit to the profile, with reasons",
     description=(
-        "Only the candidate's and related specializations, the same or a neighbouring grade. "
-        "`view=all` hides skipped cards, `unseen` hides every decided card (swipe deck). "
-        "`liked`, `matched` and `skipped` are the candidate's own decisions, the latest first, "
-        "whatever the profile says now; `matched` = liked and liked back by the recruiter."
+        "`mode=profile`: only the candidate's and related specializations, the same or a "
+        "neighbouring grade, best fit first; `mode=free`: every vacancy, newest first. Vacancies "
+        "asking for more `nice` technologies go first. `view=all` hides skipped cards, `unseen` "
+        "hides every decided card (swipe deck). `liked`, `matched` and `skipped` are the "
+        "candidate's own decisions, the latest first, whatever the profile says now; `matched` = "
+        "liked and liked back by the recruiter."
     ),
 )
 async def vacancy_feed(
-    *,
     user: CandidateUser,
     pagination: PaginationDep,
     feed: VacancyFeedServiceDep,
-    view: FeedView = "all",
-    work_format: Annotated[list[WorkFormat] | None, Query(alias="workFormat")] = None,
-    salary_min: Annotated[int | None, Query(alias="salaryMin", ge=0)] = None,
+    params: VacancyFeedParamsDep,
 ) -> VacancyFeedPage:
-    filters = VacancyFeedFilters(work_formats=tuple(work_format or ()), salary_min=salary_min)
-    return await feed.feed(user, view=view, filters=filters, pagination=pagination)
+    return await feed.feed(user, params, pagination)
+
+
+@router.get(
+    "/feed/facets",
+    summary="Candidate: how many vacancies each filter option would leave",
+    description=(
+        "Takes the parameters of the feed. A format, an employment type or a condition counts "
+        "the feed after adding it to the chosen ones; `cities` and `stack` count the vacancies "
+        "of the mode. When nothing matches, `relaxations` names up to three filters to loosen."
+    ),
+)
+async def vacancy_feed_facets(
+    user: CandidateUser, feed: VacancyFeedServiceDep, params: VacancyFeedParamsDep
+) -> VacancyFacets:
+    return await feed.facets(user, params)
+
+
+@router.get(
+    "/feed/presets",
+    summary="Candidate: the feed's modes and the filters the profile fills in",
+)
+async def vacancy_feed_presets(
+    user: CandidateUser, feed: VacancyFeedServiceDep, view: FeedView = "all"
+) -> VacancyFeedPresets:
+    return await feed.presets(user, view=view)
 
 
 @router.get(

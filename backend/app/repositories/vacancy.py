@@ -28,22 +28,9 @@ class VacancyRepository:
         rows = await self._fetch(self._rows().where(Vacancy.id == vacancy_id))
         return rows[0] if rows else None
 
-    async def published(
-        self,
-        *,
-        specializations: Collection[str] | None = None,
-        grades: Collection[Grade] | None = None,
-        work_formats: Collection[WorkFormat] = (),
-        salary_min: int | None = None,
-        reactions: ReactionFilter | None = None,
-    ) -> list[VacancyRow]:
-        """Every published vacancy matching the filters, unordered: the caller ranks them."""
-        conditions = self._published_conditions(
-            specializations=specializations,
-            grades=grades,
-            work_formats=work_formats,
-            salary_min=salary_min,
-        )
+    async def published(self, *, reactions: ReactionFilter | None = None) -> list[VacancyRow]:
+        """Every published vacancy, unordered: the feed filters and ranks them in Python."""
+        conditions: list[ColumnElement[bool]] = [Vacancy.published_at.is_not(None)]
         if reactions is not None:
             reacted = select(VacancyReaction.vacancy_id).where(
                 VacancyReaction.user_id == reactions.user_id,
@@ -87,6 +74,16 @@ class VacancyRepository:
         )
         return rows, total or 0
 
+    async def for_company(self, company_id: uuid.UUID) -> list[VacancyRow]:
+        """All of a company's vacancies: published ones newest first, then drafts."""
+        return await self._fetch(
+            self._rows()
+            .where(Vacancy.company_id == company_id)
+            .order_by(
+                Vacancy.published_at.desc().nulls_last(), Vacancy.created_at.desc(), Vacancy.id
+            )
+        )
+
     async def page_for_company(
         self, company_id: uuid.UUID, *, limit: int, offset: int
     ) -> tuple[list[VacancyRow], int]:
@@ -110,7 +107,6 @@ class VacancyRepository:
         specializations: Collection[str] | None,
         grades: Collection[Grade] | None,
         work_formats: Collection[WorkFormat],
-        salary_min: int | None = None,
     ) -> list[ColumnElement[bool]]:
         conditions: list[ColumnElement[bool]] = [Vacancy.published_at.is_not(None)]
         if specializations is not None:
@@ -119,6 +115,4 @@ class VacancyRepository:
             conditions.append(Vacancy.grade.in_(grades))
         if work_formats:
             conditions.append(Vacancy.work_format.in_(work_formats))
-        if salary_min is not None:
-            conditions.append(Vacancy.salary_to >= salary_min)
         return conditions

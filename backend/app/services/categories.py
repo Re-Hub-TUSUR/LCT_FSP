@@ -2,6 +2,7 @@
 
 from app.models.enums import FspDiscipline, Grade, WorkFormat
 from app.schemas.category import Category, CategoryDictionary, GradeRead, SpecializationRead
+from app.search.synonyms import SYNONYM_GROUPS
 
 SPECIALIZATIONS: dict[str, str] = {
     "backend": "Backend-разработка",
@@ -58,4 +59,5 @@ def get_dictionary() -> CategoryDictionary:
             SpecializationRead(code=code, label=label) for code, label in SPECIALIZATIONS.items()
         ],
         grades=[GradeRead(code=grade, label=label) for grade, label in GRADE_LABELS.items()],
+        synonyms=[list(group) for group in SYNONYM_GROUPS],
     )

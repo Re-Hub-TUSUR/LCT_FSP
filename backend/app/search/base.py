@@ -1,8 +1,16 @@
 import uuid
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Literal, Protocol
 
-from app.models import Grade, WorkFormat
+from app.models.enums import (
+    EmploymentType,
+    FspDiscipline,
+    FspResult,
+    Grade,
+    JobStatus,
+    WorkFormat,
+)
 from app.schemas.candidate import SearchEngine
 from app.services.matching import VacancyFacts
 
@@ -12,20 +20,34 @@ CandidateSort = Literal["relevance", "assessment", "salary", "experience"]
 
 @dataclass(frozen=True, slots=True)
 class CandidateSearchQuery:
+    """Structured filters mean the same in every engine: see `app.search.filters`."""
+
     text: str | None = None
-    specialization: str | None = None
+    # Any of the listed specializations / grades.
+    specializations: tuple[str, ...] = ()
     grades: tuple[Grade, ...] = ()
     # Every listed technology is required.
     stack: tuple[str, ...] = ()
+    # «Будет плюсом»: no filtering, the candidates with more of these go first (relevance only).
+    nice_stack: tuple[str, ...] = ()
+    # False: no FSP results at all. True: some result, narrowed by the two fields below.
     has_fsp: bool | None = None
+    fsp_result: FspResult | None = None
+    fsp_discipline: FspDiscipline | None = None
     verified_only: bool = False
-    # Any of the listed formats.
-    work_formats: tuple[WorkFormat, ...] = ()
-    # Lives in the city or is ready to relocate.
-    city: str | None = None
-    # Budget: expectation not above it (candidates without an expectation pass).
-    salary_max: int | None = None
     experience_min: int | None = None
+    # Expectations inside the range; candidates without an expectation pass.
+    salary_min: int | None = None
+    salary_max: int | None = None
+    # Any of the listed formats. Remote work needs no city; the others need one of `cities`
+    # (or readiness to relocate when `include_relocation`).
+    work_formats: tuple[WorkFormat, ...] = ()
+    cities: tuple[str, ...] = ()
+    include_relocation: bool = True
+    employment_types: tuple[EmploymentType, ...] = ()
+    job_statuses: tuple[JobStatus, ...] = ()
+    # Signed in since then.
+    active_since: datetime | None = None
     # Hiring for this vacancy: rank by fit to it.
     vacancy: VacancyFacts | None = None
     # Favourites view: only these candidates.
