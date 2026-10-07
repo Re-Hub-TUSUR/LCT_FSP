@@ -3,6 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models import Conversation, Message, MessageAttachment
 
 
@@ -33,7 +34,9 @@ class ConversationRepository:
         result = await self._session.scalars(
             select(Conversation)
             .where(Conversation.company_id == company_id)
-            .order_by(Conversation.last_message_at.desc().nullslast(), Conversation.updated_at.desc())
+            .order_by(
+                Conversation.last_message_at.desc().nullslast(), Conversation.updated_at.desc()
+            )
         )
         return list(result)
 
@@ -41,7 +44,9 @@ class ConversationRepository:
         result = await self._session.scalars(
             select(Conversation)
             .where(Conversation.candidate_id == candidate_id)
-            .order_by(Conversation.last_message_at.desc().nullslast(), Conversation.updated_at.desc())
+            .order_by(
+                Conversation.last_message_at.desc().nullslast(), Conversation.updated_at.desc()
+            )
         )
         return list(result)
 

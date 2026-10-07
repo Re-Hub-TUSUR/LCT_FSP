@@ -1,7 +1,5 @@
 """Inbound likes and responding with mutual interest."""
 
-import uuid
-
 from app.core.errors import AppError, NotFoundError
 from app.models import ReactionKind, User, UserRole
 from app.repositories.company import CompanyRepository
@@ -26,9 +24,11 @@ class ResponsesService:
         self._reaction_service = reaction_service
         self._companies = companies
 
-    async def inbound_for_user(self, user: User) -> list[CandidateInboundRead | EmployerInboundRead]:
+    async def inbound_for_user(
+        self, user: User
+    ) -> list[CandidateInboundRead | EmployerInboundRead]:
         if user.role == UserRole.CANDIDATE:
-            rows = await self._inbound.for_candidate(user.id)
+            companies = await self._inbound.for_candidate(user.id)
             return [
                 CandidateInboundRead(
                     company_id=row.company_id,
@@ -37,10 +37,10 @@ class ResponsesService:
                     vacancy_id=row.vacancy_id,
                     reacted_at=row.reacted_at,
                 )
-                for row in rows
+                for row in companies
             ]
         if user.role == UserRole.EMPLOYER:
-            rows = await self._inbound.for_employer(user.id)
+            candidates = await self._inbound.for_employer(user.id)
             return [
                 EmployerInboundRead(
                     candidate_id=row.candidate_id,
@@ -50,7 +50,7 @@ class ResponsesService:
                     vacancy_title=row.vacancy_title,
                     reacted_at=row.reacted_at,
                 )
-                for row in rows
+                for row in candidates
             ]
         raise AppError("Раздел доступен соискателям и работодателям")
 

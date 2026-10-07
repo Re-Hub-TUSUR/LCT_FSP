@@ -6,10 +6,10 @@ from app.dependencies.common import SessionDep, SettingsDep
 from app.repositories.assessment import AssessmentRepository
 from app.repositories.candidate import CandidateRepository
 from app.repositories.company import CompanyRepository
-from app.repositories.email_verification import EmailVerificationRepository
-from app.repositories.invitation import InvitationRepository
 from app.repositories.conversation import ConversationRepository
+from app.repositories.email_verification import EmailVerificationRepository
 from app.repositories.inbound import InboundRepository
+from app.repositories.invitation import InvitationRepository
 from app.repositories.meeting import MeetingRepository
 from app.repositories.reaction import ReactionRepository
 from app.repositories.refresh_token import RefreshTokenRepository
@@ -22,9 +22,9 @@ from app.services.auth import AuthService
 from app.services.calendar import CalendarService
 from app.services.candidate_search import CandidateSearchService
 from app.services.candidates import CandidateProfileService
+from app.services.chat import ChatService
 from app.services.code_runner import CodeRunner, OnlineCompilerRunner
 from app.services.email import ResendEmailSender
-from app.services.chat import ChatService
 from app.services.notifications import NotificationHub
 from app.services.reactions import ReactionService
 from app.services.responses import ResponsesService
@@ -101,15 +101,14 @@ CandidateProfileServiceDep = Annotated[
 
 
 def get_notification_hub(request: Request) -> NotificationHub:
-    return request.app.state.notifications
+    hub: NotificationHub = request.app.state.notifications
+    return hub
 
 
 NotificationHubDep = Annotated[NotificationHub, Depends(get_notification_hub)]
 
 
-def get_reaction_service(
-    session: SessionDep, hub: NotificationHubDep
-) -> ReactionService:
+def get_reaction_service(session: SessionDep, hub: NotificationHubDep) -> ReactionService:
     return ReactionService(
         ReactionRepository(session),
         VacancyRepository(session),
@@ -122,9 +121,7 @@ def get_reaction_service(
 ReactionServiceDep = Annotated[ReactionService, Depends(get_reaction_service)]
 
 
-def get_responses_service(
-    session: SessionDep, reactions: ReactionServiceDep
-) -> ResponsesService:
+def get_responses_service(session: SessionDep, reactions: ReactionServiceDep) -> ResponsesService:
     return ResponsesService(
         InboundRepository(session),
         reactions,
@@ -135,16 +132,18 @@ def get_responses_service(
 ResponsesServiceDep = Annotated[ResponsesService, Depends(get_responses_service)]
 
 
-def get_chat_service(session: SessionDep, hub: NotificationHubDep, settings: SettingsDep) -> ChatService:
+def get_chat_service(
+    session: SessionDep, hub: NotificationHubDep, settings: SettingsDep
+) -> ChatService:
     return ChatService(
-        ConversationRepository(session),
-        ReactionRepository(session),
-        CompanyRepository(session),
-        CandidateRepository(session),
-        VacancyRepository(session),
-        MeetingRepository(session),
-        settings,
-        hub,
+        conversations=ConversationRepository(session),
+        reactions=ReactionRepository(session),
+        companies=CompanyRepository(session),
+        candidates=CandidateRepository(session),
+        vacancies=VacancyRepository(session),
+        meetings=MeetingRepository(session),
+        settings=settings,
+        notifications=hub,
     )
 
 

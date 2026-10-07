@@ -47,6 +47,8 @@ WEIGHTS = Weights()
 HALF = 0.5
 # A candidate ready to move gets most, not all, of the location points.
 RELOCATION_SHARE = 0.6
+# A second resume in the vacancy's profession: below the priority one, above a related one.
+SECOND_RESUME_SHARE = 0.75
 # Expectation up to 10% above the top of the range still gets half of the salary points.
 SALARY_TOLERANCE = 1.1
 
@@ -245,7 +247,7 @@ def _specialization(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[f
         return WEIGHTS.specialization, "same"
     # A second resume in this profession ranks above a merely related one, below the priority.
     if vacancy.specialization in candidate.other_specializations:
-        return WEIGHTS.specialization * 0.75, "related"
+        return WEIGHTS.specialization * SECOND_RESUME_SHARE, "related"
     if candidate.specialization in related_specializations(vacancy.specialization):
         return WEIGHTS.specialization * HALF, "related"
     return 0.0, "other"

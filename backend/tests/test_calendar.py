@@ -24,7 +24,9 @@ async def data(sessionmaker: async_sessionmaker[AsyncSession]) -> SeedData:
     return data
 
 
-def meeting(candidate_id: Any, starts_at: datetime = SLOT, minutes: int = 60, **extra: Any) -> dict:
+def meeting(
+    candidate_id: Any, starts_at: datetime = SLOT, minutes: int = 60, **extra: Any
+) -> dict[str, Any]:
     return {
         "candidateId": str(candidate_id),
         "title": "Техническое интервью",
@@ -44,7 +46,8 @@ async def events(client: AsyncClient, token: str, around: datetime = SLOT) -> li
         headers=bearer(token),
     )
     assert response.status_code == 200, response.text
-    return response.json()
+    items: list[dict[str, Any]] = response.json()
+    return items
 
 
 async def test_employer_schedules_and_candidate_confirms(

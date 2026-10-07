@@ -51,9 +51,7 @@ class ReactionService:
             row = await self._vacancies.get(vacancy_id)
             if row is None or row[1].owner_id != user.id:
                 raise NotFoundError("Вакансия не найдена")
-        reaction = await self._reactions.set_for_candidate(
-            user.id, candidate_id, kind, vacancy_id
-        )
+        reaction = await self._reactions.set_for_candidate(user.id, candidate_id, kind, vacancy_id)
         if kind == ReactionKind.LIKE and self._notifications and self._companies:
             await self._notify_company_liked(user.id, candidate_id)
         return reaction

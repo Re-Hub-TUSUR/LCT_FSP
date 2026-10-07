@@ -20,6 +20,7 @@ from app.search.database import DatabaseCandidateSearch
 from app.search.elastic import CandidateIndex, ElasticCandidateSearch, ElasticSearchState
 from app.seed.fixtures import load_seed_data
 from app.seed.loader import seed_database, seed_id
+from app.services.categories import SPECIALIZATIONS
 from app.services.matching import VacancyFacts
 
 ES_URL = os.environ.get("TEST_ELASTICSEARCH_URL", "")
@@ -48,6 +49,16 @@ async def drop(client: AsyncElasticsearch, alias: str) -> None:
     await client.indices.delete(index=list(response.body))
 
 
+async def add_second_resumes(session: AsyncSession) -> None:
+    """Demo profiles have one resume each; every fifth gets a second one in the next profession."""
+    professions = sorted(SPECIALIZATIONS)
+    for position, profile in enumerate(await CandidateRepository(session).all()):
+        if position % 5 == 0 and profile.specialization in professions:
+            following = (professions.index(profile.specialization) + 1) % len(professions)
+            profile.additional_resumes = [{"specialization": professions[following]}]
+    await session.commit()
+
+
 @dataclass
 class Engines:
     elastic: ElasticCandidateSearch
@@ -60,6 +71,7 @@ async def engines(sessionmaker: async_sessionmaker[AsyncSession]) -> AsyncIterat
     async with sessionmaker() as session:
         await seed_database(session, load_seed_data(), password_hash="not-a-real-hash")
         await session.commit()
+        await add_second_resumes(session)
 
     client = AsyncElasticsearch(ES_URL)
     index = CandidateIndex(client, f"kadry-test-{uuid.uuid4().hex[:8]}")

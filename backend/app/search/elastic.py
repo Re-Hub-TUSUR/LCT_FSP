@@ -15,7 +15,7 @@ from app.core.config import Settings
 from app.models import CandidateProfile
 from app.schemas.candidate import SearchEngine
 from app.search.base import CandidateSearchQuery, SearchHits, SearchUnavailableError
-from app.search.documents import MAPPINGS, SETTINGS, candidate_document
+from app.search.documents import INDEX_VERSION, MAPPINGS, SETTINGS, candidate_document
 from app.search.query import build_search_body
 
 logger = logging.getLogger(__name__)
@@ -42,12 +42,22 @@ class CandidateIndex:
         self._client = client
         self.alias = alias
 
-    async def exists(self) -> bool:
-        return bool(await self._client.indices.exists_alias(name=self.alias))
+    async def is_current(self) -> bool:
+        """The alias exists and points at an index built from today's `INDEX_VERSION`."""
+        try:
+            response = await self._client.indices.get_mapping(index=self.alias)
+        except NotFoundError:
+            return False
+        versions = {
+            index.get("mappings", {}).get("_meta", {}).get("version")
+            for index in response.body.values()
+        }
+        return versions == {INDEX_VERSION}
 
     async def rebuild(self, profiles: Iterable[CandidateProfile]) -> int:
         name = f"{self.alias}-{datetime.now(UTC):%Y%m%d%H%M%S%f}"
-        await self._client.indices.create(index=name, settings=SETTINGS, mappings=MAPPINGS)
+        mappings = {**MAPPINGS, "_meta": {"version": INDEX_VERSION}}
+        await self._client.indices.create(index=name, settings=SETTINGS, mappings=mappings)
         actions = (
             {"_index": name, "_id": str(profile.id), "_source": candidate_document(profile)}
             for profile in profiles
@@ -134,7 +144,8 @@ class ElasticSearchState:
             if self._ready:
                 return True
             try:
-                if not await self.index.exists():
+                # Missing, or built from another index definition: build a fresh one.
+                if not await self.index.is_current():
                     started = datetime.now(UTC)
                     indexed = await self.index.rebuild(await load_profiles())
                     self._synced_at = started

@@ -16,6 +16,7 @@ from app.services.matching import (
     HALF,
     RELOCATION_SHARE,
     SALARY_TOLERANCE,
+    SECOND_RESUME_SHARE,
     WEIGHTS,
     VacancyFacts,
     normalize_term,
@@ -31,6 +32,8 @@ double points = params.w_bonus
 String specialization = doc['specialization'].size() == 0 ? '' : doc['specialization'].value;
 if (specialization == params.specialization) {
   points += params.w_specialization;
+} else if (doc['other_specializations'].contains(params.specialization)) {
+  points += params.w_specialization * params.second_resume_share;
 } else if (params.related.contains(specialization)) {
   points += params.w_specialization * params.half;
 }
@@ -94,6 +97,7 @@ def _fit_params(vacancy: VacancyFacts) -> dict[str, Any]:
         "half": HALF,
         "relocation_share": RELOCATION_SHARE,
         "salary_tolerance": SALARY_TOLERANCE,
+        "second_resume_share": SECOND_RESUME_SHARE,
         "specialization": vacancy.specialization,
         "related": sorted(related_specializations(vacancy.specialization)),
         "grade_index": {grade.value: index for index, grade in enumerate(GRADES)},

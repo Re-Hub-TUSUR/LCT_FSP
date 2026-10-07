@@ -1,6 +1,8 @@
 """Elasticsearch index definition and the document built from a candidate profile."""
 
-from typing import Any
+import hashlib
+import json
+from typing import Any, Final
 
 from app.models import CandidateProfile
 from app.search.synonyms import elasticsearch_rules
@@ -62,6 +64,8 @@ MAPPINGS: dict[str, Any] = {
         "city": _KEYWORD_WITH_TEXT,
         "fsp_text": _TEXT,
         "specialization": {"type": "keyword"},
+        # Professions of the additional resumes: they score in the vacancy fit, not in filters.
+        "other_specializations": {"type": "keyword"},
         "grade": {"type": "keyword"},
         "experience_years": {"type": "integer"},
         "relocation_ready": {"type": "boolean"},
@@ -79,6 +83,12 @@ MAPPINGS: dict[str, Any] = {
     },
 }
 
+# Fingerprint of the index definition. An index built from another definition is rebuilt on the
+# first search, so a new field reaches the cluster without a manual reindex.
+INDEX_VERSION: Final = hashlib.sha256(
+    json.dumps([SETTINGS, MAPPINGS], sort_keys=True, ensure_ascii=False).encode()
+).hexdigest()[:12]
+
 # Fields of the free-text query and their weights.
 TEXT_FIELDS: tuple[str, ...] = (
     "headline^3",
@@ -95,6 +105,7 @@ TEXT_FIELDS: tuple[str, ...] = (
 def candidate_document(profile: CandidateProfile) -> dict[str, Any]:
     """`profile.fsp_achievements` must be loaded."""
     category = profile_category(profile)
+    facts = CandidateFacts.of(profile)
     fsp_text = " ".join(
         f"{item.event_name} {FSP_DISCIPLINE_LABELS[item.discipline]}"
         for item in profile.fsp_achievements
@@ -110,6 +121,7 @@ def candidate_document(profile: CandidateProfile) -> dict[str, Any]:
         "city": profile.city,
         "fsp_text": fsp_text or None,
         "specialization": profile.specialization,
+        "other_specializations": list(facts.other_specializations),
         "grade": profile.grade.value if profile.grade else None,
         "experience_years": profile.experience_years,
         "relocation_ready": profile.relocation_ready,
@@ -120,7 +132,7 @@ def candidate_document(profile: CandidateProfile) -> dict[str, Any]:
         "verified": profile.assessment_score is not None,
         "assessment_status": profile.assessment_status.value,
         "has_fsp": bool(profile.fsp_achievements),
-        "profile_strength": CandidateFacts.of(profile).strength,
+        "profile_strength": facts.strength,
         "visible": profile.is_visible_to_employers,
         "categorized": category is not None,
     }

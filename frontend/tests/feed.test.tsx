@@ -269,7 +269,8 @@ describe('feeds', () => {
     vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
       const url = new URL(String(input), 'http://localhost')
       const view = url.searchParams.get('view')
-      views.push(view)
+      // The app also restores the session and checks the resume on start: only the feed counts.
+      if (url.pathname.endsWith('/vacancies/feed')) views.push(view)
       const items =
         view === 'matched'
           ? [{ ...vacancyMatch('v1', 'Go-разработчик в команду антифрода', 0.91), matched: true }]

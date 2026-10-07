@@ -26,6 +26,7 @@ from app.services.presenters import (
 from app.services.uploads import PHOTO_LIMIT, sniff_image
 
 MAX_RESUMES = 3
+MAX_SKILL_LENGTH = 40
 
 
 class CandidateProfileService:
@@ -235,6 +236,12 @@ def _require_resume(data: CandidateProfileUpdate) -> None:
 
 
 def _apply_resume(profile: CandidateProfile, data: CandidateProfileUpdate) -> None:
+    _apply_texts(profile, data)
+    _apply_terms(profile, data)
+
+
+def _apply_texts(profile: CandidateProfile, data: CandidateProfileUpdate) -> None:
+    """Free-text fields: they are only trimmed, never rejected."""
     fields = data.model_fields_set
     if "display_name" in fields and data.display_name is not None:
         profile.display_name = data.display_name.strip()
@@ -242,6 +249,17 @@ def _apply_resume(profile: CandidateProfile, data: CandidateProfileUpdate) -> No
         profile.headline = data.headline.strip() if data.headline else None
     if "about" in fields:
         profile.about = data.about.strip() if data.about else None
+    if "city" in fields:
+        profile.city = data.city.strip() if data.city else None
+    if "phone" in fields:
+        profile.phone = _blank(data.phone)
+    if "telegram" in fields:
+        profile.telegram = _telegram(data.telegram)
+
+
+def _apply_terms(profile: CandidateProfile, data: CandidateProfileUpdate) -> None:
+    """Skills and work terms: the fields that can be rejected."""
+    fields = data.model_fields_set
     if "stack" in fields:
         profile.stack = _skills(data.stack or [], limit=30, label="Стек")
         if not profile.stack:
@@ -250,18 +268,12 @@ def _apply_resume(profile: CandidateProfile, data: CandidateProfileUpdate) -> No
         profile.soft_skills = _skills(data.soft_skills or [], limit=20, label="Софт-скиллы")
     if "experience_years" in fields:
         profile.experience_years = data.experience_years
-    if "city" in fields:
-        profile.city = data.city.strip() if data.city else None
     if "work_formats" in fields:
         if not data.work_formats:
             raise AppError("Выберите формат работы")
         profile.work_formats = list(dict.fromkeys(item.value for item in data.work_formats))
     if "salary_expectation" in fields:
         profile.salary_expectation = data.salary_expectation
-    if "phone" in fields:
-        profile.phone = _blank(data.phone)
-    if "telegram" in fields:
-        profile.telegram = _telegram(data.telegram)
     if "specialization" in fields:
         if data.specialization not in SPECIALIZATIONS:
             raise AppError("Выберите специализацию из списка")
@@ -275,8 +287,10 @@ def _skills(values: list[str], *, limit: int, label: str) -> list[str]:
         skill = " ".join(raw.split())
         if not skill:
             continue
-        if len(skill) > 40:
-            raise AppError(f"{label}: «{skill[:40]}» длиннее 40 символов")
+        if len(skill) > MAX_SKILL_LENGTH:
+            raise AppError(
+                f"{label}: «{skill[:MAX_SKILL_LENGTH]}» длиннее {MAX_SKILL_LENGTH} символов"
+            )
         key = skill.casefold()
         if key in seen:
             continue

@@ -42,6 +42,7 @@ def _utc(value: datetime) -> datetime:
 class ChatService:
     def __init__(
         self,
+        *,
         conversations: ConversationRepository,
         reactions: ReactionRepository,
         companies: CompanyRepository,
@@ -86,11 +87,7 @@ class ChatService:
         else:
             raise AppError("Чаты доступны соискателям и работодателям")
 
-        rows.sort(
-            key=lambda item: (
-                -(item.last_message_at or item.updated_at).timestamp(),
-            )
-        )
+        rows.sort(key=lambda item: (-(item.last_message_at or item.updated_at).timestamp(),))
         result: list[ConversationRead] = []
         for conv in rows:
             peer = await self._peer_for(user, conv)
@@ -127,9 +124,7 @@ class ChatService:
         items = [await self._present_message(row) for row in page]
         return MessagePage(items=items, has_more=has_more)
 
-    async def send_text(
-        self, user: User, conversation_id: uuid.UUID, text: str
-    ) -> MessageRead:
+    async def send_text(self, user: User, conversation_id: uuid.UUID, text: str) -> MessageRead:
         conv = await self._require_access(user, conversation_id)
         message = await self._conversations.add_message(
             Message(
@@ -313,24 +308,24 @@ class ChatService:
     async def _present_message(self, message: Message) -> MessageRead:
         attachment = meeting = None
         if message.attachment_id is not None:
-            row = await self._conversations.get_attachment(message.attachment_id)
-            if row is not None:
+            stored = await self._conversations.get_attachment(message.attachment_id)
+            if stored is not None:
                 attachment = AttachmentRead(
-                    id=row.id,
-                    filename=row.filename,
-                    media_type=row.media_type,
-                    size_bytes=row.size_bytes,
+                    id=stored.id,
+                    filename=stored.filename,
+                    media_type=stored.media_type,
+                    size_bytes=stored.size_bytes,
                 )
         if message.meeting_id is not None:
-            row = await self._meetings.get(message.meeting_id)
-            if row is not None:
+            planned = await self._meetings.get(message.meeting_id)
+            if planned is not None:
                 meeting = MeetingPreview(
-                    id=row.id,
-                    title=row.title,
-                    starts_at=_utc(row.starts_at),
-                    ends_at=_utc(row.ends_at),
-                    location=row.location,
-                    status=row.status,
+                    id=planned.id,
+                    title=planned.title,
+                    starts_at=_utc(planned.starts_at),
+                    ends_at=_utc(planned.ends_at),
+                    location=planned.location,
+                    status=planned.status,
                 )
         return MessageRead(
             id=message.id,
