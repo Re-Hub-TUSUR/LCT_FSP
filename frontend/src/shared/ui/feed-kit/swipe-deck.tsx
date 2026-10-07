@@ -145,7 +145,10 @@ export function SwipeDeck<T>({
       if (
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement ||
-        document.querySelector('dialog[open], [role="dialog"]')
+        // Only a dialog on screen takes the arrows: the header keeps its closed menu in the page.
+        document.querySelector(
+          'dialog[open], [role="dialog"]:not([aria-hidden="true"]):not([inert])',
+        )
       ) {
         return
       }

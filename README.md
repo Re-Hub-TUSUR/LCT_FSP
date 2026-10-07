@@ -67,6 +67,7 @@ cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy
 ```
 
 Pre-commit (husky + lint-staged) прогоняет oxlint и prettier по изменённым frontend-файлам.
+Правила, как не ломать CI (для людей и ИИ-агентов), — в [ci_rules.md](ci_rules.md).
 
 ## Переменные окружения
 

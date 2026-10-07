@@ -52,7 +52,10 @@ function page<T>(items: T[]) {
 const vacancyFeed: VacancyFeedDto = {
   ...page([
     vacancyMatch('v1', 'Go-разработчик в команду антифрода', 0.91),
-    vacancyMatch('v2', 'Python-разработчик', 0.7),
+    {
+      ...vacancyMatch('v2', 'Python-разработчик', 0.7),
+      reasons: ['Смежная специализация: Fullstack-разработка'],
+    },
   ]),
   personalized: true,
   basis: {
@@ -105,24 +108,34 @@ const candidateMatch: CandidateMatchDto = {
 const candidateSearch: CandidateSearchDto = { ...page([candidateMatch]), engine: 'elasticsearch' }
 
 describe('feeds', () => {
-  afterEach(() => sessionStore.clear())
+  afterEach(() => {
+    sessionStore.clear()
+    vi.restoreAllMocks()
+  })
 
-  it('shows the candidate relevant vacancies with the match and reasons', async () => {
+  it('lists the relevant vacancies with notes and opens one on the side sheet', async () => {
     signIn('candidate')
     vi.stubGlobal('fetch', mockFetch({ '/api/v1/vacancies/feed': { body: vacancyFeed } }))
+    const user = userEvent.setup()
 
     renderApp('/feed')
 
-    expect(
-      await screen.findByText('Go-разработчик в команду антифрода', {}, SLOW),
-    ).toBeInTheDocument()
-    expect(screen.getByText('91%')).toBeInTheDocument()
-    expect(screen.getAllByText('Ваша категория: Backend-разработка · Middle')).toHaveLength(2)
+    const row = await screen.findByRole(
+      'button',
+      { name: /Go-разработчик в команду антифрода/ },
+      SLOW,
+    )
+    // A row carries only what is worth a note; the full card is on the sheet.
+    expect(screen.getByText('Смежная специализация: Fullstack-разработка')).toBeInTheDocument()
     expect(screen.getByText('Найдено: 2')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Свайпы' })).toBeInTheDocument()
+
+    await user.click(row)
+    const sheet = await screen.findByRole('dialog', { name: 'Go-разработчик в команду антифрода' })
+    expect(within(sheet).getByText('Команда процессинга.')).toBeInTheDocument()
   })
 
-  it('shows the recruiter search with profile strength and the engine', async () => {
+  it('shows the recruiter search with profile strength, the engine and FSP on the sheet', async () => {
     signIn('employer')
     vi.stubGlobal(
       'fetch',
@@ -132,13 +145,17 @@ describe('feeds', () => {
         '/api/v1/categories/dictionary': { body: { specializations: [], grades: [] } },
       }),
     )
+    const user = userEvent.setup()
 
     renderApp('/feed')
 
     expect(await screen.findByText('Марина Крылова', {}, SLOW)).toBeInTheDocument()
     expect(screen.getByText('Сила профиля')).toBeInTheDocument()
     expect(screen.getByText('Поиск: Elasticsearch')).toBeInTheDocument()
-    expect(screen.getByText(/ФСП: 1-е место/)).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Марина Крылова/ }))
+    const sheet = await screen.findByRole('dialog', { name: 'Марина Крылова' })
+    expect(within(sheet).getByText(/1-е место · Чемпионат Москвы/)).toBeInTheDocument()
   })
 
   it('moves to the next card after a swipe decision', async () => {
@@ -225,11 +242,14 @@ describe('feeds', () => {
       if (path === '/vacancies/reactions/counts') return { liked: 0, matched: 0, skipped: 0 }
       return method === 'GET' ? [] : undefined
     })
+    // The details button appears only when the text does not fit the frame; jsdom has no layout.
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(900)
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(400)
     const user = userEvent.setup()
 
     renderApp('/feed/swipe')
     await screen.findAllByText('Go-разработчик в команду антифрода', {}, SLOW)
-    await user.click(screen.getByRole('button', { name: 'Изучить подробнее' }))
+    await user.click(await screen.findByRole('button', { name: 'Изучить подробнее' }))
 
     const sheet = await screen.findByRole('dialog', { name: 'Go-разработчик в команду антифрода' })
     // Both blocks of the description, not only the lead shown on the frame.
