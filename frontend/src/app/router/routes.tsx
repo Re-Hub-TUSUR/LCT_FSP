@@ -4,6 +4,7 @@ import type { UserRole } from '@/entities/user'
 import { ROUTES } from '@/shared/config'
 import { Splash } from '@/shared/ui'
 import { MainLayout } from '../layouts/main-layout'
+import { RootLayout } from '../layouts/root-layout'
 import { RequireAuth } from './guards'
 import { RouteError } from './route-error'
 
@@ -30,6 +31,7 @@ const authRequired: Access = { auth: true }
 
 export const routes: RouteObject[] = [
   {
+    element: <RootLayout />,
     errorElement: <RouteError />,
     hydrateFallbackElement: <Splash />,
     children: [

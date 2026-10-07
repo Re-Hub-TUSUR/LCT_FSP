@@ -1,3 +1,4 @@
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -6,13 +7,16 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.core.errors import ConflictError
 from app.core.security import hash_password
 
 # Imported under another name: pytest would try to collect a class called `Test…`.
 from app.models import TestAssignment as Assignment
+from app.repositories.assessment import AssessmentRepository
 from app.seed.fixtures import SeedData, load_seed_data
 from app.seed.generate import DEMO_CANDIDATE_EMAIL, DEMO_EMPLOYER_EMAIL
 from app.seed.loader import seed_database, seed_id
+from app.services.attempt_context import AttemptContextService
 from tests.conftest import API, PASSWORD, bearer, login, register_and_login
 
 BANK = f"{API}/companies/me"
@@ -325,3 +329,24 @@ async def test_company_test_scores_itself_without_open_questions(
 
     assert (finished["status"], finished["score"]) == ("passed", 100.0)
     assert (detail["status"], detail["score"], detail["pasteCount"]) == ("done", 100.0, 1)
+
+
+async def test_assigned_test_gives_no_interview_context(
+    client: AsyncClient, data: SeedData, sessionmaker: async_sessionmaker[AsyncSession]
+) -> None:
+    employer = await login(client, DEMO_EMPLOYER_EMAIL)
+    candidate = await login(client, DEMO_CANDIDATE_EMAIL)
+    candidate_id = str(seed_id("candidate", data.candidates[0].key))
+    await match(client, employer, candidate, candidate_id)
+    sent = await client.post(
+        SENT,
+        headers=bearer(employer),
+        json={"testId": await company_test(client, employer), "candidateId": candidate_id},
+    )
+    result = await take(client, candidate, sent.json()["id"])
+
+    # The follow-up interview belongs to grade tests: a company reviews its own test itself.
+    async with sessionmaker() as session:
+        service = AttemptContextService(AssessmentRepository(session))
+        with pytest.raises(ConflictError):
+            await service.build(uuid.UUID(result["id"]))

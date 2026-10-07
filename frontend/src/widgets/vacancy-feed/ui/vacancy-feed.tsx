@@ -1,17 +1,19 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useCallback, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import {
   DECISION_VIEW_LABELS,
   DECISION_VIEWS,
   parseListView,
-  VacancyMatchCard,
   vacancyQueries,
   WORK_FORMAT_LABELS,
   WORK_FORMATS,
 } from '@/entities/vacancy'
-import type { ListView, WorkFormat } from '@/entities/vacancy'
+import type { ListView, VacancyMatchDto, WorkFormat } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
 import { Chip, EmptyState, FeedSkeleton, Notice, Pagination, QueryState } from '@/shared/ui'
+import { VacancyPanel } from './vacancy-panel'
+import { VacancyRow } from './vacancy-row'
 
 const rub = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 })
 
@@ -42,6 +44,8 @@ export function VacancyFeed() {
   const view = parseListView(params.get('view'))
   const formats = params.getAll('workFormat') as WorkFormat[]
   const salaryMin = Number(params.get('salaryMin')) || undefined
+  const [open, setOpen] = useState<VacancyMatchDto | null>(null)
+  const closePanel = useCallback(() => setOpen(null), [setOpen])
 
   const query = useQuery({
     ...vacancyQueries.feed({ page, perPage, view, workFormat: formats, salaryMin }),
@@ -134,8 +138,11 @@ export function VacancyFeed() {
               <ol className="feed__list">
                 {data.items.map((match) => (
                   <li key={match.vacancy.id}>
-                    <VacancyMatchCard
+                    <VacancyRow
                       match={match}
+                      profileStack={data.basis?.stack ?? []}
+                      selected={open?.vacancy.id === match.vacancy.id}
+                      onOpen={() => setOpen(match)}
                       actions={
                         <ReactionButtons
                           target="vacancy"
@@ -166,6 +173,17 @@ export function VacancyFeed() {
           <QueryState query={query}>{() => null}</QueryState>
         )}
       </section>
+      {open && (
+        <VacancyPanel
+          key={open.vacancy.id}
+          match={open}
+          profileStack={data?.basis?.stack ?? []}
+          onClose={closePanel}
+          actions={
+            <ReactionButtons target="vacancy" id={open.vacancy.id} initial={open.reaction} />
+          }
+        />
+      )}
     </div>
   )
 }

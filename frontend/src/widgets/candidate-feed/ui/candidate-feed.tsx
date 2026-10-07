@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { FormEvent } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { Link, useSearchParams } from 'react-router'
-import { CandidateMatchCard, candidateQueries } from '@/entities/candidate'
-import type { CandidateSort } from '@/entities/candidate'
+import { useSearchParams } from 'react-router'
+import { candidateQueries } from '@/entities/candidate'
+import type { CandidateMatchDto, CandidateSort } from '@/entities/candidate'
 import { categoryQueries, GRADE_LABELS, GRADES } from '@/entities/category'
 import type { Grade } from '@/entities/category'
 import {
@@ -16,8 +16,9 @@ import {
 } from '@/entities/vacancy'
 import type { ListView, WorkFormat } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
-import { paths } from '@/shared/config'
 import { Chip, EmptyState, FeedSkeleton, Pagination, QueryState } from '@/shared/ui'
+import { CandidatePanel } from './candidate-panel'
+import { CandidateRow } from './candidate-row'
 
 const SORTS: Record<CandidateSort, string> = {
   relevance: 'По релевантности',
@@ -64,6 +65,8 @@ export function CandidateFeed() {
   const sort = (params.get('sort') as CandidateSort | null) ?? 'relevance'
   const vacancyId = params.get('vacancyId') ?? undefined
   const [text, setText] = useState(q)
+  const [open, setOpen] = useState<CandidateMatchDto | null>(null)
+  const closePanel = useCallback(() => setOpen(null), [setOpen])
 
   const dictionary = useQuery(categoryQueries.dictionary())
   const mine = useQuery(vacancyQueries.mine())
@@ -291,23 +294,17 @@ export function CandidateFeed() {
               <ol className="feed__list">
                 {data.items.map((match) => (
                   <li key={match.candidate.id}>
-                    <CandidateMatchCard
+                    <CandidateRow
                       match={match}
+                      selected={open?.candidate.id === match.candidate.id}
+                      onOpen={() => setOpen(match)}
                       actions={
-                        <>
-                          <ReactionButtons
-                            target="candidate"
-                            id={match.candidate.id}
-                            initial={match.reaction}
-                            vacancyId={vacancyId}
-                          />
-                          <Link
-                            className="feed__link"
-                            to={paths.matchingProfile('candidate', match.candidate.id)}
-                          >
-                            Профиль и приглашение →
-                          </Link>
-                        </>
+                        <ReactionButtons
+                          target="candidate"
+                          id={match.candidate.id}
+                          initial={match.reaction}
+                          vacancyId={vacancyId}
+                        />
                       }
                     />
                   </li>
@@ -332,6 +329,21 @@ export function CandidateFeed() {
           <QueryState query={query}>{() => null}</QueryState>
         )}
       </section>
+      {open && (
+        <CandidatePanel
+          key={open.candidate.id}
+          match={open}
+          onClose={closePanel}
+          actions={
+            <ReactionButtons
+              target="candidate"
+              id={open.candidate.id}
+              initial={open.reaction}
+              vacancyId={vacancyId}
+            />
+          }
+        />
+      )}
     </div>
   )
 }

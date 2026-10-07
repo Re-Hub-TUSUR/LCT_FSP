@@ -7,10 +7,18 @@ admin panel and admin edits of starter rows stay intact. Switch a starter task o
 deleting it — a deleted one comes back on the next run.
 
 Files in `data/assessment/`:
-- `quiz.json` — rows `[specialization | null, topic, "e" | "m" | "h", question, correct, wrong…]`;
-  the first option is the correct one (options are shuffled for every attempt);
-- `code.json` — stdin/stdout tasks with test groups and a reference solution;
+- `quiz.json` and `quiz/*.json` — rows `[specialization | null, topic, "e" | "m" | "h", question,
+  correct, wrong…]`; the first option is the correct one (options are shuffled for every attempt);
+- `code.json` and `code/*.json` — stdin/stdout tasks with test groups and a reference solution;
+  the files of the folder are built by `python -m app.seed.code_bank`, do not edit them by hand;
 - `tests.json` — one template per grade: duration and composition rules.
+
+The id of a question derives from its text and the id of a code task from its key: rewording a
+question adds a new row and leaves the old one in databases that already have it.
+
+Difficulty is what ties a task to a grade (the templates pick it): an easy question asks to
+recognise one basic notion, a medium one to apply it to a typical situation, a hard one to weigh
+trade-offs, diagnose a failure or know how a thing works inside.
 """
 
 import asyncio
@@ -30,6 +38,9 @@ from app.schemas.assessment import CodePayload, QuizPayload, RulesComposition
 DATA_DIR: Final = Path(__file__).parent / "data" / "assessment"
 NAMESPACE: Final = uuid.UUID("b3a0f6f2-7d0e-4a57-9d55-0c1f4a6a2e11")
 DIFFICULTY: Final = {"e": TaskDifficulty.EASY, "m": TaskDifficulty.MEDIUM, "h": TaskDifficulty.HARD}
+# Bumped when the compositions in `tests.json` change: templates are only ever added, so a new
+# version gets new ids and the previous ones are switched off.
+TEMPLATE_VERSION: Final = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,17 +54,27 @@ def _id(kind: str, key: str) -> uuid.UUID:
     return uuid.uuid5(NAMESPACE, f"{kind}:{key}")
 
 
-def _read(name: str) -> list[Any]:
-    data = json.loads((DATA_DIR / name).read_text(encoding="utf-8"))
+def _template_id(grade: str, version: int) -> uuid.UUID:
+    return _id("test", grade if version == 1 else f"{grade}:{version}")
+
+
+def _read(path: Path) -> list[Any]:
+    data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, list):
-        msg = f"{name}: expected a list"
+        msg = f"{path.name}: expected a list"
         raise TypeError(msg)
     return data
 
 
+def _rows(stem: str) -> list[Any]:
+    """Rows of `<stem>.json` followed by every file of the `<stem>/` folder."""
+    files = [DATA_DIR / f"{stem}.json", *sorted((DATA_DIR / stem).glob("*.json"))]
+    return [row for path in files for row in _read(path)]
+
+
 def quiz_tasks() -> list[AssessmentTask]:
     tasks = []
-    for specialization, topic, difficulty, question, *options in _read("quiz.json"):
+    for specialization, topic, difficulty, question, *options in _rows("quiz"):
         payload = QuizPayload(options=options, correct=[0])
         tasks.append(
             AssessmentTask(
@@ -72,7 +93,7 @@ def quiz_tasks() -> list[AssessmentTask]:
 
 def code_tasks() -> list[AssessmentTask]:
     tasks = []
-    for item in _read("code.json"):
+    for item in _rows("code"):
         payload = CodePayload.model_validate(
             {key: item[key] for key in ("time_limit", "groups", "reference")}
         )
@@ -93,11 +114,11 @@ def code_tasks() -> list[AssessmentTask]:
 
 def grade_tests() -> list[AssessmentTest]:
     tests = []
-    for item in _read("tests.json"):
+    for item in _read(DATA_DIR / "tests.json"):
         composition = RulesComposition.model_validate({"rules": item["rules"]})
         tests.append(
             AssessmentTest(
-                id=_id("test", item["grade"]),
+                id=_template_id(item["grade"], TEMPLATE_VERSION),
                 title=item["title"],
                 grade=Grade(item["grade"]),
                 duration_minutes=item["duration_minutes"],
@@ -116,6 +137,11 @@ async def seed_assessment_bank(session: AsyncSession) -> BankSummary:
     for row in rows:
         if await session.get(type(row), row.id) is None:
             session.add(row)
+    for grade in Grade:
+        for version in range(1, TEMPLATE_VERSION):
+            outdated = await session.get(AssessmentTest, _template_id(grade, version))
+            if outdated is not None:
+                outdated.is_active = False
     await session.flush()
     return BankSummary(quiz=len(quiz), code=len(code), tests=len(tests))
 
