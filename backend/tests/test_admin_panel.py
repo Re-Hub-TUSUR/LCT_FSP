@@ -1,0 +1,574 @@
+"""Workflows of the admin panel: bank statuses, journal, parameters, dictionaries, moderation,
+banlist and the company document check."""
+
+import uuid
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from typing import Any
+
+import pytest
+from httpx import AsyncClient
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from app.admin.create_admin import AdminSetupError, ensure_admin
+from app.admin.dependencies import get_verification
+from app.admin.services.verification import VerificationService, clean_filename
+from app.core.config import get_settings
+from app.dependencies.common import SessionDep
+from app.models import AssessmentAttempt, AssessmentTask, CandidateProfile, User, UserRole
+from tests.conftest import API, bearer, create_admin, login, register_and_login
+
+PDF = b"%PDF-1.7\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n"
+COMPANY = {
+    "name": "ООО Проверка",
+    "industry": "ИТ",
+    "description": "Компания для проверки документов. " * 4,
+    "city": "Москва",
+    "website": "https://example.ru",
+    "contactEmail": "hr@example.ru",
+}
+
+
+def quiz(title: str = "Сумма", **extra: Any) -> dict[str, Any]:
+    return {
+        "kind": "quiz",
+        "title": title,
+        "statement": "Сколько будет {a} + {b}?",
+        "specializations": ["backend"],
+        "grade": "middle-minus",
+        "skill": "arithmetic",
+        "variables": [{"name": "a", "min": 1, "max": 9}, {"name": "b", "min": 10, "max": 20}],
+        "timeLimitMinutes": 5,
+        "payload": {"options": ["{a}{b}", "другое"], "correct": [0]},
+        **extra,
+    }
+
+
+@pytest.fixture
+async def admin(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession]
+) -> dict[str, str]:
+    await create_admin(sessionmaker, "admin@fsp.ru")
+    return bearer(await login(client, "admin@fsp.ru"))
+
+
+@pytest.fixture
+async def uploads(client: AsyncClient, tmp_path: Path) -> AsyncIterator[Path]:
+    """Documents go to a temporary folder instead of UPLOAD_DIR."""
+    settings = get_settings().model_copy(update={"upload_dir": str(tmp_path)})
+
+    def service(session: SessionDep) -> VerificationService:
+        return VerificationService(session, settings)
+
+    app = client._transport.app  # type: ignore[attr-defined]
+    app.dependency_overrides[get_verification] = service
+    yield tmp_path
+    app.dependency_overrides.pop(get_verification)
+
+
+async def employer_with_company(client: AsyncClient, email: str = "boss@fsp.ru") -> dict[str, str]:
+    headers = bearer(await register_and_login(client, email, role="employer"))
+    saved = await client.put(f"{API}/companies/me", headers=headers, json=COMPANY)
+    assert saved.status_code == 200, saved.text
+    return headers
+
+
+# ── Task bank ───────────────────────────────────────────────────────────────────────────────────
+
+
+async def test_bank_status_workflow_drives_delivery(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], admin: dict[str, str]
+) -> None:
+    created = await client.post(f"{API}/admin/bank/tasks", headers=admin, json=quiz())
+    assert created.status_code == 201, created.text
+    task = created.json()
+    assert task["status"] == "draft"
+    assert task["grade"] == "middle-minus"
+    assert task["canDelete"] is True
+    assert task["allowedStatuses"] == ["active", "archived"]
+
+    async def delivered() -> bool:
+        async with sessionmaker() as session:
+            row = await session.get(AssessmentTask, uuid.UUID(task["id"]))
+            assert row is not None
+            return row.is_active
+
+    assert await delivered() is False
+    active = await client.post(
+        f"{API}/admin/bank/tasks/{task['id']}/status", headers=admin, json={"status": "active"}
+    )
+    assert active.json()["status"] == "active"
+    assert await delivered() is True
+
+    leaked = await client.post(
+        f"{API}/admin/bank/tasks/{task['id']}/status",
+        headers=admin,
+        json={"status": "leaked", "reason": "Разбор задания нашли в Telegram"},
+    )
+    assert leaked.json()["status"] == "leaked"
+    assert await delivered() is False
+    back = await client.post(
+        f"{API}/admin/bank/tasks/{task['id']}/status", headers=admin, json={"status": "active"}
+    )
+    assert back.status_code == 409
+
+    deleted = await client.delete(f"{API}/admin/bank/tasks/{task['id']}", headers=admin)
+    assert deleted.status_code == 409
+
+    history = await client.get(f"{API}/admin/bank/tasks/{task['id']}/history", headers=admin)
+    entries = history.json()["items"]
+    assert [entry["action"] for entry in entries] == ["status", "status", "create"]
+    assert entries[0]["changes"] == {"status": ["active", "leaked"]}
+    assert entries[0]["reason"] == "Разбор задания нашли в Telegram"
+    assert entries[0]["actorEmail"] == "admin@fsp.ru"
+
+
+async def test_bank_edit_is_journaled_and_filters_work(
+    client: AsyncClient, admin: dict[str, str]
+) -> None:
+    task = (await client.post(f"{API}/admin/bank/tasks", headers=admin, json=quiz())).json()
+    await client.post(
+        f"{API}/admin/bank/tasks",
+        headers=admin,
+        json=quiz(
+            "Код",
+            kind="code",
+            skill="io",
+            grade="senior",
+            payload={
+                "groups": [
+                    {"input": "1", "expected": "1", "hidden": False},
+                    {"input": "2", "expected": "2", "hidden": True},
+                ]
+            },
+            status="active",
+        ),
+    )
+    edited = await client.put(
+        f"{API}/admin/bank/tasks/{task['id']}",
+        headers=admin,
+        json=quiz("Сумма двух чисел", grade="middle"),
+    )
+    assert edited.status_code == 200, edited.text
+    history = (
+        await client.get(f"{API}/admin/bank/tasks/{task['id']}/history", headers=admin)
+    ).json()
+    assert history["items"][0]["changes"] == {
+        "grade": ["middle-minus", "middle"],
+        "title": ["Сумма", "Сумма двух чисел"],
+    }
+
+    async def titles(query: str) -> list[str]:
+        page = await client.get(f"{API}/admin/bank/tasks?{query}", headers=admin)
+        assert page.status_code == 200, page.text
+        return [item["title"] for item in page.json()["items"]]
+
+    assert await titles("kind=code") == ["Код"]
+    assert await titles("status=draft") == ["Сумма двух чисел"]
+    assert await titles("grade=senior") == ["Код"]
+    assert await titles("skill=arithmetic") == ["Сумма двух чисел"]
+    assert await titles("specialization=backend&q=двух") == ["Сумма двух чисел"]
+    assert await titles("specialization=qa") == []
+
+    exported = await client.get(f"{API}/admin/bank/tasks/export.csv?kind=code", headers=admin)
+    lines = exported.content.decode("utf-8").splitlines()
+    assert lines[0].startswith("\ufeffID;Название;Тип")
+    assert len(lines) == 2
+
+    unknown = await client.post(f"{API}/admin/bank/tasks", headers=admin, json=quiz(grade="guru"))
+    open_kind = await client.post(f"{API}/admin/bank/tasks", headers=admin, json=quiz(kind="open"))
+    bad_payload = await client.post(
+        f"{API}/admin/bank/tasks", headers=admin, json=quiz(payload={"options": ["один"]})
+    )
+    assert unknown.status_code == 400
+    assert open_kind.status_code == 422
+    assert bad_payload.status_code == 400
+
+
+async def test_draft_without_attempts_is_deleted(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], admin: dict[str, str]
+) -> None:
+    lonely = (await client.post(f"{API}/admin/bank/tasks", headers=admin, json=quiz())).json()
+    used = (
+        await client.post(f"{API}/admin/bank/tasks", headers=admin, json=quiz("Был в тесте"))
+    ).json()
+    candidate = await register_and_login(client, "cand@fsp.ru")
+    await client.get(f"{API}/assessments/status", headers=bearer(candidate))
+    async with sessionmaker() as session:
+        profile = await session.scalar(select(CandidateProfile))
+        if profile is None:
+            user = await session.scalar(select(User).where(User.email == "cand@fsp.ru"))
+            assert user is not None
+            profile = CandidateProfile(user_id=user.id, display_name="cand")
+            session.add(profile)
+            await session.flush()
+        now = datetime.now(UTC)
+        session.add(
+            AssessmentAttempt(
+                candidate_id=profile.id,
+                title="t",
+                pass_score=60,
+                quiz_weight=40,
+                started_at=now,
+                expires_at=now + timedelta(minutes=30),
+                task_ids=[used["id"]],
+            )
+        )
+        await session.commit()
+
+    detail = await client.get(f"{API}/admin/bank/tasks/{used['id']}", headers=admin)
+    assert detail.json()["attempts"] == 1
+    assert detail.json()["canDelete"] is False
+    refused = await client.delete(f"{API}/admin/bank/tasks/{used['id']}", headers=admin)
+    removed = await client.delete(f"{API}/admin/bank/tasks/{lonely['id']}", headers=admin)
+    assert refused.status_code == 409
+    assert removed.status_code == 204
+    gone = await client.get(f"{API}/admin/bank/tasks/{lonely['id']}", headers=admin)
+    assert gone.status_code == 404
+    journal = await client.get(
+        f"{API}/admin/audit?entity=task&entityId={lonely['id']}", headers=admin
+    )
+    assert journal.json()["items"][0]["action"] == "delete"
+
+
+async def test_preview_substitutes_variables(client: AsyncClient, admin: dict[str, str]) -> None:
+    response = await client.post(
+        f"{API}/admin/bank/preview",
+        headers=admin,
+        json={
+            "statement": "Сколько будет {a} + {b}? {unknown}",
+            "variables": [
+                {"name": "a", "min": 1, "max": 3},
+                {"name": "b", "min": 0.5, "max": 1.5, "step": 0.5},
+            ],
+            "options": ["{a}", "нет"],
+        },
+    )
+    assert response.status_code == 200, response.text
+    variants = response.json()
+    assert len(variants) == 3
+    for variant in variants:
+        a, b = variant["values"]["a"], variant["values"]["b"]
+        assert a in {1, 2, 3}
+        assert b in {0.5, 1.0, 1.5}
+        assert variant["statement"].startswith(f"Сколько будет {int(a)} + ")
+        assert variant["statement"].endswith("{unknown}")
+        assert variant["options"] == [str(int(a)), "нет"]
+
+
+# ── Parameters and dictionaries ─────────────────────────────────────────────────────────────────
+
+
+async def test_parameters_are_validated_and_journaled(
+    client: AsyncClient, admin: dict[str, str]
+) -> None:
+    initial = (await client.get(f"{API}/admin/parameters", headers=admin)).json()
+    values = {item["key"]: item["value"] for item in initial["items"]}
+    assert values["p_pass"] == 65
+    assert values["min_attempts_for_flags"] == 30
+    assert initial["hardcoded"]
+
+    changed = await client.put(f"{API}/admin/parameters/p_pass", headers=admin, json={"value": 70})
+    out_of_order = await client.put(
+        f"{API}/admin/parameters/p_plus", headers=admin, json={"value": 60}
+    )
+    out_of_range = await client.put(
+        f"{API}/admin/parameters/p_pass", headers=admin, json={"value": 101}
+    )
+    unknown = await client.put(f"{API}/admin/parameters/nope", headers=admin, json={"value": 1})
+    assert changed.status_code == 200
+    assert {i["key"]: i["value"] for i in changed.json()["items"]}["p_pass"] == 70
+    assert out_of_order.status_code == 400
+    assert out_of_range.status_code == 400
+    assert unknown.status_code == 404
+
+    journal = (await client.get(f"{API}/admin/audit?entity=parameter", headers=admin)).json()
+    assert journal["total"] == 1
+    assert journal["items"][0]["changes"] == {"value": [65, 70]}
+
+
+async def test_dictionaries(client: AsyncClient, admin: dict[str, str]) -> None:
+    data = (await client.get(f"{API}/admin/dictionaries", headers=admin)).json()
+    assert [grade["label"] for grade in data["grades"]] == [
+        "Junior-",
+        "Junior",
+        "Junior+",
+        "Middle-",
+        "Middle",
+        "Middle+",
+        "Senior-",
+        "Senior",
+        "Senior+",
+        "Lead",
+        "Head",
+    ]
+    codes = {item["code"] for item in data["specializations"]}
+    assert {"backend", "frontend", "qa"} <= codes
+
+    added = await client.post(
+        f"{API}/admin/dictionaries/specializations",
+        headers=admin,
+        json={"code": "data-ml", "label": "Data/ML"},
+    )
+    duplicate = await client.post(
+        f"{API}/admin/dictionaries/specializations",
+        headers=admin,
+        json={"code": "data-ml", "label": "Ещё раз"},
+    )
+    assert added.status_code == 200
+    assert duplicate.status_code == 409
+    ml = next(s for s in added.json()["specializations"] if s["code"] == "data-ml")
+    assert ml["inPlatform"] is False
+
+    renamed = await client.patch(
+        f"{API}/admin/dictionaries/specializations/data-ml",
+        headers=admin,
+        json={"label": "Data / ML", "isArchived": True},
+    )
+    ml = next(s for s in renamed.json()["specializations"] if s["code"] == "data-ml")
+    assert (ml["label"], ml["isArchived"]) == ("Data / ML", True)
+
+    skill = await client.post(
+        f"{API}/admin/dictionaries/skills",
+        headers=admin,
+        json={"specializationCode": "data-ml", "name": "pandas"},
+    )
+    assert any(s["name"] == "pandas" for s in skill.json()["skills"])
+    journal = (await client.get(f"{API}/admin/audit", headers=admin)).json()
+    assert {entry["entity"] for entry in journal["items"]} == {"specialization", "skill"}
+
+
+# ── Employers and banlist ───────────────────────────────────────────────────────────────────────
+
+
+async def test_banlist_add_search_unban(client: AsyncClient, admin: dict[str, str]) -> None:
+    added = await client.post(
+        f"{API}/admin/banlist",
+        headers=admin,
+        json={"inn": "7707083893", "emailDomain": "@Spam.RU", "reason": "Массовая рассылка"},
+    )
+    assert added.status_code == 201, added.text
+    ban = added.json()
+    assert (ban["emailDomain"], ban["isActive"], ban["createdByEmail"]) == (
+        "spam.ru",
+        True,
+        "admin@fsp.ru",
+    )
+    empty = await client.post(f"{API}/admin/banlist", headers=admin, json={"reason": "нет цели"})
+    bad_inn = await client.post(
+        f"{API}/admin/banlist", headers=admin, json={"inn": "123", "reason": "плохой ИНН"}
+    )
+    assert empty.status_code == 422
+    assert bad_inn.status_code == 422
+
+    found = await client.get(f"{API}/admin/banlist?q=spam", headers=admin)
+    assert found.json()["total"] == 1
+
+    no_reason = await client.post(f"{API}/admin/banlist/{ban['id']}/unban", headers=admin, json={})
+    unbanned = await client.post(
+        f"{API}/admin/banlist/{ban['id']}/unban", headers=admin, json={"reason": "Ошибка"}
+    )
+    twice = await client.post(
+        f"{API}/admin/banlist/{ban['id']}/unban", headers=admin, json={"reason": "Ещё раз"}
+    )
+    assert no_reason.status_code == 422
+    assert unbanned.json()["isActive"] is False
+    assert unbanned.json()["unbanReason"] == "Ошибка"
+    assert twice.status_code == 409
+    active = await client.get(f"{API}/admin/banlist?active=true", headers=admin)
+    assert active.json()["total"] == 0
+    history = await client.get(f"{API}/admin/banlist/{ban['id']}/history", headers=admin)
+    assert [entry["action"] for entry in history.json()] == ["unban", "ban"]
+
+
+async def test_employer_decisions_and_block(client: AsyncClient, admin: dict[str, str]) -> None:
+    employer = await employer_with_company(client, "boss2@fsp.ru")
+    mine = await client.get(f"{API}/companies/me", headers=employer)
+    company_id = mine.json()["id"]
+
+    no_reason = await client.post(
+        f"{API}/admin/employers/{company_id}/decision", headers=admin, json={"action": "warn"}
+    )
+    no_limit = await client.post(
+        f"{API}/admin/employers/{company_id}/decision",
+        headers=admin,
+        json={"action": "restrict", "reason": "Подозрительная активность"},
+    )
+    restricted = await client.post(
+        f"{API}/admin/employers/{company_id}/decision",
+        headers=admin,
+        json={"action": "restrict", "reason": "Подозрительная активность", "inviteLimit": 5},
+    )
+    assert no_reason.status_code == 422
+    assert no_limit.status_code == 422
+    assert restricted.status_code == 200, restricted.text
+    assert restricted.json()["case"] == {
+        "status": "restricted",
+        "inviteLimit": 5,
+        "updatedAt": restricted.json()["case"]["updatedAt"],
+    }
+
+    blocked = await client.post(
+        f"{API}/admin/employers/{company_id}/decision",
+        headers=admin,
+        json={"action": "block", "reason": "Фиктивные вакансии"},
+    )
+    card = blocked.json()
+    assert card["case"]["status"] == "blocked"
+    assert card["banned"] is True
+    assert [entry["action"] for entry in card["history"]] == ["block", "restrict"]
+    bans = (await client.get(f"{API}/admin/banlist", headers=admin)).json()
+    assert bans["items"][0]["companyId"] == company_id
+    assert bans["items"][0]["email"] == "boss2@fsp.ru"
+
+
+async def test_employer_signals_snapshot(client: AsyncClient, admin: dict[str, str]) -> None:
+    await employer_with_company(client)
+    computed = await client.post(
+        f"{API}/admin/analytics/employers/recalculate", headers=admin, json={"period": "90d"}
+    )
+    assert computed.status_code == 200, computed.text
+    result = computed.json()["result"]
+    assert result["summary"]["flagged"] == 0
+    assert result["unavailable"]
+    page = await client.get(f"{API}/admin/analytics/employers?signal=any", headers=admin)
+    assert page.json()["total"] == 0
+
+
+async def test_platform_funnels(client: AsyncClient, admin: dict[str, str]) -> None:
+    await register_and_login(client, "c1@fsp.ru")
+    await register_and_login(client, "c2@fsp.ru")
+    await employer_with_company(client)
+    computed = await client.post(
+        f"{API}/admin/analytics/platform/recalculate", headers=admin, json={"period": "7d"}
+    )
+    result = computed.json()["result"]
+    candidates = {step["step"]: step["count"] for step in result["candidateFunnel"]}
+    employers = {step["step"]: step["count"] for step in result["employerFunnel"]}
+    assert candidates["registered"] == 2
+    assert candidates["started_test"] == 0
+    assert employers["registered"] == 1
+    assert employers["hired"] is None
+    assert result["candidateFunnel"][1]["fromStartShare"] == 0.0
+
+
+# ── Company documents ───────────────────────────────────────────────────────────────────────────
+
+
+async def test_company_verification_flow(
+    client: AsyncClient, admin: dict[str, str], uploads: Path
+) -> None:
+    no_company = bearer(await register_and_login(client, "new@fsp.ru", role="employer"))
+    early = await client.post(
+        f"{API}/companies/me/verification/documents",
+        headers=no_company,
+        files={"file": ("egrul.pdf", PDF, "application/pdf")},
+    )
+    assert early.status_code == 404
+
+    employer = await employer_with_company(client)
+    nothing = await client.get(f"{API}/companies/me/verification", headers=employer)
+    assert nothing.json() == {
+        "status": None,
+        "submittedAt": None,
+        "decidedAt": None,
+        "reason": None,
+        "documents": [],
+    }
+    not_pdf = await client.post(
+        f"{API}/companies/me/verification/documents",
+        headers=employer,
+        files={"file": ("photo.pdf", b"\x89PNG\r\n\x1a\n", "application/pdf")},
+    )
+    assert not_pdf.status_code == 400
+
+    uploaded = await client.post(
+        f"{API}/companies/me/verification/documents",
+        headers=employer,
+        files={"file": ("Выписка ЕГРЮЛ.pdf", PDF, "application/pdf")},
+    )
+    assert uploaded.status_code == 201, uploaded.text
+    assert uploaded.json()["status"] == "pending"
+    assert uploaded.json()["documents"][0]["filename"] == "Выписка ЕГРЮЛ.pdf"
+    assert stored_pdfs(uploads) == 1
+
+    assert (await client.get(f"{API}/admin/verifications/pending-count", headers=admin)).json() == 1
+    queue = (await client.get(f"{API}/admin/verifications?status=pending", headers=admin)).json()
+    request = queue["items"][0]
+    assert (request["companyName"], request["documents"]) == ("ООО Проверка", 1)
+    company_id = request["companyId"]
+
+    detail = (await client.get(f"{API}/admin/verifications/{company_id}", headers=admin)).json()
+    document_id = detail["files"][0]["id"]
+    pdf = await client.get(
+        f"{API}/admin/verifications/{company_id}/documents/{document_id}", headers=admin
+    )
+    assert pdf.status_code == 200
+    assert pdf.headers["content-type"] == "application/pdf"
+    assert pdf.content == PDF
+    stolen = await client.get(
+        f"{API}/admin/verifications/{company_id}/documents/{document_id}", headers=employer
+    )
+    assert stolen.status_code == 403
+
+    no_reason = await client.post(
+        f"{API}/admin/verifications/{company_id}/reject", headers=admin, json={}
+    )
+    rejected = await client.post(
+        f"{API}/admin/verifications/{company_id}/reject",
+        headers=admin,
+        json={"reason": "Выписка старше 30 дней"},
+    )
+    assert no_reason.status_code == 422
+    assert rejected.json()["status"] == "rejected"
+    seen = (await client.get(f"{API}/companies/me/verification", headers=employer)).json()
+    assert (seen["status"], seen["reason"]) == ("rejected", "Выписка старше 30 дней")
+
+    again = await client.post(
+        f"{API}/companies/me/verification/documents",
+        headers=employer,
+        files={"file": ("new.pdf", PDF, "application/pdf")},
+    )
+    assert again.json()["status"] == "pending"
+    assert again.json()["reason"] is None
+
+    approved = await client.post(
+        f"{API}/admin/verifications/{company_id}/approve", headers=admin, json={}
+    )
+    assert approved.json()["status"] == "approved"
+    assert approved.json()["decidedByEmail"] == "admin@fsp.ru"
+    assert [entry["action"] for entry in approved.json()["history"]] == ["approve", "reject"]
+    locked = await client.delete(
+        f"{API}/companies/me/verification/documents/{document_id}", headers=employer
+    )
+    assert locked.status_code == 409
+
+
+def stored_pdfs(root: Path) -> int:
+    return len(list(root.rglob("*.pdf")))
+
+
+def test_clean_filename() -> None:
+    assert clean_filename("../../etc/passwd") == "passwd.pdf"
+    assert clean_filename('C:\\docs\\"устав".PDF') == "устав.PDF"
+    assert clean_filename(None) == "document.pdf"
+
+
+# ── Admin account ───────────────────────────────────────────────────────────────────────────────
+
+
+async def test_ensure_admin(sessionmaker: async_sessionmaker[AsyncSession]) -> None:
+    async with sessionmaker() as session:
+        assert await ensure_admin(session, " Root@FSP.ru ", "long-enough-password") is True
+        assert await ensure_admin(session, "root@fsp.ru", "another-long-password") is False
+        with pytest.raises(AdminSetupError):
+            await ensure_admin(session, "root2@fsp.ru", "short")
+        session.add(User(email="cand@fsp.ru", password_hash="x", role=UserRole.CANDIDATE))
+        await session.flush()
+        with pytest.raises(AdminSetupError):
+            await ensure_admin(session, "cand@fsp.ru", "long-enough-password")
+        admin = await session.scalar(select(User).where(User.email == "root@fsp.ru"))
+        assert admin is not None
+        assert (admin.role, admin.is_email_verified) == (UserRole.ADMIN, True)

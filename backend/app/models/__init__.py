@@ -1,5 +1,6 @@
 """ORM models. Importing this package registers every table on `Base.metadata` (used by Alembic)."""
 
+import app.admin.models  # noqa: F401  # tables of the admin panel
 from app.models.assessment import (
     AssessmentAnswer,
     AssessmentAttempt,

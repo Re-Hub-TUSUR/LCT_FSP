@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.admin.routes import panel_router
 from app.api.routes.assessment_bank import bank_router
 from app.dependencies.auth import AdminUser
 from app.dependencies.common import PaginationDep
@@ -10,6 +11,8 @@ from app.schemas.user import UserRead
 router = APIRouter(prefix="/admin", tags=["admin"])
 # Platform task bank and grade test templates.
 router.include_router(bank_router(AdminUser))
+# Admin panel: bank workflow, analytics, moderation, banlist, dictionaries (app/admin).
+router.include_router(panel_router)
 
 
 @router.get("/users", summary="All accounts (admin only)")

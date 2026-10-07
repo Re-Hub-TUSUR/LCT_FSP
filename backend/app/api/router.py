@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.admin import company_documents
 from app.api.routes import (
     admin,
     applications,
@@ -32,6 +33,7 @@ for module in (
     categories,
     candidates,
     companies,
+    company_documents,
     test_assignments,
     vacancies,
     invitations,
