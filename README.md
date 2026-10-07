@@ -51,9 +51,11 @@ npm run dev                               # http://localhost:5173 (/api → :800
 
 `python -m app.seed` загружает вымышленные данные: 20 компаний, 97 вакансий (3 черновика) и
 124 соискателя всех специализаций и грейдов — с результатами ФСП и без, с пройденным тестом и
-без. Повторный запуск заменяет демо-записи, не дублируя их. Демо-аккаунты:
-`candidate@example.com` (соискатель) и `employer@example.com` (работодатель, компания
-«ПэйФлоу»); пароль и остальные учётки — в [backend/README.md](backend/README.md#демо-данные).
+без. Повторный запуск заменяет демо-записи, не дублируя их. Контейнер при старте грузит их
+только в пустую базу, поэтому после изменений в демо-данных перезалейте их: `python -m app.seed`.
+Демо-аккаунты: `candidate@example.com` (соискатель), `employer@example.com` и
+`employer2@example.com` (работодатели, компании «ПэйФлоу» и «Северный код»); пароль и остальные
+учётки — в [backend/README.md](backend/README.md#демо-данные).
 
 ## Проверки
 
@@ -83,6 +85,7 @@ Pre-commit (husky + lint-staged) прогоняет oxlint и prettier по из
 | `RESEND_FROM`              | backend           | нет         | отправитель письма, по умолчанию `onboarding@resend.dev` |
 | `SEED_USER_PASSWORD`       | backend (seed)    | нет         | пароль демо-аккаунтов `python -m app.seed`; пусто — пароль из backend/README |
 | `ELASTICSEARCH_URL`        | backend           | нет         | поиск кандидатов; в compose задан, пусто — поиск по базе |
+| `UPLOAD_DIR`               | backend           | нет         | каталог вложений чата, по умолчанию `/data/uploads`; в compose — том `upload-data` |
 | `VITE_API_URL`             | frontend (build)  | нет         | база API, по умолчанию `/api/v1`          |
 | `DEV_API_PROXY_TARGET`     | frontend (dev)    | нет         | цель прокси `/api` dev-сервера            |
 

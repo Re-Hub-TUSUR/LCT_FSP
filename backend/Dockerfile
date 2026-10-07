@@ -17,7 +17,10 @@ FROM python:3.12-slim AS runtime
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
-RUN groupadd --system app && useradd --system --gid app --no-create-home app
+# The uploads volume takes the owner of this directory; without it the volume is root-owned
+# and the app user cannot store chat attachments.
+RUN groupadd --system app && useradd --system --gid app --no-create-home app \
+    && mkdir -p /data/uploads && chown app:app /data/uploads
 WORKDIR /app
 COPY --from=build /opt/venv /opt/venv
 COPY --from=build --chown=app:app /app /app
