@@ -105,3 +105,10 @@ class TaskKindSpec[P: ApiModel](ABC):
     @abstractmethod
     def review(self, payload: P, state: Stored | None, stored: Stored | None) -> Stored:
         """The answer next to what was expected, for the author of the test."""
+
+    @abstractmethod
+    def context(
+        self, payload: P, state: Stored | None, stored: Stored | None, points: float
+    ) -> ApiModel:
+        """The task as an interviewer needs it: the answer, what was expected and how it went.
+        `stored` is None for a task left without an answer."""
