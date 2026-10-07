@@ -3,6 +3,7 @@ import { companyQueries } from '@/entities/company'
 import { signOut, useSession } from '@/entities/session'
 import { getErrorMessage } from '@/shared/api'
 import { Button, ErrorState, Loader, Page } from '@/shared/ui'
+import { CompanyVerification } from '@/features/company-verification'
 import { CompanyForm } from '@/features/edit-company'
 import { isNotFound } from '../lib/is-not-found'
 import { RoleNote } from './role-note'
@@ -52,6 +53,7 @@ export function CompanyProfilePage() {
       }
     >
       <CompanyForm company={company.data ?? null} />
+      {company.data && <CompanyVerification />}
     </Page>
   )
 }

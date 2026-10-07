@@ -8,6 +8,7 @@ from app.models import (
     AssessmentAnswer,
     AssessmentAttempt,
     AssessmentTask,
+    AssessmentTaskTime,
     AssessmentTest,
     CandidateCategory,
     CandidateProfile,
@@ -21,6 +22,7 @@ type Row = (
     BankRow
     | AssessmentAttempt
     | AssessmentAnswer
+    | AssessmentTaskTime
     | CandidateProfile
     | CandidateCategory
     | TestAssignment
@@ -177,6 +179,11 @@ class AssessmentRepository:
             .limit(1)
         )
         return result.first()
+
+    async def task_time(
+        self, attempt_id: uuid.UUID, task_id: uuid.UUID
+    ) -> AssessmentTaskTime | None:
+        return await self._session.get(AssessmentTaskTime, (attempt_id, task_id))
 
     async def answers_of(self, attempt_id: uuid.UUID) -> dict[uuid.UUID, AssessmentAnswer]:
         result = await self._session.scalars(
