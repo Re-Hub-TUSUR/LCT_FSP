@@ -1,5 +1,9 @@
 """«Я понравился»: answering an incoming like makes the interest mutual and opens the chat."""
 
+import json
+import uuid
+from datetime import UTC, datetime, timedelta
+
 from httpx import AsyncClient
 
 from tests.conftest import API, bearer
@@ -45,3 +49,71 @@ async def test_answering_an_inbound_like_opens_the_chat_for_both_sides(
         json={"text": "Здравствуйте!"},
     )
     assert sent.status_code == 201, sent.text
+
+
+async def test_like_names_its_vacancy_and_meeting_asks_for_an_answer(client: AsyncClient) -> None:
+    employer = await employer_with_company(client, "hr-pick@fsp.ru")
+    candidate, candidate_id = await candidate_with_resume(client, "dev-pick@fsp.ru")
+    older = await client.post(f"{API}/vacancies", headers=bearer(employer), json=VACANCY)
+    newer = await client.post(
+        f"{API}/vacancies", headers=bearer(employer), json={**VACANCY, "title": "Go-разработчик"}
+    )
+    draft = await client.post(
+        f"{API}/vacancies",
+        headers=bearer(employer),
+        json={**VACANCY, "title": "Черновик", "publish": False},
+    )
+    company_id = older.json()["company"]["id"]
+
+    # The company page lists the published vacancies of the company, newest first.
+    listed = await client.get(f"{API}/vacancies", params={"companyId": company_id})
+    assert [item["id"] for item in listed.json()["items"]] == [
+        newer.json()["id"],
+        older.json()["id"],
+    ]
+    assert draft.json()["id"] not in {item["id"] for item in listed.json()["items"]}
+
+    me = (await client.get(f"{API}/users/me", headers=bearer(candidate))).json()
+    hub = client._transport.app.state.notifications  # type: ignore[attr-defined]
+    queue = hub.subscribe(uuid.UUID(me["id"]))
+
+    # The recruiter picks the candidate for the older vacancy, not for the latest one.
+    liked = await client.put(
+        f"{API}/candidates/{candidate_id}/reaction",
+        headers=bearer(employer),
+        json={"kind": "like", "vacancyId": older.json()["id"]},
+    )
+    assert liked.status_code == 200, liked.text
+    event = json.loads(queue.get_nowait())
+    assert (event["type"], event["vacancyTitle"]) == ("company_liked", VACANCY["title"])
+
+    (inbound,) = (await client.get(f"{API}/responses/inbound", headers=bearer(candidate))).json()
+    assert (inbound["vacancyId"], inbound["vacancyTitle"]) == (older.json()["id"], VACANCY["title"])
+    assert inbound["salary"] == VACANCY["salary"]
+
+    answered = await client.post(
+        f"{API}/responses/inbound/companies/{company_id}/respond",
+        headers=bearer(candidate),
+        params={"vacancyId": inbound["vacancyId"]},
+    )
+    assert answered.status_code == 204, answered.text
+    favourites = await client.get(
+        f"{API}/vacancies/feed", headers=bearer(candidate), params={"view": "liked"}
+    )
+    assert [item["vacancy"]["id"] for item in favourites.json()["items"]] == [older.json()["id"]]
+
+    starts_at = (datetime.now(UTC) + timedelta(days=3)).replace(microsecond=0)
+    scheduled = await client.post(
+        f"{API}/calendar/events",
+        headers=bearer(employer),
+        json={
+            "candidateId": candidate_id,
+            "title": "Техническое интервью",
+            "startsAt": starts_at.isoformat(),
+            "endsAt": (starts_at + timedelta(hours=1)).isoformat(),
+        },
+    )
+    assert scheduled.status_code == 201, scheduled.text
+    event = json.loads(queue.get_nowait())
+    assert (event["type"], event["meetingId"]) == ("meeting_pending", scheduled.json()["id"])
+    assert event["companyName"] == "ООО «Технологии»"

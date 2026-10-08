@@ -47,17 +47,23 @@ class ReactionService:
         profile = await self._candidates.get(candidate_id)
         if profile is None or not profile.is_visible_to_employers:
             raise NotFoundError("Кандидат не найден")
+        vacancy_title = None
         if vacancy_id is not None:
             row = await self._vacancies.get(vacancy_id)
             if row is None or row[1].owner_id != user.id:
                 raise NotFoundError("Вакансия не найдена")
+            vacancy_title = row[0].title
         reaction = await self._reactions.set_for_candidate(user.id, candidate_id, kind, vacancy_id)
         if kind == ReactionKind.LIKE and self._notifications and self._companies:
-            await self._notify_company_liked(user.id, candidate_id)
+            await self._notify_company_liked(user.id, candidate_id, vacancy_id, vacancy_title)
         return reaction
 
     async def _notify_company_liked(
-        self, employer_user_id: uuid.UUID, candidate_id: uuid.UUID
+        self,
+        employer_user_id: uuid.UUID,
+        candidate_id: uuid.UUID,
+        vacancy_id: uuid.UUID | None,
+        vacancy_title: str | None,
     ) -> None:
         if self._notifications is None or self._companies is None:
             return
@@ -71,6 +77,9 @@ class ReactionService:
                 "type": "company_liked",
                 "companyId": str(company.id),
                 "companyName": company.name,
+                # The vacancy the recruiter picked the candidate for, if one was named.
+                "vacancyId": str(vacancy_id) if vacancy_id else None,
+                "vacancyTitle": vacancy_title,
             },
         )
 

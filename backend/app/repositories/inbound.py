@@ -4,6 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from app.models import (
     CandidateProfile,
@@ -21,7 +22,11 @@ class CandidateInboundRow:
     company_name: str
     industry: str | None
     recruiter_id: uuid.UUID
+    # The vacancy the recruiter picked the candidate for; older likes name none.
     vacancy_id: uuid.UUID | None
+    vacancy_title: str | None
+    salary_from: int | None
+    salary_to: int | None
     reacted_at: datetime
 
 
@@ -46,11 +51,12 @@ class InboundRepository:
         if profile is None:
             return []
 
+        liked = aliased(Vacancy)
         liked_back = exists().where(
             VacancyReaction.user_id == candidate_user_id,
             VacancyReaction.kind == ReactionKind.LIKE,
-            VacancyReaction.vacancy_id == Vacancy.id,
-            Vacancy.company_id == Company.id,
+            VacancyReaction.vacancy_id == liked.id,
+            liked.company_id == Company.id,
         )
         rows = await self._session.execute(
             select(
@@ -58,10 +64,18 @@ class InboundRepository:
                 Company.name,
                 Company.industry,
                 CandidateReaction.user_id,
-                CandidateReaction.vacancy_id,
+                Vacancy.id,
+                Vacancy.title,
+                Vacancy.salary_from,
+                Vacancy.salary_to,
                 CandidateReaction.updated_at,
             )
             .join(Company, Company.owner_id == CandidateReaction.user_id)
+            # A draft or a vacancy taken back is not shown: the like then names no vacancy.
+            .outerjoin(
+                Vacancy,
+                (Vacancy.id == CandidateReaction.vacancy_id) & Vacancy.published_at.is_not(None),
+            )
             .where(
                 CandidateReaction.candidate_id == profile.id,
                 CandidateReaction.kind == ReactionKind.LIKE,
@@ -76,9 +90,22 @@ class InboundRepository:
                 industry=industry,
                 recruiter_id=recruiter_id,
                 vacancy_id=vacancy_id,
+                vacancy_title=title,
+                salary_from=salary_from,
+                salary_to=salary_to,
                 reacted_at=reacted_at,
             )
-            for company_id, name, industry, recruiter_id, vacancy_id, reacted_at in rows
+            for (
+                company_id,
+                name,
+                industry,
+                recruiter_id,
+                vacancy_id,
+                title,
+                salary_from,
+                salary_to,
+                reacted_at,
+            ) in rows
         ]
 
     async def for_employer(self, employer_user_id: uuid.UUID) -> list[EmployerInboundRow]:

@@ -4,6 +4,7 @@ from app.core.errors import AppError, NotFoundError
 from app.models import ReactionKind, User, UserRole
 from app.repositories.company import CompanyRepository
 from app.repositories.inbound import InboundRepository
+from app.schemas.common import SalaryRange
 from app.schemas.responses import (
     CandidateInboundRead,
     EmployerInboundRead,
@@ -35,6 +36,12 @@ class ResponsesService:
                     company_name=row.company_name,
                     industry=row.industry,
                     vacancy_id=row.vacancy_id,
+                    vacancy_title=row.vacancy_title,
+                    salary=(
+                        SalaryRange.model_validate({"from": row.salary_from, "to": row.salary_to})
+                        if row.salary_from and row.salary_to
+                        else None
+                    ),
                     reacted_at=row.reacted_at,
                 )
                 for row in companies

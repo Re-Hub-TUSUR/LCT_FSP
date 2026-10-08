@@ -36,8 +36,10 @@ async def list_vacancies(
     specialization: str | None = None,
     grade: Grade | None = None,
     work_format: Annotated[WorkFormat | None, Query(alias="workFormat")] = None,
+    company_id: Annotated[uuid.UUID | None, Query(alias="companyId")] = None,
 ) -> Page[VacancyRead]:
     return await vacancies.public_page(
+        company_id=company_id,
         specialization=specialization,
         grade=grade,
         work_format=work_format,

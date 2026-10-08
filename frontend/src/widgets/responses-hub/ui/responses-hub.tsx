@@ -1,20 +1,18 @@
 import type { ReactNode } from 'react'
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router'
 import { useSession } from '@/entities/session'
 import {
   type CandidateInboundDto,
   type EmployerInboundDto,
-  responseApi,
-  responseKeys,
   responseQueries,
 } from '@/entities/response'
 import { CandidateMatchCard, candidateQueries } from '@/entities/candidate'
-import { conversationKeys, conversationQueries } from '@/entities/conversation'
-import { VacancyMatchCard, vacancyQueries } from '@/entities/vacancy'
+import { SALARY_NOTE, VacancyMatchCard, vacancyQueries } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
+import { useRespondToLike } from '@/features/respond-to-like'
 import { getErrorMessage } from '@/shared/api'
-import { formatDateTime } from '@/shared/lib'
+import { formatDateTime, formatRubRange } from '@/shared/lib'
 import { Button, EmptyState, QueryState, Tabs } from '@/shared/ui'
 import './responses-hub.css'
 
@@ -70,34 +68,12 @@ export function ResponsesHub({ messagesPanel }: Props) {
     placeholderData: keepPreviousData,
   })
 
-  const queryClient = useQueryClient()
-  const respond = useMutation({
-    mutationFn: async (payload: {
-      companyId?: string
-      candidateId?: string
-      vacancyId?: string
-    }) => {
-      if (payload.companyId) {
-        await responseApi.respondCompany(payload.companyId, payload.vacancyId)
-      } else if (payload.candidateId) {
-        await responseApi.respondCandidate(payload.candidateId, payload.vacancyId)
-      }
-      // The interest is mutual now, so the chat with the other side exists: find it to open it.
-      const peerId = payload.companyId ?? payload.candidateId
-      await queryClient.invalidateQueries({ queryKey: conversationKeys.list() })
-      const chats = await queryClient.fetchQuery(conversationQueries.list()).catch(() => [])
-      return chats.find((chat) => chat.peer.id === peerId)?.id ?? null
-    },
-    onSuccess: (chatId) => {
-      void queryClient.invalidateQueries({ queryKey: responseKeys.inbound() })
-      void queryClient.invalidateQueries({ queryKey: ['vacancies'] })
-      void queryClient.invalidateQueries({ queryKey: ['candidates'] })
-      // Answering leads straight to the conversation instead of a card that silently vanishes.
-      const next = new URLSearchParams(params)
-      next.set('tab', 'messages')
-      if (chatId) next.set('chat', chatId)
-      setParams(next, { replace: true })
-    },
+  // Answering leads straight to the conversation instead of a card that silently vanishes.
+  const respond = useRespondToLike((chatId) => {
+    const next = new URLSearchParams(params)
+    next.set('tab', 'messages')
+    if (chatId) next.set('chat', chatId)
+    setParams(next, { replace: true })
   })
 
   return (
@@ -129,6 +105,13 @@ export function ResponsesHub({ messagesPanel }: Props) {
                         <div className="responses__card-text">
                           <p className="responses__eyebrow">{item.industry ?? 'Компания'}</p>
                           <h3 className="responses__title">{item.companyName}</h3>
+                          {item.vacancyTitle && (
+                            <p className="responses__lead">
+                              {item.vacancyTitle}
+                              {item.salary &&
+                                ` · ${formatRubRange(item.salary.from, item.salary.to)} ${SALARY_NOTE}`}
+                            </p>
+                          )}
                           <p className="responses__time">{formatDateTime(item.reactedAt)}</p>
                         </div>
                         <Button

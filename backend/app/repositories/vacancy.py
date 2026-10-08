@@ -54,13 +54,16 @@ class VacancyRepository:
         search: str | None,
         limit: int,
         offset: int,
+        company_id: uuid.UUID | None = None,
     ) -> tuple[list[VacancyRow], int]:
-        """The public list, newest first."""
+        """The public list, newest first; of one company when `company_id` is given."""
         conditions = self._published_conditions(
             specializations=[specialization] if specialization else None,
             grades=[grade] if grade else None,
             work_formats=[work_format] if work_format else (),
         )
+        if company_id is not None:
+            conditions.append(Vacancy.company_id == company_id)
         if search:
             pattern = f"%{search.strip()}%"
             conditions.append(Vacancy.title.ilike(pattern) | Company.name.ilike(pattern))

@@ -10,6 +10,7 @@ from app.repositories.company import CompanyRepository
 from app.repositories.meeting import MeetingRepository
 from app.repositories.vacancy import VacancyRepository
 from app.schemas.calendar import CalendarEventRead, CalendarParty, MeetingCreate, MeetingUpdate
+from app.services.notifications import NotificationHub, announce_meeting
 
 
 def _utc(value: datetime) -> datetime:
@@ -46,11 +47,13 @@ class CalendarService:
         companies: CompanyRepository,
         candidates: CandidateRepository,
         vacancies: VacancyRepository,
+        notifications: NotificationHub | None = None,
     ) -> None:
         self._meetings = meetings
         self._companies = companies
         self._candidates = candidates
         self._vacancies = vacancies
+        self._notifications = notifications
 
     async def events(self, user: User, from_: datetime, to: datetime) -> list[CalendarEventRead]:
         """An employer sees the meetings of the company, a candidate — the ones they are in."""
@@ -97,6 +100,14 @@ class CalendarService:
                 status=MeetingStatus.PENDING,
             )
         )
+        await announce_meeting(
+            self._notifications,
+            user_id=profile.user_id,
+            meeting_id=meeting.id,
+            company_name=company.name,
+            title=meeting.title,
+            starts_at=starts_at,
+        )
         return _event(meeting, company.name, profile.display_name, vacancy_title)
 
     async def reschedule(
@@ -118,6 +129,15 @@ class CalendarService:
         meeting.location = _clean(data.location)
         meeting.note = _clean(data.note)
         profile = await self._candidates.get(meeting.candidate_id)
+        if moved and profile is not None:
+            await announce_meeting(
+                self._notifications,
+                user_id=profile.user_id,
+                meeting_id=meeting.id,
+                company_name=company_name,
+                title=meeting.title,
+                starts_at=starts_at,
+            )
         return _event(meeting, company_name, profile.display_name if profile else "", vacancy_title)
 
     async def cancel(self, user: User, meeting_id: uuid.UUID) -> None:

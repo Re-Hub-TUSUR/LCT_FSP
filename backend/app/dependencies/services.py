@@ -209,12 +209,13 @@ def get_chat_service(
 ChatServiceDep = Annotated[ChatService, Depends(get_chat_service)]
 
 
-def get_calendar_service(session: SessionDep) -> CalendarService:
+def get_calendar_service(session: SessionDep, hub: NotificationHubDep) -> CalendarService:
     return CalendarService(
         MeetingRepository(session),
         CompanyRepository(session),
         CandidateRepository(session),
         VacancyRepository(session),
+        hub,
     )
 
 

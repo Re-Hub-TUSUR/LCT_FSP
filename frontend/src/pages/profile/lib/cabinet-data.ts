@@ -6,6 +6,7 @@ import type { Grade } from '@/entities/category'
 import { companyQueries } from '@/entities/company'
 import { invitationQueries } from '@/entities/invitation'
 import type { InvitationDto } from '@/entities/invitation'
+import { responseQueries } from '@/entities/response'
 import { useSession } from '@/entities/session'
 
 export function initialsOf(name: string): string {
@@ -50,5 +51,7 @@ export function useCabinetData() {
     ...invitationQueries.list(role === 'employer' ? 'outgoing' : 'incoming'),
     enabled: role === 'candidate' || role === 'employer',
   })
-  return { user, role, profile, company, invitations }
+  // Companies that picked the candidate and wait for an answer are shown with the invitations.
+  const likes = useQuery({ ...responseQueries.inbound(), enabled: role === 'candidate' })
+  return { user, role, profile, company, invitations, likes }
 }

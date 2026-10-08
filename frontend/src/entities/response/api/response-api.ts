@@ -1,11 +1,15 @@
 import { queryOptions } from '@tanstack/react-query'
 import { http } from '@/shared/api'
+import type { SalaryRangeDto } from '@/shared/api'
 
 export type CandidateInboundDto = {
   companyId: string
   companyName: string
   industry: string | null
+  /** The vacancy the recruiter picked the candidate for; null when the like names none. */
   vacancyId: string | null
+  vacancyTitle: string | null
+  salary: SalaryRangeDto | null
   reactedAt: string
 }
 

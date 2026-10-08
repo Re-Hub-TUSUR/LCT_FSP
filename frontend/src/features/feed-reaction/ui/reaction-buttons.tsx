@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { candidateApi, candidateKeys } from '@/entities/candidate'
 import { vacancyApi, vacancyKeys } from '@/entities/vacancy'
 import type { Reaction } from '@/entities/vacancy'
+import { useLikeVacancy } from './vacancy-choice'
 import './reaction-buttons.css'
 
 export type ReactionTarget = 'vacancy' | 'candidate'
@@ -39,15 +40,25 @@ type Props = {
 export function ReactionButtons({ target, id, initial, vacancyId, likeLabel = 'Отобрать' }: Props) {
   const [reaction, setReaction] = useState<Reaction | null>(initial)
   const mutation = useReaction()
+  const likeVacancy = useLikeVacancy()
+
+  const save = (next: Reaction | null, forVacancy = vacancyId) => {
+    setReaction(next)
+    mutation.mutate({ target, id, kind: next, vacancyId: forVacancy })
+  }
 
   const toggle = (kind: Reaction) => {
     const next = reaction === kind ? null : kind
-    setReaction(next)
-    mutation.mutate({ target, id, kind: next, vacancyId })
+    // A recruiter's like names the vacancy it is for, unless the feed is open for one already.
+    if (target === 'candidate' && next === 'like' && !vacancyId) {
+      return likeVacancy.ask((chosen) => save(next, chosen))
+    }
+    save(next)
   }
 
   return (
     <div className="reaction-buttons">
+      {likeVacancy.dialog}
       <button
         type="button"
         aria-pressed={reaction === 'like'}

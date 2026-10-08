@@ -2,7 +2,7 @@ import { Link } from 'react-router'
 import { useSession } from '@/entities/session'
 import { ROUTES } from '@/shared/config'
 import { EmptyState, Page } from '@/shared/ui'
-import { InvitationsBoard } from '@/widgets/invitations-inbox'
+import { CompanyLikes, InvitationsBoard } from '@/widgets/invitations-inbox'
 
 export function InvitationsPage() {
   const { user } = useSession()
@@ -32,6 +32,7 @@ export function InvitationsPage() {
       title="Приглашения"
       lead="Работодатели находят вас по категории и присылают предложение с зарплатой. Контакты они увидят, только когда вы примете приглашение."
     >
+      <CompanyLikes />
       <InvitationsBoard
         direction="incoming"
         empty={

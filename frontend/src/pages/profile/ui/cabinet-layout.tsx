@@ -8,7 +8,7 @@ import './cabinet.css'
 type NavEntry = { label: string; to: string; count?: number }
 
 export function CabinetLayout() {
-  const { role, profile, company, invitations } = useCabinetData()
+  const { role, profile, company, invitations, likes } = useCabinetData()
   const category = useCategoryLabel()
   const onOverview = useMatch({ path: ROUTES.profile, end: true }) !== null
   // The query cache outlives a change of account: read only the current role's data.
@@ -24,7 +24,7 @@ export function CabinetLayout() {
   const fresh =
     role === 'employer'
       ? (items?.filter(isWaiting).length ?? 0)
-      : (items?.filter((item) => item.status === 'sent').length ?? 0)
+      : (items?.filter((item) => item.status === 'sent').length ?? 0) + (likes.data?.length ?? 0)
 
   const links: NavEntry[] = !ready
     ? []

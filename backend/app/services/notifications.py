@@ -5,6 +5,7 @@ import json
 import logging
 import uuid
 from collections import defaultdict
+from datetime import datetime
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -36,3 +37,27 @@ class NotificationHub:
             self._queues[user_id].discard(queue)
         if stale:
             logger.warning("Dropped %s slow SSE subscriber(s) for user %s", len(stale), user_id)
+
+
+async def announce_meeting(
+    hub: NotificationHub | None,
+    *,
+    user_id: uuid.UUID,
+    meeting_id: uuid.UUID,
+    company_name: str,
+    title: str,
+    starts_at: datetime,
+) -> None:
+    """Tells the candidate that a meeting waits for their answer."""
+    if hub is None:
+        return
+    await hub.publish(
+        user_id,
+        {
+            "type": "meeting_pending",
+            "meetingId": str(meeting_id),
+            "companyName": company_name,
+            "title": title,
+            "startsAt": starts_at.isoformat(),
+        },
+    )

@@ -1,3 +1,4 @@
+export { CompanyLikes } from './ui/company-likes'
 export {
   CandidateName,
   InvitationStatusTag,

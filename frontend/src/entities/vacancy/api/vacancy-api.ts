@@ -196,6 +196,8 @@ export type VacancyFeedPresetsDto = {
 }
 
 export type VacancyListParams = PaginationParams & {
+  /** Only the vacancies of this company. */
+  companyId?: string
   search?: string
   specialization?: SpecializationCode
   grade?: Grade

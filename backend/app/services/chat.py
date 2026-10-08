@@ -31,7 +31,7 @@ from app.schemas.chat import (
     MessagePage,
     MessageRead,
 )
-from app.services.notifications import NotificationHub
+from app.services.notifications import NotificationHub, announce_meeting
 from app.services.uploads import CHAT_ATTACHMENT_LIMIT, sniff_chat_attachment
 
 
@@ -230,6 +230,16 @@ class ChatService:
         await self._conversations.touch(conv.id, _utc(message.created_at))
         read = await self._present_message(message)
         await self._notify_message(conv, read)
+        profile = await self._candidates.get(conv.candidate_id)
+        if profile is not None:
+            await announce_meeting(
+                self._notifications,
+                user_id=profile.user_id,
+                meeting_id=meeting.id,
+                company_name=company.name,
+                title=meeting.title,
+                starts_at=starts_at,
+            )
         return read
 
     async def load_attachment_bytes(

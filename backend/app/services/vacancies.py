@@ -31,8 +31,10 @@ class VacancyService:
         work_format: WorkFormat | None,
         search: str | None,
         pagination: Pagination,
+        company_id: uuid.UUID | None = None,
     ) -> Page[VacancyRead]:
         rows, total = await self._vacancies.page_published(
+            company_id=company_id,
             specialization=specialization,
             grade=grade,
             work_format=work_format,

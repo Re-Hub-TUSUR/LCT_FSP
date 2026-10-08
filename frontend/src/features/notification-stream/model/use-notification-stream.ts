@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { calendarEventKeys } from '@/entities/calendar-event'
 import { candidateKeys } from '@/entities/candidate'
 import { companyKeys } from '@/entities/company'
 import { conversationKeys } from '@/entities/conversation'
@@ -13,6 +14,18 @@ export type CompanyLikedEvent = {
   type: 'company_liked'
   companyId: string
   companyName: string
+  /** The vacancy the recruiter picked the candidate for, if one was named. */
+  vacancyId?: string | null
+  vacancyTitle?: string | null
+}
+
+/** A company scheduled or moved a meeting: it waits for the candidate's answer. */
+export type MeetingPendingEvent = {
+  type: 'meeting_pending'
+  meetingId: string
+  companyName: string
+  title: string
+  startsAt: string
 }
 
 export type MessageEvent = {
@@ -42,6 +55,8 @@ export type SavedSearchNewEvent = {
 export type InvitationEvent = {
   type: 'invitation' | 'invitation_answered'
   invitationId: string
+  /** `invitation` only. */
+  companyName?: string
 }
 
 export type NotificationEvent =
@@ -50,9 +65,12 @@ export type NotificationEvent =
   | CompanyVerificationEvent
   | SavedSearchNewEvent
   | InvitationEvent
+  | MeetingPendingEvent
 
 type Handlers = {
   onCompanyLiked?: (event: CompanyLikedEvent) => void
+  onInvitation?: (event: InvitationEvent) => void
+  onMeetingPending?: (event: MeetingPendingEvent) => void
   onMessage?: (event: MessageEvent) => void
   onCompanyVerification?: (event: CompanyVerificationEvent) => void
   onSavedSearchNew?: (event: SavedSearchNewEvent) => void
@@ -112,6 +130,11 @@ export function useNotificationStream(handlers: Handlers) {
               // The extract status and `itAccredited` of the company profile.
               void queryClient.invalidateQueries({ queryKey: companyKeys.all })
             }
+            if (payload.type === 'meeting_pending') {
+              handlersRef.current.onMeetingPending?.(payload)
+              void queryClient.invalidateQueries({ queryKey: calendarEventKeys.all })
+            }
+            if (payload.type === 'invitation') handlersRef.current.onInvitation?.(payload)
             if (payload.type === 'invitation' || payload.type === 'invitation_answered') {
               // The lists of both sides, and the contacts an acceptance opens.
               void queryClient.invalidateQueries({ queryKey: invitationKeys.all })

@@ -23,6 +23,20 @@
   animation: notify-in 0.35s var(--ease-premium) both;
 }
 
+/* The stack lets clicks through; a toast that leads somewhere takes them back. */
+.notify-stack__item--link {
+  display: block;
+  text-decoration: none;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.notify-stack__item--link:hover,
+.notify-stack__item--link:focus-visible {
+  outline: none;
+  border-color: var(--blue);
+}
+
 @keyframes notify-in {
   from {
     opacity: 0;
