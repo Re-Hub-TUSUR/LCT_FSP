@@ -394,3 +394,31 @@ async def test_keycloak_provider_checks_the_id_token(monkeypatch: pytest.MonkeyP
     claims["iss"] = "https://evil.example/realms/fsp"
     with pytest.raises(FspIdError):
         await provider.exchange_code(**exchange, nonce="n-2")
+
+
+async def test_mock_realm_accepts_local_origins_and_offers_a_random_participant(
+    client: AsyncClient,
+) -> None:
+    """A demo opened through Docker (:8080) or by a LAN address links without configuration."""
+    token = await candidate(client, "fsp-local@fsp.ru")
+
+    async def started(redirect_uri: str) -> int:
+        response = await client.post(
+            f"{API}/fsp-id/authorize", headers=bearer(token), json={"redirectUri": redirect_uri}
+        )
+        return response.status_code
+
+    assert await started("http://localhost:8080/profile/fsp/callback") == 200
+    assert await started("http://127.0.0.1:8080/profile/fsp/callback") == 200
+    assert await started("http://192.168.1.20:5173/profile/fsp/callback") == 200
+    assert await started("http://localhost:8080/elsewhere") == 400
+    assert await started("https://8.8.8.8/profile/fsp/callback") == 400
+
+    first, second = mock.random_member_id(), mock.random_member_id()
+    assert first != second
+    assert first not in mock.DEMO_MEMBERS
+    linked = await link(client, token, first)
+    assert linked.status_code == 200, linked.text
+    body = linked.json()
+    assert (body["fspLinked"], body["fspMemberId"], body["fspSyncError"]) == (True, first, None)
+    assert len(body["fspAchievements"]) > 0

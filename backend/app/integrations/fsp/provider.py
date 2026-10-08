@@ -7,6 +7,7 @@ the participant in the registry. `MockFspIdProvider` emulates the realm for the 
 
 import base64
 import hashlib
+import ipaddress
 from typing import Any, Protocol
 from urllib.parse import urlencode, urlsplit
 
@@ -61,13 +62,35 @@ def authorize_url(
 
 
 def redirect_allowed(settings: Settings, redirect_uri: str) -> bool:
-    """The configured callback, or the same page on one of the trusted SPA origins."""
+    """The configured callback, or the same page on one of the trusted SPA origins.
+
+    The emulated realm also accepts the page on this machine or its local network, on any port:
+    a demo opened through Docker or by IP links without extra configuration.
+    """
     if redirect_uri == settings.fsp_id_redirect_uri:
         return True
     parts = urlsplit(redirect_uri)
     if parts.path != CALLBACK_PATH or parts.query or parts.fragment:
         return False
-    return f"{parts.scheme}://{parts.netloc}" in settings.cors_origins
+    if f"{parts.scheme}://{parts.netloc}" in settings.cors_origins:
+        return True
+    return (
+        settings.fsp_id_mode == "mock"
+        and parts.scheme in ("http", "https")
+        and _is_local(parts.hostname)
+    )
+
+
+def _is_local(host: str | None) -> bool:
+    if host is None:
+        return False
+    if host == "localhost":
+        return True
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return address.is_loopback or address.is_private
 
 
 def identity_from_claims(claims: dict[str, Any], *, settings: Settings, nonce: str) -> FspIdentity:

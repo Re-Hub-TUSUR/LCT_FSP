@@ -11,6 +11,7 @@ another issuer and type, so neither kind is accepted in place of the other.
 
 import hashlib
 import random
+import secrets
 import uuid
 import zlib
 from datetime import UTC, datetime, timedelta
@@ -295,6 +296,15 @@ def generated_member(member_id: str) -> FspMemberRecord:
             )
         )
     return FspMemberRecord(member_id=member_id, achievements=achievements, titles=titles)
+
+
+def random_member_id() -> str:
+    """A participant nobody has linked yet, with a generated history."""
+    taken = {*DEMO_MEMBERS, *seeded_members()}
+    while True:
+        member_id = f"FSP-{secrets.randbelow(900_000) + 100_000}"
+        if member_id not in taken:
+            return member_id
 
 
 class MockFspRegistry:

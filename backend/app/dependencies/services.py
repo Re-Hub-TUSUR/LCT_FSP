@@ -33,6 +33,7 @@ from app.services.code_runner import CodeRunner, OnlineCompilerRunner
 from app.services.email import ResendEmailSender
 from app.services.fsp_link import FspLinkService
 from app.services.interview import AttemptInterviewService, Interviewer
+from app.services.invitations import InvitationService
 from app.services.llm import RouterAiModel
 from app.services.notifications import NotificationHub
 from app.services.reactions import ReactionService
@@ -151,6 +152,19 @@ def get_notification_hub(request: Request) -> NotificationHub:
 
 
 NotificationHubDep = Annotated[NotificationHub, Depends(get_notification_hub)]
+
+
+def get_invitation_service(session: SessionDep, hub: NotificationHubDep) -> InvitationService:
+    return InvitationService(
+        InvitationRepository(session),
+        CompanyRepository(session),
+        CandidateRepository(session),
+        VacancyRepository(session),
+        hub,
+    )
+
+
+InvitationServiceDep = Annotated[InvitationService, Depends(get_invitation_service)]
 
 
 def get_reaction_service(session: SessionDep, hub: NotificationHubDep) -> ReactionService:

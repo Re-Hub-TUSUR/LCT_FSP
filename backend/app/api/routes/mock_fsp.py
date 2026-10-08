@@ -216,11 +216,14 @@ def _sign_in_form(hidden: dict[str, str]) -> str:
         f'<input type="hidden" name="{name}" value="{html.escape(value)}">'
         for name, value in hidden.items()
     )
+    # A new participant with a generated history goes first: two demo accounts never collide.
+    members = (mock.random_member_id(), *mock.DEMO_MEMBERS)
     options = "".join(
         f'<label class="option"><input type="radio" name="member" value="{member_id}"'
         f"{' checked' if index == 0 else ''}> <b>{member_id}</b> — "
+        f"{'случайный участник: ' if index == 0 else ''}"
         f"{html.escape(_describe(member_id))}</label>"
-        for index, member_id in enumerate(mock.DEMO_MEMBERS)
+        for index, member_id in enumerate(members)
     )
     return (
         "<p>Демо-режим: настоящий ФСП ID (Keycloak) подключится после хакатона. "

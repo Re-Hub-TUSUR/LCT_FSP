@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { candidateKeys } from '@/entities/candidate'
 import { companyKeys } from '@/entities/company'
 import { conversationKeys } from '@/entities/conversation'
+import { invitationKeys } from '@/entities/invitation'
 import { responseKeys } from '@/entities/response'
 import { useSession } from '@/entities/session'
 import { vacancyKeys } from '@/entities/vacancy'
@@ -37,8 +38,18 @@ export type SavedSearchNewEvent = {
   count: number
 }
 
+/** A company invited the candidate, or the candidate answered the company's invitation. */
+export type InvitationEvent = {
+  type: 'invitation' | 'invitation_answered'
+  invitationId: string
+}
+
 export type NotificationEvent =
-  CompanyLikedEvent | MessageEvent | CompanyVerificationEvent | SavedSearchNewEvent
+  | CompanyLikedEvent
+  | MessageEvent
+  | CompanyVerificationEvent
+  | SavedSearchNewEvent
+  | InvitationEvent
 
 type Handlers = {
   onCompanyLiked?: (event: CompanyLikedEvent) => void
@@ -100,6 +111,11 @@ export function useNotificationStream(handlers: Handlers) {
               handlersRef.current.onCompanyVerification?.(payload)
               // The extract status and `itAccredited` of the company profile.
               void queryClient.invalidateQueries({ queryKey: companyKeys.all })
+            }
+            if (payload.type === 'invitation' || payload.type === 'invitation_answered') {
+              // The lists of both sides, and the contacts an acceptance opens.
+              void queryClient.invalidateQueries({ queryKey: invitationKeys.all })
+              void queryClient.invalidateQueries({ queryKey: candidateKeys.all })
             }
             if (payload.type === 'saved_search_new') {
               handlersRef.current.onSavedSearchNew?.(payload)

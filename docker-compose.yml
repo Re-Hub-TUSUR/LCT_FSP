@@ -63,6 +63,13 @@ services:
       ROUTERAI_API_KEY: ${ROUTERAI_API_KEY:-}
       RESUME_PARSER_MODEL: ${RESUME_PARSER_MODEL:-yandex/aliceai-llm-flash}
       INTERVIEW_MODEL: ${INTERVIEW_MODEL:-yandex/aliceai-llm-flash}
+      # FSP ID: emulated inside the API unless a real realm is configured (docs/FSP_INTEGRATION.md).
+      FSP_ID_MODE: ${FSP_ID_MODE:-mock}
+      FSP_ID_ISSUER: ${FSP_ID_ISSUER:-/api/v1/mock/fsp-id/realms/fsp}
+      FSP_ID_CLIENT_ID: ${FSP_ID_CLIENT_ID:-kadry}
+      FSP_ID_CLIENT_SECRET: ${FSP_ID_CLIENT_SECRET:-}
+      FSP_ID_REDIRECT_URI: ${FSP_ID_REDIRECT_URI:-http://localhost:8080/profile/fsp/callback}
+      FSP_REGISTRY_URL: ${FSP_REGISTRY_URL:-}
     volumes:
       - upload-data:/data/uploads
     depends_on:
