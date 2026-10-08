@@ -7,16 +7,23 @@
 }
 
 .responses__tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  border-bottom: 1px solid var(--line);
 }
 
-.responses__list,
 .responses__feed {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* «Я понравился»: a tile per person or company still waiting for an answer. */
+.responses__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -24,32 +31,50 @@
 
 .responses__card {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
-  gap: 16px;
-  padding: 16px 18px;
-  border: 1px solid var(--line);
-  background: rgba(16, 18, 28, 0.72);
+  gap: 18px;
+  padding: 20px 22px;
+  border-top: 3px solid var(--red);
+  background: var(--surface);
+}
+
+.responses__card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
 
 .responses__eyebrow {
-  margin: 0 0 4px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--muted);
 }
 
 .responses__title {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: 300;
-  font-size: 22px;
+  font-family: var(--font-accent);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.responses__lead,
+.responses__time {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
 }
 
 .responses__lead {
-  margin: 6px 0 0;
-  font-size: 14px;
-  color: var(--text-dim);
+  color: var(--ink-2);
+}
+
+.responses__card .btn {
+  align-self: flex-start;
 }

@@ -1,20 +1,48 @@
 import { INK, SCRIPTS, type FilmScript, type InkKind } from '../config/film-scripts'
 
-// 135 film proportions: 8 perforations per frame, 36x24 image on a 35mm strip, 38mm pitch
+// 135 film proportions: 8 slots per frame edge, 36x24 image on a 35mm strip, 38mm pitch
 const CELL_W = 608
 const CELL_H = 560
 const COLS = 4
 const ROWS = 4
 const MARGIN = Math.round(CELL_H * 0.157)
-const HOLE_W = Math.round(CELL_W * 0.052)
-const HOLE_H = Math.round(CELL_H * 0.08)
 const SLOT = CELL_W / 8
 const IMG_X = Math.round(CELL_W / 38)
 
 export const FRAME_PITCH = CELL_W / CELL_H
-export const ATLAS_FONTS = ['400 14px "IBM Plex Mono"', '500 13px "IBM Plex Mono"'] as const
+export const ATLAS_FONTS = ['400 14px "JetBrains Mono"', '800 66px "JetBrains Mono"'] as const
 
-/** 4x4 atlas of film frames: base, code still, edge markings, perforations cut to alpha 0. */
+// The ФСП ornament runs where the perforations would be: 8 glyphs per frame edge, continuous
+// across frames.
+const ORNAMENT: readonly (readonly [string, 'b' | 'r' | 'w'])[] = [
+  ['{', 'b'],
+  ['•', 'w'],
+  ['}', 'b'],
+  ['|', 'r'],
+  ['>', 'b'],
+  ['•', 'w'],
+  ['|', 'b'],
+  ['<', 'b'],
+  ['/', 'r'],
+  ['>', 'b'],
+  ['▲', 'w'],
+  ['[', 'b'],
+  ['•', 'w'],
+  [']', 'b'],
+  ['//', 'r'],
+  ['●', 'r'],
+  ['—', 'b'],
+  ['>', 'b'],
+  ['|', 'w'],
+  ['<', 'b'],
+  ['▲', 'r'],
+  ['</>', 'b'],
+  ['•', 'w'],
+  ['{•}', 'b'],
+]
+const ORNAMENT_INK = { b: '#402fff', r: '#ec1d35', w: '#ededed' } as const
+
+/** 4x4 atlas of film frames: base, code still and the ornament along both edges. */
 export function paintAtlas() {
   const canvas = document.createElement('canvas')
   canvas.width = CELL_W * COLS
@@ -50,7 +78,7 @@ function paintCell(
 ) {
   const W = CELL_W
   const H = CELL_H
-  ctx.fillStyle = '#14171f'
+  ctx.fillStyle = '#2d2e37'
   ctx.fillRect(0, 0, W, H)
   const base = ctx.createLinearGradient(0, 0, 0, H)
   base.addColorStop(0, 'rgba(255,255,255,0.03)')
@@ -65,10 +93,10 @@ function paintCell(
   roundRect(ctx, IMG_X, MARGIN, iw, ih, 9)
   ctx.clip()
   const lift = 0.85 + rnd() * 0.3
-  ctx.fillStyle = '#0a0d15'
+  ctx.fillStyle = '#1b1c21'
   ctx.fillRect(IMG_X, MARGIN, iw, ih)
   const vignette = ctx.createRadialGradient(W / 2, H / 2, ih * 0.1, W / 2, H / 2, iw * 0.62)
-  vignette.addColorStop(0, `rgba(40,48,72,${0.22 * lift})`)
+  vignette.addColorStop(0, `rgba(64,47,255,${0.22 * lift})`)
   vignette.addColorStop(1, 'rgba(0,0,0,0.35)')
   ctx.fillStyle = vignette
   ctx.fillRect(IMG_X, MARGIN, iw, ih)
@@ -79,23 +107,25 @@ function paintCell(
   roundRect(ctx, IMG_X, MARGIN, iw, ih, 9)
   ctx.stroke()
 
-  ctx.font = '500 13px "IBM Plex Mono", ui-monospace, monospace'
-  ctx.fillStyle = 'rgba(206,201,184,0.8)'
+  paintOrnament(ctx, index)
+}
+
+function paintOrnament(ctx: CanvasRenderingContext2D, index: number) {
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(`→ ${String(index + 1).padStart(2, '0')}`, SLOT * 2, H - MARGIN / 2)
-  ctx.fillText(script.mark, SLOT * 6, H - MARGIN / 2)
-
-  ctx.globalCompositeOperation = 'destination-out'
-  ctx.fillStyle = '#000'
-  for (let k = 0; k < 8; k += 1) {
-    const x = k * SLOT + (SLOT - HOLE_W) / 2
-    roundRect(ctx, x, (MARGIN - HOLE_H) / 2, HOLE_W, HOLE_H, 5)
-    ctx.fill()
-    roundRect(ctx, x, H - MARGIN + (MARGIN - HOLE_H) / 2, HOLE_W, HOLE_H, 5)
-    ctx.fill()
+  for (let row = 0; row < 2; row += 1) {
+    const centerY = row === 0 ? MARGIN / 2 : CELL_H - MARGIN / 2
+    for (let k = 0; k < 8; k += 1) {
+      const [glyph, tone] = ORNAMENT[(index * 8 + k + row * 11) % ORNAMENT.length]!
+      const ink = ORNAMENT_INK[tone]
+      ctx.font = `800 ${glyph.length > 1 ? 44 : 66}px "JetBrains Mono", ui-monospace, monospace`
+      ctx.fillStyle = ink
+      ctx.shadowColor = ink
+      ctx.shadowBlur = 10
+      ctx.fillText(glyph, k * SLOT + SLOT / 2, centerY + 2)
+    }
   }
-  ctx.globalCompositeOperation = 'source-over'
+  ctx.shadowBlur = 0
 }
 
 function roundRect(
@@ -122,7 +152,7 @@ function paintCode(
   const fit = Math.floor((height * 0.88) / (script.lines.length * lineFactor))
   const fontSize = Math.max(9, Math.min(Math.round(height * 0.05), fit))
   const keywords = new Set(script.keywords)
-  ctx.font = `400 ${fontSize}px "IBM Plex Mono", ui-monospace, monospace`
+  ctx.font = `400 ${fontSize}px "JetBrains Mono", ui-monospace, monospace`
   ctx.textBaseline = 'top'
   ctx.textAlign = 'left'
   const lineH = fontSize * lineFactor

@@ -1,126 +1,100 @@
 import type { ReactNode } from 'react'
 import { AssessmentStatusBadge } from '@/entities/assessment'
-import { CandidateResumes, useCandidatePhoto } from '@/entities/candidate'
+import { useCandidatePhoto } from '@/entities/candidate'
 import type { CandidateMatchDto } from '@/entities/candidate'
 import { WORK_FORMAT_LABELS } from '@/entities/vacancy'
-import { MatchMeter } from '@/shared/ui'
+import { Avatar, MatchMeter } from '@/shared/ui'
 import './candidate-sheet.css'
 
 const rub = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 })
 
-function initials(name: string) {
-  return name
-    .split(' ')
-    .map((part) => part[0] ?? '')
-    .join('')
-    .slice(0, 2)
-}
-
 type Props = {
   match: CandidateMatchDto
   selected: boolean
+  /** A skipped candidate still shown in the main list. */
+  dimmed?: boolean
   onOpen: () => void
   actions?: ReactNode
 }
 
-/** Feed row for an employer. The full profile, including FSP and the bio, opens in the side panel. */
-export function CandidateRow({ match, selected, onOpen, actions }: Props) {
+/** Table row of the employer's feed. The full profile, FSP and the bio open in the side sheet. */
+export function CandidateRow({ match, selected, dimmed = false, onOpen, actions }: Props) {
   const { candidate, matchScore, profileStrength, matched } = match
+  const photo = useCandidatePhoto(candidate.id, candidate.hasPhoto === true)
+  const place = candidate.city
+    ? `${candidate.city}${candidate.relocationReady ? ' · переезд' : ''}`
+    : null
+  const classes = [
+    'candidate-row',
+    'candidate-row__grid',
+    selected && 'is-open',
+    dimmed && 'is-dim',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
-    <article
-      className={selected ? 'match-card is-open' : 'match-card'}
-      aria-label={candidate.displayName}
-    >
-      <button
-        type="button"
-        className="candidate-row__open"
-        aria-expanded={selected}
-        onClick={onOpen}
-      >
-        <span className="match-card__head">
-          <span className="match-card__person">
-            <CandidateAvatar
-              candidateId={candidate.id}
-              hasPhoto={candidate.hasPhoto === true}
-              name={candidate.displayName}
-            />
-            <span className="match-card__titles">
-              <span className="match-card__title">{candidate.displayName}</span>
-              {candidate.headline && (
-                <span className="match-card__eyebrow">{candidate.headline}</span>
-              )}
-              {matched && (
-                <span className="match-card__matched">Взаимно: кандидат отметил вашу вакансию</span>
-              )}
+    // The name is the keyboard way in; a click anywhere on the row is a shortcut for the mouse.
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
+    <article className={classes} aria-label={candidate.displayName} onClick={onOpen}>
+      <div className="candidate-row__person">
+        <Avatar name={candidate.displayName} src={photo.data} />
+        <div className="candidate-row__titles">
+          <button
+            type="button"
+            className="candidate-row__name"
+            aria-expanded={selected}
+            onClick={(event) => {
+              event.stopPropagation()
+              onOpen()
+            }}
+          >
+            {candidate.displayName}
+          </button>
+          {(candidate.headline || place) && (
+            <span className="candidate-row__sub">
+              {[candidate.headline, place].filter(Boolean).join(' · ')}
             </span>
-          </span>
-          <span className="match-card__meters">
-            {matchScore !== null && <MatchMeter value={matchScore} label="Под вакансию" />}
-            <MatchMeter value={profileStrength} label="Сила профиля" />
-          </span>
+          )}
+          {matched && <span className="candidate-row__matched">Взаимно</span>}
+        </div>
+      </div>
+
+      <div className="candidate-row__tags">
+        {candidate.category && <span className="tag">{candidate.category.label}</span>}
+        <AssessmentStatusBadge
+          status={candidate.assessmentStatus}
+          score={candidate.assessmentScore}
+        />
+      </div>
+
+      <div className="candidate-row__meter">
+        <MatchMeter compact value={matchScore} label="Под вакансию" />
+      </div>
+      <div className="candidate-row__meter">
+        <MatchMeter compact value={profileStrength} label="Сила профиля" />
+      </div>
+
+      <div className="candidate-row__pay">
+        <span className="candidate-row__salary">
+          {candidate.salaryExpectation !== null
+            ? `от ${rub.format(candidate.salaryExpectation)} ₽`
+            : 'Не указано'}
         </span>
-
-        <ul className="match-card__facts">
-          {candidate.category && (
-            <li className="match-card__fact match-card__fact--accent">
-              {candidate.category.label}
-            </li>
-          )}
-          <li>
-            <AssessmentStatusBadge
-              status={candidate.assessmentStatus}
-              score={candidate.assessmentScore}
-            />
-          </li>
-          {candidate.experienceYears !== null && (
-            <li className="match-card__fact">Опыт: {candidate.experienceYears} г.</li>
-          )}
-          {candidate.city && (
-            <li className="match-card__fact">
-              {candidate.city}
-              {candidate.relocationReady ? ' · переезд' : ''}
-            </li>
-          )}
-          {candidate.workFormats.map((format) => (
-            <li key={format} className="match-card__fact">
-              {WORK_FORMAT_LABELS[format]}
-            </li>
-          ))}
-          {candidate.salaryExpectation !== null && (
-            <li className="match-card__fact">от {rub.format(candidate.salaryExpectation)} ₽</li>
-          )}
-        </ul>
-
-        <CandidateResumes candidate={candidate} />
-
-        {candidate.stack.length > 0 && (
-          <ul className="match-card__stack" aria-label="Стек">
-            {candidate.stack.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
+        {candidate.workFormats.length > 0 && (
+          <span className="candidate-row__sub">
+            {candidate.workFormats.map((format) => WORK_FORMAT_LABELS[format]).join(' · ')}
+          </span>
         )}
-      </button>
-      {actions && <footer className="match-card__actions">{actions}</footer>}
-    </article>
-  )
-}
+      </div>
 
-function CandidateAvatar({
-  candidateId,
-  hasPhoto,
-  name,
-}: {
-  candidateId: string
-  hasPhoto: boolean
-  name: string
-}) {
-  const photo = useCandidatePhoto(candidateId, hasPhoto)
-  if (photo.data) return <img className="match-card__photo" src={photo.data} alt="" />
-  return (
-    <span className="match-card__avatar" aria-hidden="true">
-      {initials(name)}
-    </span>
+      {actions && (
+        // Buttons inside the row decide on their own; they must not open the sheet.
+        // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+        <div className="candidate-row__actions" onClick={(event) => event.stopPropagation()}>
+          {actions}
+        </div>
+      )}
+    </article>
   )
 }

@@ -53,7 +53,7 @@ export function EditorMark({ svgRef, circleRef, checkRef, nibRef }: Props) {
       <g
         filter={`url(#${wax})`}
         fill="none"
-        stroke="#3dcc8a"
+        stroke="#7d72ff"
         strokeLinecap="round"
         strokeLinejoin="round"
       >

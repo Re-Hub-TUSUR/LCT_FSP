@@ -391,10 +391,10 @@ export class ReelEngine {
     if (elements.mark) paintMark(elements.mark, this.markGeometry, visual.mark, visual.tick)
 
     if (elements.skip) {
-      this.paintButton(elements.skip, visual.skipK, this.hover === 'skip', '#ff4d3d', '255,77,61')
+      this.paintButton(elements.skip, visual.skipK, this.hover === 'skip', '#ec1d35', '236,29,53')
     }
     if (elements.like) {
-      this.paintButton(elements.like, visual.likeK, this.hover === 'like', '#3dcc8a', '61,204,138')
+      this.paintButton(elements.like, visual.likeK, this.hover === 'like', '#402fff', '64,47,255')
     }
     if (elements.gate) elements.gate.style.cursor = this.drag?.active ? 'grabbing' : ''
   }

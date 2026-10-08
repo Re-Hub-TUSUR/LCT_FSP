@@ -1,0 +1,28 @@
+.ornament {
+  display: flex;
+  justify-content: center;
+  gap: 0.14em;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1;
+  user-select: none;
+}
+
+.ornament__g {
+  flex: none;
+}
+
+.ornament__g--b {
+  color: var(--blue);
+}
+
+.ornament__g--w {
+  color: var(--ink);
+}
+
+.ornament__g--r {
+  color: var(--red);
+}

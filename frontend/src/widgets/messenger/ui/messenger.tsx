@@ -9,7 +9,7 @@ import {
 import { useSession } from '@/entities/session'
 import { useNotificationStream } from '@/features/notification-stream'
 import { getErrorMessage } from '@/shared/api'
-import { Button, EmptyState, QueryState } from '@/shared/ui'
+import { Avatar, EmptyState, QueryState } from '@/shared/ui'
 import { ChatMeetingDialog } from './chat-meeting-dialog'
 import './messenger.css'
 
@@ -26,6 +26,27 @@ function formatWhen(value: string) {
     minute: '2-digit',
   }).format(new Date(value))
 }
+
+const time = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' })
+const day = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' })
+
+/** Time for today's messages, the date for older ones. */
+function formatShort(value: string) {
+  const date = new Date(value)
+  return date.toDateString() === new Date().toDateString() ? time.format(date) : day.format(date)
+}
+
+function formatSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} Б`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} КБ`
+  return `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} МБ`
+}
+
+const MEETING_STATUS = {
+  pending: 'Ждёт ответа',
+  confirmed: 'Подтверждена',
+  declined: 'Отклонена',
+} as const
 
 function ChatAttachmentImage({ id, alt }: { id: string; alt: string }) {
   const [src, setSrc] = useState<string | null>(null)
@@ -47,55 +68,82 @@ function ChatAttachmentImage({ id, alt }: { id: string; alt: string }) {
 }
 
 function MessageBubble({ message, own }: { message: MessageDto; own: boolean }) {
+  const stamp = (
+    <time className="chat-msg__time" dateTime={message.createdAt}>
+      {formatWhen(message.createdAt)}
+    </time>
+  )
+
   if (message.kind === 'meeting' && message.meeting) {
     const meet = message.meeting
     return (
-      <article className={`chat-msg chat-msg--meeting${own ? ' is-own' : ''}`}>
-        <p className="chat-msg__label">Встреча</p>
-        <h4 className="chat-msg__meet-title">{meet.title}</h4>
-        <p className="chat-msg__meet-when">
-          {formatWhen(meet.startsAt)} — {formatWhen(meet.endsAt)}
-        </p>
-        {meet.location ? (
-          <a className="chat-msg__meet-link" href={meet.location} target="_blank" rel="noreferrer">
-            {meet.location}
-          </a>
-        ) : null}
-        <p className="chat-msg__meet-status">{meet.status}</p>
-      </article>
+      <div className={`chat-row${own ? ' is-own' : ''}`}>
+        <article className={`chat-msg chat-msg--meeting is-${meet.status}`}>
+          <p className="chat-msg__label">Встреча</p>
+          <h4 className="chat-msg__meet-title">{meet.title}</h4>
+          <p className="chat-msg__meet-when">
+            {formatWhen(meet.startsAt)} — {formatWhen(meet.endsAt)}
+          </p>
+          {meet.location ? (
+            <a
+              className="chat-msg__meet-link"
+              href={meet.location}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {meet.location}
+            </a>
+          ) : null}
+          <p className="chat-msg__meet-status">{MEETING_STATUS[meet.status] ?? meet.status}</p>
+        </article>
+        {stamp}
+      </div>
     )
   }
 
   if (message.kind === 'attachment' && message.attachment) {
     const att = message.attachment
     const image = att.mediaType.startsWith('image/')
+    const extension = att.filename.includes('.') ? att.filename.split('.').pop() : 'файл'
     return (
-      <article className={`chat-msg chat-msg--file${own ? ' is-own' : ''}`}>
-        {image ? (
-          <ChatAttachmentImage id={att.id} alt={att.filename} />
-        ) : (
-          <button
-            type="button"
-            className="chat-msg__file"
-            onClick={() => {
-              void conversationApi.fetchAttachmentBlob(att.id).then((blob) => {
-                const url = URL.createObjectURL(blob)
-                window.open(url, '_blank', 'noopener,noreferrer')
-                window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
-              })
-            }}
-          >
-            {att.filename}
-          </button>
-        )}
-      </article>
+      <div className={`chat-row${own ? ' is-own' : ''}`}>
+        <article className="chat-msg chat-msg--file">
+          {image ? (
+            <ChatAttachmentImage id={att.id} alt={att.filename} />
+          ) : (
+            <button
+              type="button"
+              className="chat-msg__file"
+              onClick={() => {
+                void conversationApi.fetchAttachmentBlob(att.id).then((blob) => {
+                  const url = URL.createObjectURL(blob)
+                  window.open(url, '_blank', 'noopener,noreferrer')
+                  window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
+                })
+              }}
+            >
+              <span className="chat-msg__ext" aria-hidden="true">
+                {extension}
+              </span>
+              <span className="chat-msg__file-text">
+                <span className="chat-msg__file-name">{att.filename}</span>
+                <span className="chat-msg__file-size">{formatSize(att.sizeBytes)}</span>
+              </span>
+            </button>
+          )}
+        </article>
+        {stamp}
+      </div>
     )
   }
 
   return (
-    <article className={`chat-msg${own ? ' is-own' : ''}`}>
-      <p>{message.text}</p>
-    </article>
+    <div className={`chat-row${own ? ' is-own' : ''}`}>
+      <article className="chat-msg">
+        <p>{message.text}</p>
+      </article>
+      {stamp}
+    </div>
   )
 }
 
@@ -106,6 +154,8 @@ export function Messenger({ selectedId, onSelect }: Props) {
   const [draft, setDraft] = useState('')
   const [meetingOpen, setMeetingOpen] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
+  // On a narrow screen the list and the chat take turns; this is which one is up.
+  const [listUp, setListUp] = useState(true)
   const fileRef = useRef<HTMLInputElement>(null)
   const streamRef = useRef<HTMLDivElement>(null)
 
@@ -157,6 +207,8 @@ export function Messenger({ selectedId, onSelect }: Props) {
     onError: (err) => setSendError(getErrorMessage(err)),
   })
 
+  const peer = listQuery.data?.find((item) => item.id === selectedId)?.peer
+
   const submit = () => {
     const text = draft.trim()
     if (!selectedId || !text || sendText.isPending) return
@@ -165,7 +217,7 @@ export function Messenger({ selectedId, onSelect }: Props) {
   }
 
   return (
-    <div className="chat">
+    <div className={listUp ? 'chat chat--list' : 'chat'}>
       <aside className="chat__sidebar" aria-label="Диалоги">
         <QueryState query={listQuery} loadingLabel="Диалоги…">
           {(items) =>
@@ -176,11 +228,23 @@ export function Messenger({ selectedId, onSelect }: Props) {
                     <button
                       type="button"
                       className={`chat__thread${selectedId === item.id ? ' is-active' : ''}`}
-                      onClick={() => onSelect(item.id)}
+                      aria-current={selectedId === item.id ? 'true' : undefined}
+                      onClick={() => {
+                        onSelect(item.id)
+                        setListUp(false)
+                      }}
                     >
-                      <span className="chat__thread-name">{item.peer.name}</span>
-                      {item.peer.subtitle ? (
-                        <span className="chat__thread-sub">{item.peer.subtitle}</span>
+                      <Avatar name={item.peer.name} size="sm" />
+                      <span className="chat__thread-text">
+                        <span className="chat__thread-name">{item.peer.name}</span>
+                        {item.peer.subtitle ? (
+                          <span className="chat__thread-sub">{item.peer.subtitle}</span>
+                        ) : null}
+                      </span>
+                      {item.lastMessageAt ? (
+                        <time className="chat__thread-time" dateTime={item.lastMessageAt}>
+                          {formatShort(item.lastMessageAt)}
+                        </time>
                       ) : null}
                     </button>
                   </li>
@@ -203,6 +267,17 @@ export function Messenger({ selectedId, onSelect }: Props) {
           </EmptyState>
         ) : (
           <>
+            <header className="chat__head">
+              <button type="button" className="chat__back" onClick={() => setListUp(true)}>
+                ← Диалоги
+              </button>
+              {peer ? (
+                <div className="chat__peer">
+                  <h3 className="chat__peer-name">{peer.name}</h3>
+                  {peer.subtitle ? <p className="chat__peer-sub">{peer.subtitle}</p> : null}
+                </div>
+              ) : null}
+            </header>
             <div ref={streamRef} className="chat__stream">
               <QueryState query={messagesQuery} loadingLabel="Сообщения…">
                 {(page) => (
@@ -243,6 +318,7 @@ export function Messenger({ selectedId, onSelect }: Props) {
               />
               <input
                 className="chat__input"
+                aria-label="Сообщение"
                 placeholder="Сообщение"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
@@ -258,9 +334,15 @@ export function Messenger({ selectedId, onSelect }: Props) {
                   Встреча
                 </button>
               ) : null}
-              <Button size="inline" disabled={!draft.trim() || sendText.isPending} onClick={submit}>
+              <button
+                type="button"
+                className="chat__send"
+                aria-label="Отправить"
+                disabled={!draft.trim() || sendText.isPending}
+                onClick={submit}
+              >
                 →
-              </Button>
+              </button>
             </div>
             {sendError ? <p className="chat__error">{sendError}</p> : null}
           </>

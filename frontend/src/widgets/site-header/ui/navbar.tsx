@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import type { MouseEvent, RefObject } from 'react'
 import { Link, NavLink } from 'react-router'
+import { fspStarUrl } from '@/shared/assets'
 import { BRAND, ROUTES } from '@/shared/config'
 import { scrollToId } from '../lib/scroll-to-hash'
 import { MENU } from '../model/types'
 import type { NavItem } from '../model/types'
-import { LogoMark } from './logo-mark'
 
 type Props = {
   links: readonly NavItem[]
@@ -48,8 +48,10 @@ export function Navbar({
   return (
     <header className={bar}>
       <Link className="nav__logo" to={home}>
-        <LogoMark />
-        {BRAND}
+        <img className="nav__star" src={fspStarUrl} alt="ФСП" />
+        <span className="nav__rule" aria-hidden="true" />
+        <span className="nav__brand">{BRAND}</span>
+        {overlay && <span className="nav__tagline">платформа подбора ФСП России</span>}
       </Link>
 
       <div className="nav__right">

@@ -13,14 +13,14 @@
 .invite-form__status {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--muted);
 }
 
 .invite-form__status--error {
-  color: var(--error);
+  color: var(--red-text);
 }
 
 @media (max-width: 600px) {

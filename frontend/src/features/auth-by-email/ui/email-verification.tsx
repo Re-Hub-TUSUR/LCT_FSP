@@ -110,81 +110,90 @@ export function EmailVerification({ email, onVerified, onClose }: Props) {
   return createPortal(
     <div className="verify">
       <div className="verify__card" role="dialog" aria-modal="true" aria-labelledby="verify-title">
-        <div className="verify__header">
+        <div className="verify__bar">
+          <span className="verify__glyph" aria-hidden="true">
+            {'{'}
+            <span>@</span>
+            {'}'}
+          </span>
           <button type="button" className="verify__close" onClick={onClose} aria-label="Закрыть">
             ×
           </button>
-          <div className="verify__mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
+        </div>
+        <div className="verify__body">
+          <div className="verify__header">
+            <div className="verify__mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <h2 id="verify-title" className="verify__title">
+              Подтвердите почту
+            </h2>
+            <p className="verify__subtitle">
+              Мы отправили 6-значный код на
+              <br />
+              <strong>{maskEmail(email)}</strong>
+            </p>
           </div>
-          <h2 id="verify-title" className="verify__title">
-            Подтвердите почту
-          </h2>
-          <p className="verify__subtitle">
-            Мы отправили 6-значный код на
-            <br />
-            <strong>{maskEmail(email)}</strong>
+
+          {error && (
+            <div className="verify__error" role="alert">
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="verify__form" onPaste={handlePaste}>
+            <div className="verify__inputs">
+              {SLOTS.map((slot) => (
+                <input
+                  key={slot}
+                  ref={(element) => {
+                    inputRefs.current[slot] = element
+                  }}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete={slot === 0 ? 'one-time-code' : 'off'}
+                  maxLength={1}
+                  value={code[slot] ?? ''}
+                  aria-label={`Цифра ${slot + 1}`}
+                  disabled={isLoading}
+                  className={error ? 'verify__input is-error' : 'verify__input'}
+                  onChange={(event) => handleInputChange(slot, event.target.value)}
+                  onKeyDown={(event) => handleKeyDown(slot, event)}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              className="verify__submit"
+              disabled={isLoading || code.some((digit) => digit === '')}
+              onClick={() => void handleVerify(code.join(''))}
+            >
+              {isLoading ? 'Проверяем…' : 'Подтвердить аккаунт'}
+            </button>
+          </div>
+
+          <p className="verify__footer">
+            Не пришёл код?
+            <button
+              type="button"
+              className="verify__resend"
+              disabled={isResending || resendCooldown > 0}
+              onClick={() => void handleResend()}
+            >
+              {resendCooldown > 0
+                ? `Повторно через ${resendCooldown} с`
+                : isResending
+                  ? 'Отправка…'
+                  : 'Отправить снова'}
+            </button>
           </p>
         </div>
-
-        {error && (
-          <div className="verify__error" role="alert">
-            <span>{error}</span>
-          </div>
-        )}
-
-        <div className="verify__form" onPaste={handlePaste}>
-          <div className="verify__inputs">
-            {SLOTS.map((slot) => (
-              <input
-                key={slot}
-                ref={(element) => {
-                  inputRefs.current[slot] = element
-                }}
-                type="text"
-                inputMode="numeric"
-                autoComplete={slot === 0 ? 'one-time-code' : 'off'}
-                maxLength={1}
-                value={code[slot] ?? ''}
-                aria-label={`Цифра ${slot + 1}`}
-                disabled={isLoading}
-                className={error ? 'verify__input is-error' : 'verify__input'}
-                onChange={(event) => handleInputChange(slot, event.target.value)}
-                onKeyDown={(event) => handleKeyDown(slot, event)}
-              />
-            ))}
-          </div>
-          <button
-            type="button"
-            className="verify__submit"
-            disabled={isLoading || code.some((digit) => digit === '')}
-            onClick={() => void handleVerify(code.join(''))}
-          >
-            {isLoading ? 'Проверяем…' : 'Подтвердить аккаунт'}
-          </button>
-        </div>
-
-        <p className="verify__footer">
-          Не пришёл код?
-          <button
-            type="button"
-            className="verify__resend"
-            disabled={isResending || resendCooldown > 0}
-            onClick={() => void handleResend()}
-          >
-            {resendCooldown > 0
-              ? `Повторно через ${resendCooldown} с`
-              : isResending
-                ? 'Отправка…'
-                : 'Отправить снова'}
-          </button>
-        </p>
       </div>
     </div>,
     document.body,

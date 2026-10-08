@@ -7,6 +7,7 @@
 /* The ground lives on the root only, so fixed decorative layers can sit between it and the content */
 html {
   background: var(--bg);
+  scrollbar-color: var(--line) transparent;
 }
 
 html,
@@ -19,7 +20,9 @@ body {
 }
 
 body {
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 body.menu-open {
@@ -28,6 +31,80 @@ body.menu-open {
 
 a {
   color: inherit;
+  text-underline-offset: 3px;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+::placeholder {
+  color: var(--dim);
+  opacity: 1;
+}
+
+/* Checkboxes and radios are squares everywhere: blue with a tick (or a dot) when on. */
+input[type='checkbox'],
+input[type='radio'] {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid var(--muted);
+  border-radius: 0;
+  background: transparent;
+  vertical-align: -4px;
+  appearance: none;
+  cursor: pointer;
+}
+
+input[type='checkbox']:checked,
+input[type='radio']:checked {
+  border-color: var(--blue);
+  background: var(--blue);
+}
+
+input[type='checkbox']:checked::after {
+  content: '✓';
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+input[type='radio']:checked::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: #fff;
+}
+
+input[type='checkbox']:disabled,
+input[type='radio']:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input[type='checkbox']:focus-visible,
+input[type='radio']:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+select option {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+::selection {
+  background: var(--blue);
+  color: #fff;
 }
 
 .visually-hidden {
@@ -43,7 +120,7 @@ a {
   border: 0;
 }
 
-/* Quiet echo of the landing glow so inner pages don't sit on a flat ground */
+/* Quiet blue glow so inner pages don't sit on a flat ground */
 .app-glow {
   position: fixed;
   inset: 0;
@@ -51,8 +128,8 @@ a {
   pointer-events: none;
   background: radial-gradient(
     55% 50% at 15% 64%,
-    rgba(52, 40, 200, 0.2),
-    rgba(20, 16, 90, 0.08) 55%,
+    rgba(64, 47, 255, 0.16),
+    rgba(10, 0, 107, 0.08) 55%,
     transparent 78%
   );
 }
@@ -65,7 +142,7 @@ a {
   display: grid;
   place-items: center;
   pointer-events: none;
-  background: rgba(5, 6, 13, 0.72);
+  background: rgba(27, 28, 33, 0.78);
   animation: route-loader-in 0.3s var(--ease-premium) 0.15s both;
 }
 

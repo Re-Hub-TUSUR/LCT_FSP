@@ -29,16 +29,16 @@ export function SignupPanel() {
   }
 
   return (
-    <div className="panel" id="join">
-      <span className="chip">
-        <span className="chip__bracket">[</span> {PANEL.chip}{' '}
-        <span className="chip__bracket">]</span>
+    <div className="signup" id="join">
+      <span className="signup__chip">
+        <span className="signup__bracket">[</span> {PANEL.chip}{' '}
+        <span className="signup__bracket">]</span>
       </span>
 
-      <h1 className="panel__title">{BRAND}</h1>
-      <p className="panel__tagline">{PANEL.tagline}</p>
+      <h1 className="signup__title">{BRAND}</h1>
+      <p className="signup__tagline">{PANEL.tagline}</p>
 
-      <form className="form" action="#" method="post" noValidate onSubmit={onSubmit}>
+      <form className="signup__actions" action="#" method="post" noValidate onSubmit={onSubmit}>
         <TextField
           id="email"
           label={PANEL.emailLabel}
@@ -56,17 +56,19 @@ export function SignupPanel() {
           }}
         />
 
-        <Button variant="ghost" type="submit" name="role" value="employer">
+        <Button
+          className="signup__employer"
+          variant="ghost"
+          type="submit"
+          name="role"
+          value="employer"
+        >
           {PANEL.employerButton}
         </Button>
         <Button variant="solid" type="submit" name="role" value="specialist">
           {PANEL.specialistButton}
         </Button>
       </form>
-
-      <a className="panel__invite" href={PANEL.invite.href}>
-        {PANEL.invite.label}
-      </a>
     </div>
   )
 }

@@ -3,12 +3,20 @@ import { Link } from 'react-router'
 import type { LinkProps } from 'react-router'
 import './button.css'
 
+type Variant = 'solid' | 'ghost' | 'danger'
+type Size = 'block' | 'inline' | 'small'
+
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'solid' | 'ghost'
-  /** `block` stretches to the container width (landing forms), `inline` fits the content. */
-  size?: 'block' | 'inline'
+  variant?: Variant
+  /** `block` stretches to the container width (forms), `inline` and `small` fit the content. */
+  size?: Size
   ref?: Ref<HTMLButtonElement>
 }
+
+const classesOf = (variant: Variant, size: Size, className?: string) =>
+  ['btn', `btn--${variant}`, size !== 'block' && `btn--${size}`, className]
+    .filter(Boolean)
+    .join(' ')
 
 export function Button({
   variant = 'solid',
@@ -18,16 +26,12 @@ export function Button({
   ref,
   ...rest
 }: Props) {
-  const classes = ['btn', `btn--${variant}`, size === 'inline' && 'btn--inline', className]
-    .filter(Boolean)
-    .join(' ')
-
-  return <button ref={ref} type={type} className={classes} {...rest} />
+  return <button ref={ref} type={type} className={classesOf(variant, size, className)} {...rest} />
 }
 
 type ButtonLinkProps = LinkProps & {
-  variant?: 'solid' | 'ghost'
-  size?: 'block' | 'inline'
+  variant?: Variant
+  size?: Size
 }
 
 /** Same look as `Button`, but a real link: it can be opened, copied and focused. */
@@ -37,9 +41,5 @@ export function ButtonLink({
   className,
   ...rest
 }: ButtonLinkProps) {
-  const classes = ['btn', `btn--${variant}`, size === 'inline' && 'btn--inline', className]
-    .filter(Boolean)
-    .join(' ')
-
-  return <Link className={classes} {...rest} />
+  return <Link className={classesOf(variant, size, className)} {...rest} />
 }

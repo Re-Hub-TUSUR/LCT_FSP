@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
 import { companyQueries } from '@/entities/company'
-import type { CompanyDto } from '@/entities/company'
 import { invitationQueries } from '@/entities/invitation'
 import { verificationQueries } from '@/features/company-verification'
 import type { VerificationStatus } from '@/features/company-verification'
@@ -11,8 +10,8 @@ import { ButtonLink, ErrorState, Loader, Page, Panel, StatusTag } from '@/shared
 import { isNotReady, NOT_READY } from '@/widgets/invitations-inbox'
 import { isWaiting } from '../../lib/cabinet-data'
 import { isNotFound } from '../../lib/is-not-found'
+import { employerTodos } from '../../lib/todos'
 import { TodoList } from './todo-list'
-import type { TodoItem } from './todo-list'
 import { WaitingList } from './waiting-list'
 
 function AccreditationTag({
@@ -26,31 +25,6 @@ function AccreditationTag({
   if (status === 'pending') return <StatusTag tone="wait">На проверке</StatusTag>
   if (status === 'rejected') return <StatusTag tone="off">Отклонена</StatusTag>
   return <StatusTag tone="todo">Не подана</StatusTag>
-}
-
-function todosOf(company: CompanyDto, invited: boolean): TodoItem[] {
-  return [
-    {
-      id: 'legal',
-      label: 'Заполнить реквизиты',
-      done: Boolean(company.inn && company.ogrn && company.legalAddress),
-      to: ROUTES.profileCompany,
-    },
-    {
-      id: 'profile',
-      label: 'Описать компанию для кандидатов',
-      done: Boolean(company.description && company.website),
-      to: ROUTES.profileCompany,
-    },
-    { id: 'logo', label: 'Загрузить логотип', done: company.hasLogo, to: ROUTES.profileCompany },
-    {
-      id: 'accreditation',
-      label: 'Подтвердить IT-аккредитацию',
-      done: company.itAccredited,
-      to: ROUTES.profileCompany,
-    },
-    { id: 'invite', label: 'Пригласить первого кандидата', done: invited, to: ROUTES.feed },
-  ]
 }
 
 export function EmployerOverview() {
@@ -105,77 +79,78 @@ export function EmployerOverview() {
     { label: 'Приняли', value: invitations.isSuccess ? String(accepted) : '—' },
   ]
 
+  const todos = employerTodos(own, items.length > 0)
+
   return (
-    <Page
-      className="page--inset"
-      title={own.name}
-      lead={
-        waiting.length > 0
-          ? `Ждут ответа кандидатов: ${waiting.length}. Контакты откроются после согласия.`
-          : 'Найдите кандидатов в банке и отправьте предложение с зарплатой.'
-      }
-      actions={<ButtonLink to={ROUTES.feed}>Открыть банк кандидатов</ButtonLink>}
-    >
-      <div className="cabinet-grid">
-        <div className="cabinet-col">
-          <Panel
-            title="Ждут ответа кандидатов"
-            action={
-              <Link className="cabinet-link-btn" to={ROUTES.profileInvitations}>
-                Все приглашения
-              </Link>
-            }
-          >
-            {invitations.isPending ? (
-              <Loader />
-            ) : isNotReady(invitations.error) ? (
-              <p className="cabinet-muted">{NOT_READY}</p>
-            ) : invitations.isError ? (
-              <ErrorState
-                message={getErrorMessage(invitations.error)}
-                onRetry={() => void invitations.refetch()}
-              />
-            ) : (
-              <WaitingList
-                items={waiting}
-                direction="outgoing"
-                emptyText="Все кандидаты ответили — или приглашений ещё не было."
-              />
+    <div className="cabinet-grid">
+      <section className="cabinet-col" aria-labelledby="cabinet-waiting">
+        <header className="cabinet-heading">
+          <h2 id="cabinet-waiting">
+            Ждут ответа кандидатов{' '}
+            {invitations.isSuccess && (
+              <span className="cabinet-heading__count">{waiting.length}</span>
             )}
-          </Panel>
-        </div>
-        <div className="cabinet-col">
-          <Panel
-            title="Компания"
-            action={
-              <Link className="cabinet-link-btn" to={ROUTES.profileCompany}>
-                Изменить
-              </Link>
-            }
-          >
-            <dl className="mini-facts">
-              {facts.map((fact) => (
-                <div key={fact.label}>
-                  <dt>{fact.label}</dt>
-                  <dd>{fact.value}</dd>
-                </div>
-              ))}
-              <div>
-                <dt>IT-аккредитация</dt>
-                <dd>
-                  <AccreditationTag
-                    accredited={own.itAccredited}
-                    status={verification.data?.status}
-                  />
-                </dd>
+          </h2>
+          <Link className="cabinet-link-btn" to={ROUTES.profileInvitations}>
+            Все приглашения
+          </Link>
+        </header>
+        {invitations.isPending ? (
+          <Loader />
+        ) : isNotReady(invitations.error) ? (
+          <p className="cabinet-muted cabinet-muted--plate">{NOT_READY}</p>
+        ) : invitations.isError ? (
+          <ErrorState
+            message={getErrorMessage(invitations.error)}
+            onRetry={() => void invitations.refetch()}
+          />
+        ) : (
+          <WaitingList
+            items={waiting}
+            direction="outgoing"
+            emptyText="Все кандидаты ответили — или приглашений ещё не было."
+          />
+        )}
+      </section>
+      <aside className="cabinet-col">
+        <Panel
+          className="panel--frame"
+          title="Что сделать"
+          action={
+            <span className="cabinet-progress">
+              {todos.filter((item) => item.done).length}/{todos.length}
+            </span>
+          }
+        >
+          <TodoList items={todos} />
+        </Panel>
+        <Panel
+          title="Компания"
+          action={
+            <Link className="cabinet-link-btn" to={ROUTES.profileCompany}>
+              Изменить
+            </Link>
+          }
+        >
+          <dl className="mini-facts">
+            {facts.map((fact) => (
+              <div key={fact.label}>
+                <dt>{fact.label}</dt>
+                <dd>{fact.value}</dd>
               </div>
-            </dl>
-          </Panel>
-          <Panel title="Что сделать">
-            <TodoList items={todosOf(own, items.length > 0)} />
-          </Panel>
-        </div>
-      </div>
-    </Page>
+            ))}
+            <div>
+              <dt>IT-аккредитация</dt>
+              <dd>
+                <AccreditationTag
+                  accredited={own.itAccredited}
+                  status={verification.data?.status}
+                />
+              </dd>
+            </div>
+          </dl>
+        </Panel>
+      </aside>
+    </div>
   )
 }

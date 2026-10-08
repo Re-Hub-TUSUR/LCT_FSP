@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { AuthForm } from '@/features/auth-by-email'
 import type { AuthMode } from '@/features/auth-by-email'
 import { ROUTES } from '@/shared/config'
 import { isSafeInternalPath } from '@/shared/lib'
-import { Page } from '@/shared/ui'
+import { Ornament, Page } from '@/shared/ui'
+import { RoleGlyph } from './auth-page'
 
 const TITLES = {
   candidate: {
@@ -36,21 +37,36 @@ function RoleAuthPage({ role }: { role: 'candidate' | 'employer' }) {
   )
 
   return (
-    <Page className="page--auth" title={TITLES[role][mode]} lead={TITLES[role].lead}>
-      <AuthForm
-        role={role}
-        initialEmail={params.get('email') ?? ''}
-        initialMode={mode}
-        onModeChange={setMode}
-        onSuccess={(entry) => {
-          const setup = role === 'candidate' ? ROUTES.profileResume : ROUTES.profileCompany
-          if (entry === 'verified') {
-            navigate(setup, { replace: true })
-            return
-          }
-          navigate(isSafeInternalPath(redirect) ? redirect : ROUTES.feedSwipe, { replace: true })
-        }}
-      />
-    </Page>
+    <>
+      <Page
+        className="page--auth"
+        eyebrow={
+          <>
+            <Link className="auth-back" to={ROUTES.auth}>
+              ← Выбор роли
+            </Link>
+            <RoleGlyph role={role} />
+          </>
+        }
+        title={TITLES[role][mode]}
+        lead={TITLES[role].lead}
+      >
+        <AuthForm
+          role={role}
+          initialEmail={params.get('email') ?? ''}
+          initialMode={mode}
+          onModeChange={setMode}
+          onSuccess={(entry) => {
+            const setup = role === 'candidate' ? ROUTES.profileResume : ROUTES.profileCompany
+            if (entry === 'verified') {
+              navigate(setup, { replace: true })
+              return
+            }
+            navigate(isSafeInternalPath(redirect) ? redirect : ROUTES.feedSwipe, { replace: true })
+          }}
+        />
+      </Page>
+      <Ornament className="auth-strip" length={60} />
+    </>
   )
 }

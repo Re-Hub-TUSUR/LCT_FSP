@@ -99,23 +99,39 @@ export function ReviewPanel({ detail }: { detail: AssignmentDetailDto }) {
 
   return (
     <form className="review" noValidate onSubmit={onSubmit}>
-      <p className="review__summary">
-        {detail.score === null
-          ? 'Итог появится, когда будут оценены все открытые ответы'
-          : `Итог: ${Math.round(detail.score)} из 100 · проходной балл ${detail.passScore}`}
-      </p>
-      <p className="review__signals">
-        Вставок из буфера: {detail.pasteCount} · уходов с вкладки: {detail.blurCount}. Это
-        наблюдения, а не оценка: на балл они не влияют.
-      </p>
+      <div className="review__tiles">
+        <div className="review__tile">
+          <p className="review__tile-label">Итог</p>
+          <p className="review__summary">
+            {detail.score === null
+              ? 'Итог появится, когда будут оценены все открытые ответы'
+              : `Итог: ${Math.round(detail.score)} из 100 · проходной балл ${detail.passScore}`}
+          </p>
+        </div>
+        <div className="review__tile">
+          <p className="review__tile-label">Наблюдения</p>
+          <p className="review__signals">
+            Вставок из буфера: {detail.pasteCount} · уходов с вкладки: {detail.blurCount}. Это
+            наблюдения, а не оценка: на балл они не влияют.
+          </p>
+        </div>
+      </div>
 
       <ol className="review__tasks">
-        {detail.tasks.map((task) => {
+        {detail.tasks.map((task, index) => {
           const draft = drafts[task.id]
           return (
-            <li key={task.id} className="review__task">
+            <li
+              key={task.id}
+              className={task.points === null ? 'review__task is-waiting' : 'review__task'}
+            >
               <header className="review__head">
-                <p className="review__label">{TASK_KIND_LABELS[task.kind]}</p>
+                <p className="review__label">
+                  <span className="review__num" aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  {TASK_KIND_LABELS[task.kind]}
+                </p>
                 <p className="review__points">
                   {task.points === null ? 'Ждёт оценки' : `${Math.round(task.points * 100)}%`}
                 </p>
@@ -148,15 +164,19 @@ export function ReviewPanel({ detail }: { detail: AssignmentDetailDto }) {
         })}
       </ol>
 
-      {(problem || save.isError) && (
-        <p className="review__error" role="alert">
-          {problem || getErrorMessage(save.error)}
-        </p>
-      )}
       {gradable.length > 0 && (
-        <Button type="submit" size="inline" disabled={save.isPending}>
-          {save.isPending ? 'Сохраняем…' : 'Сохранить оценки'}
-        </Button>
+        <footer className="review__foot">
+          {problem || save.isError ? (
+            <p className="review__error" role="alert">
+              {problem || getErrorMessage(save.error)}
+            </p>
+          ) : (
+            <p className="review__hint">Оценка каждого открытого ответа — от 0 до 100</p>
+          )}
+          <Button type="submit" size="inline" disabled={save.isPending}>
+            {save.isPending ? 'Сохраняем…' : 'Сохранить оценки'}
+          </Button>
+        </footer>
       )}
     </form>
   )

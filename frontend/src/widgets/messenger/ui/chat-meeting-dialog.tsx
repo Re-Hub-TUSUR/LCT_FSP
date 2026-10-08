@@ -69,7 +69,12 @@ export function ChatMeetingDialog({ conversationId, onClose, onSent }: Props) {
           value={time}
           onChange={(e) => setTime(e.target.value)}
         />
-        {error ? <p className="chat-meeting__error">{error}</p> : null}
+        <p className="chat-meeting__note">Собеседование · 1 час</p>
+        {error ? (
+          <p className="chat-meeting__error" role="alert">
+            {error}
+          </p>
+        ) : null}
         <div className="chat-meeting__actions">
           <Button type="button" variant="ghost" onClick={onClose}>
             Отмена

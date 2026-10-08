@@ -4,7 +4,7 @@ import { useSession } from '@/entities/session'
 import type { VacancyMatchDto } from '@/entities/vacancy'
 import { Page } from '@/shared/ui'
 import { CandidateFeed, CandidatePanel } from '@/widgets/candidate-feed'
-import { CandidateSwipe, DecisionCounters, VacancySwipe } from '@/widgets/feed-swipe'
+import { CandidateSwipe, DecisionCounters, FeedViewTabs, VacancySwipe } from '@/widgets/feed-swipe'
 import { VacancyFeed, VacancyPanel } from '@/widgets/vacancy-feed'
 
 export function FeedPage() {
@@ -19,6 +19,7 @@ export function FeedPage() {
           ? 'Банк категоризированных кандидатов: поиск, фильтры и объяснимый рейтинг'
           : 'Только подходящие вам вакансии — по категории, стеку и предпочтениям'
       }
+      actions={<FeedViewTabs role={employer ? 'employer' : 'candidate'} />}
     >
       {employer ? <CandidateFeed /> : <VacancyFeed />}
     </Page>
