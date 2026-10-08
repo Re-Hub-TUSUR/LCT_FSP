@@ -124,7 +124,7 @@ migrations/    Alembic (async), URL из настроек
 | candidates (employees) | поиск (Elasticsearch), `/{id}`, реакции, `/me`, резюме PDF; `/me/fsp-link`, `/me/fsp-sync` — привязка FSP ID и выгрузка из реестра ФСП | ✅ |
 | fsp-id | `/fsp-id/authorize` — начало входа через FSP ID (OIDC + PKCE); эмуляция реалма и реестра `/mock/*` при `FSP_ID_MODE=mock` ([FSP_INTEGRATION.md](FSP_INTEGRATION.md)) | ✅ |
 | companies (employers) | `/{id}` ✅; банк задач и тестов компании с импортом и экспортом JSON, `/me/test-assignments` (отправить тестовое при взаимном лайке, ответы, ручная проверка) ✅; `/me` GET/PUT — 501 | ✅ / 501 |
-| vacancies | список, `feed`, `mine`, `/{id}`, реакции ✅; создание и правка — 501 | ✅ / 501 |
+| vacancies | список, `feed`, `mine`, `/{id}`, реакции, создание и правка (черновик или публикация) | ✅ |
 | invitations | создание, `incoming`, `outgoing`, `accept`/`decline` | 501 |
 | applications | отклики кандидата | 501 |
 | matching | `needs`, `recommendations` | 501 |

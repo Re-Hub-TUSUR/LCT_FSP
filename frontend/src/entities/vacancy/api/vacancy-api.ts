@@ -44,6 +44,29 @@ export type VacancyDto = {
   minExperienceYears: number | null
 }
 
+/** The recruiter's vacancy form; an edit replaces the vacancy as a whole. */
+export type VacancyWrite = {
+  title: string
+  description: string
+  specialization: SpecializationCode
+  grades: Grade[]
+  stackRequired: string[]
+  stackNice: string[]
+  salary: SalaryRangeDto
+  workFormat: WorkFormat
+  /** Required for office and hybrid work. */
+  city: string | null
+  relocationHelp: boolean
+  employmentTypes: EmploymentType[]
+  benefits: VacancyBenefit[]
+  verifiedGradeOnly: boolean
+  fspBestResult: FspResult | null
+  fspDiscipline: string | null
+  minExperienceYears: number
+  /** False: a draft only the company sees. */
+  publish: boolean
+}
+
 export type Reaction = 'like' | 'skip'
 
 /**
@@ -223,6 +246,9 @@ export const vacancyQueries = {
 }
 
 export const vacancyApi = {
+  create: (payload: VacancyWrite) => http.post<VacancyDto>('/vacancies', payload),
+  update: (id: string, payload: VacancyWrite) =>
+    http.patch<VacancyDto>(`/vacancies/${id}`, payload),
   react: (id: string, kind: Reaction) => http.put<unknown>(`/vacancies/${id}/reaction`, { kind }),
   clearReaction: (id: string) => http.delete<void>(`/vacancies/${id}/reaction`),
 }

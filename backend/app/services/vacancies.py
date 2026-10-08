@@ -1,15 +1,18 @@
-"""Read access to vacancies and companies outside the personalised feed."""
+"""Vacancies and companies outside the personalised feed: public reads and the employer's own."""
 
 import uuid
+from datetime import UTC, datetime
+from typing import Any
 
 from app.core.errors import AppError, ConflictError, NotFoundError
 from app.dependencies.common import Pagination
-from app.models import Company, Grade, User, WorkFormat
+from app.models import Company, Grade, User, Vacancy, WorkFormat
 from app.repositories.company import CompanyRepository
 from app.repositories.vacancy import VacancyRepository
 from app.schemas.common import Page
 from app.schemas.company import CompanyRead, CompanyUpsert
-from app.schemas.vacancy import VacancyRead
+from app.schemas.vacancy import VacancyCreate, VacancyRead
+from app.services.categories import SPECIALIZATIONS
 from app.services.inn import ORGANISATION_LENGTH as ORGANISATION_INN_LENGTH
 from app.services.presenters import company_read, vacancy_read
 from app.services.uploads import PHOTO_LIMIT, sniff_image
@@ -69,6 +72,27 @@ class VacancyService:
             page=pagination.page,
             per_page=pagination.per_page,
         )
+
+    async def create(self, user: User, data: VacancyCreate) -> VacancyRead:
+        company = await self._require_mine(user)
+        vacancy = Vacancy(company_id=company.id, **_columns(data))
+        vacancy.published_at = datetime.now(UTC) if data.publish else None
+        await self._vacancies.add(vacancy)
+        return vacancy_read(vacancy, company)
+
+    async def update(self, user: User, vacancy_id: uuid.UUID, data: VacancyCreate) -> VacancyRead:
+        row = await self._vacancies.get(vacancy_id)
+        if row is None or row[1].owner_id != user.id:
+            raise NotFoundError("Вакансия не найдена")
+        vacancy, company = row
+        for name, value in _columns(data).items():
+            setattr(vacancy, name, value)
+        # The date of the first publication survives later edits.
+        if not data.publish:
+            vacancy.published_at = None
+        elif vacancy.published_at is None:
+            vacancy.published_at = datetime.now(UTC)
+        return vacancy_read(vacancy, company)
 
     async def company(self, company_id: uuid.UUID) -> CompanyRead:
         company = await self._companies.get(company_id)
@@ -137,3 +161,32 @@ class VacancyService:
         if company is None:
             raise NotFoundError("Сначала заполните и сохраните профиль компании")
         return company
+
+
+def _columns(data: VacancyCreate) -> dict[str, Any]:
+    """The recruiter's form as the columns of `Vacancy`, publication aside."""
+    if data.specialization not in SPECIALIZATIONS:
+        raise AppError("Неизвестная специализация")
+    grades = sorted(set(data.grades), key=list(Grade).index)
+    remote = data.work_format == WorkFormat.REMOTE
+    return {
+        "title": data.title.strip(),
+        "description": data.description.strip(),
+        "specialization": data.specialization,
+        "grade": grades[0],
+        "grades": [grade.value for grade in grades],
+        "stack": [*data.stack_required, *data.stack_nice],
+        "stack_required": data.stack_required,
+        "stack_nice": data.stack_nice,
+        "salary_from": data.salary.from_,
+        "salary_to": data.salary.to,
+        "work_format": data.work_format,
+        "city": None if remote or data.city is None else data.city.strip(),
+        "relocation_help": data.relocation_help,
+        "employment_types": [item.value for item in dict.fromkeys(data.employment_types)],
+        "benefits": [item.value for item in dict.fromkeys(data.benefits)],
+        "verified_grade_only": data.verified_grade_only,
+        "fsp_best_result": data.fsp_best_result,
+        "fsp_discipline": data.fsp_discipline,
+        "min_experience_years": data.min_experience_years,
+    }

@@ -12,6 +12,8 @@ export const ROUTES = {
   /** Registered as the redirect URI of the platform's FSP ID client. */
   fspCallback: '/profile/fsp/callback',
   vacancies: '/vacancies',
+  vacancyNew: '/vacancies/new',
+  vacancyEdit: '/vacancies/:vacancyId/edit',
   feed: '/feed',
   feedSwipe: '/feed/swipe',
   responses: '/responses',
@@ -32,5 +34,6 @@ const segment = (value: string) => encodeURIComponent(value)
 export const paths = {
   company: (companyId: string) => `/companies/${segment(companyId)}`,
   candidate: (candidateId: string) => `/candidates/${segment(candidateId)}`,
+  vacancyEdit: (vacancyId: string) => `/vacancies/${segment(vacancyId)}/edit`,
   matchingProfile: (kind: MatchingProfileKind, id: string) => `/matching/${kind}/${segment(id)}`,
 } as const

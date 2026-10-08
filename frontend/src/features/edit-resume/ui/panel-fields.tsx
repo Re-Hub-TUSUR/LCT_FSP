@@ -10,13 +10,13 @@ import {
   WORK_FORMATS,
 } from '@/entities/vacancy'
 import { getErrorMessage } from '@/shared/api'
-import { SelectField, TextArea, TextField } from '@/shared/ui'
+import { STACK_SKILLS } from '@/shared/config'
+import { SelectField, SkillField, TextArea, TextField } from '@/shared/ui'
 import type { PanelId } from '../model/panels'
 import type { ResumeErrors, ResumeValues } from '../model/schema'
-import { SOFT_SKILLS, STACK_SKILLS } from '../model/skills'
+import { SOFT_SKILLS } from '../model/skills'
 import { EducationField } from './education-field'
 import { ExperienceField } from './experience-field'
-import { SkillField } from './skill-field'
 
 type Props = {
   panel: PanelId

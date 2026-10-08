@@ -3,7 +3,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query, Response, status
 
-from app.api.stub import not_implemented
 from app.dependencies.auth import CandidateUser, EmployerUser, OptionalUser
 from app.dependencies.common import PaginationDep
 from app.dependencies.filters import VacancyFeedParamsDep
@@ -108,9 +107,15 @@ async def my_vacancies(
     return await vacancies.mine(user, pagination)
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, summary="Publish a vacancy")
-async def create_vacancy(_: EmployerUser, data: VacancyCreate) -> VacancyRead:
-    not_implemented("vacancies.create")
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    summary="Employer: publish a vacancy or save it as a draft (`publish: false`)",
+)
+async def create_vacancy(
+    user: EmployerUser, data: VacancyCreate, vacancies: VacancyServiceDep
+) -> VacancyRead:
+    return await vacancies.create(user, data)
 
 
 @router.get("/{vacancy_id}", summary="Vacancy details (a draft only for its company)")
@@ -120,11 +125,14 @@ async def read_vacancy(
     return await vacancies.read(vacancy_id, viewer)
 
 
-@router.patch("/{vacancy_id}", summary="Edit own vacancy")
+@router.patch(
+    "/{vacancy_id}",
+    summary="Employer: replace own vacancy; `publish` publishes a draft or takes it back",
+)
 async def update_vacancy(
-    vacancy_id: uuid.UUID, _: EmployerUser, data: VacancyCreate
+    vacancy_id: uuid.UUID, user: EmployerUser, data: VacancyCreate, vacancies: VacancyServiceDep
 ) -> VacancyRead:
-    not_implemented("vacancies.update")
+    return await vacancies.update(user, vacancy_id, data)
 
 
 @router.put("/{vacancy_id}/reaction", summary="Candidate: like (favourites) or skip a vacancy")

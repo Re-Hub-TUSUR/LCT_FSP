@@ -59,6 +59,20 @@ export const routes: RouteObject[] = [
             lazy: lazyPage(() => import('@/pages/vacancies').then((m) => m.VacanciesPage)),
           },
           {
+            path: ROUTES.vacancyNew,
+            lazy: lazyPage(() => import('@/pages/vacancies').then((m) => m.VacancyEditorPage), {
+              auth: true,
+              roles: ['employer'],
+            }),
+          },
+          {
+            path: ROUTES.vacancyEdit,
+            lazy: lazyPage(() => import('@/pages/vacancies').then((m) => m.VacancyEditorPage), {
+              auth: true,
+              roles: ['employer'],
+            }),
+          },
+          {
             path: ROUTES.company,
             lazy: lazyPage(() => import('@/pages/company').then((m) => m.CompanyPage)),
           },

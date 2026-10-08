@@ -20,8 +20,8 @@ import {
 } from '@/entities/vacancy'
 import type { EmploymentType, WorkFormat } from '@/entities/vacancy'
 import { getErrorMessage } from '@/shared/api'
-import { ROUTES } from '@/shared/config'
-import { Button, SelectField, TextArea, TextField } from '@/shared/ui'
+import { ROUTES, STACK_SKILLS } from '@/shared/config'
+import { Button, SelectField, SkillField, TextArea, TextField } from '@/shared/ui'
 import { photoFileError, resumeFileError } from '../model/files'
 import {
   applyResumeDraft,
@@ -34,13 +34,12 @@ import {
   validateResume,
 } from '../model/schema'
 import type { ResumeErrors, ResumeValues } from '../model/schema'
-import { SOFT_SKILLS, STACK_SKILLS } from '../model/skills'
+import { SOFT_SKILLS } from '../model/skills'
 import { EducationField } from './education-field'
 import { ExperienceField } from './experience-field'
 import { PhotoField } from './photo-field'
 import { consentsGiven, EMPTY_CONSENTS, ResumeConsents } from './resume-consents'
 import type { ConsentValues } from './resume-consents'
-import { SkillField } from './skill-field'
 import './resume-form.css'
 
 const MAX_RESUMES = 3

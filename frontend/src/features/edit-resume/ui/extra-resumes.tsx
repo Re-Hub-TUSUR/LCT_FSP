@@ -5,11 +5,11 @@ import { candidateApi, candidateKeys } from '@/entities/candidate'
 import type { OwnCandidateDto, ResumeDto } from '@/entities/candidate'
 import { categoryQueries } from '@/entities/category'
 import { getErrorMessage } from '@/shared/api'
-import { Button, SelectField, TextArea, TextField } from '@/shared/ui'
+import { STACK_SKILLS } from '@/shared/config'
+import { Button, SelectField, SkillField, TextArea, TextField } from '@/shared/ui'
 import { EMPTY_RESUME, toExtraResume, validateExtra } from '../model/schema'
 import type { ResumeErrors, ResumeValues } from '../model/schema'
-import { SOFT_SKILLS, STACK_SKILLS } from '../model/skills'
-import { SkillField } from './skill-field'
+import { SOFT_SKILLS } from '../model/skills'
 
 export const MAX_RESUMES = 3
 

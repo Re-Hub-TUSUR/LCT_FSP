@@ -17,6 +17,7 @@ export type {
   VacancyMatchDto,
   VacancyRelaxationDto,
   VacancyRelaxationKind,
+  VacancyWrite,
 } from './api/vacancy-api'
 export { DECISION_VIEW_LABELS, DECISION_VIEWS, parseListView } from './model/feed-view'
 export type { DecisionView, ListView } from './model/feed-view'

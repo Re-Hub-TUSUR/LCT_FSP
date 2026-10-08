@@ -162,6 +162,23 @@ class VacancyFeedPresets(ApiModel):
 
 _GRADE_ORDER = list(Grade)
 MinExperience = Literal[0, 1, 3, 5]
+MAX_SKILL_LENGTH = 40
+
+
+def _skills(values: list[str], *, taken: list[str] | None = None) -> list[str]:
+    """Trimmed technologies without repeats (whatever the case) and without the `taken` ones."""
+    seen = {item.casefold() for item in taken or []}
+    result = []
+    for value in values:
+        skill = " ".join(value.split())
+        if not skill or skill.casefold() in seen:
+            continue
+        if len(skill) > MAX_SKILL_LENGTH:
+            msg = f"Название технологии — до {MAX_SKILL_LENGTH} символов"
+            raise ValueError(msg)
+        seen.add(skill.casefold())
+        result.append(skill)
+    return result
 
 
 class VacancyCreate(ApiModel):
@@ -184,9 +201,16 @@ class VacancyCreate(ApiModel):
     fsp_discipline: FspDiscipline | None = None
     min_experience_years: MinExperience = 0
     benefits: list[VacancyBenefit] = Field(default_factory=list)
+    # False = a draft: saved, but only the company sees it.
+    publish: bool = True
 
     @model_validator(mode="after")
     def _rules(self) -> Self:
+        self.stack_required = _skills(self.stack_required)
+        self.stack_nice = _skills(self.stack_nice, taken=self.stack_required)
+        if not self.stack_required:
+            msg = "Укажите хотя бы одну обязательную технологию"
+            raise ValueError(msg)
         if len(self.grades) > 1:
             first, *_, last = sorted(_GRADE_ORDER.index(grade) for grade in self.grades)
             if last - first != 1:

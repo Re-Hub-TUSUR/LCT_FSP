@@ -1,0 +1,87 @@
+.skills {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skills__chosen,
+.skills__list,
+.skills__popular {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.skills__chosen,
+.skills__popular {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.skills__chip,
+.skills__option,
+.skills__suggest {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.skills__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+
+.skills__option,
+.skills__suggest {
+  width: 100%;
+  padding: 0 12px;
+  text-align: left;
+}
+
+.skills__suggest {
+  width: auto;
+}
+
+.skills__chip:hover,
+.skills__option:hover,
+.skills__suggest:hover,
+.skills__chip:focus-visible,
+.skills__option:focus-visible,
+.skills__suggest:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+  border-color: var(--blue);
+}
+
+.skills__remove {
+  color: var(--muted);
+}
+
+.skills__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.skills__list {
+  position: absolute;
+  z-index: 2;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}

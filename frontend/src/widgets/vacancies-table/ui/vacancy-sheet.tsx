@@ -8,7 +8,7 @@ import {
   WORK_FORMAT_LABELS,
 } from '@/entities/vacancy'
 import type { VacancyDto } from '@/entities/vacancy'
-import { ROUTES } from '@/shared/config'
+import { paths, ROUTES } from '@/shared/config'
 import { formatDate, formatRubRange } from '@/shared/lib'
 import { ButtonLink, Sheet, SheetSection, VerifiedMark } from '@/shared/ui'
 
@@ -31,7 +31,7 @@ function experienceFact(vacancy: VacancyDto): string | null {
 
 type Props = {
   vacancy: VacancyDto
-  /** The viewer's company published it: the sheet offers to pick candidates for it. */
+  /** The viewer's company owns it: the sheet offers to pick candidates for it and to edit it. */
   own: boolean
   onClose: () => void
 }
@@ -70,9 +70,14 @@ export function VacancySheet({ vacancy, own, onClose }: Props) {
       onClose={onClose}
       footer={
         own ? (
-          <ButtonLink size="block" to={`${ROUTES.feed}?vacancyId=${vacancy.id}`}>
-            Подобрать кандидатов
-          </ButtonLink>
+          <>
+            <ButtonLink size="block" to={`${ROUTES.feed}?vacancyId=${vacancy.id}`}>
+              Подобрать кандидатов
+            </ButtonLink>
+            <ButtonLink variant="ghost" size="block" to={paths.vacancyEdit(vacancy.id)}>
+              Редактировать
+            </ButtonLink>
+          </>
         ) : undefined
       }
     >

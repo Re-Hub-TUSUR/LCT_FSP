@@ -1,5 +1,28 @@
 import { useId, useState } from 'react'
-import { suggestSkills } from '../model/skills'
+import './skill-field.css'
+
+function suggestSkills(
+  catalog: readonly string[],
+  query: string,
+  selected: readonly string[],
+): string[] {
+  const needle = query.trim().toLocaleLowerCase('ru')
+  const taken = new Set(selected.map((item) => item.toLocaleLowerCase('ru')))
+  const starts: string[] = []
+  const contains: string[] = []
+  for (const item of catalog) {
+    const folded = item.toLocaleLowerCase('ru')
+    if (taken.has(folded)) continue
+    if (!needle) {
+      starts.push(item)
+      continue
+    }
+    if (!folded.includes(needle)) continue
+    if (folded.startsWith(needle)) starts.push(item)
+    else contains.push(item)
+  }
+  return [...starts, ...contains].slice(0, 8)
+}
 
 type Props = {
   id: string
@@ -10,6 +33,7 @@ type Props = {
   onChange: (next: string[]) => void
 }
 
+/** Skills as chips: typing filters the catalog, Enter adds the typed one. */
 export function SkillField({ id, label, catalog, value, error, onChange }: Props) {
   const listId = useId()
   const [query, setQuery] = useState('')

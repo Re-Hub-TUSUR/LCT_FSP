@@ -18,6 +18,7 @@ export { Ornament } from './ornament/ornament'
 export { HackerRain } from './hacker-rain/hacker-rain'
 export { HackerText } from './hacker-text/hacker-text'
 export { Sheet, SheetSection } from './sheet/sheet'
+export { SkillField } from './skill-field/skill-field'
 export { Segmented, Tabs } from './tabs/tabs'
 export type { TabItem } from './tabs/tabs'
 export {

@@ -28,6 +28,11 @@ class VacancyRepository:
         rows = await self._fetch(self._rows().where(Vacancy.id == vacancy_id))
         return rows[0] if rows else None
 
+    async def add(self, vacancy: Vacancy) -> Vacancy:
+        self._session.add(vacancy)
+        await self._session.flush()
+        return vacancy
+
     async def published(self, *, reactions: ReactionFilter | None = None) -> list[VacancyRow]:
         """Every published vacancy, unordered: the feed filters and ranks them in Python."""
         conditions: list[ColumnElement[bool]] = [Vacancy.published_at.is_not(None)]
