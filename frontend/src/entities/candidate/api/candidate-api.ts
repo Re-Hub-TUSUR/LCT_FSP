@@ -326,6 +326,27 @@ export type VacancyPresetDto = {
   count: number
 }
 
+/** The recruiter's search to save: what the list shows now. */
+export type CandidateSearchSaveDto = {
+  title?: string
+  filters: CandidateFiltersDto
+  text?: string | null
+  vacancyId?: string | null
+}
+
+/** A saved search: how many candidates it finds now and how many of them were not seen. */
+export type SavedCandidateSearchDto = {
+  id: string
+  title: string
+  summary: string
+  filters: CandidateFiltersDto
+  text: string | null
+  vacancyId: string | null
+  count: number
+  newCount: number
+  createdAt: string
+}
+
 export type CandidatePresetsDto = {
   /** Free search: every candidate of the view. */
   total: number
@@ -339,6 +360,7 @@ export const candidateKeys = {
   search: (params: CandidateSearchParams) => [...candidateKeys.all, 'search', params] as const,
   facets: (params: CandidateFilterParams) => [...candidateKeys.all, 'facets', params] as const,
   presets: (view: FeedView) => [...candidateKeys.all, 'presets', view] as const,
+  savedSearches: () => [...candidateKeys.all, 'saved-searches'] as const,
   reactionCounts: () => [...candidateKeys.all, 'reaction-counts'] as const,
 }
 
@@ -377,6 +399,13 @@ export const candidateQueries = {
       queryFn: ({ signal }) =>
         http.get<CandidatePresetsDto>('/candidates/presets', { query: { view }, signal }),
     }),
+  /** The recruiter's saved searches with their new candidates. */
+  savedSearches: () =>
+    queryOptions({
+      queryKey: candidateKeys.savedSearches(),
+      queryFn: ({ signal }) =>
+        http.get<SavedCandidateSearchDto[]>('/candidates/saved-searches', { signal }),
+    }),
   mine: () =>
     queryOptions({
       queryKey: candidateKeys.mine(),
@@ -386,6 +415,12 @@ export const candidateQueries = {
 }
 
 export const candidateApi = {
+  saveSearch: (payload: CandidateSearchSaveDto) =>
+    http.post<SavedCandidateSearchDto>('/candidates/saved-searches', payload),
+  /** Opened: every candidate the search finds now counts as seen. */
+  openSearch: (id: string) =>
+    http.post<SavedCandidateSearchDto>(`/candidates/saved-searches/${id}/seen`),
+  deleteSearch: (id: string) => http.delete<void>(`/candidates/saved-searches/${id}`),
   react: (id: string, kind: Reaction, vacancyId?: string) =>
     http.put<unknown>(`/candidates/${id}/reaction`, { kind, vacancyId }),
   clearReaction: (id: string) => http.delete<void>(`/candidates/${id}/reaction`),

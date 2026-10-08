@@ -165,6 +165,25 @@ export type VacancyFacetsDto = {
   relaxations: VacancyRelaxationDto[]
 }
 
+/** The candidate's feed to save: the mode and the filters as they are now. */
+export type VacancySearchSaveDto = {
+  title?: string
+  mode: FeedMode
+  filters: VacancyFiltersDto
+}
+
+/** A saved search: how many vacancies it finds now and how many of them were not seen. */
+export type SavedVacancySearchDto = {
+  id: string
+  title: string
+  summary: string
+  mode: FeedMode
+  filters: VacancyFiltersDto
+  count: number
+  newCount: number
+  createdAt: string
+}
+
 export type VacancyFeedPresetsDto = {
   /** False until the candidate has a category: only the free search then. */
   personalized: boolean
@@ -190,6 +209,7 @@ export const vacancyKeys = {
   feedFacets: (params: VacancyFeedFilterParams) =>
     [...vacancyKeys.all, 'feed-facets', params] as const,
   feedPresets: (view: FeedView) => [...vacancyKeys.all, 'feed-presets', view] as const,
+  savedSearches: () => [...vacancyKeys.all, 'saved-searches'] as const,
   mine: () => [...vacancyKeys.all, 'mine'] as const,
   reactionCounts: () => [...vacancyKeys.all, 'reaction-counts'] as const,
   detail: (id: string) => [...vacancyKeys.all, 'detail', id] as const,
@@ -223,6 +243,13 @@ export const vacancyQueries = {
       queryFn: ({ signal }) =>
         http.get<VacancyFeedPresetsDto>('/vacancies/feed/presets', { query: { view }, signal }),
     }),
+  /** The candidate's saved searches with their new vacancies. */
+  savedSearches: () =>
+    queryOptions({
+      queryKey: vacancyKeys.savedSearches(),
+      queryFn: ({ signal }) =>
+        http.get<SavedVacancySearchDto[]>('/vacancies/feed/saved-searches', { signal }),
+    }),
   /** Candidate: how many vacancies are liked, matched and skipped. */
   reactionCounts: () =>
     queryOptions({
@@ -249,6 +276,12 @@ export const vacancyApi = {
   create: (payload: VacancyWrite) => http.post<VacancyDto>('/vacancies', payload),
   update: (id: string, payload: VacancyWrite) =>
     http.patch<VacancyDto>(`/vacancies/${id}`, payload),
+  saveSearch: (payload: VacancySearchSaveDto) =>
+    http.post<SavedVacancySearchDto>('/vacancies/feed/saved-searches', payload),
+  /** Opened: every vacancy the search finds now counts as seen. */
+  openSearch: (id: string) =>
+    http.post<SavedVacancySearchDto>(`/vacancies/feed/saved-searches/${id}/seen`),
+  deleteSearch: (id: string) => http.delete<void>(`/vacancies/feed/saved-searches/${id}`),
   react: (id: string, kind: Reaction) => http.put<unknown>(`/vacancies/${id}/reaction`, { kind }),
   clearReaction: (id: string) => http.delete<void>(`/vacancies/${id}/reaction`),
 }

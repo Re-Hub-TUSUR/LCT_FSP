@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useSession } from '@/entities/session'
+import { plural } from '@/shared/lib'
 import { useNotificationStream } from '../model/use-notification-stream'
 import './notification-toasts.css'
 
@@ -21,6 +22,13 @@ export function NotificationToasts() {
     onCompanyLiked: (event) => {
       if (user?.role !== 'candidate') return
       push(`${event.companyName} вас оценила!`)
+    },
+    onSavedSearchNew: (event) => {
+      const what =
+        event.kind === 'candidates'
+          ? plural(event.count, ['новый кандидат', 'новых кандидата', 'новых кандидатов'])
+          : plural(event.count, ['новая вакансия', 'новые вакансии', 'новых вакансий'])
+      push(`Сохранённый поиск «${event.title}»: ${event.count} ${what}`)
     },
     onCompanyVerification: (event) => {
       if (user?.role !== 'employer') return

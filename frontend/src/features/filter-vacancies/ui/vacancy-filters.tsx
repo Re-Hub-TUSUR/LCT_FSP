@@ -1,15 +1,19 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useState } from 'react'
 import { categoryQueries } from '@/entities/category'
 import {
   BENEFIT_LABELS,
   BENEFITS,
   EMPLOYMENT_LABELS,
   EMPLOYMENT_TYPES,
+  vacancyApi,
+  vacancyKeys,
   vacancyQueries,
   WORK_FORMAT_LABELS,
   WORK_FORMATS,
 } from '@/entities/vacancy'
-import type { FeedMode, VacancyFiltersDto } from '@/entities/vacancy'
+import type { FeedMode, SavedVacancySearchDto, VacancyFiltersDto } from '@/entities/vacancy'
+import { getErrorMessage } from '@/shared/api'
 import type { OptionCountDto } from '@/shared/api'
 import { plural, resolveTerm, termOptions, toggled } from '@/shared/lib'
 import {
@@ -24,8 +28,9 @@ import {
   MoneyField,
   SourceMark,
   TagCombobox,
+  UndoToast,
 } from '@/shared/ui'
-import type { ModeOption, Relaxation } from '@/shared/ui'
+import type { ModeOption, Relaxation, ToastState } from '@/shared/ui'
 import {
   EMPTY_FILTERS,
   markOf,
@@ -38,6 +43,8 @@ import type { MarkGroup } from '../model/filters'
 import { useVacancyFilters } from '../model/use-vacancy-filters'
 
 const VACANCIES = ['вакансия', 'вакансии', 'вакансий'] as const
+// Mode ids of saved searches: `saved:<id>`.
+const SAVED = 'saved:'
 
 const countIn = (options: OptionCountDto[] | undefined, value: string) =>
   options?.find((option) => option.value === value)?.count
@@ -48,7 +55,9 @@ const countIn = (options: OptionCountDto[] | undefined, value: string) =>
  * loosen. The state lives in the URL.
  */
 export function VacancyFilters() {
-  const { filters, mode, view, active, query, setFilters } = useVacancyFilters()
+  const { filters, mode, savedId, view, active, query, setFilters, setSaved } = useVacancyFilters()
+  const [toast, setToast] = useState<ToastState>(null)
+  const closeToast = useCallback(() => setToast(null), [])
   const presets = useQuery(vacancyQueries.feedPresets(view))
   const facets = useQuery({
     ...vacancyQueries.feedFacets({ ...query, view }),
@@ -63,7 +72,22 @@ export function VacancyFilters() {
   const personalized = presets.data?.personalized !== false
   const current: FeedMode = personalized ? mode : 'free'
   const profile = presets.data?.profile ?? null
-  const preset = current === 'profile' ? profile : null
+  const savedSearches = useQuery(vacancyQueries.savedSearches())
+  const savedSearch = savedSearches.data?.find((item) => item.id === savedId) ?? null
+  // What the filters were filled in from: an opened saved search, otherwise the profile.
+  const preset = savedSearch ? savedSearch.filters : current === 'profile' ? profile : null
+  const source = savedSearch ? 'из поиска' : 'из профиля'
+
+  const queryClient = useQueryClient()
+  const refreshSaved = () =>
+    queryClient.invalidateQueries({ queryKey: vacancyKeys.savedSearches() })
+  const save = useMutation({ mutationFn: vacancyApi.saveSearch })
+  // Opened: the feed and its counts show the new vacancies, the search marks them seen.
+  const open = useMutation({
+    mutationFn: vacancyApi.openSearch,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: vacancyKeys.all }),
+  })
+  const remove = useMutation({ mutationFn: vacancyApi.deleteSearch, onSuccess: refreshSaved })
 
   const change = (patch: Partial<VacancyFiltersDto>) => setFilters({ ...filters, ...patch })
 
@@ -76,15 +100,48 @@ export function VacancyFilters() {
     })
   }
 
-  const pickMode = (id: string) =>
-    id === 'profile'
-      ? setFilters(profile ?? EMPTY_FILTERS, 'profile')
-      : setFilters(EMPTY_FILTERS, 'free')
+  const pickMode = (id: string) => {
+    if (id.startsWith(SAVED)) {
+      const search = savedSearches.data?.find((item) => `${SAVED}${item.id}` === id)
+      if (!search) return
+      setFilters(search.filters, { mode: search.mode, saved: search.id })
+      // Opened: its new vacancies are seen now.
+      open.mutate(search.id)
+      return
+    }
+    if (id === 'profile') setFilters(profile ?? EMPTY_FILTERS, { mode: 'profile', saved: null })
+    else setFilters(EMPTY_FILTERS, { mode: 'free', saved: null })
+  }
+
+  const sameSearch = (search: SavedVacancySearchDto) =>
+    search.mode === current && sameFilters(search.filters, filters)
+  const alreadySaved = (savedSearches.data ?? []).some(sameSearch)
+
+  const saveCurrent = () =>
+    save.mutate(
+      { mode: current, filters },
+      {
+        onSuccess: (created) => {
+          void refreshSaved()
+          setSaved(created.id)
+          setToast({ message: `Поиск «${created.title}» сохранён` })
+        },
+        onError: (error) => setToast({ message: getErrorMessage(error) }),
+      },
+    )
+
+  const deleteCurrent = (search: SavedVacancySearchDto) =>
+    remove.mutate(search.id, {
+      onSuccess: () => {
+        setSaved(null)
+        setToast({ message: `Поиск «${search.title}» удалён` })
+      },
+    })
 
   const mark = (group: MarkGroup) => (
     <SourceMark
       state={markOf(group, filters, preset)}
-      source="из профиля"
+      source={source}
       onRevert={() => preset && setFilters(reverted(group, filters, preset))}
     />
   )
@@ -119,7 +176,23 @@ export function VacancyFilters() {
       subtitle: 'Все вакансии · по дате',
       note: presets.data ? `${presets.data.freeCount} всего` : undefined,
     },
+    ...(savedSearches.data ?? []).map((item) => ({
+      id: `${SAVED}${item.id}`,
+      title: item.title,
+      subtitle: item.summary,
+      note:
+        item.newCount > 0
+          ? `+${item.newCount} новых`
+          : `${item.count} ${plural(item.count, VACANCIES)}`,
+      fresh: item.newCount > 0,
+      section: 'Сохранённые поиски',
+    })),
   ]
+  const modeValue = savedId ? `${SAVED}${savedId}` : current
+  // A saved search opened by a link before the list loaded is still the current mode.
+  if (!modes.some((item) => item.id === modeValue)) {
+    modes.push({ id: modeValue, title: 'Сохранённый поиск', subtitle: 'Загружаем…' })
+  }
 
   const dirty = preset ? !sameFilters(filters, preset) : active > 0
   const relaxations: Relaxation[] = (counts?.relaxations ?? []).flatMap((item) => {
@@ -130,7 +203,8 @@ export function VacancyFilters() {
         key: `${item.kind}:${item.value ?? ''}`,
         label: loosened.label,
         gain: item.count,
-        apply: () => setFilters(loosened.next, loosened.mode),
+        apply: () =>
+          setFilters(loosened.next, loosened.mode ? { mode: loosened.mode, saved: null } : {}),
       },
     ]
   })
@@ -140,7 +214,15 @@ export function VacancyFilters() {
     <>
       <FilterHead
         active={active}
-        resetLabel={dirty ? (preset ? 'Вернуть из профиля' : 'Сбросить') : null}
+        resetLabel={
+          dirty
+            ? savedSearch
+              ? 'Вернуть из поиска'
+              : preset
+                ? 'Вернуть из профиля'
+                : 'Сбросить'
+            : null
+        }
         onReset={() => setFilters(preset ?? EMPTY_FILTERS)}
         count={
           counts && (
@@ -151,15 +233,35 @@ export function VacancyFilters() {
         }
       />
 
-      <ModeSelect
-        label="Основа ленты"
-        options={modes}
-        value={current}
-        onChange={pickMode}
-        searchPlaceholder="Найти поиск"
-        emptyText="Ничего не найдено"
-        accented={current === 'profile'}
-      />
+      <div className="filters-group">
+        <ModeSelect
+          label="Основа ленты"
+          options={modes}
+          value={modeValue}
+          onChange={pickMode}
+          searchPlaceholder="Найти поиск"
+          emptyText="Ничего не найдено"
+          accented={modeValue !== 'free'}
+          action={
+            alreadySaved || save.isPending
+              ? undefined
+              : { label: '+ Сохранить текущие фильтры', onClick: saveCurrent }
+          }
+        />
+        {savedSearch && (
+          <p className="filters-saved-note">
+            О новых подходящих вакансиях придёт уведомление.
+            <button
+              type="button"
+              className="filters-link"
+              disabled={remove.isPending}
+              onClick={() => deleteCurrent(savedSearch)}
+            >
+              Удалить поиск
+            </button>
+          </p>
+        )}
+      </div>
 
       {counts?.count === 0 && (
         <FilterDeadEnd
@@ -169,8 +271,8 @@ export function VacancyFilters() {
             preset
               ? {
                   key: 'profile',
-                  label: 'Вернуть фильтры из профиля',
-                  gain: presets.data?.profileCount ?? 0,
+                  label: savedSearch ? 'Вернуть фильтры из поиска' : 'Вернуть фильтры из профиля',
+                  gain: savedSearch ? savedSearch.count : (presets.data?.profileCount ?? 0),
                   apply: () => setFilters(preset),
                 }
               : {
@@ -313,6 +415,8 @@ export function VacancyFilters() {
           Аккредитованная IT-компания
         </CheckRow>
       </FilterDisclosure>
+
+      <UndoToast toast={toast} onClose={closeToast} />
     </>
   )
 }

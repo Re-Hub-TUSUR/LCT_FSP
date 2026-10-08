@@ -13,7 +13,9 @@ from app.dependencies.services import (
     FspLinkServiceDep,
     ReactionServiceDep,
     ResumeImportServiceDep,
+    SavedSearchServiceDep,
 )
+from app.models.enums import SavedSearchKind
 from app.schemas.candidate import (
     CandidateFacets,
     CandidatePresets,
@@ -32,6 +34,7 @@ from app.schemas.reaction import (
     ReactionCounts,
     ReactionRead,
 )
+from app.schemas.saved_search import CandidateSearchSave, SavedCandidateSearch
 from app.search.base import CandidateSort
 from app.services.uploads import PHOTO_LIMIT, RESUME_LIMIT
 
@@ -86,6 +89,53 @@ async def candidate_presets(
     user: EmployerUser, search: CandidateSearchServiceDep, view: FeedView = "all"
 ) -> CandidatePresets:
     return await search.presets(user, view=view)
+
+
+@router.get(
+    "/saved-searches",
+    summary="Employer: saved searches with how many candidates each finds and how many are new",
+)
+async def list_saved_candidate_searches(
+    user: EmployerUser, searches: SavedSearchServiceDep
+) -> list[SavedCandidateSearch]:
+    return await searches.candidate_searches(user)
+
+
+@router.post(
+    "/saved-searches",
+    status_code=status.HTTP_201_CREATED,
+    summary="Employer: save the current search",
+    description=(
+        "The candidates found now count as seen; later ones are new and come as a notification "
+        "(`saved_search_new` in the notification stream). Up to 20 searches."
+    ),
+)
+async def save_candidate_search(
+    data: CandidateSearchSave, user: EmployerUser, searches: SavedSearchServiceDep
+) -> SavedCandidateSearch:
+    return await searches.save_candidate_search(user, data)
+
+
+@router.post(
+    "/saved-searches/{search_id}/seen",
+    summary="Employer: the search was opened, every candidate it finds now is seen",
+)
+async def open_saved_candidate_search(
+    search_id: uuid.UUID, user: EmployerUser, searches: SavedSearchServiceDep
+) -> SavedCandidateSearch:
+    return await searches.open_candidate_search(user, search_id)
+
+
+@router.delete(
+    "/saved-searches/{search_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Employer: delete a saved search",
+)
+async def delete_saved_candidate_search(
+    search_id: uuid.UUID, user: EmployerUser, searches: SavedSearchServiceDep
+) -> Response:
+    await searches.delete(user, search_id, SavedSearchKind.CANDIDATES)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get(

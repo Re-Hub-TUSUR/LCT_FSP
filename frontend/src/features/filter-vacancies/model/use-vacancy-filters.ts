@@ -12,21 +12,51 @@ export function useVacancyFilters() {
   const modeParam = params.get('mode')
   const mode: FeedMode = modeParam === 'free' ? 'free' : 'profile'
 
-  /** New filters; `mode` switches between the profile match and the free search. */
+  /**
+   * New filters. `mode` switches between the profile match and the free search, `saved` names
+   * the saved search the feed was opened from (null drops it, leaving out keeps it).
+   */
   const setFilters = useCallback(
-    (next: VacancyFiltersDto, nextMode?: FeedMode) =>
-      setParams((current) => writeFilters(current, next, nextMode), { replace: true }),
+    (next: VacancyFiltersDto, options: { mode?: FeedMode; saved?: string | null } = {}) =>
+      setParams(
+        (current) => {
+          const updated = writeFilters(current, next, options.mode)
+          if ('saved' in options) {
+            updated.delete('saved')
+            if (options.saved) updated.set('saved', options.saved)
+          }
+          return updated
+        },
+        { replace: true },
+      ),
+    [setParams],
+  )
+
+  /** The saved search the feed now shows, or none; the filters stay as they are. */
+  const setSaved = useCallback(
+    (id: string | null) =>
+      setParams(
+        (current) => {
+          const updated = new URLSearchParams(current)
+          updated.delete('saved')
+          if (id) updated.set('saved', id)
+          return updated
+        },
+        { replace: true },
+      ),
     [setParams],
   )
 
   return {
     filters,
     mode,
+    savedId: params.get('saved'),
     view: parseListView(params.get('view')),
     active: activeCount(filters),
     // Without a mode in the URL the backend matches the profile.
     query: { ...filterParams(filters), mode: modeParam === null ? undefined : mode },
     setFilters,
+    setSaved,
   }
 }
 

@@ -1,6 +1,8 @@
+import asyncio
 import logging
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
+from datetime import timedelta
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +17,7 @@ from app.db.session import get_engine, get_sessionmaker
 from app.repositories.candidate import CandidateRepository
 from app.search.elastic import ElasticSearchState, create_client
 from app.services.notifications import NotificationHub
+from app.services.saved_searches import run_alerts
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +42,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             elastic = ElasticSearchState(create_client(settings), settings.elasticsearch_index)
             app.state.elastic = elastic
             await _prepare_search(elastic)
+        alerts = None
+        if settings.saved_search_alert_minutes:
+            alerts = asyncio.create_task(
+                run_alerts(
+                    timedelta(minutes=settings.saved_search_alert_minutes),
+                    get_sessionmaker(),
+                    app.state.notifications,
+                    elastic,
+                )
+            )
         yield
+        if alerts is not None:
+            alerts.cancel()
+            with suppress(asyncio.CancelledError):
+                await alerts
         if elastic is not None:
             await elastic.close()
         await get_engine().dispose()

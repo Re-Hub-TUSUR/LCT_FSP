@@ -1,11 +1,13 @@
 """MVP dictionary of specializations and grades (ТЗ: the team compiles it from common IT terms)."""
 
 from app.models.enums import (
+    EmploymentType,
     FspDiscipline,
     FspEventKind,
     FspOutcome,
     FspTitleKind,
     Grade,
+    VacancyBenefit,
     WorkFormat,
 )
 from app.schemas.category import Category, CategoryDictionary, GradeRead, SpecializationRead
@@ -36,6 +38,19 @@ WORK_FORMAT_LABELS: dict[WorkFormat, str] = {
     WorkFormat.OFFICE: "Офис",
     WorkFormat.HYBRID: "Гибрид",
     WorkFormat.REMOTE: "Удалённо",
+}
+
+EMPLOYMENT_LABELS: dict[EmploymentType, str] = {
+    EmploymentType.FULL: "полная занятость",
+    EmploymentType.PART: "частичная занятость",
+    EmploymentType.PROJECT: "проектная работа",
+    EmploymentType.INTERNSHIP: "стажировка",
+}
+
+BENEFIT_LABELS: dict[VacancyBenefit, str] = {
+    VacancyBenefit.DMS: "ДМС",
+    VacancyBenefit.FLEXIBLE_START: "гибкое начало дня",
+    VacancyBenefit.LABOR_CODE: "оформление по ТК РФ",
 }
 
 FSP_DISCIPLINE_LABELS: dict[FspDiscipline, str] = {

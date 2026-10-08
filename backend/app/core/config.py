@@ -72,6 +72,9 @@ class Settings(BaseSettings):
     # Time to answer the questions once they are shown.
     interview_minutes: int = Field(default=15, ge=1, le=120)
 
+    # How often the API checks saved searches for new results and notifies their owners; 0 = off.
+    saved_search_alert_minutes: int = Field(default=5, ge=0, le=1440)
+
     # FSP ID (Keycloak, OAuth2 / OIDC) and the FSP participant registry, `app.integrations.fsp`.
     # `mock`: both are emulated inside this API (the hackathon has no access to the real ones).
     fsp_id_mode: Literal["mock", "keycloak"] = "mock"

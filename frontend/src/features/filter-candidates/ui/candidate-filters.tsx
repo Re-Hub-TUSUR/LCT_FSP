@@ -1,7 +1,11 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useState } from 'react'
-import { candidateQueries } from '@/entities/candidate'
-import type { CandidateFiltersDto, VacancyPresetDto } from '@/entities/candidate'
+import { candidateApi, candidateKeys, candidateQueries } from '@/entities/candidate'
+import type {
+  CandidateFiltersDto,
+  SavedCandidateSearchDto,
+  VacancyPresetDto,
+} from '@/entities/candidate'
 import { categoryQueries, GRADE_LABELS, GRADES } from '@/entities/category'
 import {
   EMPLOYMENT_LABELS,
@@ -9,6 +13,7 @@ import {
   WORK_FORMAT_LABELS,
   WORK_FORMATS,
 } from '@/entities/vacancy'
+import { getErrorMessage } from '@/shared/api'
 import type { OptionCountDto } from '@/shared/api'
 import { formatNumber, plural, resolveTerm, squashTerm, termOptions, toggled } from '@/shared/lib'
 import {
@@ -20,6 +25,7 @@ import {
   FilterSubLabel,
   ModeSelect,
   MoneyField,
+  SaveSearchButton,
   SourceMark,
   TagCombobox,
   UndoToast,
@@ -44,6 +50,8 @@ import { useCandidateFilters } from '../model/use-candidate-filters'
 
 const CANDIDATES = ['кандидат', 'кандидата', 'кандидатов'] as const
 const FREE = 'free'
+// Mode ids of saved searches: `saved:<id>`.
+const SAVED = 'saved:'
 const SUGGESTIONS = 5
 // Required skills leaving this few candidates deserve a hint to move some to «nice to have».
 const FEW = 5
@@ -65,8 +73,19 @@ function presetSubtitle(preset: VacancyPresetDto): string {
  * suggests what to loosen. The state lives in the URL.
  */
 export function CandidateFilters() {
-  const { filters, vacancyId, text, view, snapshot, active, query, setFilters, restore } =
-    useCandidateFilters()
+  const {
+    filters,
+    vacancyId,
+    savedId,
+    text,
+    view,
+    snapshot,
+    active,
+    query,
+    setFilters,
+    setSaved,
+    restore,
+  } = useCandidateFilters()
   const [toast, setToast] = useState<ToastState>(null)
   const closeToast = useCallback(() => setToast(null), [])
 
@@ -77,8 +96,27 @@ export function CandidateFilters() {
     placeholderData: keepPreviousData,
   })
   const counts = facets.data
+  const savedSearches = useQuery(candidateQueries.savedSearches())
   const preset = presets.data?.vacancies.find((item) => item.vacancyId === vacancyId) ?? null
-  const presetFilters = preset?.filters ?? null
+  const savedSearch = savedSearches.data?.find((item) => item.id === savedId) ?? null
+  // What the filters were filled in from: an opened saved search, otherwise the vacancy.
+  const origin = savedSearch
+    ? { filters: savedSearch.filters, source: 'из поиска', count: savedSearch.count }
+    : preset
+      ? { filters: preset.filters, source: 'из вакансии', count: preset.count }
+      : null
+  const presetFilters = origin?.filters ?? null
+
+  const queryClient = useQueryClient()
+  const refreshSaved = () =>
+    queryClient.invalidateQueries({ queryKey: candidateKeys.savedSearches() })
+  const save = useMutation({ mutationFn: candidateApi.saveSearch })
+  // Opened: the list and its counts show the new candidates, the search marks them seen.
+  const open = useMutation({
+    mutationFn: candidateApi.openSearch,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: candidateKeys.all }),
+  })
+  const remove = useMutation({ mutationFn: candidateApi.deleteSearch, onSuccess: refreshSaved })
   const synonyms = dictionary.data?.synonyms ?? []
   const technologies = counts?.stack ?? []
   const specializationLabels = new Map(
@@ -104,11 +142,28 @@ export function CandidateFilters() {
   }
 
   const pickMode = (id: string) => {
-    const hadSomething = active > 0 || vacancyId !== null
+    const hadSomething = active > 0 || vacancyId !== null || savedId !== null
+    if (id.startsWith(SAVED)) {
+      const search = savedSearches.data?.find((item) => `${SAVED}${item.id}` === id)
+      if (!search) return
+      undoable(
+        'Фильтры из сохранённого поиска',
+        () =>
+          setFilters(search.filters, {
+            vacancyId: search.vacancyId,
+            text: search.text,
+            saved: search.id,
+          }),
+        hadSomething,
+      )
+      // Opened: its new candidates are seen now.
+      open.mutate(search.id)
+      return
+    }
     if (id === FREE) {
       undoable(
         'Вакансия снята, фильтры очищены',
-        () => setFilters(EMPTY_FILTERS, { vacancyId: null }),
+        () => setFilters(EMPTY_FILTERS, { vacancyId: null, saved: null }),
         hadSomething,
       )
       return
@@ -117,7 +172,7 @@ export function CandidateFilters() {
     if (chosen) {
       undoable(
         'Фильтры заполнены из вакансии',
-        () => setFilters(chosen.filters, { vacancyId: id }),
+        () => setFilters(chosen.filters, { vacancyId: id, saved: null }),
         hadSomething,
       )
     }
@@ -125,13 +180,44 @@ export function CandidateFilters() {
 
   const reset = () =>
     presetFilters
-      ? undoable('Фильтры возвращены к вакансии', () => setFilters(presetFilters))
+      ? undoable(
+          savedSearch
+            ? 'Фильтры возвращены к сохранённому поиску'
+            : 'Фильтры возвращены к вакансии',
+          () => setFilters(presetFilters),
+        )
       : undoable('Фильтры сброшены', () => setFilters(EMPTY_FILTERS))
+
+  const sameSearch = (search: SavedCandidateSearchDto) =>
+    sameFilters(search.filters, filters) &&
+    (search.text ?? '') === text &&
+    (search.vacancyId ?? null) === vacancyId
+  const alreadySaved = (savedSearches.data ?? []).some(sameSearch)
+
+  const saveCurrent = () =>
+    save.mutate(
+      { filters, text: text || null, vacancyId },
+      {
+        onSuccess: (created) => {
+          void refreshSaved()
+          setSaved(created.id)
+          setToast({ message: 'Поиск сохранён' })
+        },
+      },
+    )
+
+  const deleteCurrent = (search: SavedCandidateSearchDto) =>
+    remove.mutate(search.id, {
+      onSuccess: () => {
+        setSaved(null)
+        setToast({ message: `Поиск «${search.title}» удалён` })
+      },
+    })
 
   const mark = (group: MarkGroup) => (
     <SourceMark
       state={markOf(group, filters, presetFilters)}
-      source="из вакансии"
+      source={origin?.source ?? 'из вакансии'}
       onRevert={() => presetFilters && setFilters(reverted(group, filters, presetFilters))}
     />
   )
@@ -152,9 +238,27 @@ export function CandidateFilters() {
       section: 'Мои вакансии',
     })),
   ]
-  // A vacancy opened by a link before its preset loaded is still the current mode.
-  if (vacancyId && !preset) {
-    modes.push({ id: vacancyId, title: 'Подбор под вакансию', subtitle: 'По совпадению' })
+  modes.push(
+    ...(savedSearches.data ?? []).map((item) => ({
+      id: `${SAVED}${item.id}`,
+      title: item.title,
+      subtitle: item.summary,
+      note:
+        item.newCount > 0
+          ? `+${item.newCount} новых`
+          : `${item.count} ${plural(item.count, CANDIDATES)}`,
+      fresh: item.newCount > 0,
+      section: 'Сохранённые поиски',
+    })),
+  )
+  // A mode opened by a link before its data loaded is still the current one.
+  const mode = savedId ? `${SAVED}${savedId}` : (vacancyId ?? FREE)
+  if (!modes.some((item) => item.id === mode)) {
+    modes.push(
+      savedId
+        ? { id: mode, title: 'Сохранённый поиск', subtitle: 'Загружаем…' }
+        : { id: mode, title: 'Подбор под вакансию', subtitle: 'По совпадению' },
+    )
   }
 
   const dirty = presetFilters ? !sameFilters(filters, presetFilters) : active > 0
@@ -185,7 +289,15 @@ export function CandidateFilters() {
     <>
       <FilterHead
         active={active}
-        resetLabel={dirty ? (presetFilters ? 'Вернуть из вакансии' : 'Сбросить') : null}
+        resetLabel={
+          dirty
+            ? savedSearch
+              ? 'Вернуть из поиска'
+              : presetFilters
+                ? 'Вернуть из вакансии'
+                : 'Сбросить'
+            : null
+        }
         onReset={reset}
         count={
           counts && (
@@ -203,18 +315,32 @@ export function CandidateFilters() {
         <ModeSelect
           label="Подбор под вакансию"
           options={modes}
-          value={vacancyId ?? FREE}
+          value={mode}
           onChange={pickMode}
-          searchPlaceholder="Найти вакансию"
-          emptyText="Вакансия не найдена"
-          accented={vacancyId !== null}
+          searchPlaceholder="Найти вакансию или поиск"
+          emptyText="Ничего не найдено"
+          accented={mode !== FREE}
         />
-        {vacancies.length > 0 && (
-          <p className="filters-hint">
-            {vacancyId
-              ? 'Фильтры заполнены из вакансии, кандидаты отсортированы по совпадению.'
-              : 'Выберите вакансию — фильтры заполнятся из её требований.'}
+        {savedSearch ? (
+          <p className="filters-saved-note">
+            О новых подходящих кандидатах придёт уведомление.
+            <button
+              type="button"
+              className="filters-link"
+              disabled={remove.isPending}
+              onClick={() => deleteCurrent(savedSearch)}
+            >
+              Удалить поиск
+            </button>
           </p>
+        ) : (
+          vacancies.length > 0 && (
+            <p className="filters-hint">
+              {vacancyId
+                ? 'Фильтры заполнены из вакансии, кандидаты отсортированы по совпадению.'
+                : 'Выберите вакансию — фильтры заполнятся из её требований.'}
+            </p>
+          )
         )}
       </div>
 
@@ -223,12 +349,12 @@ export function CandidateFilters() {
           title="Никто не подходит"
           relaxations={relaxations}
           fallback={
-            preset && presetFilters
+            origin
               ? {
                   key: 'preset',
-                  label: 'Вернуть фильтры из вакансии',
-                  gain: preset.count,
-                  apply: () => setFilters(presetFilters),
+                  label: savedSearch ? 'Вернуть фильтры из поиска' : 'Вернуть фильтры из вакансии',
+                  gain: origin.count,
+                  apply: () => setFilters(origin.filters),
                 }
               : {
                   key: 'reset',
@@ -553,6 +679,14 @@ export function CandidateFilters() {
           Активность за последние {ACTIVE_DAYS} дней
         </CheckRow>
       </FilterGroup>
+
+      <SaveSearchButton
+        saved={alreadySaved}
+        pending={save.isPending}
+        onSave={saveCurrent}
+        hint="Пришлём уведомление, когда появятся новые подходящие кандидаты"
+        error={save.isError ? getErrorMessage(save.error) : null}
+      />
 
       <UndoToast toast={toast} onClose={closeToast} />
     </>

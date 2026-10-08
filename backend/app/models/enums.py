@@ -196,6 +196,13 @@ class ReactionKind(StrEnum):
     SKIP = "skip"
 
 
+class SavedSearchKind(StrEnum):
+    """What a saved search finds: a recruiter's candidates or a candidate's vacancies."""
+
+    CANDIDATES = "candidates"
+    VACANCIES = "vacancies"
+
+
 class MessageKind(StrEnum):
     TEXT = "text"
     ATTACHMENT = "attachment"

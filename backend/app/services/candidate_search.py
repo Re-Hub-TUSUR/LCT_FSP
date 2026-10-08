@@ -230,6 +230,33 @@ class CandidateSearchService:
             )
         return CandidatePresets(total=len(facts), vacancies=presets)
 
+    async def matching_ids(
+        self,
+        user: User,
+        searches: Sequence[CandidateSearchParams],
+        *,
+        now: datetime | None = None,
+    ) -> list[set[uuid.UUID]]:
+        """The candidates each search finds now, as the feed shows them (skipped ones hidden)."""
+        now = now or datetime.now(UTC)
+        scope = await self._scope(user, "all")
+        plain: list[tuple[uuid.UUID, FilterFacts]] | None = None
+        found = []
+        for params in searches:
+            query = scope.apply(candidate_query(params.filters, text=params.text, now=now))
+            if query.text is None:
+                if plain is None:
+                    plain = [(p.id, FilterFacts.of(p)) for p in await self._base(query)]
+                facts = plain
+            else:
+                facts = [(p.id, FilterFacts.of(p)) for p in await self._base(query)]
+            found.append({candidate_id for candidate_id, item in facts if passes(item, query)})
+        return found
+
+    async def check_vacancy(self, user: User, vacancy_id: uuid.UUID) -> None:
+        """Only an own vacancy may be searched for."""
+        await self._own_vacancy(user, vacancy_id)
+
     async def counts(self, user: User) -> ReactionCounts:
         """Sizes of the lists `liked`, `matched` and `skipped` as the search would show them."""
         reactions = await self._reactions.for_candidates(user.id)
