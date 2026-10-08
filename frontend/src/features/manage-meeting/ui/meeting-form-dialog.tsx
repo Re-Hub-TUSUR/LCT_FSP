@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { calendarEventApi, calendarEventKeys } from '@/entities/calendar-event'
 import type { CalendarEventDto } from '@/entities/calendar-event'
 import { candidateQueries } from '@/entities/candidate'
+import { conversationQueries } from '@/entities/conversation'
 import { vacancyQueries } from '@/entities/vacancy'
 import { getErrorMessage } from '@/shared/api'
 import { toDateInput, toTimeInput } from '@/shared/lib'
@@ -49,20 +50,52 @@ function initialValues(event?: CalendarEventDto, start = new Date()): MeetingFor
   }
 }
 
-/** Search over the candidate bank; favourites are one tap away. */
+type Source = 'all' | 'liked' | 'chats'
+
+type Option = Picked & { hint: string }
+
+const NOTHING: Record<Source, string> = {
+  all: 'Никого не нашли. В поиске только кандидаты с подтверждённой категорией — остальных ищите в чатах.',
+  liked: 'Среди отобранных никого нет',
+  chats: 'Чатов с кандидатами пока нет: они появляются после взаимного интереса',
+}
+
+/**
+ * Search over the candidate bank; favourites and chats are one tap away. The bank holds only
+ * candidates with a confirmed category, so a newcomer is reached through the chat with them.
+ */
 function CandidatePicker({ onPick, error }: { onPick: (c: Picked) => void; error?: string }) {
   const [text, setText] = useState('')
   const [q, setQ] = useState('')
-  const [likedOnly, setLikedOnly] = useState(false)
+  const [source, setSource] = useState<Source>('all')
 
   useEffect(() => {
     const timer = setTimeout(() => setQ(text.trim()), 300)
     return () => clearTimeout(timer)
   }, [text])
 
-  const found = useQuery(
-    candidateQueries.search({ q: q || undefined, view: likedOnly ? 'liked' : 'all', perPage: 6 }),
-  )
+  const search = useQuery({
+    ...candidateQueries.search({
+      q: q || undefined,
+      view: source === 'liked' ? 'liked' : 'all',
+      perPage: 6,
+    }),
+    enabled: source !== 'chats',
+  })
+  const chats = useQuery({ ...conversationQueries.list(), enabled: source === 'chats' })
+  const found = source === 'chats' ? chats : search
+
+  const needle = text.trim().toLowerCase()
+  const options: Option[] | undefined =
+    source === 'chats'
+      ? chats.data
+          ?.map(({ peer }) => ({ id: peer.id, name: peer.name, hint: peer.subtitle ?? '' }))
+          .filter((item) => `${item.name} ${item.hint}`.toLowerCase().includes(needle))
+      : search.data?.items.map(({ candidate }) => ({
+          id: candidate.id,
+          name: candidate.displayName,
+          hint: candidate.headline ?? candidate.category?.label ?? '',
+        }))
 
   return (
     <div className="meeting-picker">
@@ -76,25 +109,26 @@ function CandidatePicker({ onPick, error }: { onPick: (c: Picked) => void; error
         onChange={(e) => setText(e.target.value)}
       />
       <div className="meeting-picker__chips">
-        <Chip active={!likedOnly} onClick={() => setLikedOnly(false)}>
+        <Chip active={source === 'all'} onClick={() => setSource('all')}>
           Все
         </Chip>
-        <Chip active={likedOnly} onClick={() => setLikedOnly(true)}>
+        <Chip active={source === 'liked'} onClick={() => setSource('liked')}>
           Отобранные
+        </Chip>
+        <Chip active={source === 'chats'} onClick={() => setSource('chats')}>
+          Из чатов
         </Chip>
       </div>
       <ul className="meeting-picker__list" aria-label="Найденные кандидаты">
-        {found.data?.items.map(({ candidate }) => (
-          <li key={candidate.id}>
+        {options?.map((option) => (
+          <li key={option.id}>
             <button
               type="button"
               className="meeting-picker__option"
-              onClick={() => onPick({ id: candidate.id, name: candidate.displayName })}
+              onClick={() => onPick({ id: option.id, name: option.name })}
             >
-              <span>{candidate.displayName}</span>
-              <span className="meeting-picker__hint">
-                {candidate.headline ?? candidate.category?.label ?? ''}
-              </span>
+              <span>{option.name}</span>
+              <span className="meeting-picker__hint">{option.hint}</span>
             </button>
           </li>
         ))}
@@ -105,11 +139,7 @@ function CandidatePicker({ onPick, error }: { onPick: (c: Picked) => void; error
           {getErrorMessage(found.error)}
         </p>
       )}
-      {found.data?.items.length === 0 && (
-        <p className="meeting-form__status">
-          {likedOnly ? 'Среди отобранных никого нет' : 'Никого не нашли'}
-        </p>
-      )}
+      {options?.length === 0 && <p className="meeting-form__status">{NOTHING[source]}</p>}
     </div>
   )
 }

@@ -10,8 +10,10 @@ import {
   responseQueries,
 } from '@/entities/response'
 import { CandidateMatchCard, candidateQueries } from '@/entities/candidate'
+import { conversationKeys, conversationQueries } from '@/entities/conversation'
 import { VacancyMatchCard, vacancyQueries } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
+import { getErrorMessage } from '@/shared/api'
 import { formatDateTime } from '@/shared/lib'
 import { Button, EmptyState, QueryState, Tabs } from '@/shared/ui'
 import './responses-hub.css'
@@ -80,11 +82,21 @@ export function ResponsesHub({ messagesPanel }: Props) {
       } else if (payload.candidateId) {
         await responseApi.respondCandidate(payload.candidateId, payload.vacancyId)
       }
+      // The interest is mutual now, so the chat with the other side exists: find it to open it.
+      const peerId = payload.companyId ?? payload.candidateId
+      await queryClient.invalidateQueries({ queryKey: conversationKeys.list() })
+      const chats = await queryClient.fetchQuery(conversationQueries.list()).catch(() => [])
+      return chats.find((chat) => chat.peer.id === peerId)?.id ?? null
     },
-    onSuccess: () => {
+    onSuccess: (chatId) => {
       void queryClient.invalidateQueries({ queryKey: responseKeys.inbound() })
       void queryClient.invalidateQueries({ queryKey: ['vacancies'] })
       void queryClient.invalidateQueries({ queryKey: ['candidates'] })
+      // Answering leads straight to the conversation instead of a card that silently vanishes.
+      const next = new URLSearchParams(params)
+      next.set('tab', 'messages')
+      if (chatId) next.set('chat', chatId)
+      setParams(next, { replace: true })
     },
   })
 
@@ -101,71 +113,83 @@ export function ResponsesHub({ messagesPanel }: Props) {
       {tab === 'messages' ? (
         messagesPanel
       ) : tab === 'inbound' ? (
-        <QueryState query={inboundQuery}>
-          {(data) =>
-            data.length ? (
-              <ul className="responses__list">
-                {data.map((item) =>
-                  isCandidateInbound(item) ? (
-                    <li key={item.companyId} className="responses__card">
-                      <div className="responses__card-text">
-                        <p className="responses__eyebrow">{item.industry ?? 'Компания'}</p>
-                        <h3 className="responses__title">{item.companyName}</h3>
-                        <p className="responses__time">{formatDateTime(item.reactedAt)}</p>
-                      </div>
-                      <Button
-                        size="inline"
-                        disabled={respond.isPending}
-                        onClick={() =>
-                          respond.mutate({
-                            companyId: item.companyId,
-                            vacancyId: item.vacancyId ?? undefined,
-                          })
-                        }
+        <>
+          {respond.isError && (
+            <p className="responses__error" role="alert">
+              Не удалось ответить: {getErrorMessage(respond.error)}
+            </p>
+          )}
+          <QueryState query={inboundQuery}>
+            {(data) =>
+              data.length ? (
+                <ul className="responses__list">
+                  {data.map((item) =>
+                    isCandidateInbound(item) ? (
+                      <li key={item.companyId} className="responses__card">
+                        <div className="responses__card-text">
+                          <p className="responses__eyebrow">{item.industry ?? 'Компания'}</p>
+                          <h3 className="responses__title">{item.companyName}</h3>
+                          <p className="responses__time">{formatDateTime(item.reactedAt)}</p>
+                        </div>
+                        <Button
+                          size="inline"
+                          disabled={respond.isPending}
+                          onClick={() =>
+                            respond.mutate({
+                              companyId: item.companyId,
+                              vacancyId: item.vacancyId ?? undefined,
+                            })
+                          }
+                        >
+                          Ответить
+                        </Button>
+                      </li>
+                    ) : (
+                      <li
+                        key={(item as EmployerInboundDto).candidateId}
+                        className="responses__card"
                       >
-                        Ответить
-                      </Button>
-                    </li>
-                  ) : (
-                    <li key={(item as EmployerInboundDto).candidateId} className="responses__card">
-                      <div className="responses__card-text">
-                        <p className="responses__eyebrow">
-                          {(item as EmployerInboundDto).vacancyTitle}
-                        </p>
-                        <h3 className="responses__title">
-                          {(item as EmployerInboundDto).displayName}
-                        </h3>
-                        {(item as EmployerInboundDto).headline ? (
-                          <p className="responses__lead">{(item as EmployerInboundDto).headline}</p>
-                        ) : null}
-                        <p className="responses__time">
-                          {formatDateTime((item as EmployerInboundDto).reactedAt)}
-                        </p>
-                      </div>
-                      <Button
-                        size="inline"
-                        disabled={respond.isPending}
-                        onClick={() =>
-                          respond.mutate({
-                            candidateId: (item as EmployerInboundDto).candidateId,
-                            vacancyId: (item as EmployerInboundDto).vacancyId,
-                          })
-                        }
-                      >
-                        Ответить
-                      </Button>
-                    </li>
-                  ),
-                )}
-              </ul>
-            ) : (
-              <EmptyState title="Пока пусто">
-                Здесь появятся компании и кандидаты, которым вы понравились, но вы ещё не ответили
-                взаимностью.
-              </EmptyState>
-            )
-          }
-        </QueryState>
+                        <div className="responses__card-text">
+                          <p className="responses__eyebrow">
+                            {(item as EmployerInboundDto).vacancyTitle}
+                          </p>
+                          <h3 className="responses__title">
+                            {(item as EmployerInboundDto).displayName}
+                          </h3>
+                          {(item as EmployerInboundDto).headline ? (
+                            <p className="responses__lead">
+                              {(item as EmployerInboundDto).headline}
+                            </p>
+                          ) : null}
+                          <p className="responses__time">
+                            {formatDateTime((item as EmployerInboundDto).reactedAt)}
+                          </p>
+                        </div>
+                        <Button
+                          size="inline"
+                          disabled={respond.isPending}
+                          onClick={() =>
+                            respond.mutate({
+                              candidateId: (item as EmployerInboundDto).candidateId,
+                              vacancyId: (item as EmployerInboundDto).vacancyId,
+                            })
+                          }
+                        >
+                          Ответить
+                        </Button>
+                      </li>
+                    ),
+                  )}
+                </ul>
+              ) : (
+                <EmptyState title="Пока пусто">
+                  Здесь появятся компании и кандидаты, которым вы понравились, но вы ещё не ответили
+                  взаимностью.
+                </EmptyState>
+              )
+            }
+          </QueryState>
+        </>
       ) : employer ? (
         <QueryState query={candidateQuery} loadingLabel="Загрузка…">
           {(data) =>

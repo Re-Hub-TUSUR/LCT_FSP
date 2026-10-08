@@ -78,3 +78,11 @@
 .responses__card .btn {
   align-self: flex-start;
 }
+
+.responses__error {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--red-text);
+}
