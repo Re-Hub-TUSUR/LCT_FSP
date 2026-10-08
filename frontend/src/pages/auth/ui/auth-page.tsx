@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import { BRAND, ROUTES } from '@/shared/config'
-import { HackerText, Ornament, Page } from '@/shared/ui'
+import { HackerRain, HackerText, Ornament, Page } from '@/shared/ui'
 import './auth-page.css'
 
 /** The sign of a role: a specialist writes code, a company holds a team. */
@@ -32,6 +32,7 @@ export function PlatformChip() {
 export function AuthPage() {
   return (
     <>
+      <HackerRain />
       <Page
         className="page--auth page--auth-wide"
         eyebrow={<PlatformChip />}

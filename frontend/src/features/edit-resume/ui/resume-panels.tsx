@@ -7,6 +7,11 @@ import {
   candidateKeys,
   dropPhotoUrl,
   FSP_DISCIPLINE_LABELS,
+  FSP_EVENT_KIND_LABELS,
+  FSP_LEVEL_LABELS,
+  FSP_TITLE_LABELS,
+  fspOutcomeText,
+  fspTeamText,
   JOB_STATUS_LABELS,
 } from '@/entities/candidate'
 import type { OwnCandidateDto } from '@/entities/candidate'
@@ -34,12 +39,6 @@ import { ExtraResumes } from './extra-resumes'
 import { PanelFields } from './panel-fields'
 import { PhotoField } from './photo-field'
 import './resume-form.css'
-
-const LEVEL_LABELS = {
-  regional: 'региональный',
-  national: 'всероссийский',
-  international: 'международный',
-} as const
 
 function monthLabel(value: string): string {
   const [year, month] = value.split('-')
@@ -449,25 +448,45 @@ export function ResumePanels({ profile }: Props) {
       </Panel>
 
       <Panel title="Достижения ФСП">
-        {profile.fspAchievements.length > 0 ? (
+        {(profile.fspAchievements?.length ?? 0) > 0 || (profile.fspTitles?.length ?? 0) > 0 ? (
           <DataRows
-            rows={profile.fspAchievements.map((item, index) => ({
-              key: `fsp-${index}`,
-              label: String(item.year),
-              value: item.eventName,
-              note: `${item.place ? `${item.place} место` : 'участие'} · ${FSP_DISCIPLINE_LABELS[item.discipline]} · ${LEVEL_LABELS[item.level]}`,
-            }))}
+            rows={[
+              ...(profile.fspTitles ?? []).map((title) => ({
+                key: `title-${title.kind}-${title.discipline}`,
+                label: String(title.awardedYear),
+                value: FSP_TITLE_LABELS[title.kind],
+                note: `Спортивное звание · ${FSP_DISCIPLINE_LABELS[title.discipline]}`,
+              })),
+              ...(profile.fspAchievements ?? []).map((item, index) => ({
+                key: `fsp-${index}`,
+                label: String(item.year),
+                value: item.eventName,
+                note: [
+                  fspOutcomeText(item),
+                  fspTeamText(item),
+                  FSP_DISCIPLINE_LABELS[item.discipline],
+                  item.eventKind
+                    ? `${FSP_EVENT_KIND_LABELS[item.eventKind]}, ${FSP_LEVEL_LABELS[item.level]} уровень`
+                    : `${FSP_LEVEL_LABELS[item.level]} уровень`,
+                ]
+                  .filter(Boolean)
+                  .join(' · '),
+              })),
+            ]}
           />
         ) : (
           <p className="resume-panels__text resume-panels__text--dim">
             {profile.fspLinked
-              ? 'В ФСП пока нет результатов по вашему ID.'
-              : 'Профиль не связан с ФСП.'}
+              ? 'В реестре ФСП пока нет ваших результатов — профиль работает как обычно.'
+              : 'Профиль не связан с ФСП ID.'}
           </p>
         )}
         <p className="form-hint">
-          <LockIcon /> Достижения приходят из ФСП, вручную их не изменить.{' '}
-          {!profile.fspLinked && <Link to={ROUTES.profileSettings}>Связать в настройках</Link>}
+          <LockIcon /> Достижения приходят из реестра ФСП, вручную их не изменить.
+          {profile.fspSyncedAt ? ` Обновлено ${formatDate(profile.fspSyncedAt)}.` : ''}{' '}
+          <Link to={ROUTES.profileSettings}>
+            {profile.fspLinked ? 'Обновить в настройках' : 'Привязать ФСП ID'}
+          </Link>
         </p>
       </Panel>
     </div>

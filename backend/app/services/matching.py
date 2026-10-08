@@ -14,11 +14,15 @@ import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Literal, Self
+from typing import Any, Literal, Self
 
 from app.models import CandidateProfile, FspDiscipline, FspEventLevel, Grade, Vacancy, WorkFormat
+from app.models.enums import FspOutcome, FspParticipation, FspTitleKind
 from app.services.categories import (
     FSP_DISCIPLINE_LABELS,
+    FSP_EVENT_KIND_LABELS,
+    FSP_OUTCOME_LABELS,
+    FSP_TITLE_LABELS,
     GRADE_LABELS,
     SPECIALIZATIONS,
     WORK_FORMAT_LABELS,
@@ -77,54 +81,125 @@ def neighbour_grades(grade: Grade) -> tuple[Grade, ...]:
 
 # --- profile strength ---------------------------------------------------------------------------
 
-# Points for the best FSP result: 1st, 2nd, 3rd place, finalist (4th and below), participant.
+# Points for the best FSP result: winner, prizewinner 2nd and 3rd place, finalist, participant.
 FSP_POINTS: dict[FspEventLevel, tuple[float, float, float, float, float]] = {
     FspEventLevel.INTERNATIONAL: (0.40, 0.37, 0.34, 0.27, 0.17),
     FspEventLevel.NATIONAL: (0.38, 0.35, 0.32, 0.25, 0.15),
     FspEventLevel.REGIONAL: (0.30, 0.26, 0.23, 0.15, 0.08),
 }
 FSP_EXTRA_PER_RESULT = 0.02
+# A team result is shared with teammates, so it weighs a little less than an individual one.
+FSP_TEAM_SHARE = 0.9
+# The highest sport rank or title adds to the FSP part, still within the cap.
+FSP_TITLE_BONUS: dict[FspTitleKind, float] = {
+    FspTitleKind.RANK_3: 0.01,
+    FspTitleKind.RANK_2: 0.015,
+    FspTitleKind.RANK_1: 0.02,
+    FspTitleKind.KMS: 0.03,
+    FspTitleKind.MS: 0.04,
+    FspTitleKind.MSMK: 0.05,
+    FspTitleKind.ZMS: 0.05,
+}
 FSP_CAP = 0.4
 TEST_SHARE = 0.6
 PRIZE_PLACES = 3
 
 
 @dataclass(frozen=True, slots=True)
-class FspResult:
+class FspScoredResult:
+    """An FSP result as the ranking sees it."""
+
     event_name: str
     discipline: FspDiscipline
     level: FspEventLevel
     year: int
     place: int | None
+    result: FspOutcome
+    participation: FspParticipation = FspParticipation.INDIVIDUAL
+    team_name: str | None = None
+
+    @classmethod
+    def placed(
+        cls,
+        event_name: str,
+        discipline: FspDiscipline,
+        level: FspEventLevel,
+        year: int,
+        place: int | None,
+        **extra: Any,
+    ) -> Self:
+        """The registry's result for a place, e.g. 2 → prizewinner."""
+        return cls(
+            event_name, discipline, level, year, place, FspOutcome.from_place(place), **extra
+        )
 
 
-def _result_points(result: FspResult) -> float:
+def _result_points(result: FspScoredResult) -> float:
     points = FSP_POINTS[result.level]
-    if result.place is None:
-        return points[4]
-    return points[min(result.place, PRIZE_PLACES + 1) - 1]
+    if result.result == FspOutcome.WINNER:
+        value = points[0]
+    elif result.result == FspOutcome.PRIZEWINNER:
+        # The place only orders prizewinners; without one the result counts as 2nd.
+        place = result.place if result.place in (2, 3) else 2
+        value = points[place - 1]
+    elif result.result == FspOutcome.FINALIST:
+        value = points[3]
+    else:
+        value = points[4]
+    if result.participation == FspParticipation.TEAM:
+        value *= FSP_TEAM_SHARE
+    return value
 
 
-def best_fsp_result(results: Sequence[FspResult]) -> FspResult | None:
+def best_fsp_result(results: Sequence[FspScoredResult]) -> FspScoredResult | None:
     return max(results, key=lambda result: (_result_points(result), result.year), default=None)
 
 
-def fsp_points(results: Sequence[FspResult]) -> float:
-    """0–0.4: the best result plus a little for each further one."""
+def best_fsp_title(titles: Sequence[FspTitleKind]) -> FspTitleKind | None:
+    order = list(FspTitleKind)
+    return max(titles, key=order.index, default=None)
+
+
+def fsp_points(results: Sequence[FspScoredResult], titles: Sequence[FspTitleKind] = ()) -> float:
+    """0–0.4: the best result, a little for each further one, and the highest title."""
     best = best_fsp_result(results)
-    if best is None:
-        return 0.0
-    extra = FSP_EXTRA_PER_RESULT * (len(results) - 1)
-    return min(FSP_CAP, _result_points(best) + extra)
+    title = best_fsp_title(titles)
+    points = FSP_TITLE_BONUS[title] if title is not None else 0.0
+    if best is not None:
+        points += _result_points(best) + FSP_EXTRA_PER_RESULT * (len(results) - 1)
+    return min(FSP_CAP, points)
 
 
-def profile_strength(assessment_score: float | None, results: Sequence[FspResult]) -> float:
-    """0–1: 60% the test result for the current grade, up to 40% confirmed FSP results.
+def fsp_search_text(profile: CandidateProfile) -> str:
+    """Words of the FSP history a recruiter may search by: «хакатон», «призёр», «КМС»…"""
+    parts: list[str] = []
+    for item in profile.fsp_achievements:
+        parts += [
+            item.event_name,
+            FSP_EVENT_KIND_LABELS[item.event_kind],
+            FSP_DISCIPLINE_LABELS[item.discipline],
+            FSP_OUTCOME_LABELS[item.result],
+        ]
+        if item.team_name:
+            parts += ["команда", item.team_name]
+    for title in profile.fsp_titles:
+        parts += [FSP_TITLE_LABELS[title.kind], FSP_DISCIPLINE_LABELS[title.discipline]]
+    return " ".join(parts)
 
-    A candidate who skipped the test only gets the FSP part, so self-declared grades rank lower.
+
+def profile_strength(
+    assessment_score: float | None,
+    results: Sequence[FspScoredResult],
+    titles: Sequence[FspTitleKind] = (),
+) -> float:
+    """0–1: 60% the test result for the current grade, up to 40% confirmed FSP history.
+
+    The order inside a category only: the grade and the category come from the test alone, FSP
+    results never change them. A candidate who skipped the test only gets the FSP part, so
+    self-declared grades rank lower; one without FSP history ranks by the test alone.
     """
     test = TEST_SHARE * assessment_score / 100 if assessment_score is not None else 0.0
-    return round(test + fsp_points(results), 4)
+    return round(test + fsp_points(results, titles), 4)
 
 
 # --- facts ---------------------------------------------------------------------------------------
@@ -140,13 +215,14 @@ class CandidateFacts:
     relocation_ready: bool
     salary_expectation: int | None
     assessment_score: float | None
-    fsp: tuple[FspResult, ...]
+    fsp: tuple[FspScoredResult, ...]
     # Specializations of the non-priority resumes. They rank below an exact priority match.
     other_specializations: tuple[str, ...] = ()
+    fsp_titles: tuple[FspTitleKind, ...] = ()
 
     @classmethod
     def of(cls, profile: CandidateProfile) -> Self:
-        """`profile.fsp_achievements` must be loaded."""
+        """`profile.fsp_achievements` and `profile.fsp_titles` must be loaded."""
         return cls(
             specialization=profile.specialization,
             grade=profile.grade,
@@ -162,20 +238,24 @@ class CandidateFacts:
                 if isinstance(item, dict) and item.get("specialization")
             ),
             fsp=tuple(
-                FspResult(
+                FspScoredResult(
                     event_name=item.event_name,
                     discipline=item.discipline,
                     level=item.level,
                     year=item.year,
                     place=item.place,
+                    result=item.result,
+                    participation=item.participation,
+                    team_name=item.team_name,
                 )
                 for item in profile.fsp_achievements
             ),
+            fsp_titles=tuple(item.kind for item in profile.fsp_titles),
         )
 
     @property
     def strength(self) -> float:
-        return profile_strength(self.assessment_score, self.fsp)
+        return profile_strength(self.assessment_score, self.fsp, self.fsp_titles)
 
 
 @dataclass(frozen=True, slots=True)
@@ -405,13 +485,22 @@ def vacancy_reasons(
     return reasons[:MAX_REASONS]
 
 
-def _fsp_reason(result: FspResult) -> str:
+def _fsp_reason(result: FspScoredResult, title: FspTitleKind | None = None) -> str:
     details = f"{result.event_name} ({FSP_DISCIPLINE_LABELS[result.discipline]}, {result.year})"
-    if result.place is None:
-        return f"ФСП: участие — {details}"
-    if result.place <= PRIZE_PLACES:
-        return f"ФСП: {result.place}-е место — {details}"
-    return f"ФСП: финал, {result.place}-е место — {details}"
+    if result.participation == FspParticipation.TEAM:
+        details += f", команда «{result.team_name}»" if result.team_name else ", командный зачёт"
+    place = f", {result.place}-е место" if result.place is not None else ""
+    if result.result == FspOutcome.WINNER:
+        text = f"ФСП: победитель — {details}"
+    elif result.result == FspOutcome.PRIZEWINNER:
+        text = f"ФСП: призёр{place} — {details}"
+    elif result.result == FspOutcome.FINALIST:
+        text = f"ФСП: финал{place} — {details}"
+    else:
+        text = f"ФСП: участие — {details}"
+    if title is not None:
+        text += f"; {FSP_TITLE_LABELS[title]}"
+    return text
 
 
 def _vacancy_fit_reasons(
@@ -454,8 +543,11 @@ def candidate_reasons(
     else:
         reasons.append("Грейд указан без теста")
     best = best_fsp_result(candidate.fsp)
+    title = best_fsp_title(candidate.fsp_titles)
     if best is not None:
-        reasons.append(_fsp_reason(best))
+        reasons.append(_fsp_reason(best, title))
+    elif title is not None:
+        reasons.append(f"ФСП: {FSP_TITLE_LABELS[title]}")
 
     if result is not None and vacancy is not None:
         reasons += _vacancy_fit_reasons(candidate, vacancy, result)

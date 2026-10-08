@@ -35,6 +35,7 @@ const PROFILE: OwnCandidateDto = {
   workFormats: ['remote'],
   salaryExpectation: 200000,
   fspAchievements: [],
+  fspTitles: [],
   fspLinked: false,
   resumes: [],
   hasPhoto: false,

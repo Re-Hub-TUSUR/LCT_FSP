@@ -72,6 +72,18 @@ class Settings(BaseSettings):
     # Time to answer the questions once they are shown.
     interview_minutes: int = Field(default=15, ge=1, le=120)
 
+    # FSP ID (Keycloak, OAuth2 / OIDC) and the FSP participant registry, `app.integrations.fsp`.
+    # `mock`: both are emulated inside this API (the hackathon has no access to the real ones).
+    fsp_id_mode: Literal["mock", "keycloak"] = "mock"
+    # Realm URL, e.g. https://id.fsp-russia.ru/realms/fsp. The mock realm is served by this API,
+    # so a path relative to the site works for the browser redirect.
+    fsp_id_issuer: str = "/api/v1/mock/fsp-id/realms/fsp"
+    fsp_id_client_id: str = "kadry"
+    fsp_id_client_secret: SecretStr = SecretStr("")
+    # Where FSP ID returns the browser. Origins from CORS_ORIGINS are accepted with the same path.
+    fsp_id_redirect_uri: str = "http://localhost:5173/profile/fsp/callback"
+    fsp_registry_url: str = ""
+
     @field_validator("resend_from")
     @classmethod
     def _default_from(cls, value: str) -> str:

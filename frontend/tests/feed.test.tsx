@@ -107,12 +107,17 @@ const candidateMatch: CandidateMatchDto = {
     fspAchievements: [
       {
         eventName: 'Чемпионат Москвы по спортивному программированию',
+        eventKind: 'championship',
         year: 2025,
         place: 1,
+        result: 'winner',
+        participation: 'team',
+        teamName: 'NullPointer',
         discipline: 'algorithmic',
         level: 'regional',
       },
     ],
+    fspTitles: [{ kind: 'kms', discipline: 'algorithmic', awardedYear: 2025 }],
     fspLinked: true,
     contacts: null,
     jobStatus: 'open',
@@ -181,7 +186,10 @@ describe('feeds', () => {
 
     await user.click(screen.getByRole('button', { name: /Марина Крылова/ }))
     const sheet = await screen.findByRole('dialog', { name: 'Марина Крылова' })
-    expect(within(sheet).getByText(/1-е место · Чемпионат Москвы/)).toBeInTheDocument()
+    expect(
+      within(sheet).getByText(/^Победитель · Чемпионат Москвы .* · команда «NullPointer»/),
+    ).toBeInTheDocument()
+    expect(within(sheet).getByText('КМС · алгоритмическое программирование, 2025')).toBeVisible()
   })
 
   it('moves to the next card after a swipe decision', async () => {

@@ -11,12 +11,26 @@ export type {
   EducationEntryDto,
   ExperienceEntryDto,
   FspAchievementDto,
+  FspLinkRequest,
+  FspSportTitleDto,
   OwnCandidateDto,
   ResumeCreate,
   ResumeDraftDto,
   ResumeDto,
 } from './api/candidate-api'
-export { FSP_DISCIPLINE_LABELS } from './model/fsp'
+export {
+  bestFspResult,
+  bestFspTitle,
+  FSP_DISCIPLINE_LABELS,
+  FSP_EVENT_KIND_LABELS,
+  FSP_LEVEL_LABELS,
+  FSP_OUTCOME_LABELS,
+  FSP_TITLE_LABELS,
+  fspAchievementLine,
+  fspOutcomeText,
+  fspTeamText,
+  fspTitleLine,
+} from './model/fsp'
 export {
   FSP_SYNC_LABELS,
   JOB_STATUS_HINTS,

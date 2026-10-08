@@ -1,23 +1,17 @@
 import { useId, type ReactNode } from 'react'
 import { AssessmentStatusBadge } from '@/entities/assessment'
-import { CandidateResumes, FSP_DISCIPLINE_LABELS, useCandidatePhoto } from '@/entities/candidate'
-import type { CandidateMatchDto, FspAchievementDto } from '@/entities/candidate'
+import {
+  CandidateResumes,
+  fspAchievementLine,
+  fspTitleLine,
+  useCandidatePhoto,
+} from '@/entities/candidate'
+import type { CandidateMatchDto } from '@/entities/candidate'
 import { WORK_FORMAT_LABELS } from '@/entities/vacancy'
 import { Avatar, ChipList, MatchMeter, Sheet, SheetSection } from '@/shared/ui'
 import './candidate-sheet.css'
 
 const rub = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 })
-
-const FSP_LEVELS = {
-  regional: 'региональный',
-  national: 'всероссийский',
-  international: 'международный',
-} as const
-
-function achievementLine(item: FspAchievementDto) {
-  const place = item.place ? `${item.place}-е место` : 'участие'
-  return `${place} · ${item.eventName} · ${FSP_DISCIPLINE_LABELS[item.discipline]}, ${item.year} · ${FSP_LEVELS[item.level]}`
-}
 
 /** Comparisons with the chosen vacancy. Test, FSP, stack and city are already on the sheet. */
 function vacancyNotes(reasons: string[]) {
@@ -39,6 +33,8 @@ export function CandidatePanel({ match, onClose, actions }: Props) {
   const titleId = useId()
   const photo = useCandidatePhoto(candidate.id, candidate.hasPhoto === true)
   const about = candidate.about?.split('\n\n').filter(Boolean) ?? []
+  const fspAchievements = candidate.fspAchievements ?? []
+  const fspTitles = candidate.fspTitles ?? []
 
   return (
     <Sheet label="Кандидат" labelledBy={titleId} onClose={onClose} footer={actions}>
@@ -121,16 +117,30 @@ export function CandidatePanel({ match, onClose, actions }: Props) {
         </SheetSection>
       )}
       <SheetSection title="Достижения ФСП">
-        {candidate.fspAchievements.length > 0 ? (
-          <ul>
-            {candidate.fspAchievements.map((item) => (
+        {fspTitles.length > 0 && (
+          <ul aria-label="Спортивные звания">
+            {fspTitles.map((title) => (
+              <li key={`${title.kind}-${title.discipline}`}>{fspTitleLine(title)}</li>
+            ))}
+          </ul>
+        )}
+        {fspAchievements.length > 0 ? (
+          <ul aria-label="Результаты">
+            {fspAchievements.map((item) => (
               <li key={`${item.eventName}-${item.year}-${item.discipline}`}>
-                {achievementLine(item)}
+                {fspAchievementLine(item, { detailed: true })}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="candidate-panel__none">Нет подтверждённой истории участия в ФСП</p>
+          fspTitles.length === 0 && (
+            <p className="candidate-panel__none">Нет подтверждённой истории участия в ФСП</p>
+          )
+        )}
+        {(fspAchievements.length > 0 || fspTitles.length > 0) && (
+          <p className="candidate-panel__none">
+            Подтверждено реестром ФСП. Влияет на порядок внутри категории, не на грейд.
+          </p>
         )}
       </SheetSection>
 

@@ -121,7 +121,8 @@ migrations/    Alembic (async), URL из настроек
 | auth | `/auth/register`, `/auth/login`, `/auth/verify-email`, `/auth/resend-verification`; `/auth/refresh` | ✅ / 501 |
 | users | `/users/me` | ✅ |
 | categories | `/categories/dictionary` | ✅ (статический MVP-словарь) |
-| candidates (employees) | поиск (Elasticsearch), `/{id}`, реакции ✅; `/me`, резюме PDF, `fsp-link` — 501 | ✅ / 501 |
+| candidates (employees) | поиск (Elasticsearch), `/{id}`, реакции, `/me`, резюме PDF; `/me/fsp-link`, `/me/fsp-sync` — привязка FSP ID и выгрузка из реестра ФСП | ✅ |
+| fsp-id | `/fsp-id/authorize` — начало входа через FSP ID (OIDC + PKCE); эмуляция реалма и реестра `/mock/*` при `FSP_ID_MODE=mock` ([FSP_INTEGRATION.md](FSP_INTEGRATION.md)) | ✅ |
 | companies (employers) | `/{id}` ✅; банк задач и тестов компании с импортом и экспортом JSON, `/me/test-assignments` (отправить тестовое при взаимном лайке, ответы, ручная проверка) ✅; `/me` GET/PUT — 501 | ✅ / 501 |
 | vacancies | список, `feed`, `mine`, `/{id}`, реакции ✅; создание и правка — 501 | ✅ / 501 |
 | invitations | создание, `incoming`, `outgoing`, `accept`/`decline` | 501 |
@@ -143,7 +144,8 @@ migrations/    Alembic (async), URL из настроек
 
 Модели: `User`, `EmailVerificationCode`, `CandidateProfile` (категория и балл теста,
 предпочтения для ленты: город, форматы работы, ожидания по зарплате; контакты),
-`FspAchievement` (результаты соревнований ФСП по FSP ID), `Company`, `Vacancy`, `Invitation`
+`FspAchievement` и `FspSportTitle` (результаты и звания из реестра ФСП по номеру участника,
+подтверждённому FSP ID; схема — [FSP_INTEGRATION.md](FSP_INTEGRATION.md)), `Company`, `Vacancy`, `Invitation`
 (CHECK на вилку `0 < from ≤ to`). Таблицы для откликов, потребностей мэтчинга, событий
 календаря и попыток тестирования появятся вместе с их сервисами.
 
@@ -219,7 +221,8 @@ required reviewers; (3) задать `PUBLISH_IMAGES=true` и секрет `DEPL
    (балл тестирования, затем подтверждённые достижения ФСП).
 2. Приглашения: статусы, раскрытие контактов только после `accept`, уведомления.
 3. Тестирование: банк заданий по грейдам, варианты на кандидата, cooldown смены грейда.
-4. Подключить домен в Resend и прописать `RESEND_API_KEY`. Дальше — refresh-токены и FSP ID.
+4. Подключить домен в Resend и прописать `RESEND_API_KEY`. Дальше — настоящий FSP ID вместо
+   эмуляции (чек-лист в [FSP_INTEGRATION.md](FSP_INTEGRATION.md)).
 5. Разбор PDF-резюме, объяснимый мэтчинг, календарь.
 6. Генерация TS-типов из OpenAPI (`openapi-typescript`) вместо ручных DTO.
 7. Наблюдаемость (Sentry/OTel), rate limiting на `/auth/*`, e2e-тесты (Playwright).

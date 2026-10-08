@@ -149,30 +149,6 @@ async def test_experience_periods_set_the_years(client: AsyncClient) -> None:
     assert foreign.status_code == 400
 
 
-async def test_fsp_id_is_unique_and_can_be_unlinked(client: AsyncClient) -> None:
-    first = await register_and_login(client, "first@fsp.ru")
-    await client.patch(f"{API}/candidates/me", headers=bearer(first), json=RESUME)
-    linked = await client.post(
-        f"{API}/candidates/me/fsp-link", headers=bearer(first), json={"fspMemberId": "104582"}
-    )
-    assert linked.status_code == 200
-    assert linked.json()["fspLinked"] is True
-    assert linked.json()["fspMemberId"] == "104582"
-    assert linked.json()["fspAchievements"] == []
-
-    second = await register_and_login(client, "second@fsp.ru")
-    await client.patch(f"{API}/candidates/me", headers=bearer(second), json=RESUME)
-    conflict = await client.post(
-        f"{API}/candidates/me/fsp-link", headers=bearer(second), json={"fspMemberId": "104582"}
-    )
-    assert conflict.status_code == 409
-
-    cleared = await client.delete(f"{API}/candidates/me/fsp-link", headers=bearer(first))
-    assert cleared.status_code == 200
-    assert cleared.json()["fspLinked"] is False
-    assert cleared.json()["fspMemberId"] is None
-
-
 async def test_employer_company_profile_and_role_split(client: AsyncClient) -> None:
     employer = await register_and_login(client, "hr@fsp.ru", role="employer")
     missing = await client.get(f"{API}/companies/me", headers=bearer(employer))

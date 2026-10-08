@@ -29,13 +29,30 @@ export type EducationEntryDto = {
 
 export type FspDiscipline = 'algorithmic' | 'product' | 'security' | 'robotics' | 'uav'
 
+export type FspEventKind = 'championship' | 'cup' | 'hackathon' | 'olympiad'
+export type FspOutcome = 'winner' | 'prizewinner' | 'finalist' | 'participant'
+export type FspParticipation = 'individual' | 'team'
+export type FspTitleKind = 'rank_3' | 'rank_2' | 'rank_1' | 'kms' | 'ms' | 'msmk' | 'zms'
+
+/** A result confirmed by the FSP registry. */
 export type FspAchievementDto = {
   eventName: string
+  eventKind: FspEventKind
   year: number
   /** Null = took part without a prize place. */
   place: number | null
+  result: FspOutcome
+  participation: FspParticipation
+  teamName: string | null
   discipline: FspDiscipline
   level: 'regional' | 'national' | 'international'
+}
+
+/** A sport rank or title of the federation (разряд, КМС, МС…). */
+export type FspSportTitleDto = {
+  kind: FspTitleKind
+  discipline: FspDiscipline
+  awardedYear: number
 }
 
 /** Contacts are revealed only after the candidate accepted an invitation or applied (ТЗ 2.2). */
@@ -66,6 +83,7 @@ export type CandidateDto = {
   salaryExpectation: number | null
   /** Empty list is a valid, explicitly handled state: candidate has no FSP history. */
   fspAchievements: FspAchievementDto[]
+  fspTitles: FspSportTitleDto[]
   fspLinked: boolean
   resumes?: ResumeDto[]
   hasPhoto?: boolean
@@ -86,16 +104,27 @@ export type CandidateDto = {
   matched?: boolean | null
 }
 
-/** Cabinet view: the search switch and the FSP id the candidate entered. */
+/** Cabinet view: the search switch and the FSP ID link with its sync state. */
 export type OwnCandidateDto = CandidateDto & {
   searching: boolean
+  /** Confirmed by FSP ID sign-in, never typed by the candidate. */
   fspMemberId: string | null
   /** Kept before a grade exists, so the resume can be reopened. */
   specialization: string | null
   birthDate: string | null
   profileDisplayConsent: boolean
   fspSync: FspSync | null
+  fspLinkedAt?: string | null
+  /** Last successful import from the FSP registry. */
+  fspSyncedAt?: string | null
+  /** The registry did not answer on the last import; the link stays. */
+  fspSyncError?: string | null
 }
+
+export type FspAuthorizeDto = { authorizeUrl: string }
+
+/** What FSP ID returns to `/profile/fsp/callback`. */
+export type FspLinkRequest = { code: string; state: string }
 
 export type ResumeDto = {
   id: string
@@ -255,7 +284,12 @@ export const candidateApi = {
   },
   setJobStatus: (jobStatus: JobStatus) =>
     http.patch<OwnCandidateDto>('/candidates/me/searching', { jobStatus }),
-  linkFsp: (fspMemberId: string) =>
-    http.post<OwnCandidateDto>('/candidates/me/fsp-link', { fspMemberId }),
+  /** Starts the FSP ID sign-in (OIDC + PKCE): the browser goes to the returned URL. */
+  authorizeFsp: (redirectUri: string) =>
+    http.post<FspAuthorizeDto>('/fsp-id/authorize', { redirectUri }),
+  linkFsp: (answer: FspLinkRequest) =>
+    http.post<OwnCandidateDto>('/candidates/me/fsp-link', answer),
+  /** Re-reads the FSP registry without a new sign-in. */
+  syncFsp: () => http.post<OwnCandidateDto>('/candidates/me/fsp-sync'),
   unlinkFsp: () => http.delete<OwnCandidateDto>('/candidates/me/fsp-link'),
 }

@@ -38,11 +38,24 @@
     "fsp_member_id": "FSP-408134",
     "fsp_achievements": [
       {
+        "id": "ach-e43baf20",
         "event_name": "Чемпионат Москвы по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2025,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-e43baf20",
+        "kind": "rank_1",
+        "discipline": "algorithmic",
+        "awarded_year": 2025
       }
     ],
     "phone": "+7 913 706-99-72",
@@ -55,7 +68,7 @@
     "email": "t.mukhametova@example.com",
     "display_name": "Таисия Мухаметова",
     "headline": "Senior Android-разработчик",
-    "about": "9 лет в IT, из них 5 — в продуктовой студии. В фокусе: перевод проекта с RxJava на корутины, многомодульная архитектура и ускорение сборки. Довожу сложные задачи от идеи до продакшена. 2-е место — Чемпионат России по спортивному программированию (продуктовое программирование, 2025). Ищу команду с сильной инженерной культурой.",
+    "about": "9 лет в IT, из них 5 — в продуктовой студии. В фокусе: перевод проекта с RxJava на корутины, многомодульная архитектура и ускорение сборки. Довожу сложные задачи от идеи до продакшена. 2-е место — Хакатон ФСП «Цифровые сервисы для регионов» (продуктовое программирование, 2025). Ищу команду с сильной инженерной культурой.",
     "specialization": "mobile",
     "grade": "senior",
     "experience_years": 9,
@@ -89,11 +102,24 @@
     "fsp_member_id": "FSP-188184",
     "fsp_achievements": [
       {
-        "event_name": "Чемпионат России по спортивному программированию",
+        "id": "ach-e67d1179",
+        "event_name": "Хакатон ФСП «Цифровые сервисы для регионов»",
+        "event_kind": "hackathon",
         "discipline": "product",
         "level": "national",
         "year": 2025,
-        "place": 2
+        "place": 2,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "Стек вызовов"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-e67d1179",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2025
       }
     ],
     "phone": "+7 950 612-72-76",
@@ -135,6 +161,7 @@
     "registered_days_ago": 70,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 969 608-82-60",
     "telegram": "@asmirnova_565",
     "is_visible_to_employers": true
@@ -174,6 +201,7 @@
     "registered_days_ago": 27,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 936 454-77-85",
     "telegram": "@sshcherbakov_826",
     "is_visible_to_employers": true
@@ -184,7 +212,7 @@
     "email": "d.orlov@example.com",
     "display_name": "Даниил Орлов",
     "headline": "Senior продуктовый аналитик",
-    "about": "6 лет в IT, из них 3 — в продуктовой студии. В фокусе: дизайн и анализ A/B-тестов, дашборды для продуктовых команд. Довожу сложные задачи от идеи до продакшена. 3-е место — Кубок России по спортивному программированию (алгоритмическое программирование, 2023). Интересны продукты, которые приносят пользу людям.",
+    "about": "6 лет в IT, из них 3 — в продуктовой студии. В фокусе: дизайн и анализ A/B-тестов, дашборды для продуктовых команд. Довожу сложные задачи от идеи до продакшена. 3-е место — Всероссийская студенческая олимпиада по спортивному программированию (алгоритмическое программирование, 2023). Интересны продукты, которые приносят пользу людям.",
     "specialization": "data-science",
     "grade": "senior",
     "experience_years": 6,
@@ -216,11 +244,24 @@
     "fsp_member_id": "FSP-813927",
     "fsp_achievements": [
       {
-        "event_name": "Кубок России по спортивному программированию",
+        "id": "ach-e33207fc",
+        "event_name": "Всероссийская студенческая олимпиада по спортивному программированию",
+        "event_kind": "olympiad",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2023,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-e33207fc",
+        "kind": "rank_1",
+        "discipline": "algorithmic",
+        "awarded_year": 2023
       }
     ],
     "phone": "+7 936 838-95-82",
@@ -265,6 +306,7 @@
     "registered_days_ago": 94,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 966 383-40-74",
     "telegram": "@enovikov_576",
     "is_visible_to_employers": true
@@ -304,25 +346,48 @@
     "fsp_member_id": "FSP-184576",
     "fsp_achievements": [
       {
+        "id": "ach-e0b6d392",
         "event_name": "Кубок Москвы по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2025,
-        "place": 2
+        "place": 2,
+        "result": "prizewinner",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-97b1e304",
         "event_name": "Чемпионат России по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2025,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-0eb8b2be",
         "event_name": "Первенство России по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2025,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-e0b6d392",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2025
       }
     ],
     "phone": "+7 990 529-15-46",
@@ -335,7 +400,7 @@
     "email": "a.grigorev@example.com",
     "display_name": "Арсений Григорьев",
     "headline": "Junior Fullstack-разработчик (React + Node.js)",
-    "about": "Год коммерческого опыта в продуктовой студии. В фокусе: настройка CI/CD и деплоя в облако, API на NestJS и клиентская часть на React. Хочу расти в команде с культурой код-ревью и наставничества. 1-е место — Всероссийские соревнования по спортивному программированию (продуктовое программирование, 2023). Ценю прозрачные процессы и понятные цели.",
+    "about": "Год коммерческого опыта в продуктовой студии. В фокусе: настройка CI/CD и деплоя в облако, API на NestJS и клиентская часть на React. Хочу расти в команде с культурой код-ревью и наставничества. 1-е место — Хакатон ФСП «Цифровые сервисы для регионов» (продуктовое программирование, 2023). Ценю прозрачные процессы и понятные цели.",
     "specialization": "fullstack",
     "grade": "junior",
     "experience_years": 1,
@@ -366,18 +431,36 @@
     "fsp_member_id": "FSP-632515",
     "fsp_achievements": [
       {
-        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "id": "ach-ebea94af",
+        "event_name": "Хакатон ФСП «Цифровые сервисы для регионов»",
+        "event_kind": "hackathon",
         "discipline": "product",
         "level": "national",
         "year": 2023,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "team",
+        "team_name": "Байтовые волки"
       },
       {
+        "id": "ach-9ceda439",
         "event_name": "Кубок Москвы по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2023,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "404 Not Found"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-ebea94af",
+        "kind": "kms",
+        "discipline": "product",
+        "awarded_year": 2023
       }
     ],
     "phone": "+7 918 495-17-52",
@@ -422,6 +505,7 @@
     "registered_days_ago": 192,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 979 844-89-68",
     "telegram": "@esolovev_651",
     "is_visible_to_employers": true
@@ -463,18 +547,36 @@
     "fsp_member_id": "FSP-301058",
     "fsp_achievements": [
       {
+        "id": "ach-5d45a272",
         "event_name": "Кубок России по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "national",
         "year": 2024,
-        "place": 15
+        "place": 15,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Бинарный поиск"
       },
       {
+        "id": "ach-2a4292e4",
         "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2023,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "404 Not Found"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-5d45a272",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2023
       }
     ],
     "phone": "+7 999 750-83-73",
@@ -515,25 +617,48 @@
     "fsp_member_id": "FSP-993732",
     "fsp_achievements": [
       {
+        "id": "ach-5c87c845",
         "event_name": "Кубок России по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "national",
         "year": 2026,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Бинарный поиск"
       },
       {
+        "id": "ach-2b80f8d3",
         "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2024,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "Сигма-драйв"
       },
       {
-        "event_name": "Первенство России по спортивному программированию",
+        "id": "ach-b289a969",
+        "event_name": "Хакатон ФСП «Цифровые сервисы для регионов»",
+        "event_kind": "hackathon",
         "discipline": "product",
         "level": "national",
         "year": 2024,
-        "place": 6
+        "place": 6,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Байтовые волки"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-5c87c845",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2024
       }
     ],
     "phone": null,
@@ -573,6 +698,7 @@
     "registered_days_ago": 216,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": null,
     "telegram": "@obykova_404",
     "is_visible_to_employers": true
@@ -614,6 +740,7 @@
     "registered_days_ago": 100,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 981 966-26-91",
     "telegram": "@pkudryavtsev_359",
     "is_visible_to_employers": true
@@ -653,13 +780,19 @@
     "fsp_member_id": "FSP-549351",
     "fsp_achievements": [
       {
+        "id": "ach-5a4c0aae",
         "event_name": "Чемпионат Республики Татарстан по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2024,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 935 610-33-57",
     "telegram": "@afomin_947",
     "is_visible_to_employers": true
@@ -704,6 +837,7 @@
     "registered_days_ago": 221,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 987 331-56-74",
     "telegram": "@gsergeev_317",
     "is_visible_to_employers": true
@@ -746,6 +880,7 @@
     "registered_days_ago": 32,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 956 968-33-20",
     "telegram": "@ekomarov_923",
     "is_visible_to_employers": true
@@ -789,13 +924,19 @@
     "fsp_member_id": "FSP-474258",
     "fsp_achievements": [
       {
+        "id": "ach-580ab4f7",
         "event_name": "Кубок России по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2022,
-        "place": 5
+        "place": 5,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Стек вызовов"
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 955 385-92-62",
     "telegram": "@mmelnikov_472",
     "is_visible_to_employers": true
@@ -840,6 +981,7 @@
     "registered_days_ago": 108,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 957 706-50-28",
     "telegram": "@mmorozov_350",
     "is_visible_to_employers": true
@@ -877,20 +1019,31 @@
     "fsp_member_id": "FSP-263447",
     "fsp_achievements": [
       {
+        "id": "ach-529499fd",
         "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2026,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "Бинарный поиск"
       },
       {
+        "id": "ach-2593a96b",
         "event_name": "Чемпионат России по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2024,
-        "place": 10
+        "place": 10,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "NullPointer"
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 968 559-83-26",
     "telegram": null,
     "is_visible_to_employers": true
@@ -934,6 +1087,7 @@
     "registered_days_ago": 145,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 917 177-64-15",
     "telegram": null,
     "is_visible_to_employers": true
@@ -974,6 +1128,7 @@
     "registered_days_ago": 144,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 920 709-39-69",
     "telegram": "@nbykov_343",
     "is_visible_to_employers": true
@@ -1015,6 +1170,7 @@
     "registered_days_ago": 213,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 946 782-29-50",
     "telegram": "@ktimofeeva_235",
     "is_visible_to_employers": true
@@ -1053,6 +1209,7 @@
     "registered_days_ago": 230,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 949 915-92-93",
     "telegram": "@dpetrov_658",
     "is_visible_to_employers": true
@@ -1094,6 +1251,7 @@
     "registered_days_ago": 129,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 973 493-45-59",
     "telegram": "@ykondratev_202",
     "is_visible_to_employers": true
@@ -1138,6 +1296,7 @@
     "registered_days_ago": 207,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 926 510-82-10",
     "telegram": "@ititov_132",
     "is_visible_to_employers": true
@@ -1180,6 +1339,7 @@
     "registered_days_ago": 243,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 978 610-25-98",
     "telegram": "@vkrylova_954",
     "is_visible_to_employers": true
@@ -1223,6 +1383,7 @@
     "registered_days_ago": 215,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 976 148-54-93",
     "telegram": null,
     "is_visible_to_employers": true
@@ -1266,18 +1427,36 @@
     "fsp_member_id": "FSP-324582",
     "fsp_achievements": [
       {
-        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "id": "ach-41e35c24",
+        "event_name": "Командный хакатон ФСП по информационной безопасности",
+        "event_kind": "hackathon",
         "discipline": "security",
         "level": "national",
         "year": 2026,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "NullPointer"
       },
       {
+        "id": "ach-36e46cb2",
         "event_name": "Чемпионат Свердловской области по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "security",
         "level": "regional",
         "year": 2025,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-41e35c24",
+        "kind": "rank_1",
+        "discipline": "security",
+        "awarded_year": 2025
       }
     ],
     "phone": null,
@@ -1319,6 +1498,7 @@
     "registered_days_ago": 272,
     "fsp_member_id": "FSP-452643",
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 932 942-20-89",
     "telegram": "@vfedotova_772",
     "is_visible_to_employers": true
@@ -1362,25 +1542,48 @@
     "fsp_member_id": "FSP-154118",
     "fsp_achievements": [
       {
+        "id": "ach-f74c6af9",
         "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2025,
-        "place": 7
+        "place": 7,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-804b5a6f",
         "event_name": "Всероссийские соревнования по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2023,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-19420bd5",
         "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2022,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Байтовые волки"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-f74c6af9",
+        "kind": "rank_2",
+        "discipline": "product",
+        "awarded_year": 2025
       }
     ],
     "phone": "+7 949 675-70-78",
@@ -1424,6 +1627,7 @@
     "registered_days_ago": 66,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 932 692-26-81",
     "telegram": null,
     "is_visible_to_employers": true
@@ -1465,20 +1669,31 @@
     "fsp_member_id": "FSP-269409",
     "fsp_achievements": [
       {
+        "id": "ach-f4c8be97",
         "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2026,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "Сибирский код"
       },
       {
+        "id": "ach-83cf8e01",
         "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2026,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Сибирский код"
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 986 628-12-68",
     "telegram": "@ngrigorev_103",
     "is_visible_to_employers": true
@@ -1519,6 +1734,7 @@
     "registered_days_ago": 253,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 921 895-29-62",
     "telegram": "@kabramov_575",
     "is_visible_to_employers": true
@@ -1560,6 +1776,7 @@
     "registered_days_ago": 93,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 944 239-37-94",
     "telegram": "@nromanov_652",
     "is_visible_to_employers": true
@@ -1602,20 +1819,31 @@
     "fsp_member_id": "FSP-221996",
     "fsp_achievements": [
       {
+        "id": "ach-f187a812",
         "event_name": "Чемпионат России по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2025,
-        "place": 11
+        "place": 11,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Бинарный поиск"
       },
       {
+        "id": "ach-86809884",
         "event_name": "Чемпионат Калининградской области по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2024,
-        "place": 2
+        "place": 2,
+        "result": "prizewinner",
+        "participation": "individual",
+        "team_name": null
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 974 295-80-57",
     "telegram": "@kstepanova_626",
     "is_visible_to_employers": true
@@ -1655,6 +1883,7 @@
     "registered_days_ago": 181,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 961 959-27-54",
     "telegram": "@mmorozov_742",
     "is_visible_to_employers": true
@@ -1665,7 +1894,7 @@
     "email": "d.sorokina@example.com",
     "display_name": "Дарья Сорокина",
     "headline": "Middle iOS-разработчик",
-    "about": "4 года в IT, из них 1 — в ритейле. В фокусе: разработка новых экранов на SwiftUI, оптимизация запуска и потребления памяти приложения. Финал — Всероссийские соревнования по спортивному программированию (продуктовое программирование, 2023), 4-е место.",
+    "about": "4 года в IT, из них 1 — в ритейле. В фокусе: разработка новых экранов на SwiftUI, оптимизация запуска и потребления памяти приложения. Финал — Хакатон ФСП «Цифровые сервисы для регионов» (продуктовое программирование, 2023), 4-е место.",
     "specialization": "mobile",
     "grade": "middle",
     "experience_years": 4,
@@ -1695,11 +1924,24 @@
     "fsp_member_id": "FSP-807290",
     "fsp_achievements": [
       {
-        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "id": "ach-f2037c7c",
+        "event_name": "Хакатон ФСП «Цифровые сервисы для регионов»",
+        "event_kind": "hackathon",
         "discipline": "product",
         "level": "national",
         "year": 2023,
-        "place": 4
+        "place": 4,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Бинарный поиск"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-f2037c7c",
+        "kind": "rank_2",
+        "discipline": "product",
+        "awarded_year": 2023
       }
     ],
     "phone": "+7 954 812-99-22",
@@ -1744,6 +1986,7 @@
     "registered_days_ago": 123,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 974 738-28-53",
     "telegram": null,
     "is_visible_to_employers": true
@@ -1786,6 +2029,7 @@
     "registered_days_ago": 18,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": null,
     "telegram": null,
     "is_visible_to_employers": true
@@ -1825,25 +2069,48 @@
     "fsp_member_id": "FSP-640374",
     "fsp_achievements": [
       {
+        "id": "ach-6a9b5240",
         "event_name": "Кубок Приморского края по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2025,
-        "place": 10
+        "place": 10,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-1d9c62d6",
         "event_name": "Чемпионат Приморского края по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "robotics",
         "level": "regional",
         "year": 2025,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "404 Not Found"
       },
       {
+        "id": "ach-8495336c",
         "event_name": "Кубок Приморского края по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "robotics",
         "level": "regional",
         "year": 2024,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "team",
+        "team_name": "NullPointer"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-6a9b5240",
+        "kind": "rank_1",
+        "discipline": "robotics",
+        "awarded_year": 2024
       }
     ],
     "phone": "+7 924 700-85-82",
@@ -1885,18 +2152,36 @@
     "fsp_member_id": "FSP-332215",
     "fsp_achievements": [
       {
+        "id": "ach-6b593877",
         "event_name": "Чемпионат Москвы по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2026,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-1c5e08e1",
         "event_name": "Чемпионат России по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2025,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-6b593877",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2026
       }
     ],
     "phone": "+7 915 716-26-54",
@@ -1941,25 +2226,48 @@
     "fsp_member_id": "FSP-613979",
     "fsp_achievements": [
       {
+        "id": "ach-691f862e",
         "event_name": "Кубок Томской области по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2026,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "Ctrl+Alt+Win"
       },
       {
+        "id": "ach-1e18b6b8",
         "event_name": "Всероссийские соревнования по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2026,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Бинарный поиск"
       },
       {
+        "id": "ach-8711e702",
         "event_name": "Чемпионат Томской области по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2024,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-691f862e",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2026
       }
     ],
     "phone": "+7 994 698-23-38",
@@ -2001,6 +2309,7 @@
     "registered_days_ago": 128,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 932 817-16-15",
     "telegram": "@vkondrateva_684",
     "is_visible_to_employers": true
@@ -2042,13 +2351,19 @@
     "fsp_member_id": "FSP-532547",
     "fsp_achievements": [
       {
+        "id": "ach-6d92fa9c",
         "event_name": "Кубок Москвы по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2022,
-        "place": 10
+        "place": 10,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 995 876-42-88",
     "telegram": "@akim_177",
     "is_visible_to_employers": true
@@ -2091,6 +2406,7 @@
     "registered_days_ago": 251,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 945 319-16-62",
     "telegram": "@etsoy_657",
     "is_visible_to_employers": true
@@ -2132,18 +2448,36 @@
     "fsp_member_id": "FSP-642640",
     "fsp_achievements": [
       {
+        "id": "ach-6e162ef2",
         "event_name": "Кубок Тюменской области по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "security",
         "level": "regional",
         "year": 2025,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-19111e64",
         "event_name": "Чемпионат Тюменской области по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "security",
         "level": "regional",
         "year": 2022,
-        "place": 7
+        "place": 7,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-6e162ef2",
+        "kind": "rank_1",
+        "discipline": "security",
+        "awarded_year": 2025
       }
     ],
     "phone": "+7 920 639-12-24",
@@ -2187,20 +2521,31 @@
     "fsp_member_id": "FSP-338929",
     "fsp_achievements": [
       {
+        "id": "ach-6fd444c5",
         "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "security",
         "level": "regional",
         "year": 2026,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-18d37453",
         "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "security",
         "level": "regional",
         "year": 2024,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Сигма-драйв"
       }
     ],
+    "fsp_titles": [],
     "phone": null,
     "telegram": null,
     "is_visible_to_employers": true
@@ -2240,13 +2585,19 @@
     "fsp_member_id": "FSP-608551",
     "fsp_achievements": [
       {
+        "id": "ach-648803f8",
         "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2025,
-        "place": 8
+        "place": 8,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 964 108-93-12",
     "telegram": null,
     "is_visible_to_employers": true
@@ -2288,6 +2639,7 @@
     "registered_days_ago": 93,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 939 627-74-47",
     "telegram": null,
     "is_visible_to_employers": true
@@ -2329,6 +2681,7 @@
     "registered_days_ago": 152,
     "fsp_member_id": "FSP-430885",
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 985 620-22-11",
     "telegram": "@dvasilev_634",
     "is_visible_to_employers": true
@@ -2376,11 +2729,24 @@
     "fsp_member_id": "FSP-154257",
     "fsp_achievements": [
       {
+        "id": "ach-d3e55f12",
         "event_name": "Чемпионат России по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2026,
-        "place": 2
+        "place": 2,
+        "result": "prizewinner",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-d3e55f12",
+        "kind": "rank_1",
+        "discipline": "algorithmic",
+        "awarded_year": 2026
       }
     ],
     "phone": "+7 936 413-30-49",
@@ -2393,7 +2759,7 @@
     "email": "v.stepanov@example.com",
     "display_name": "Вадим Степанов",
     "headline": "Junior Backend-разработчик (Python)",
-    "about": "Год коммерческого опыта в стриминговом сервисе. В фокусе: интеграции с внешними сервисами через очереди сообщений, разработка асинхронных REST API на FastAPI. Хочу расти в команде с культурой код-ревью и наставничества. Финал — Кубок России по спортивному программированию (алгоритмическое программирование, 2023), 13-е место.",
+    "about": "Год коммерческого опыта в стриминговом сервисе. В фокусе: интеграции с внешними сервисами через очереди сообщений, разработка асинхронных REST API на FastAPI. Хочу расти в команде с культурой код-ревью и наставничества. Финал — Всероссийская студенческая олимпиада по спортивному программированию (алгоритмическое программирование, 2023), 13-е место.",
     "specialization": "backend",
     "grade": "junior",
     "experience_years": 1,
@@ -2423,13 +2789,19 @@
     "fsp_member_id": "FSP-238767",
     "fsp_achievements": [
       {
-        "event_name": "Кубок России по спортивному программированию",
+        "id": "ach-d1a3e14b",
+        "event_name": "Всероссийская студенческая олимпиада по спортивному программированию",
+        "event_kind": "olympiad",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2023,
-        "place": 13
+        "place": 13,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 994 301-42-39",
     "telegram": null,
     "is_visible_to_employers": true
@@ -2470,6 +2842,7 @@
     "registered_days_ago": 259,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 981 859-69-42",
     "telegram": "@dgaripova_248",
     "is_visible_to_employers": true
@@ -2510,6 +2883,7 @@
     "registered_days_ago": 35,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 924 433-60-95",
     "telegram": "@rtikhonov_237",
     "is_visible_to_employers": true
@@ -2550,6 +2924,7 @@
     "registered_days_ago": 96,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 911 536-51-56",
     "telegram": null,
     "is_visible_to_employers": true
@@ -2590,6 +2965,7 @@
     "registered_days_ago": 219,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 960 247-77-61",
     "telegram": "@sdenisov_888",
     "is_visible_to_employers": true
@@ -2632,11 +3008,24 @@
     "fsp_member_id": "FSP-578598",
     "fsp_achievements": [
       {
+        "id": "ach-d76823a0",
         "event_name": "Кубок России по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2025,
-        "place": 12
+        "place": 12,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-d76823a0",
+        "kind": "rank_2",
+        "discipline": "algorithmic",
+        "awarded_year": 2025
       }
     ],
     "phone": null,
@@ -2681,27 +3070,43 @@
     "fsp_member_id": "FSP-883263",
     "fsp_achievements": [
       {
+        "id": "ach-dc34649d",
         "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2025,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Сибирский код"
       },
       {
-        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "id": "ach-ab33540b",
+        "event_name": "Всероссийский хакатон ФСП по продуктовому программированию",
+        "event_kind": "hackathon",
         "discipline": "product",
         "level": "national",
         "year": 2025,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Бинарный поиск"
       },
       {
-        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "id": "ach-323a05b1",
+        "event_name": "Всероссийская студенческая олимпиада по спортивному программированию",
+        "event_kind": "olympiad",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2024,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 978 931-66-64",
     "telegram": "@epetrova_670",
     "is_visible_to_employers": true
@@ -2744,6 +3149,7 @@
     "registered_days_ago": 230,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 914 204-53-63",
     "telegram": "@sdavydov_513",
     "is_visible_to_employers": true
@@ -2785,6 +3191,7 @@
     "registered_days_ago": 120,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 961 185-95-96",
     "telegram": "@malekseev_566",
     "is_visible_to_employers": true
@@ -2824,18 +3231,36 @@
     "fsp_member_id": "FSP-707029",
     "fsp_achievements": [
       {
+        "id": "ach-c150f0fc",
         "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2026,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-b657c06a",
         "event_name": "Кубок Санкт-Петербурга по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2026,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-c150f0fc",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2026
       }
     ],
     "phone": "+7 912 671-65-15",
@@ -2878,13 +3303,19 @@
     "fsp_member_id": "FSP-301190",
     "fsp_achievements": [
       {
+        "id": "ach-c3164ea5",
         "event_name": "Чемпионат Республики Татарстан по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2024,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "individual",
+        "team_name": null
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 978 167-92-24",
     "telegram": null,
     "is_visible_to_employers": true
@@ -2926,25 +3357,48 @@
     "fsp_member_id": "FSP-535348",
     "fsp_achievements": [
       {
+        "id": "ach-c2d42492",
         "event_name": "Чемпионат России по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2025,
-        "place": 15
+        "place": 15,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "404 Not Found"
       },
       {
+        "id": "ach-b5d31404",
         "event_name": "Кубок Москвы по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2024,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-2cda45be",
         "event_name": "Всероссийские соревнования по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2024,
-        "place": 9
+        "place": 9,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Ctrl+Alt+Win"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-c2d42492",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2024
       }
     ],
     "phone": null,
@@ -2986,32 +3440,60 @@
     "fsp_member_id": "FSP-577281",
     "fsp_achievements": [
       {
+        "id": "ach-c79b3217",
         "event_name": "Кубок Тюменской области по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2025,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-b09c0281",
         "event_name": "Всероссийские соревнования по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2025,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "Байтовые волки"
       },
       {
+        "id": "ach-2995533b",
         "event_name": "Всероссийские соревнования по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2024,
-        "place": 10
+        "place": 10,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Байтовые волки"
       },
       {
+        "id": "ach-5e9263ad",
         "event_name": "Кубок Тюменской области по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2024,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Бинарный поиск"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-c79b3217",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2025
       }
     ],
     "phone": "+7 980 362-56-39",
@@ -3054,6 +3536,7 @@
     "registered_days_ago": 46,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 959 572-67-98",
     "telegram": "@ititov_356",
     "is_visible_to_employers": true
@@ -3096,32 +3579,60 @@
     "fsp_member_id": "FSP-912076",
     "fsp_achievements": [
       {
+        "id": "ach-c41fe679",
         "event_name": "Чемпионат Москвы по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2025,
-        "place": 8
+        "place": 8,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
       },
       {
-        "event_name": "Кубок России по спортивному программированию",
+        "id": "ach-b318d6ef",
+        "event_name": "Всероссийский хакатон ФСП по продуктовому программированию",
+        "event_kind": "hackathon",
         "discipline": "product",
         "level": "national",
         "year": 2024,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Бинарный поиск"
       },
       {
+        "id": "ach-2a118755",
         "event_name": "Всероссийские соревнования по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2023,
-        "place": 2
+        "place": 2,
+        "result": "prizewinner",
+        "participation": "individual",
+        "team_name": null
       },
       {
-        "event_name": "Кубок России по спортивному программированию",
+        "id": "ach-5d16b7c3",
+        "event_name": "Всероссийская студенческая олимпиада по спортивному программированию",
+        "event_kind": "olympiad",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2022,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "Сибирский код"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-c41fe679",
+        "kind": "kms",
+        "discipline": "algorithmic",
+        "awarded_year": 2023
       }
     ],
     "phone": "+7 979 393-71-62",
@@ -3164,6 +3675,7 @@
     "registered_days_ago": 134,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 992 218-70-70",
     "telegram": "@pakhmetov_217",
     "is_visible_to_employers": true
@@ -3207,6 +3719,7 @@
     "registered_days_ago": 105,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": null,
     "telegram": "@ailina_997",
     "is_visible_to_employers": true
@@ -3246,6 +3759,7 @@
     "registered_days_ago": 74,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 938 206-82-13",
     "telegram": "@llazarev_204",
     "is_visible_to_employers": true
@@ -3289,6 +3803,7 @@
     "registered_days_ago": 197,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 928 379-13-86",
     "telegram": "@nkrylov_108",
     "is_visible_to_employers": true
@@ -3331,6 +3846,7 @@
     "registered_days_ago": 219,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": null,
     "telegram": "@aakhmetov_758",
     "is_visible_to_employers": false
@@ -3373,6 +3889,7 @@
     "registered_days_ago": 48,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 918 327-52-93",
     "telegram": "@emaksimov_686",
     "is_visible_to_employers": true
@@ -3415,6 +3932,7 @@
     "registered_days_ago": 73,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 977 235-87-69",
     "telegram": null,
     "is_visible_to_employers": true
@@ -3454,11 +3972,24 @@
     "fsp_member_id": "FSP-571158",
     "fsp_achievements": [
       {
+        "id": "ach-7f275572",
         "event_name": "Чемпионат Краснодарского края по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2025,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-7f275572",
+        "kind": "rank_1",
+        "discipline": "algorithmic",
+        "awarded_year": 2025
       }
     ],
     "phone": "+7 984 970-91-37",
@@ -3503,6 +4034,7 @@
     "registered_days_ago": 200,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 943 114-80-13",
     "telegram": "@pisaev_130",
     "is_visible_to_employers": true
@@ -3544,11 +4076,24 @@
     "fsp_member_id": "FSP-827720",
     "fsp_achievements": [
       {
+        "id": "ach-7ca3811c",
         "event_name": "Чемпионат Самарской области по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2022,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "Ctrl+Alt+Win"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-7ca3811c",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2022
       }
     ],
     "phone": "+7 977 891-52-56",
@@ -3591,6 +4136,7 @@
     "registered_days_ago": 227,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 942 659-68-13",
     "telegram": null,
     "is_visible_to_employers": true
@@ -3629,6 +4175,7 @@
     "registered_days_ago": 117,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 946 394-97-26",
     "telegram": "@vkarpov_170",
     "is_visible_to_employers": true
@@ -3671,6 +4218,7 @@
     "registered_days_ago": 180,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 998 547-34-71",
     "telegram": null,
     "is_visible_to_employers": true
@@ -3708,6 +4256,7 @@
     "registered_days_ago": 179,
     "fsp_member_id": "FSP-458316",
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 991 892-12-13",
     "telegram": "@ygerasimov_518",
     "is_visible_to_employers": true
@@ -3748,6 +4297,7 @@
     "registered_days_ago": 196,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 983 947-37-90",
     "telegram": "@bmaksimov_860",
     "is_visible_to_employers": true
@@ -3758,7 +4308,7 @@
     "email": "n.gorbunov2@example.com",
     "display_name": "Никита Горбунов",
     "headline": "Middle инженер инфраструктуры",
-    "about": "5 лет в IT, из них 1 — в медтехе. В фокусе: поддержка и развитие Kubernetes-кластеров, CI/CD-пайплайны в GitLab CI. Финал — Кубок России по спортивному программированию (программирование систем информационной безопасности, 2024), 8-е место.",
+    "about": "5 лет в IT, из них 1 — в медтехе. В фокусе: поддержка и развитие Kubernetes-кластеров, CI/CD-пайплайны в GitLab CI. Финал — Командный хакатон ФСП по информационной безопасности (программирование систем информационной безопасности, 2024), 8-е место.",
     "specialization": "devops",
     "grade": "middle",
     "experience_years": 5,
@@ -3790,11 +4340,24 @@
     "fsp_member_id": "FSP-975111",
     "fsp_achievements": [
       {
-        "event_name": "Кубок России по спортивному программированию",
+        "id": "ach-23c93996",
+        "event_name": "Командный хакатон ФСП по информационной безопасности",
+        "event_kind": "hackathon",
         "discipline": "security",
         "level": "national",
         "year": 2024,
-        "place": 8
+        "place": 8,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "404 Not Found"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-23c93996",
+        "kind": "rank_2",
+        "discipline": "security",
+        "awarded_year": 2024
       }
     ],
     "phone": "+7 956 257-54-76",
@@ -3838,13 +4401,19 @@
     "fsp_member_id": "FSP-378835",
     "fsp_achievements": [
       {
+        "id": "ach-220b53a1",
         "event_name": "Всероссийские соревнования по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2022,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "404 Not Found"
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 951 699-14-67",
     "telegram": "@ysidorova_215",
     "is_visible_to_employers": true
@@ -3883,20 +4452,31 @@
     "fsp_member_id": "FSP-304460",
     "fsp_achievements": [
       {
+        "id": "ach-27444524",
         "event_name": "Кубок Пермского края по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2026,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-504375b2",
         "event_name": "Чемпионат Пермского края по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2023,
-        "place": 2
+        "place": 2,
+        "result": "prizewinner",
+        "participation": "individual",
+        "team_name": null
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 985 336-33-27",
     "telegram": "@vakhmetov_526",
     "is_visible_to_employers": true
@@ -3937,13 +4517,19 @@
     "fsp_member_id": "FSP-608318",
     "fsp_achievements": [
       {
+        "id": "ach-26862f13",
         "event_name": "Всероссийские соревнования по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2025,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Бинарный поиск"
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 955 104-58-86",
     "telegram": "@rdavydova_942",
     "is_visible_to_employers": true
@@ -3986,6 +4572,7 @@
     "registered_days_ago": 94,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 967 673-62-62",
     "telegram": "@agaripov_637",
     "is_visible_to_employers": true
@@ -4025,6 +4612,7 @@
     "registered_days_ago": 227,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": null,
     "telegram": null,
     "is_visible_to_employers": true
@@ -4064,18 +4652,36 @@
     "fsp_member_id": "FSP-652738",
     "fsp_achievements": [
       {
-        "event_name": "Чемпионат России по спортивному программированию",
+        "id": "ach-2e5ebc40",
+        "event_name": "Хакатон ФСП «Цифровые сервисы для регионов»",
+        "event_kind": "hackathon",
         "discipline": "product",
         "level": "national",
         "year": 2026,
-        "place": 14
+        "place": 14,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Байтовые волки"
       },
       {
+        "id": "ach-59598cd6",
         "event_name": "Кубок Томской области по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2025,
-        "place": 2
+        "place": 2,
+        "result": "prizewinner",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-2e5ebc40",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2025
       }
     ],
     "phone": "+7 943 837-83-45",
@@ -4120,6 +4726,7 @@
     "registered_days_ago": 110,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 998 503-14-18",
     "telegram": "@lromanova_908",
     "is_visible_to_employers": true
@@ -4161,6 +4768,7 @@
     "registered_days_ago": 233,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 954 855-56-11",
     "telegram": "@vmaksimov_994",
     "is_visible_to_employers": true
@@ -4204,6 +4812,7 @@
     "registered_days_ago": 135,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 969 698-57-57",
     "telegram": "@ralekseeva_813",
     "is_visible_to_employers": true
@@ -4246,6 +4855,7 @@
     "registered_days_ago": 86,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 926 320-98-44",
     "telegram": null,
     "is_visible_to_employers": true
@@ -4287,25 +4897,48 @@
     "fsp_member_id": "FSP-796522",
     "fsp_achievements": [
       {
+        "id": "ach-9ab734c4",
         "event_name": "Чемпионат Новосибирской области по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2024,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "team",
+        "team_name": "404 Not Found"
       },
       {
+        "id": "ach-edb00452",
         "event_name": "Чемпионат Новосибирской области по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2022,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "team",
+        "team_name": "NullPointer"
       },
       {
+        "id": "ach-74b955e8",
         "event_name": "Всероссийские соревнования по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "security",
         "level": "national",
         "year": 2022,
-        "place": 14
+        "place": 14,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-9ab734c4",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2024
       }
     ],
     "phone": "+7 977 765-87-70",
@@ -4348,6 +4981,7 @@
     "registered_days_ago": 27,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 934 795-90-15",
     "telegram": "@nkondratev_121",
     "is_visible_to_employers": true
@@ -4392,6 +5026,7 @@
     "registered_days_ago": 131,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 971 714-35-31",
     "telegram": "@enazarova_110",
     "is_visible_to_employers": true
@@ -4432,18 +5067,36 @@
     "fsp_member_id": "FSP-198514",
     "fsp_achievements": [
       {
+        "id": "ach-9c7cf62f",
         "event_name": "Чемпионат Краснодарского края по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2025,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "Сибирский код"
       },
       {
+        "id": "ach-eb7bc6b9",
         "event_name": "Кубок Краснодарского края по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2023,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Сигма-драйв"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-9c7cf62f",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2025
       }
     ],
     "phone": "+7 940 521-94-45",
@@ -4490,6 +5143,7 @@
     "registered_days_ago": 6,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 963 998-58-30",
     "telegram": null,
     "is_visible_to_employers": true
@@ -4529,27 +5183,43 @@
     "fsp_member_id": "FSP-374804",
     "fsp_achievements": [
       {
+        "id": "ach-96e2db25",
         "event_name": "Кубок Москвы по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2026,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Сибирский код"
       },
       {
+        "id": "ach-e1e5ebb3",
         "event_name": "Чемпионат Москвы по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2025,
-        "place": 9
+        "place": 9,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-78ecba09",
         "event_name": "Кубок Москвы по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2024,
-        "place": 7
+        "place": 7,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Сигма-драйв"
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 930 187-82-32",
     "telegram": "@yzakharova_884",
     "is_visible_to_employers": true
@@ -4594,13 +5264,19 @@
     "fsp_member_id": "FSP-188121",
     "fsp_achievements": [
       {
+        "id": "ach-9720b112",
         "event_name": "Чемпионат Республики Татарстан по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2023,
-        "place": 2
+        "place": 2,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "NullPointer"
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 928 710-75-32",
     "telegram": "@vfrolova_873",
     "is_visible_to_employers": true
@@ -4611,7 +5287,7 @@
     "email": "b.nikolaev@example.com",
     "display_name": "Богдан Николаев",
     "headline": "Senior Fullstack-разработчик (PHP + Vue)",
-    "about": "6 лет в IT, из них 1 — в ритейле. В фокусе: разработка личных кабинетов и CRM на Laravel и Vue, оптимизация загрузки страниц. Менторю младших коллег и провожу технические собеседования. Финал — Всероссийские соревнования по спортивному программированию (продуктовое программирование, 2026), 6-е место.",
+    "about": "6 лет в IT, из них 1 — в ритейле. В фокусе: разработка личных кабинетов и CRM на Laravel и Vue, оптимизация загрузки страниц. Менторю младших коллег и провожу технические собеседования. Финал — Хакатон ФСП «Цифровые сервисы для регионов» (продуктовое программирование, 2026), 6-е место.",
     "specialization": "fullstack",
     "grade": "senior",
     "experience_years": 6,
@@ -4643,20 +5319,31 @@
     "fsp_member_id": "FSP-829321",
     "fsp_achievements": [
       {
-        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "id": "ach-d899eca7",
+        "event_name": "Хакатон ФСП «Цифровые сервисы для регионов»",
+        "event_kind": "hackathon",
         "discipline": "product",
         "level": "national",
         "year": 2026,
-        "place": 6
+        "place": 6,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Сибирский код"
       },
       {
+        "id": "ach-af9edc31",
         "event_name": "Чемпионат Самарской области по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2023,
-        "place": 10
+        "place": 10,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Бинарный поиск"
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 965 551-29-39",
     "telegram": "@bnikolaev_399",
     "is_visible_to_employers": true
@@ -4697,6 +5384,7 @@
     "registered_days_ago": 9,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 947 700-99-72",
     "telegram": "@ntikhonov_512",
     "is_visible_to_employers": true
@@ -4736,6 +5424,7 @@
     "registered_days_ago": 156,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 977 660-62-20",
     "telegram": "@ssoloveva_800",
     "is_visible_to_employers": true
@@ -4776,6 +5465,7 @@
     "registered_days_ago": 225,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 933 726-91-66",
     "telegram": "@esviridova_476",
     "is_visible_to_employers": false
@@ -4819,6 +5509,7 @@
     "registered_days_ago": 56,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 932 807-85-88",
     "telegram": null,
     "is_visible_to_employers": true
@@ -4864,20 +5555,31 @@
     "fsp_member_id": "FSP-825432",
     "fsp_achievements": [
       {
-        "event_name": "Кубок России по спортивному программированию",
+        "id": "ach-de522e4c",
+        "event_name": "Всероссийский хакатон ФСП по продуктовому программированию",
+        "event_kind": "hackathon",
         "discipline": "product",
         "level": "national",
         "year": 2026,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Сибирский код"
       },
       {
+        "id": "ach-a9551eda",
         "event_name": "Чемпионат Ростовской области по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2024,
-        "place": 3
+        "place": 3,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "Бинарный поиск"
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 918 611-13-46",
     "telegram": "@nbaranov_794",
     "is_visible_to_employers": true
@@ -4919,6 +5621,7 @@
     "registered_days_ago": 127,
     "fsp_member_id": "FSP-886277",
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 971 875-85-31",
     "telegram": "@fmatveev_492",
     "is_visible_to_employers": true
@@ -4961,6 +5664,7 @@
     "registered_days_ago": 241,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 928 649-85-31",
     "telegram": "@amironov_176",
     "is_visible_to_employers": true
@@ -5001,6 +5705,7 @@
     "registered_days_ago": 162,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 982 917-71-89",
     "telegram": null,
     "is_visible_to_employers": true
@@ -5041,27 +5746,43 @@
     "fsp_member_id": "FSP-549394",
     "fsp_achievements": [
       {
+        "id": "ach-d748d728",
         "event_name": "Кубок Свердловской области по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2026,
-        "place": 9
+        "place": 9,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-a04fe7be",
         "event_name": "Кубок России по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "national",
         "year": 2026,
-        "place": 10
+        "place": 10,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Стек вызовов"
       },
       {
+        "id": "ach-3946b604",
         "event_name": "Кубок России по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "national",
         "year": 2023,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Сибирский код"
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 914 450-46-15",
     "telegram": null,
     "is_visible_to_employers": true
@@ -5105,6 +5826,7 @@
     "registered_days_ago": 167,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 971 553-97-25",
     "telegram": null,
     "is_visible_to_employers": true
@@ -5143,6 +5865,7 @@
     "registered_days_ago": 153,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 981 901-16-84",
     "telegram": "@dvolkov_720",
     "is_visible_to_employers": true
@@ -5186,6 +5909,7 @@
     "registered_days_ago": 252,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 970 421-99-98",
     "telegram": "@vgalieva_626",
     "is_visible_to_employers": true
@@ -5196,7 +5920,7 @@
     "email": "p.grigorev@example.com",
     "display_name": "Павел Григорьев",
     "headline": "Junior аналитик данных",
-    "about": "Год коммерческого опыта в маркетплейсе. В фокусе: дизайн и анализ A/B-тестов, дашборды для продуктовых команд. Хочу расти в команде с культурой код-ревью и наставничества. 2-е место — Чемпионат России по спортивному программированию (продуктовое программирование, 2025).",
+    "about": "Год коммерческого опыта в маркетплейсе. В фокусе: дизайн и анализ A/B-тестов, дашборды для продуктовых команд. Хочу расти в команде с культурой код-ревью и наставничества. 2-е место — Всероссийский хакатон ФСП по продуктовому программированию (продуктовое программирование, 2025).",
     "specialization": "data-science",
     "grade": "junior",
     "experience_years": 1,
@@ -5225,25 +5949,48 @@
     "fsp_member_id": "FSP-743051",
     "fsp_achievements": [
       {
+        "id": "ach-6263359b",
         "event_name": "Кубок Свердловской области по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2026,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
       },
       {
-        "event_name": "Чемпионат России по спортивному программированию",
+        "id": "ach-1564050d",
+        "event_name": "Всероссийский хакатон ФСП по продуктовому программированию",
+        "event_kind": "hackathon",
         "discipline": "product",
         "level": "national",
         "year": 2025,
-        "place": 2
+        "place": 2,
+        "result": "prizewinner",
+        "participation": "team",
+        "team_name": "Сигма-драйв"
       },
       {
+        "id": "ach-8c6d54b7",
         "event_name": "Чемпионат России по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2023,
-        "place": 10
+        "place": 10,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-6263359b",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2025
       }
     ],
     "phone": "+7 968 414-37-28",
@@ -5290,32 +6037,60 @@
     "fsp_member_id": "FSP-695861",
     "fsp_achievements": [
       {
+        "id": "ach-672c231e",
         "event_name": "Чемпионат России по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2026,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-102b1388",
         "event_name": "Кубок Новосибирской области по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "regional",
         "year": 2024,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-89224232",
         "event_name": "Чемпионат России по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2024,
-        "place": 8
+        "place": 8,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-fe2572a4",
         "event_name": "Чемпионат Новосибирской области по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2022,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "404 Not Found"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-672c231e",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2024
       }
     ],
     "phone": "+7 974 327-75-98",
@@ -5357,6 +6132,7 @@
     "registered_days_ago": 38,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": null,
     "telegram": "@mmikhaylov_218",
     "is_visible_to_employers": true
@@ -5396,13 +6172,19 @@
     "fsp_member_id": "FSP-908966",
     "fsp_achievements": [
       {
+        "id": "ach-64a8f770",
         "event_name": "Всероссийские соревнования по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2025,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 966 181-38-43",
     "telegram": "@vabramov_385",
     "is_visible_to_employers": true
@@ -5444,6 +6226,7 @@
     "registered_days_ago": 264,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": null,
     "telegram": "@gkondratev_373",
     "is_visible_to_employers": true
@@ -5487,25 +6270,48 @@
     "fsp_member_id": "FSP-139168",
     "fsp_achievements": [
       {
+        "id": "ach-6e36da7a",
         "event_name": "Чемпионат Санкт-Петербурга по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2024,
-        "place": 1
+        "place": 1,
+        "result": "winner",
+        "participation": "team",
+        "team_name": "Ctrl+Alt+Win"
       },
       {
+        "id": "ach-1931eaec",
         "event_name": "Кубок России по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2023,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
       },
       {
-        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "id": "ach-8038bb56",
+        "event_name": "Всероссийская студенческая олимпиада по спортивному программированию",
+        "event_kind": "olympiad",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2022,
-        "place": 6
+        "place": 6,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-6e36da7a",
+        "kind": "rank_1",
+        "discipline": "product",
+        "awarded_year": 2024
       }
     ],
     "phone": "+7 986 590-29-30",
@@ -5518,7 +6324,7 @@
     "email": "f.sergeev@example.com",
     "display_name": "Фёдор Сергеев",
     "headline": "Junior .NET-разработчик",
-    "about": "Два года коммерческого опыта в foodtech. В фокусе: перевод сервисов с .NET Framework на современный .NET, интеграция с внешними системами через RabbitMQ. Хочу расти в команде с культурой код-ревью и наставничества. 2-е место — Чемпионат России по спортивному программированию (алгоритмическое программирование, 2025).",
+    "about": "Два года коммерческого опыта в foodtech. В фокусе: перевод сервисов с .NET Framework на современный .NET, интеграция с внешними системами через RabbitMQ. Хочу расти в команде с культурой код-ревью и наставничества. 2-е место — Всероссийская студенческая олимпиада по спортивному программированию (алгоритмическое программирование, 2025).",
     "specialization": "backend",
     "grade": "junior",
     "experience_years": 2,
@@ -5548,18 +6354,36 @@
     "fsp_member_id": "FSP-780377",
     "fsp_achievements": [
       {
+        "id": "ach-6ff4b04d",
         "event_name": "Чемпионат Москвы по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2026,
-        "place": 10
+        "place": 10,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
       },
       {
-        "event_name": "Чемпионат России по спортивному программированию",
+        "id": "ach-18f380db",
+        "event_name": "Всероссийская студенческая олимпиада по спортивному программированию",
+        "event_kind": "olympiad",
         "discipline": "algorithmic",
         "level": "national",
         "year": 2025,
-        "place": 2
+        "place": 2,
+        "result": "prizewinner",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-6ff4b04d",
+        "kind": "rank_1",
+        "discipline": "algorithmic",
+        "awarded_year": 2025
       }
     ],
     "phone": "+7 915 225-24-53",
@@ -5602,11 +6426,24 @@
     "fsp_member_id": "FSP-758106",
     "fsp_achievements": [
       {
+        "id": "ach-7290242c",
         "event_name": "Кубок России по спортивному программированию",
+        "event_kind": "cup",
         "discipline": "product",
         "level": "national",
         "year": 2026,
-        "place": 13
+        "place": 13,
+        "result": "finalist",
+        "participation": "individual",
+        "team_name": null
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-7290242c",
+        "kind": "rank_2",
+        "discipline": "product",
+        "awarded_year": 2026
       }
     ],
     "phone": "+7 941 207-14-99",
@@ -5654,11 +6491,24 @@
     "fsp_member_id": "FSP-874078",
     "fsp_achievements": [
       {
+        "id": "ach-73524e1b",
         "event_name": "Чемпионат России по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "national",
         "year": 2025,
-        "place": 13
+        "place": 13,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "NullPointer"
+      }
+    ],
+    "fsp_titles": [
+      {
+        "id": "ttl-73524e1b",
+        "kind": "rank_2",
+        "discipline": "product",
+        "awarded_year": 2025
       }
     ],
     "phone": null,
@@ -5702,6 +6552,7 @@
     "registered_days_ago": 258,
     "fsp_member_id": null,
     "fsp_achievements": [],
+    "fsp_titles": [],
     "phone": "+7 936 967-79-37",
     "telegram": "@vstepanova_620",
     "is_visible_to_employers": true
@@ -5742,27 +6593,43 @@
     "fsp_member_id": "FSP-442616",
     "fsp_achievements": [
       {
-        "event_name": "Всероссийские соревнования по спортивному программированию",
+        "id": "ach-70d69a75",
+        "event_name": "Всероссийский хакатон ФСП по продуктовому программированию",
+        "event_kind": "hackathon",
         "discipline": "product",
         "level": "national",
         "year": 2026,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "team",
+        "team_name": "Ctrl+Alt+Win"
       },
       {
+        "id": "ach-07d1aae3",
         "event_name": "Чемпионат Пермского края по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "algorithmic",
         "level": "regional",
         "year": 2025,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
       },
       {
+        "id": "ach-9ed8fb59",
         "event_name": "Чемпионат Пермского края по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "product",
         "level": "regional",
         "year": 2024,
-        "place": 5
+        "place": 5,
+        "result": "finalist",
+        "participation": "team",
+        "team_name": "Сигма-драйв"
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 971 911-73-61",
     "telegram": "@rsemenov_404",
     "is_visible_to_employers": true
@@ -5802,13 +6669,19 @@
     "fsp_member_id": "FSP-117365",
     "fsp_achievements": [
       {
+        "id": "ach-75998cf0",
         "event_name": "Чемпионат Томской области по спортивному программированию",
+        "event_kind": "championship",
         "discipline": "security",
         "level": "regional",
         "year": 2024,
-        "place": null
+        "place": null,
+        "result": "participant",
+        "participation": "individual",
+        "team_name": null
       }
     ],
+    "fsp_titles": [],
     "phone": "+7 962 216-97-42",
     "telegram": null,
     "is_visible_to_employers": true

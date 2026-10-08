@@ -8,7 +8,16 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import selectinload
 
 from app.core.security import hash_password
-from app.models import CandidateProfile, Company, FspAchievement, Grade, User, UserRole, Vacancy
+from app.models import (
+    CandidateProfile,
+    Company,
+    FspAchievement,
+    FspSportTitle,
+    Grade,
+    User,
+    UserRole,
+    Vacancy,
+)
 from app.seed.fixtures import DATA_DIR, SeedData, load_seed_data
 from app.seed.generate import (
     DEMO_CANDIDATE_EMAIL,
@@ -100,15 +109,21 @@ async def test_seeding_twice_keeps_one_copy(
         assert await _count(session, Vacancy) == summary.vacancies == len(data.vacancies)
         assert await _count(session, CandidateProfile) == summary.candidates
         assert await _count(session, FspAchievement) == summary.fsp_achievements > 0
+        assert await _count(session, FspSportTitle) == summary.fsp_titles > 0
 
         demo = await session.scalar(
             select(CandidateProfile)
             .where(CandidateProfile.id == seed_id("candidate", data.candidates[0].key))
-            .options(selectinload(CandidateProfile.fsp_achievements))
+            .options(
+                selectinload(CandidateProfile.fsp_achievements),
+                selectinload(CandidateProfile.fsp_titles),
+            )
         )
         assert demo is not None
         assert demo.fsp_member_id is not None
+        assert demo.fsp_synced_at is not None
         assert len(demo.fsp_achievements) == len(data.candidates[0].fsp_achievements)
+        assert len(demo.fsp_titles) == len(data.candidates[0].fsp_titles)
         assert demo.employment_types
         assert demo.last_active_at is not None
 

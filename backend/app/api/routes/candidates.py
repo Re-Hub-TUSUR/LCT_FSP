@@ -8,6 +8,7 @@ from app.dependencies.common import PaginationDep
 from app.dependencies.services import (
     CandidateProfileServiceDep,
     CandidateSearchServiceDep,
+    FspLinkServiceDep,
     ReactionServiceDep,
     ResumeImportServiceDep,
 )
@@ -185,16 +186,29 @@ def _photo_response(body: bytes, media: str) -> Response:
     )
 
 
-@router.post("/me/fsp-link", summary="Link the profile to an FSP participant ID")
+@router.post(
+    "/me/fsp-link",
+    summary="Finish the FSP ID sign-in: link the participant and import the registry history",
+    description=(
+        "`code` and `state` are the query parameters FSP ID appended to the callback page "
+        "(start with `POST /fsp-id/authorize`). 409 when the participant is linked to another "
+        "account. When the registry is down the link is kept and `fspSyncError` is set."
+    ),
+)
 async def link_fsp(
-    user: CandidateUser, data: FspLinkRequest, profiles: CandidateProfileServiceDep
+    user: CandidateUser, data: FspLinkRequest, fsp: FspLinkServiceDep
 ) -> OwnCandidateRead:
-    return await profiles.link_fsp(user, data.fsp_member_id)
+    return await fsp.link(user, code=data.code, state=data.state)
 
 
-@router.delete("/me/fsp-link", summary="Unlink FSP and drop imported achievements")
-async def unlink_fsp(user: CandidateUser, profiles: CandidateProfileServiceDep) -> OwnCandidateRead:
-    return await profiles.unlink_fsp(user)
+@router.post("/me/fsp-sync", summary="Import the FSP registry history again")
+async def sync_fsp(user: CandidateUser, fsp: FspLinkServiceDep) -> OwnCandidateRead:
+    return await fsp.resync(user)
+
+
+@router.delete("/me/fsp-link", summary="Unlink FSP ID and drop the imported results and titles")
+async def unlink_fsp(user: CandidateUser, fsp: FspLinkServiceDep) -> OwnCandidateRead:
+    return await fsp.unlink(user)
 
 
 @router.get(

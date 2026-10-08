@@ -3,6 +3,7 @@ import type { OwnCandidateDto } from '@/entities/candidate'
 import type { CompanyDto } from '@/entities/company'
 import type { InvitationDto } from '@/entities/invitation'
 import { ROUTES } from '@/shared/config'
+import { HackerText } from '@/shared/ui'
 import { isWaiting } from '../lib/cabinet-data'
 import { candidateTodos } from '../lib/todos'
 
@@ -33,7 +34,7 @@ export function EmployerHero({ company, invitations }: EmployerProps) {
       <div className="cabinet-hero__main">
         <span className="cabinet-hero__kicker">Кабинет компании</span>
         <h1 id="page-title" className="cabinet-hero__title">
-          {company.name}
+          <HackerText text={company.name} />
           {company.itAccredited && (
             <span className="cabinet-hero__check" title="IT-аккредитация">
               ✓<span className="visually-hidden">IT-аккредитация подтверждена</span>
@@ -86,7 +87,7 @@ export function CandidateHero({ profile, category, invitations }: CandidateProps
       <div className="cabinet-hero__main">
         <span className="cabinet-hero__kicker">Кабинет специалиста</span>
         <h1 id="page-title" className="cabinet-hero__title">
-          {firstName}
+          <HackerText text={firstName} />
         </h1>
         <p className="cabinet-hero__lead">
           {fresh > 0

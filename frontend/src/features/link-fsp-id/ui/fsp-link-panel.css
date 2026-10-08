@@ -1,0 +1,12 @@
+.fsp-link {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 640px;
+}
+
+.fsp-link__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}

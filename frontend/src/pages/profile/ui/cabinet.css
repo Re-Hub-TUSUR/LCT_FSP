@@ -1,4 +1,6 @@
 .cabinet {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -82,7 +84,7 @@
   align-items: center;
   gap: 14px;
   margin: 0;
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-weight: 400;
   font-size: clamp(40px, 5vw, 88px);
   letter-spacing: 0.02em;
@@ -95,13 +97,18 @@
   font-size: clamp(44px, 5.4vw, 96px);
 }
 
+/* The scramble inherits the display face already set on the title. */
+.cabinet-hero__title .hacker-text {
+  font-family: inherit;
+}
+
 .cabinet-hero__check {
   display: inline-grid;
   place-items: center;
   width: 32px;
   height: 32px;
   background: var(--ink);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-weight: 800;
   font-size: 18px;
   line-height: 1;
@@ -133,7 +140,7 @@
 
 .cabinet-hero__stats dd {
   margin: 0;
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-size: clamp(30px, 2.6vw, 44px);
   line-height: 0.9;
 }
@@ -188,7 +195,7 @@
 }
 
 .cabinet-hero__progress b {
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-weight: 400;
   font-size: clamp(36px, 3vw, 52px);
   letter-spacing: 0;
@@ -357,7 +364,7 @@ section.cabinet-col {
 }
 
 .cabinet-heading__count {
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   color: var(--red);
 }
 
@@ -387,18 +394,18 @@ section.cabinet-col {
 }
 
 .cabinet-progress {
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-size: 18px;
   line-height: 1;
   color: var(--blue-light);
 }
 
-/* «Что сделать» stands out by its frame, not by a fill. */
-.panel.panel--frame {
+/* «Что сделать» stands out by its frame. The fill matches the page ground so rain stays outside the card. */
+.cabinet .panel.panel--frame {
   gap: 10px;
   padding: 18px 20px;
   border: 4px solid var(--ink);
-  background: transparent;
+  background: var(--bg);
 }
 
 /* Waiting invitations: a card per reply that is still owed. */
@@ -493,7 +500,7 @@ section.cabinet-col {
 }
 
 .todo-list__num {
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-size: 16px;
   color: var(--blue-light);
 }
@@ -610,14 +617,14 @@ section.cabinet-col {
   align-items: baseline;
   gap: 4px 14px;
   margin: 0;
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-size: clamp(28px, 3vw, 40px);
   line-height: 1.1;
   text-transform: uppercase;
 }
 
 .cat-big__grade {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-weight: 600;
   font-size: 0.42em;
   letter-spacing: 0.12em;
@@ -630,7 +637,7 @@ section.cabinet-col {
 }
 
 .cat-big__empty {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-weight: 300;
   font-size: 0.6em;
   color: var(--muted);
@@ -714,7 +721,7 @@ section.cabinet-col {
 }
 
 .steps__index {
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-size: 16px;
   color: var(--dim);
 }

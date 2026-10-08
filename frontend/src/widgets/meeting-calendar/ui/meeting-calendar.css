@@ -29,7 +29,7 @@
   height: 36px;
   border: 1px solid var(--line);
   background: transparent;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   color: var(--ink);
   cursor: pointer;
 }
@@ -106,7 +106,7 @@
 .cal-event,
 .cal-chip {
   border: 1px solid transparent;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   text-align: left;
   color: var(--ink);
 }
@@ -120,7 +120,12 @@
 .cal-event--pending,
 .cal-chip--pending {
   border-color: var(--blue-light);
-  background: var(--blue-tint);
+  /* Tint over a solid plate: the glyph rain stays behind the label. */
+  background: linear-gradient(var(--blue-tint), var(--blue-tint)), var(--bg-deep);
+}
+
+.cal__legend .cal-chip--pending {
+  background: linear-gradient(var(--blue-tint), var(--blue-tint)), var(--bg);
 }
 
 .cal-event--declined,
@@ -168,6 +173,8 @@
 /* ── Week ──────────────────────────────────────────── */
 
 .cal-week {
+  /* Overridden from the week grid; one hour of the time axis. */
+  --hour: 56px;
   overflow-x: auto;
   border: 1px solid var(--line);
   background: var(--bg-deep);
@@ -206,13 +213,13 @@
 }
 
 .cal-week__date {
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-size: 22px;
   line-height: 1;
 }
 
 .cal-week__day.is-today {
-  background: var(--blue-tint-soft);
+  background: linear-gradient(var(--blue-tint-soft), var(--blue-tint-soft)), var(--bg);
 }
 
 .cal-week__day.is-today .cal-week__date {
@@ -222,6 +229,7 @@
 .cal-week__hours {
   display: flex;
   flex-direction: column;
+  background: var(--bg-deep);
 }
 
 .cal-week__hours span {
@@ -238,6 +246,7 @@
   display: flex;
   flex-direction: column;
   border-left: 1px solid var(--line-soft);
+  background: var(--bg-deep);
 }
 
 .cal-week__col.is-weekend,
@@ -280,7 +289,7 @@
   position: absolute;
   top: 50%;
   left: 8px;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   color: var(--blue-light);
   transform: translateY(-50%);
@@ -399,7 +408,7 @@
 }
 
 .cal-month__cell.is-today {
-  background: var(--blue-tint-soft);
+  background: linear-gradient(var(--blue-tint-soft), var(--blue-tint-soft)), var(--bg-deep);
 }
 
 .cal-month__cell-head {
@@ -413,7 +422,7 @@
 .cal-month__more {
   border: 0;
   background: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   color: var(--ink);
   cursor: pointer;
 }
@@ -422,7 +431,7 @@
   min-width: 28px;
   height: 28px;
   padding: 0 4px;
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-size: 18px;
   line-height: 1;
   text-align: left;

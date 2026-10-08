@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useMatch } from 'react-router'
 import { ROUTES } from '@/shared/config'
+import { HackerRain } from '@/shared/ui'
 import { isWaiting, useCabinetData, useCategoryLabel } from '../lib/cabinet-data'
 import { CandidateHero, EmployerHero } from './cabinet-hero'
 import './cabinet.css'
@@ -47,6 +48,7 @@ export function CabinetLayout() {
   if (links.length === 0) {
     return (
       <div className="cabinet cabinet--setup">
+        <HackerRain />
         <div className="cabinet__main">
           <Outlet />
         </div>
@@ -56,6 +58,7 @@ export function CabinetLayout() {
 
   return (
     <div className="cabinet">
+      <HackerRain />
       {/* The blue plate opens the overview only; other sections start with their own title. */}
       {onOverview && own && <EmployerHero company={own} invitations={items} />}
       {onOverview && candidate && (

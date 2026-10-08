@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Tag } from '@/shared/ui'
 import type { CandidateDto } from '../api/candidate-api'
+import { fspAchievementLine, fspTitleLine } from '../model/fsp'
 import { CandidateResumes } from './candidate-resumes'
 import './candidate-card.css'
 
@@ -11,8 +12,9 @@ type Props = {
 }
 
 export function CandidateCard({ candidate, actions }: Props) {
-  const { displayName, headline, category, stack, experienceYears, fspAchievements, contacts } =
-    candidate
+  const { displayName, headline, category, stack, experienceYears, contacts } = candidate
+  const fspAchievements = candidate.fspAchievements ?? []
+  const fspTitles = candidate.fspTitles ?? []
 
   return (
     <article className="candidate-card" aria-label={displayName}>
@@ -39,12 +41,14 @@ export function CandidateCard({ candidate, actions }: Props) {
       )}
 
       <section className="candidate-card__fsp" aria-label="Достижения ФСП">
-        {fspAchievements.length > 0 ? (
+        {fspAchievements.length > 0 || fspTitles.length > 0 ? (
           <ul>
+            {fspTitles.map((title) => (
+              <li key={`${title.kind}-${title.discipline}`}>{fspTitleLine(title)}</li>
+            ))}
             {fspAchievements.map((item) => (
-              <li key={`${item.eventName}-${item.year}`}>
-                {item.eventName}, {item.year}
-                {item.place !== null && ` — ${item.place} место`}
+              <li key={`${item.eventName}-${item.year}-${item.discipline}`}>
+                {fspAchievementLine(item)}
               </li>
             ))}
           </ul>

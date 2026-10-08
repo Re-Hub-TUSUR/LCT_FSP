@@ -7,13 +7,27 @@ type PageProps = {
   eyebrow?: ReactNode
   lead?: ReactNode
   actions?: ReactNode
+  /** Painted behind the page, in the section's box. */
+  backdrop?: ReactNode
+  /** Fixed overlays, kept outside the raised content layer. */
+  overlay?: ReactNode
   children?: ReactNode
   className?: string
 }
 
-export function Page({ title, eyebrow, lead, actions, children, className }: PageProps) {
+export function Page({
+  title,
+  eyebrow,
+  lead,
+  actions,
+  backdrop,
+  overlay,
+  children,
+  className,
+}: PageProps) {
   return (
     <section className={className ? `page ${className}` : 'page'} aria-labelledby="page-title">
+      {backdrop}
       <header className="page__header">
         <div>
           {eyebrow && <div className="page__eyebrow">{eyebrow}</div>}
@@ -25,6 +39,7 @@ export function Page({ title, eyebrow, lead, actions, children, className }: Pag
         {actions && <div className="page__actions">{actions}</div>}
       </header>
       <div className="page__body">{children}</div>
+      {overlay}
     </section>
   )
 }

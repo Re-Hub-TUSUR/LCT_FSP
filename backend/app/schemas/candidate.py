@@ -8,8 +8,12 @@ from app.models.enums import (
     AssessmentStatus,
     EmploymentType,
     FspDiscipline,
+    FspEventKind,
     FspEventLevel,
+    FspOutcome,
+    FspParticipation,
     FspSync,
+    FspTitleKind,
     JobStatus,
     ReactionKind,
     WorkFormat,
@@ -45,12 +49,26 @@ class EducationEntry(ApiModel):
 
 
 class FspAchievementRead(ApiModel):
+    """A result confirmed by the FSP registry. It ranks the candidate, never sets the grade."""
+
     event_name: str
+    event_kind: FspEventKind
     year: int
-    # Null = took part without a prize place.
+    # Null = took part without a place.
     place: int | None
+    result: FspOutcome
+    participation: FspParticipation
+    team_name: str | None
     discipline: FspDiscipline
     level: FspEventLevel
+
+
+class FspSportTitleRead(ApiModel):
+    """Sport rank (разряд) or title (звание) in sport programming."""
+
+    kind: FspTitleKind
+    discipline: FspDiscipline
+    awarded_year: int
 
 
 class CandidateContacts(ApiModel):
@@ -102,6 +120,7 @@ class CandidateRead(ApiModel):
     salary_expectation: int | None
     # Empty list = no FSP history; must be handled explicitly (ТЗ, section 2).
     fsp_achievements: list[FspAchievementRead]
+    fsp_titles: list[FspSportTitleRead] = Field(default_factory=list)
     fsp_linked: bool
     # Priority resume first, then the others.
     resumes: list[ResumeRead] = Field(default_factory=list)
@@ -158,6 +177,11 @@ class OwnCandidateRead(CandidateRead):
     birth_date: date | None = None
     profile_display_consent: bool = False
     fsp_sync: FspSync | None = None
+    fsp_linked_at: datetime | None = None
+    # Last successful import from the FSP registry.
+    fsp_synced_at: datetime | None = None
+    # Why the last import failed; null after a successful one.
+    fsp_sync_error: str | None = None
 
 
 class CandidateProfileUpdate(ApiModel):
@@ -226,5 +250,19 @@ class CandidateSearchUpdate(ApiModel):
         return JobStatus.OPEN if self.searching else JobStatus.NOT_LOOKING
 
 
+class FspAuthorizeRequest(ApiModel):
+    # The SPA page FSP ID returns to; must be the configured callback.
+    redirect_uri: str = Field(min_length=1, max_length=500)
+
+
+class FspAuthorizeRead(ApiModel):
+    """Where to send the browser: the FSP ID sign-in page with state, nonce and PKCE."""
+
+    authorize_url: str
+
+
 class FspLinkRequest(ApiModel):
-    fsp_member_id: str = Field(min_length=1, max_length=64)
+    """What FSP ID appended to the callback URL."""
+
+    code: str = Field(min_length=1, max_length=4096)
+    state: str = Field(min_length=1, max_length=4096)

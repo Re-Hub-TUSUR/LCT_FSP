@@ -1,3 +1,24 @@
+/* Rain fills this page only and stays behind the heading, the error, and the cards. */
+main:has(.page--testing) {
+  position: relative;
+  isolation: isolate;
+}
+
+.page--testing .feedback,
+.page--testing .runner__task,
+.page--testing .start-test,
+.page--testing .test-note {
+  background: var(--bg);
+}
+
+/* The error plate hugs the message so the rain stays the page ground around it. */
+.page--testing .feedback {
+  align-self: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 28px 36px;
+}
+
 .test-note {
   margin: 0;
   font-size: 14px;
@@ -37,7 +58,7 @@
 
 .test-result__score {
   margin: 0;
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-size: 32px;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -52,7 +73,7 @@
 }
 
 .test-result__score span {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -120,7 +141,7 @@
   padding: 0;
   border: 0;
   background: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;

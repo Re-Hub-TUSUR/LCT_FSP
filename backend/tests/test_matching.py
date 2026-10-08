@@ -2,17 +2,21 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import pytest
+
 from app.models import FspDiscipline, FspEventLevel, Grade, WorkFormat
+from app.models.enums import FspOutcome, FspParticipation, FspTitleKind
 from app.search.base import CandidateSearchQuery
 from app.search.query import build_search_body
 from app.services.matching import (
     WEIGHTS,
     CandidateFacts,
-    FspResult,
+    FspScoredResult,
     VacancyFacts,
     candidate_reasons,
     fit,
     freshness,
+    fsp_points,
     profile_strength,
     vacancy_reasons,
 )
@@ -53,8 +57,10 @@ def vacancy(**changes: Any) -> VacancyFacts:
 
 
 def test_profile_strength_combines_test_and_fsp() -> None:
-    national_win = FspResult("Кубок России", FspDiscipline.PRODUCT, FspEventLevel.NATIONAL, 2025, 1)
-    participation = FspResult(
+    national_win = FspScoredResult.placed(
+        "Кубок России", FspDiscipline.PRODUCT, FspEventLevel.NATIONAL, 2025, 1
+    )
+    participation = FspScoredResult.placed(
         "Чемпионат Москвы", FspDiscipline.PRODUCT, FspEventLevel.REGIONAL, 2024, None
     )
 
@@ -64,6 +70,38 @@ def test_profile_strength_combines_test_and_fsp() -> None:
     # The best result counts, every further one adds a little; the FSP part is capped at 0.4.
     assert profile_strength(80.0, (national_win, participation)) == 0.88
     assert profile_strength(100.0, (national_win,) * 5) == 1.0
+
+
+def test_fsp_points_weigh_result_team_and_title() -> None:
+    prize = FspScoredResult.placed(
+        "Кубок России", FspDiscipline.ALGORITHMIC, FspEventLevel.NATIONAL, 2025, 3
+    )
+    team_prize = replace(prize, participation=FspParticipation.TEAM, team_name="NullPointer")
+    unplaced_prize = replace(prize, place=None, result=FspOutcome.PRIZEWINNER)
+
+    assert fsp_points((prize,)) == 0.32
+    # A team result is shared with teammates; a prizewinner without a place counts as 2nd.
+    assert fsp_points((team_prize,)) == pytest.approx(0.288)
+    assert fsp_points((unplaced_prize,)) == 0.35
+    # The highest title adds to the results, and a title alone still counts.
+    assert fsp_points((prize,), (FspTitleKind.RANK_2, FspTitleKind.KMS)) == pytest.approx(0.35)
+    assert fsp_points((), (FspTitleKind.RANK_1,)) == 0.02
+    assert fsp_points((prize,) * 6, (FspTitleKind.ZMS,)) == 0.4
+
+
+def test_fsp_orders_inside_a_category_and_never_sets_it() -> None:
+    win = FspScoredResult.placed(
+        "Чемпионат России", FspDiscipline.ALGORITHMIC, FspEventLevel.NATIONAL, 2025, 1
+    )
+    plain = candidate(assessment_score=70.0)
+    champion = candidate(assessment_score=70.0, fsp=(win,), fsp_titles=(FspTitleKind.KMS,))
+
+    assert champion.strength > plain.strength
+    # Neither the grade nor the category depend on FSP: only the order inside it.
+    assert (champion.grade, champion.specialization) == (plain.grade, plain.specialization)
+    # Without FSP history the candidate ranks by the test alone.
+    assert plain.strength == profile_strength(70.0, ())
+    assert candidate_reasons(plain, None) == ["Грейд подтверждён тестом: 70 из 100"]
 
 
 def test_perfect_fit_and_its_parts() -> None:
@@ -113,8 +151,22 @@ def test_freshness_decays() -> None:
 
 def test_reasons_explain_the_position() -> None:
     facts = candidate(
-        fsp=(FspResult("Кубок России", FspDiscipline.SECURITY, FspEventLevel.NATIONAL, 2025, 2),)
+        fsp=(
+            FspScoredResult.placed(
+                "Кубок России", FspDiscipline.SECURITY, FspEventLevel.NATIONAL, 2025, 2
+            ),
+        )
     )
+    team_win = FspScoredResult.placed(
+        "Хакатон ФСП",
+        FspDiscipline.PRODUCT,
+        FspEventLevel.NATIONAL,
+        2026,
+        1,
+        participation=FspParticipation.TEAM,
+        team_name="Сибирский код",
+    )
+    titled = candidate(fsp=(team_win,), fsp_titles=(FspTitleKind.KMS,))
     job = vacancy()
     result = fit(facts, job, bonus=facts.strength)
 
@@ -127,9 +179,13 @@ def test_reasons_explain_the_position() -> None:
     assert for_candidate[-1] == "Опубликована вчера"
     assert for_employer[:2] == [
         "Грейд подтверждён тестом: 90 из 100",
-        "ФСП: 2-е место — Кубок России (программирование систем ИБ, 2025)",
+        "ФСП: призёр, 2-е место — Кубок России (программирование систем ИБ, 2025)",
     ]
     assert untested == ["Грейд указан без теста"]
+    assert candidate_reasons(titled, None)[1] == (
+        "ФСП: победитель — Хакатон ФСП (продуктовое программирование, 2026), "
+        "команда «Сибирский код»; КМС"
+    )
 
 
 def test_elasticsearch_query_mirrors_filters_and_fit() -> None:

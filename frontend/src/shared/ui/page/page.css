@@ -23,7 +23,7 @@
 
 .page__title {
   margin: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-weight: 300;
   font-size: clamp(30px, 3vw, 48px);
   line-height: 1.05;
@@ -34,7 +34,7 @@
 .page__lead {
   margin: 8px 0 0;
   max-width: 60ch;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-weight: 400;
   font-size: 13px;
   line-height: 1.55;
@@ -78,6 +78,7 @@ body:has(.page--swipe) main {
 }
 
 .page--swipe {
+  position: relative;
   flex: 1;
   width: 100%;
   max-width: none;
@@ -85,6 +86,18 @@ body:has(.page--swipe) main {
   gap: 10px;
   padding: 6px 0 8px;
   overflow: hidden;
+}
+
+/* Rain sits in the section box. Header and reel paint above it; the study sheet
+   stays a sibling so its fixed layer can still cover the site header. */
+.page--swipe > .hacker-rain {
+  z-index: 0;
+}
+
+.page--swipe > .page__header,
+.page--swipe > .page__body {
+  position: relative;
+  z-index: 1;
 }
 
 .page--swipe .page__header {
@@ -225,7 +238,7 @@ body:has(.page--swipe) main {
   margin: 0;
   padding-bottom: 10px;
   border-bottom: 2px solid var(--blue);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-weight: 600;
   font-size: 12px;
   letter-spacing: 0.16em;
@@ -239,7 +252,7 @@ body:has(.page--swipe) main {
   min-height: 24px;
   padding: 0 9px;
   background: var(--blue);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 11.5px;
   color: #fff;
   white-space: nowrap;

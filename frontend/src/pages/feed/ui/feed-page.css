@@ -1,0 +1,31 @@
+/* Rain fills only the vacancy/candidate list. z-index -1 stays behind this
+   page and above the ground. Swipe uses its own layer in page.css. */
+.page--feed {
+  position: relative;
+  isolation: isolate;
+}
+
+/* The study sheet must still cover the sticky header (z-index 60). */
+.page--feed:has(.sheet) {
+  z-index: 70;
+}
+
+.page--feed .feed__filters,
+.page--feed .feed__filters-toggle {
+  background: var(--bg);
+}
+
+.page--feed .feed-table,
+.page--feed .feed__basis,
+.page--feed .notice,
+.page--feed .vacancy-row,
+.page--feed .candidate-row {
+  background: var(--surface);
+}
+
+.page--feed .vacancy-row:hover,
+.page--feed .vacancy-row.is-open,
+.page--feed .candidate-row:hover,
+.page--feed .candidate-row.is-open {
+  background: var(--line);
+}

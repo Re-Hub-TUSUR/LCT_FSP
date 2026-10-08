@@ -1,19 +1,16 @@
 import { FSP_SYNC_LABELS } from '@/entities/candidate'
 import type { FspSync } from '@/entities/candidate'
-import { TextField } from '@/shared/ui'
 
 export type ConsentValues = {
   personalData: boolean
   profileDisplay: boolean
   fspSync: FspSync | null
-  fspMemberId: string
 }
 
 export const EMPTY_CONSENTS: ConsentValues = {
   personalData: false,
   profileDisplay: false,
   fspSync: null,
-  fspMemberId: '',
 }
 
 export const consentsGiven = (values: ConsentValues) =>
@@ -75,19 +72,10 @@ export function ResumeConsents({
       </fieldset>
 
       {values.fspSync === 'yes' && (
-        <div className="consents__fsp">
-          <p className="form-hint">
-            Синхронизация в разработке: реестр ФСП ещё не подключён. Оставьте ID участника — мы
-            сохраним его и подтянем результаты, когда интеграция заработает.
-          </p>
-          <TextField
-            id="resume-fsp-id"
-            label="ID участника ФСП (необязательно)"
-            value={values.fspMemberId}
-            maxLength={64}
-            onChange={(event) => set('fspMemberId', event.target.value)}
-          />
-        </div>
+        <p className="form-hint">
+          После сохранения резюме привяжите ФСП ID в настройках: вход через ФСП подтвердит номер
+          участника, а результаты придут из реестра Федерации. Вводить ID вручную не нужно.
+        </p>
       )}
     </div>
   )

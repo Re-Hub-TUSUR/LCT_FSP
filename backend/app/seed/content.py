@@ -2101,6 +2101,36 @@ FSP_REGIONAL_EVENTS: tuple[str, ...] = (
     "Кубок {region} по спортивному программированию",
 )
 
+FSP_HACKATHON_EVENTS: dict[FspDiscipline, tuple[str, ...]] = {
+    P: (
+        "Всероссийский хакатон ФСП по продуктовому программированию",
+        "Хакатон ФСП «Цифровые сервисы для регионов»",
+    ),
+    S: ("Командный хакатон ФСП по информационной безопасности",),
+}
+
+FSP_OLYMPIAD_EVENT = "Всероссийская студенческая олимпиада по спортивному программированию"
+
+FSP_TEAM_NAMES: tuple[str, ...] = (
+    "Байтовые волки",
+    "NullPointer",
+    "Сибирский код",
+    "Ctrl+Alt+Win",
+    "Сигма-драйв",
+    "404 Not Found",
+    "Бинарный поиск",
+    "Стек вызовов",
+)
+
+# Share of results that were team ones, by discipline (hackathons are always team events).
+FSP_TEAM_SHARE: dict[FspDiscipline, float] = {
+    A: 0.15,
+    P: 0.7,
+    S: 0.4,
+    R: 0.6,
+    U: 0.6,
+}
+
 # Probability that a candidate of the grade has linked an FSP ID (before the track bonus).
 FSP_LINK_SHARE: dict[Grade, float] = {
     Grade.INTERN: 0.75,

@@ -4,7 +4,7 @@ import { AuthForm } from '@/features/auth-by-email'
 import type { AuthMode } from '@/features/auth-by-email'
 import { ROUTES } from '@/shared/config'
 import { isSafeInternalPath } from '@/shared/lib'
-import { HackerText, Ornament, Page } from '@/shared/ui'
+import { HackerRain, HackerText, Ornament, Page } from '@/shared/ui'
 import { RoleGlyph } from './auth-page'
 
 const TITLES = {
@@ -38,6 +38,7 @@ function RoleAuthPage({ role }: { role: 'candidate' | 'employer' }) {
 
   return (
     <>
+      <HackerRain />
       <Page
         className="page--auth"
         eyebrow={

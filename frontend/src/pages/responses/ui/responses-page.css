@@ -1,6 +1,25 @@
+/* The rain fills this page and stays behind the header, tabs, and cards. */
+main:has(.page--responses),
+.page--responses {
+  position: relative;
+  isolation: isolate;
+}
+
 .page--responses .page__body {
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
+}
+
+/* Glyphs stay in the page ground. These surfaces are opaque. */
+.page--responses .responses__tabs,
+.page--responses .feedback,
+.page--responses .chat {
+  background: var(--bg);
+}
+
+.page--responses .responses__card,
+.page--responses .match-card {
+  background: var(--surface);
 }

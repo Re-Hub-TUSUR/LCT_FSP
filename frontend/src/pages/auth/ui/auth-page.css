@@ -1,3 +1,9 @@
+/* The rain fills `main` and stays behind the auth screens. */
+main:has(.page--auth) {
+  position: relative;
+  isolation: isolate;
+}
+
 .page--auth .page__eyebrow {
   display: flex;
   flex-direction: column;
