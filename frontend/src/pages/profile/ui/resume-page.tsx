@@ -5,6 +5,7 @@ import type { OwnCandidateDto } from '@/entities/candidate'
 import { useSession } from '@/entities/session'
 import { getErrorMessage } from '@/shared/api'
 import { ErrorState, Loader, Page } from '@/shared/ui'
+import { DownloadResumeButton } from '@/features/download-resume'
 import { ResumeForm, ResumePanels } from '@/features/edit-resume'
 import { isNotFound } from '../lib/is-not-found'
 import { RoleNote } from './role-note'
@@ -47,6 +48,11 @@ export function ResumePage() {
     <Page
       className={missing ? 'page--inset page--setup' : 'page--inset'}
       title={missing ? 'Резюме' : 'Профиль и резюме'}
+      actions={
+        profile.data ? (
+          <DownloadResumeButton candidateId={profile.data.id} name={profile.data.displayName} />
+        ) : undefined
+      }
       lead={
         missing
           ? 'Пока резюме не сохранено, свайпы и остальные разделы закрыты. Грейд здесь не выбирается — его подтверждает тест.'

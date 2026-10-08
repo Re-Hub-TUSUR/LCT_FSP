@@ -9,7 +9,7 @@ export {
   toDateInput,
   toTimeInput,
 } from './dates'
-export { downloadJson } from './download'
+export { downloadBlob, downloadJson } from './download'
 export { formatDate, formatDateTime, formatNumber, formatRubRange, plural } from './format'
 export { useOverflows } from './overflow'
 export { emailSchema, isEmail, isHttpUrl, isSafeInternalPath } from './validation'

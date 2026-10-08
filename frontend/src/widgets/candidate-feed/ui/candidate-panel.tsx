@@ -8,6 +8,7 @@ import {
 } from '@/entities/candidate'
 import type { CandidateMatchDto } from '@/entities/candidate'
 import { WORK_FORMAT_LABELS } from '@/entities/vacancy'
+import { DownloadResumeButton } from '@/features/download-resume'
 import { Avatar, ChipList, MatchMeter, Sheet, SheetSection } from '@/shared/ui'
 import './candidate-sheet.css'
 
@@ -48,6 +49,7 @@ export function CandidatePanel({ match, onClose, actions }: Props) {
           {matched && (
             <p className="candidate-panel__matched">Взаимно: кандидат отметил вашу вакансию</p>
           )}
+          <DownloadResumeButton candidateId={candidate.id} name={candidate.displayName} />
         </div>
       </div>
 

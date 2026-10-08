@@ -1,0 +1,11 @@
+.download-resume {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.download-resume__error {
+  font-size: 12px;
+  color: var(--red-text);
+}

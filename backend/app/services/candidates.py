@@ -1,7 +1,8 @@
 """Read and edit a candidate profile under the visibility rules of ТЗ 2.1–2.2."""
 
+import asyncio
 import uuid
-from datetime import date
+from datetime import UTC, date, datetime
 from urllib.parse import urlsplit
 
 from app.core.errors import AppError, NotFoundError
@@ -27,6 +28,7 @@ from app.services.presenters import (
     stored_text,
     stored_years,
 )
+from app.services.resume_pdf import render_resume
 from app.services.uploads import PHOTO_LIMIT, sniff_image
 
 MAX_RESUMES = 3
@@ -81,6 +83,17 @@ class CandidateProfileService:
                 candidate_user_id=profile.user_id,
             )
         return candidate_read(profile, contacts=contacts).model_copy(update={"matched": matched})
+
+    async def resume_pdf(self, candidate_id: uuid.UUID, viewer: User) -> tuple[bytes, str]:
+        """The resume as the viewer sees it on the site, as a PDF and its file name: contacts
+        only for the candidate and an employer whose invitation was accepted."""
+        candidate = await self.read(candidate_id, viewer)
+        photo = await self._candidates.photo_of(candidate_id) if candidate.has_photo else None
+        # Laying the pages out takes CPU time: off the event loop.
+        data = await asyncio.to_thread(
+            render_resume, candidate, photo=photo[0] if photo else None, now=datetime.now(UTC)
+        )
+        return data, f"Резюме — {candidate.display_name}.pdf"
 
     async def read_own(self, user: User) -> OwnCandidateRead:
         return own_candidate_read(await self._require(user), email=user.email)

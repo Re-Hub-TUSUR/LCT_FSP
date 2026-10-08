@@ -1,6 +1,7 @@
 import uuid
 from dataclasses import replace
 from typing import Annotated
+from urllib.parse import quote
 
 from fastapi import APIRouter, Query, Response, UploadFile, status
 
@@ -227,6 +228,34 @@ async def read_candidate_photo(
 ) -> Response:
     body, media = await profiles.open_photo(candidate_id, viewer)
     return _photo_response(body, media)
+
+
+@router.get(
+    "/{candidate_id}/resume.pdf",
+    summary="Candidate's resume as a PDF: what the viewer sees on the site",
+    description=(
+        "For the candidate themself and for employers (visible profiles only). Contacts are in "
+        "the file only when the profile shows them to this viewer."
+    ),
+    response_class=Response,
+    responses={200: {"content": {"application/pdf": {}}}},
+)
+async def download_resume(
+    candidate_id: uuid.UUID, viewer: CurrentUser, profiles: CandidateProfileServiceDep
+) -> Response:
+    data, filename = await profiles.resume_pdf(candidate_id, viewer)
+    return Response(
+        content=data,
+        media_type="application/pdf",
+        headers={
+            # An ASCII fallback for old clients, the Russian name for the rest (RFC 6266).
+            "Content-Disposition": (
+                f"attachment; filename=\"resume.pdf\"; filename*=UTF-8''{quote(filename)}"
+            ),
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 def _photo_response(body: bytes, media: str) -> Response:

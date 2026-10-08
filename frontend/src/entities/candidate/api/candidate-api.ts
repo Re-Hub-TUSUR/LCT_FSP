@@ -439,6 +439,8 @@ export const candidateApi = {
     return http.post<OwnCandidateDto>('/candidates/me/photo', body)
   },
   photo: (candidateId: string) => http.blob(`/candidates/${candidateId}/photo`),
+  /** The resume as a PDF: what the viewer sees on the site, contacts only when allowed. */
+  resumePdf: (candidateId: string) => http.blob(`/candidates/${candidateId}/resume.pdf`),
   uploadResume: (file: File) => {
     const body = new FormData()
     body.append('file', file)
