@@ -2,7 +2,7 @@
 
 import uuid
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from app.dependencies.common import Pagination
@@ -11,7 +11,15 @@ from app.repositories.candidate import CandidateRepository
 from app.repositories.reaction import ReactionFilter, ReactionRepository
 from app.repositories.vacancy import VacancyRepository, VacancyRow
 from app.schemas.reaction import FeedView, ReactionCounts
-from app.schemas.vacancy import FeedBasis, VacancyFeedPage, VacancyMatch
+from app.schemas.vacancy import (
+    FeedBasis,
+    FeedMode,
+    VacancyFacets,
+    VacancyFeedPage,
+    VacancyFeedPresets,
+    VacancyFilterSet,
+    VacancyMatch,
+)
 from app.services.matching import (
     CandidateFacts,
     Fit,
@@ -24,6 +32,15 @@ from app.services.matching import (
     vacancy_reasons,
 )
 from app.services.presenters import profile_category, vacancy_read
+from app.services.vacancy_filters import (
+    ProfileScope,
+    VacancyFilterFacts,
+    nice_matches,
+    passes,
+    profile_filters,
+    vacancy_facets,
+    vacancy_query,
+)
 
 _EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 
@@ -38,11 +55,10 @@ _DECIDED: dict[FeedView, ReactionKind] = {
 
 
 @dataclass(frozen=True, slots=True)
-class VacancyFeedFilters:
-    """Light refinements on top of the relevance pre-filter."""
-
-    work_formats: tuple[WorkFormat, ...] = ()
-    salary_min: int | None = None
+class VacancyFeedParams:
+    mode: FeedMode = "profile"
+    filters: VacancyFilterSet = field(default_factory=VacancyFilterSet)
+    view: FeedView = "all"
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,6 +66,8 @@ class _Ranked:
     row: VacancyRow
     # None when the feed is not personalised (the candidate has no category yet).
     fit: Fit | None
+    # «Будет плюсом» technologies the vacancy asks for.
+    nice: int
 
 
 class VacancyFeedService:
@@ -66,25 +84,26 @@ class VacancyFeedService:
     async def feed(
         self,
         user: User,
-        *,
-        view: FeedView,
-        filters: VacancyFeedFilters,
+        params: VacancyFeedParams,
         pagination: Pagination,
+        *,
         now: datetime | None = None,
     ) -> VacancyFeedPage:
         now = now or datetime.now(UTC)
         profile = await self._candidates.get_by_user(user.id)
-        candidate = CandidateFacts.of(profile) if profile is not None else None
-        if candidate is not None and (candidate.specialization is None or candidate.grade is None):
-            candidate = None  # no category yet: nothing to personalise by
+        candidate = _personal(profile)
         reactions = await self._reactions.for_vacancies(user.id)
         matched = await self._matched(user, profile)
 
-        rows = await self._load(user, candidate, view, filters)
-        if view == "matched":
-            rows = [row for row in rows if row[0].id in matched]
-        ranked = [_Ranked(row, self._fit(candidate, row, now)) for row in rows]
-        ordered = self._order(ranked, view, reactions)
+        query = vacancy_query(params.filters, _scope(candidate, params))
+        ranked = []
+        for row in await self._rows(user, params.view, matched):
+            facts = VacancyFilterFacts.of(*row)
+            if passes(facts, query):
+                ranked.append(
+                    _Ranked(row, self._fit(candidate, row, now), nice_matches(facts, query))
+                )
+        ordered = self._order(ranked, params.view, reactions, by_fit=query.scope is not None)
 
         start = pagination.offset
         items = [
@@ -98,6 +117,40 @@ class VacancyFeedService:
             per_page=pagination.per_page,
             personalized=candidate is not None,
             basis=self._basis(profile),
+        )
+
+    async def facets(self, user: User, params: VacancyFeedParams) -> VacancyFacets:
+        """Counts next to every filter option of the feed with these parameters."""
+        profile = await self._candidates.get_by_user(user.id)
+        rows = await self._rows(user, params.view, await self._matched(user, profile))
+        return vacancy_facets(
+            rows, vacancy_query(params.filters, _scope(_personal(profile), params))
+        )
+
+    async def presets(self, user: User, *, view: FeedView = "all") -> VacancyFeedPresets:
+        """The feed's modes: matched to the profile, with its filters filled in, or free."""
+        profile = await self._candidates.get_by_user(user.id)
+        candidate = _personal(profile)
+        rows = await self._rows(user, view, await self._matched(user, profile))
+        facts = [VacancyFilterFacts.of(*row) for row in rows]
+        if profile is None or candidate is None:
+            return VacancyFeedPresets(
+                personalized=False,
+                profile=None,
+                profile_count=0,
+                category=None,
+                free_count=len(facts),
+            )
+        filters = profile_filters(profile)
+        query = vacancy_query(
+            filters, _scope(candidate, VacancyFeedParams(filters=filters, view=view))
+        )
+        return VacancyFeedPresets(
+            personalized=True,
+            profile=filters,
+            profile_count=sum(passes(item, query) for item in facts),
+            category=profile_category(profile),
+            free_count=len(facts),
         )
 
     async def counts(self, user: User) -> ReactionCounts:
@@ -120,44 +173,21 @@ class VacancyFeedService:
             candidate_user_id=user.id, candidate_id=profile.id
         )
 
-    async def _decided(
-        self, user: User, kind: ReactionKind, filters: VacancyFeedFilters | None = None
-    ) -> list[VacancyRow]:
+    async def _decided(self, user: User, kind: ReactionKind) -> list[VacancyRow]:
         """Published vacancies the user reacted to this way, whatever the profile says now."""
-        filters = filters or VacancyFeedFilters()
         return await self._vacancies.published(
-            work_formats=filters.work_formats,
-            salary_min=filters.salary_min,
-            reactions=ReactionFilter(user.id, (kind,), include=True),
+            reactions=ReactionFilter(user.id, (kind,), include=True)
         )
 
-    async def _load(
-        self,
-        user: User,
-        candidate: CandidateFacts | None,
-        view: FeedView,
-        filters: VacancyFeedFilters,
-    ) -> list[VacancyRow]:
+    async def _rows(self, user: User, view: FeedView, matched: set[uuid.UUID]) -> list[VacancyRow]:
+        """Published vacancies of the view, before any filter."""
         if view in _DECIDED:
-            return await self._decided(user, _DECIDED[view], filters)
-
+            rows = await self._decided(user, _DECIDED[view])
+            return [row for row in rows if row[0].id in matched] if view == "matched" else rows
         # The feed hides skipped cards; the swipe deck hides everything already decided on.
         hidden = (ReactionKind.SKIP,) if view == "all" else tuple(ReactionKind)
-        exclude = ReactionFilter(user.id, hidden, include=False)
-        if candidate is None or candidate.specialization is None or candidate.grade is None:
-            return await self._vacancies.published(
-                work_formats=filters.work_formats, salary_min=filters.salary_min, reactions=exclude
-            )
-
-        # Priority specialization first in the score; other resumes are included, then ranked lower.
         return await self._vacancies.published(
-            specializations={candidate.specialization}
-            | set(candidate.other_specializations)
-            | related_specializations(candidate.specialization),
-            grades={candidate.grade, *neighbour_grades(candidate.grade)},
-            work_formats=filters.work_formats,
-            salary_min=filters.salary_min,
-            reactions=exclude,
+            reactions=ReactionFilter(user.id, hidden, include=False)
         )
 
     @staticmethod
@@ -168,7 +198,9 @@ class VacancyFeedService:
         return fit(candidate, VacancyFacts.of(vacancy), bonus=freshness(vacancy.published_at, now))
 
     @staticmethod
-    def _order(ranked: Sequence[_Ranked], view: FeedView, reactions: Reactions) -> list[_Ranked]:
+    def _order(
+        ranked: Sequence[_Ranked], view: FeedView, reactions: Reactions, *, by_fit: bool
+    ) -> list[_Ranked]:
         if view in _DECIDED:
             # The latest decision first.
             return sorted(
@@ -178,11 +210,12 @@ class VacancyFeedService:
                     str(item.row[0].id),
                 ),
             )
-        # Best fit first; without a profile simply the newest.
+        # «Будет плюсом» first, then the best fit to the profile or, in the free search, the newest.
         return sorted(
             ranked,
             key=lambda item: (
-                -(item.fit.points if item.fit else 0.0),
+                -item.nice,
+                -(item.fit.points if by_fit and item.fit else 0.0),
                 -as_utc(item.row[0].published_at or _EPOCH).timestamp(),
                 str(item.row[0].id),
             ),
@@ -221,3 +254,27 @@ class VacancyFeedService:
             city=profile.city,
             salary_expectation=profile.salary_expectation,
         )
+
+
+def _personal(profile: CandidateProfile | None) -> CandidateFacts | None:
+    """What the feed is personalised by; None until the candidate has a category."""
+    if profile is None or profile.specialization is None or profile.grade is None:
+        return None
+    return CandidateFacts.of(profile)
+
+
+def _scope(candidate: CandidateFacts | None, params: VacancyFeedParams) -> ProfileScope | None:
+    """The profile mode narrows the feed; the lists of own decisions show everything decided."""
+    if candidate is None or params.mode != "profile" or params.view in _DECIDED:
+        return None
+    specialization, grade = candidate.specialization, candidate.grade
+    if specialization is None or grade is None:
+        return None
+    # Priority specialization first in the score; other resumes are included, then ranked lower.
+    return ProfileScope(
+        specializations=frozenset(
+            {specialization, *candidate.other_specializations}
+            | related_specializations(specialization)
+        ),
+        grades=frozenset(item.value for item in (grade, *neighbour_grades(grade))),
+    )

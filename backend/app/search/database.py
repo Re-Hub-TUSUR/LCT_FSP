@@ -12,9 +12,10 @@ from app.models import CandidateProfile
 from app.repositories.candidate import CandidateRepository
 from app.schemas.candidate import SearchEngine
 from app.search.base import CandidateSearchQuery, SearchHits
+from app.search.filters import FilterFacts, passes
 from app.search.ranking import sort_key
 from app.search.synonyms import alternatives
-from app.services.matching import fsp_search_text, normalize_term
+from app.services.matching import fsp_search_text
 from app.services.presenters import profile_category
 
 _TOKEN = re.compile(r"[\w.+#-]+")
@@ -53,18 +54,9 @@ def matches_text(profile: CandidateProfile, text: str) -> bool:
 
 
 def matches(profile: CandidateProfile, query: CandidateSearchQuery) -> bool:
-    """The filters the SQL query could not apply, compared like the search index compares them."""
-    owned = {normalize_term(item) for item in profile.stack}
-    if any(normalize_term(item) not in owned for item in query.stack):
+    """Every structured filter as `app.search.filters` defines it, then the text."""
+    if not passes(FilterFacts.of(profile), query):
         return False
-    if query.work_formats and not set(profile.work_formats) & set(query.work_formats):
-        return False
-    if query.city is not None:
-        same_city = profile.city is not None and normalize_term(profile.city) == normalize_term(
-            query.city
-        )
-        if not (same_city or profile.relocation_ready):
-            return False
     return not (query.text and not matches_text(profile, query.text))
 
 
@@ -76,11 +68,9 @@ class DatabaseCandidateSearch:
 
     async def search(self, query: CandidateSearchQuery, *, offset: int, limit: int) -> SearchHits:
         profiles = await self._candidates.searchable(
-            specialization=query.specialization,
+            specializations=query.specializations,
             grades=query.grades,
-            has_fsp=query.has_fsp,
             verified_only=query.verified_only,
-            salary_max=query.salary_max,
             experience_min=query.experience_min,
             include_ids=query.include_ids,
             exclude_ids=query.exclude_ids,

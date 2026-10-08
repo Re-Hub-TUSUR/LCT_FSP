@@ -10,6 +10,8 @@ export type SpecializationDto = {
 export type CategoryDictionaryDto = {
   specializations: SpecializationDto[]
   grades: { code: Grade; label: string }[]
+  /** IT slang the search understands, lowercase; the first word is the usual one. */
+  synonyms?: string[][]
 }
 
 export const categoryKeys = {

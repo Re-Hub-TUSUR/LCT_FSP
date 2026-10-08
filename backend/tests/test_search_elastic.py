@@ -7,12 +7,14 @@ import os
 import uuid
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.models import Grade, WorkFormat
+from app.models.enums import EmploymentType, FspDiscipline, FspResult, JobStatus
 from app.repositories.candidate import CandidateRepository
 from app.repositories.vacancy import VacancyRepository
 from app.search.base import CandidateSearchQuery
@@ -29,14 +31,28 @@ pytestmark = pytest.mark.skipif(not ES_URL, reason="TEST_ELASTICSEARCH_URL is no
 
 QUERIES = (
     CandidateSearchQuery(),
-    CandidateSearchQuery(specialization="backend", grades=(Grade.MIDDLE, Grade.SENIOR)),
+    CandidateSearchQuery(specializations=("backend",), grades=(Grade.MIDDLE, Grade.SENIOR)),
     CandidateSearchQuery(stack=("python", "PostgreSQL"), has_fsp=True),
     CandidateSearchQuery(has_fsp=False, verified_only=True),
-    CandidateSearchQuery(city="москва", work_formats=(WorkFormat.REMOTE,)),
+    CandidateSearchQuery(cities=("москва",), work_formats=(WorkFormat.REMOTE,)),
     CandidateSearchQuery(salary_max=250_000, experience_min=3),
     CandidateSearchQuery(sort="assessment"),
     CandidateSearchQuery(sort="salary"),
-    CandidateSearchQuery(sort="experience", specialization="qa"),
+    CandidateSearchQuery(sort="experience", specializations=("qa",)),
+    CandidateSearchQuery(fsp_result=FspResult.FINALIST, fsp_discipline=FspDiscipline.SECURITY),
+    CandidateSearchQuery(
+        work_formats=(WorkFormat.OFFICE, WorkFormat.REMOTE),
+        cities=("Москва", "казань"),
+        include_relocation=False,
+    ),
+    CandidateSearchQuery(
+        salary_min=150_000,
+        salary_max=300_000,
+        employment_types=(EmploymentType.FULL, EmploymentType.PROJECT),
+        job_statuses=(JobStatus.ACTIVE,),
+        active_since=datetime.now(UTC) - timedelta(days=30),
+    ),
+    CandidateSearchQuery(nice_stack=("Docker", "kafka", "Docker")),
 )
 
 
@@ -104,6 +120,15 @@ async def test_fit_to_every_vacancy_matches_python(engines: Engines) -> None:
         elastic = await engines.elastic.search(query, offset=0, limit=500)
         database = await engines.database.search(query, offset=0, limit=500)
         assert elastic.ids == database.ids, vacancy
+
+
+async def test_nice_stack_orders_like_python(engines: Engines) -> None:
+    for vacancy in (None, *engines.vacancies[:5]):
+        nice = vacancy.stack[:2] if vacancy else ("Docker", "Kafka")
+        query = CandidateSearchQuery(vacancy=vacancy, nice_stack=nice)
+        elastic = await engines.elastic.search(query, offset=0, limit=500)
+        database = await engines.database.search(query, offset=0, limit=500)
+        assert elastic.ids == database.ids, query
 
 
 async def test_pages_are_slices_of_one_order(engines: Engines) -> None:

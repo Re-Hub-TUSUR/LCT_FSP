@@ -1,10 +1,12 @@
 import uuid
+from dataclasses import replace
 from typing import Annotated
 
 from fastapi import APIRouter, Query, Response, UploadFile, status
 
 from app.dependencies.auth import CandidateUser, CurrentUser, EmployerUser
 from app.dependencies.common import PaginationDep
+from app.dependencies.filters import CandidateSearchParamsDep
 from app.dependencies.services import (
     CandidateProfileServiceDep,
     CandidateSearchServiceDep,
@@ -12,8 +14,9 @@ from app.dependencies.services import (
     ReactionServiceDep,
     ResumeImportServiceDep,
 )
-from app.models.enums import Grade, WorkFormat
 from app.schemas.candidate import (
+    CandidateFacets,
+    CandidatePresets,
     CandidateProfileUpdate,
     CandidateRead,
     CandidateSearchPage,
@@ -30,7 +33,6 @@ from app.schemas.reaction import (
     ReactionRead,
 )
 from app.search.base import CandidateSort
-from app.services.candidate_search import CandidateSearchParams
 from app.services.uploads import PHOTO_LIMIT, RESUME_LIMIT
 
 router = APIRouter(prefix="/candidates", tags=["candidates"])
@@ -43,7 +45,8 @@ router = APIRouter(prefix="/candidates", tags=["candidates"])
         "Full-text search runs on Elasticsearch (Russian morphology, IT slang, typos) with a "
         "database fallback; `engine` tells which one answered. Hidden and uncategorised profiles "
         "never appear; contacts are never returned here. Ranking: with `vacancyId` — fit to "
-        "that vacancy, otherwise profile strength (test result + FSP results)."
+        "that vacancy, otherwise profile strength (test result + FSP results); candidates with "
+        "more `nice` technologies go first."
     ),
 )
 async def search_candidates(
@@ -51,36 +54,38 @@ async def search_candidates(
     user: EmployerUser,
     pagination: PaginationDep,
     search: CandidateSearchServiceDep,
-    q: Annotated[str | None, Query(max_length=200)] = None,
-    specialization: str | None = None,
-    grade: Annotated[list[Grade] | None, Query()] = None,
-    stack: Annotated[list[str] | None, Query()] = None,
-    has_fsp_achievements: Annotated[bool | None, Query(alias="hasFspAchievements")] = None,
-    verified_only: Annotated[bool, Query(alias="verifiedOnly")] = False,
-    work_format: Annotated[list[WorkFormat] | None, Query(alias="workFormat")] = None,
-    city: Annotated[str | None, Query(max_length=100)] = None,
-    salary_max: Annotated[int | None, Query(alias="salaryMax", gt=0)] = None,
-    experience_min: Annotated[int | None, Query(alias="experienceMin", ge=0, le=60)] = None,
+    params: CandidateSearchParamsDep,
     vacancy_id: Annotated[uuid.UUID | None, Query(alias="vacancyId")] = None,
-    view: FeedView = "all",
     sort: CandidateSort = "relevance",
 ) -> CandidateSearchPage:
-    params = CandidateSearchParams(
-        text=q,
-        specialization=specialization,
-        grades=tuple(grade or ()),
-        stack=tuple(stack or ()),
-        has_fsp=has_fsp_achievements,
-        verified_only=verified_only,
-        work_formats=tuple(work_format or ()),
-        city=city,
-        salary_max=salary_max,
-        experience_min=experience_min,
-        vacancy_id=vacancy_id,
-        view=view,
-        sort=sort,
-    )
-    return await search.search(user, params, pagination)
+    return await search.search(user, replace(params, vacancy_id=vacancy_id, sort=sort), pagination)
+
+
+@router.get(
+    "/facets",
+    summary="Employer: how many candidates each filter option would leave",
+    description=(
+        "Takes the parameters of the search. An option's count is the list's total after "
+        "choosing it alone in its group (a city: without relocation), the other filters staying "
+        "as they are. `stack` counts the matching candidates per technology. When nobody "
+        "matches, `relaxations` names up to three filters to loosen."
+    ),
+)
+async def candidate_facets(
+    user: EmployerUser, search: CandidateSearchServiceDep, params: CandidateSearchParamsDep
+) -> CandidateFacets:
+    return await search.facets(user, params)
+
+
+@router.get(
+    "/presets",
+    summary="Employer: own vacancies as ready-made filters",
+    description="Selecting a vacancy in the search fills the filters in from its requirements.",
+)
+async def candidate_presets(
+    user: EmployerUser, search: CandidateSearchServiceDep, view: FeedView = "all"
+) -> CandidatePresets:
+    return await search.presets(user, view=view)
 
 
 @router.get(

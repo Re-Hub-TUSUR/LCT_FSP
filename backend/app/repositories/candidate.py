@@ -2,11 +2,11 @@ import uuid
 from collections.abc import Collection, Sequence
 from datetime import datetime
 
-from sqlalchemy import ColumnElement, Select, exists, select
+from sqlalchemy import ColumnElement, Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import CandidateProfile, FspAchievement, Grade, User
+from app.models import CandidateProfile, Grade, User
 
 
 class CandidateRepository:
@@ -60,43 +60,39 @@ class CandidateRepository:
 
     async def updated_since(self, moment: datetime) -> Sequence[CandidateProfile]:
         """Profiles changed after `moment`: what the search index has to catch up on."""
+        # A sign-in changes `last_active_at` of the user, not the profile row.
         result = await self._session.scalars(
-            self._profiles().where(CandidateProfile.updated_at > moment)
+            self._profiles().where(
+                (CandidateProfile.updated_at > moment) | (CandidateProfile.last_active_at > moment)
+            )
         )
         return result.all()
 
     async def searchable(
         self,
         *,
-        specialization: str | None = None,
+        specializations: Collection[str] = (),
         grades: Collection[Grade] = (),
-        has_fsp: bool | None = None,
         verified_only: bool = False,
-        salary_max: int | None = None,
         experience_min: int | None = None,
         include_ids: Collection[uuid.UUID] | None = None,
         exclude_ids: Collection[uuid.UUID] = (),
     ) -> Sequence[CandidateProfile]:
-        """Visible, categorised profiles narrowed by the filters a relational query can apply."""
+        """Visible, categorised profiles narrowed by the filters a relational query can apply.
+
+        The search applies every filter again with `app.search.filters`: this only saves rows.
+        """
         conditions: list[ColumnElement[bool]] = [
             CandidateProfile.is_visible_to_employers.is_(True),
             CandidateProfile.specialization.is_not(None),
             CandidateProfile.grade.is_not(None),
         ]
-        if specialization is not None:
-            conditions.append(CandidateProfile.specialization == specialization)
+        if specializations:
+            conditions.append(CandidateProfile.specialization.in_(specializations))
         if grades:
             conditions.append(CandidateProfile.grade.in_(grades))
-        if has_fsp is not None:
-            with_results = exists().where(FspAchievement.candidate_id == CandidateProfile.id)
-            conditions.append(with_results if has_fsp else ~with_results)
         if verified_only:
             conditions.append(CandidateProfile.assessment_score.is_not(None))
-        if salary_max is not None:
-            conditions.append(
-                CandidateProfile.salary_expectation.is_(None)
-                | (CandidateProfile.salary_expectation <= salary_max)
-            )
         if experience_min is not None:
             conditions.append(CandidateProfile.experience_years >= experience_min)
         if include_ids is not None:

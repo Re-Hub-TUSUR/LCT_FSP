@@ -3,7 +3,13 @@ export { dropPhotoUrl } from './lib/photo-cache'
 export type {
   CandidateContactsDto,
   CandidateDto,
+  CandidateFacetsDto,
+  CandidateFilterParams,
+  CandidateFiltersDto,
   CandidateMatchDto,
+  CandidatePresetsDto,
+  CandidateRelaxationDto,
+  CandidateRelaxationKind,
   CandidateProfileUpdate,
   CandidateSearchDto,
   CandidateSearchParams,
@@ -11,12 +17,14 @@ export type {
   EducationEntryDto,
   ExperienceEntryDto,
   FspAchievementDto,
+  FspDiscipline,
   FspLinkRequest,
   FspSportTitleDto,
   OwnCandidateDto,
   ResumeCreate,
   ResumeDraftDto,
   ResumeDto,
+  VacancyPresetDto,
 } from './api/candidate-api'
 export {
   bestFspResult,

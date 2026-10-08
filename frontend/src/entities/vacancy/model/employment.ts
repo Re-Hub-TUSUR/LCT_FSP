@@ -9,7 +9,9 @@ export const EMPLOYMENT_LABELS: Record<EmploymentType, string> = {
   internship: 'Стажировка',
 }
 
-export type VacancyBenefit = 'dms' | 'flexible_start' | 'labor_code'
+export const BENEFITS = ['dms', 'flexible_start', 'labor_code'] as const
+
+export type VacancyBenefit = (typeof BENEFITS)[number]
 
 export const BENEFIT_LABELS: Record<VacancyBenefit, string> = {
   dms: 'ДМС',

@@ -15,6 +15,7 @@ from app.models.enums import (
 )
 from app.schemas.category import Category
 from app.schemas.common import ApiModel, Page, SalaryRange
+from app.schemas.facets import OptionCount
 
 
 class CompanyRef(ApiModel):
@@ -89,6 +90,74 @@ class VacancyFeedPage(Page[VacancyMatch]):
     # False until the candidate has a category: then the feed is just the newest vacancies.
     personalized: bool
     basis: FeedBasis | None
+
+
+# profile: the candidate's specializations and grades, best fit first. free: everything, newest.
+FeedMode = Literal["profile", "free"]
+
+
+class VacancyFilterSet(ApiModel):
+    """The candidate's feed filters. «Подбор по профилю» fills them in from the profile."""
+
+    # The top of the vacancy's range reaches it.
+    salary_min: int | None = None
+    # Remote vacancies fit from anywhere; office and hybrid ones need one of `cities`, or help
+    # with relocation when `relocation`.
+    work_formats: list[WorkFormat] = Field(default_factory=list)
+    cities: list[str] = Field(default_factory=list)
+    relocation: bool = False
+    employment_types: list[EmploymentType] = Field(default_factory=list)
+    # «Обязательно»: every technology is required. «Будет плюсом»: ranks higher, filters nothing.
+    stack: list[str] = Field(default_factory=list)
+    nice: list[str] = Field(default_factory=list)
+    # Every condition is required.
+    benefits: list[VacancyBenefit] = Field(default_factory=list)
+    accredited: bool = False
+
+
+VacancyRelaxationKind = Literal[
+    "salary", "work_formats", "employment", "cities", "stack", "benefit", "accredited", "mode"
+]
+
+
+class VacancyRelaxation(ApiModel):
+    """A filter to loosen when no vacancy matched, and how many vacancies that brings back."""
+
+    kind: VacancyRelaxationKind
+    # `salary`: the lowered minimum; `stack`: the technology to move to «nice to have»;
+    # `benefit`: the condition to drop.
+    value: str | None = None
+    count: int
+
+
+class VacancyFacets(ApiModel):
+    """How many vacancies each filter option leaves, the other filters staying as they are."""
+
+    # Vacancies of the mode (and the view) before the filters.
+    total: int
+    # Vacancies matching every filter: the feed's total.
+    count: int
+    # The option added to the ones chosen in its group.
+    work_formats: list[OptionCount]
+    employment_types: list[OptionCount]
+    benefits: list[OptionCount]
+    accredited: int
+    # How many vacancies of the mode are in each city and ask for each technology.
+    cities: list[OptionCount]
+    stack: list[OptionCount]
+    # Up to three; only when nothing matched.
+    relaxations: list[VacancyRelaxation]
+
+
+class VacancyFeedPresets(ApiModel):
+    # False until the candidate has a category: only the free search is possible then.
+    personalized: bool
+    # «Подбор по профилю»: the filters the profile suggests and how many vacancies they leave.
+    profile: VacancyFilterSet | None
+    profile_count: int
+    category: Category | None
+    # «Свободный поиск»: every published vacancy of the view.
+    free_count: int
 
 
 _GRADE_ORDER = list(Grade)

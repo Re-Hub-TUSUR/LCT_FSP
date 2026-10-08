@@ -12,14 +12,17 @@ from app.models.enums import (
     FspEventLevel,
     FspOutcome,
     FspParticipation,
+    FspResult,
     FspSync,
     FspTitleKind,
+    Grade,
     JobStatus,
     ReactionKind,
     WorkFormat,
 )
 from app.schemas.category import Category
 from app.schemas.common import ApiModel, Page
+from app.schemas.facets import OptionCount
 
 _MONTH = r"^\d{4}-(0[1-9]|1[0-2])$"
 
@@ -162,6 +165,115 @@ SearchEngine = Literal["elasticsearch", "database"]
 class CandidateSearchPage(Page[CandidateMatch]):
     # Which engine answered: Elasticsearch, or the database fallback when it is unavailable.
     engine: SearchEngine
+
+
+class CandidateFilterSet(ApiModel):
+    """The recruiter's search filters. Selecting a vacancy fills them in from its requirements."""
+
+    # Any of the listed specializations and grades.
+    specializations: list[str] = Field(default_factory=list)
+    grades: list[Grade] = Field(default_factory=list)
+    verified_only: bool = False
+    # False: no FSP results. True: some result, at least `fsp_result` in `fsp_discipline`.
+    has_fsp: bool | None = None
+    fsp_result: FspResult | None = None
+    fsp_discipline: FspDiscipline | None = None
+    experience_min: int | None = None
+    # «Обязательно»: every technology is required. «Будет плюсом»: ranks higher, filters nobody.
+    stack: list[str] = Field(default_factory=list)
+    nice: list[str] = Field(default_factory=list)
+    # Monthly net expectations; candidates without one are not excluded.
+    salary_min: int | None = None
+    salary_max: int | None = None
+    # Remote work needs no city; office and hybrid need one of `cities`, or readiness to relocate
+    # when `relocation`.
+    work_formats: list[WorkFormat] = Field(default_factory=list)
+    cities: list[str] = Field(default_factory=list)
+    relocation: bool = True
+    employment_types: list[EmploymentType] = Field(default_factory=list)
+    job_statuses: list[JobStatus] = Field(default_factory=list)
+    # Signed in within this many days.
+    active_days: int | None = None
+
+
+CandidateRelaxationKind = Literal[
+    "stack",
+    "salary_max",
+    "salary_min",
+    "grades",
+    "specializations",
+    "verified",
+    "fsp_result",
+    "fsp_discipline",
+    "fsp",
+    "experience",
+    "work_formats",
+    "relocation",
+    "cities",
+    "employment",
+    "job_statuses",
+    "active",
+]
+
+
+class CandidateRelaxation(ApiModel):
+    """A filter to loosen when nobody matched, and how many candidates that brings back."""
+
+    kind: CandidateRelaxationKind
+    # `stack`: the required technology to move to «nice to have».
+    value: str | None = None
+    count: int
+
+
+class CandidateFacets(ApiModel):
+    """How many candidates each filter option leaves, the other filters staying as they are."""
+
+    # Candidates of the view (and of the text query) before the filters.
+    total: int
+    # Candidates matching every filter: the list's total.
+    count: int
+    # The option chosen alone in its group.
+    specializations: list[OptionCount]
+    grades: list[OptionCount]
+    verified: int
+    # «Есть результаты ФСП» switched on, then each best result and each discipline.
+    fsp: int
+    fsp_results: list[OptionCount]
+    fsp_disciplines: list[OptionCount]
+    # At least 1, 3 and 5 years of commercial experience.
+    experience: list[OptionCount]
+    work_formats: list[OptionCount]
+    # Each city of the bank alone, without relocation; the most frequent first.
+    cities: list[OptionCount]
+    relocation: int
+    employment_types: list[OptionCount]
+    job_statuses: list[OptionCount]
+    # Signed in within the last 30 days.
+    active: int
+    # Each technology of the bank: how many matching candidates know it, the most frequent first.
+    stack: list[OptionCount]
+    # Up to three; only when nobody matched.
+    relaxations: list[CandidateRelaxation]
+
+
+class VacancyPreset(ApiModel):
+    """An own vacancy in the search's mode list with its requirements as filters."""
+
+    vacancy_id: uuid.UUID
+    title: str
+    work_format: WorkFormat
+    city: str | None
+    salary_to: int
+    published: bool
+    filters: CandidateFilterSet
+    # Candidates these filters leave.
+    count: int
+
+
+class CandidatePresets(ApiModel):
+    # Free search: every candidate of the view.
+    total: int
+    vacancies: list[VacancyPreset]
 
 
 class OwnCandidateRead(CandidateRead):

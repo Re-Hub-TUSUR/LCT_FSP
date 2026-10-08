@@ -1,11 +1,12 @@
 import { queryOptions } from '@tanstack/react-query'
 import { http } from '@/shared/api'
-import type { Paginated, PaginationParams } from '@/shared/api'
+import type { OptionCountDto, Paginated, PaginationParams } from '@/shared/api'
 import type { AssessmentStatus } from '@/entities/assessment/@x/candidate'
 import type { CategoryDto, Grade, SpecializationCode } from '@/entities/category/@x/candidate'
 import type {
   EmploymentType,
   FeedView,
+  FspResult,
   Reaction,
   ReactionCountsDto,
   WorkFormat,
@@ -206,19 +207,129 @@ export type CandidateSearchDto = Paginated<CandidateMatchDto> & {
 
 export type CandidateSort = 'relevance' | 'assessment' | 'salary' | 'experience'
 
-export type CandidateSearchParams = PaginationParams & {
+/** The recruiter's filters. Selecting a vacancy fills them in from its requirements. */
+export type CandidateFiltersDto = {
+  specializations: SpecializationCode[]
+  grades: Grade[]
+  verifiedOnly: boolean
+  /** False: no FSP results; true: some result, at least `fspResult` in `fspDiscipline`. */
+  hasFsp: boolean | null
+  fspResult: FspResult | null
+  fspDiscipline: FspDiscipline | null
+  experienceMin: number | null
+  /** «Обязательно»: every technology. «Будет плюсом»: ranks higher, filters nobody. */
+  stack: string[]
+  nice: string[]
+  salaryMin: number | null
+  salaryMax: number | null
+  /** Remote needs no city; office and hybrid need one of `cities` or readiness to relocate. */
+  workFormats: WorkFormat[]
+  cities: string[]
+  relocation: boolean
+  employmentTypes: EmploymentType[]
+  jobStatuses: JobStatus[]
+  /** Signed in within this many days. */
+  activeDays: number | null
+}
+
+/** Query parameters of the search and of its counts. */
+export type CandidateFilterParams = {
   q?: string
-  specialization?: SpecializationCode
-  grade?: Grade[]
-  stack?: string[]
-  hasFspAchievements?: boolean
-  verifiedOnly?: boolean
-  workFormat?: WorkFormat[]
-  city?: string
-  salaryMax?: number
-  vacancyId?: string
   view?: FeedView
-  sort?: CandidateSort
+  specialization?: SpecializationCode[]
+  grade?: Grade[]
+  verifiedOnly?: boolean
+  hasFspAchievements?: boolean
+  fspResult?: FspResult
+  fspDiscipline?: FspDiscipline
+  experienceMin?: number
+  stack?: string[]
+  nice?: string[]
+  salaryMin?: number
+  salaryMax?: number
+  workFormat?: WorkFormat[]
+  city?: string[]
+  relocation?: boolean
+  employment?: EmploymentType[]
+  jobStatus?: JobStatus[]
+  activeDays?: number
+}
+
+export type CandidateSearchParams = PaginationParams &
+  CandidateFilterParams & {
+    vacancyId?: string
+    sort?: CandidateSort
+  }
+
+export type CandidateRelaxationKind =
+  | 'stack'
+  | 'salary_max'
+  | 'salary_min'
+  | 'grades'
+  | 'specializations'
+  | 'verified'
+  | 'fsp_result'
+  | 'fsp_discipline'
+  | 'fsp'
+  | 'experience'
+  | 'work_formats'
+  | 'relocation'
+  | 'cities'
+  | 'employment'
+  | 'job_statuses'
+  | 'active'
+
+/** A filter to loosen when nobody matched; `value` is the technology for `stack`. */
+export type CandidateRelaxationDto = {
+  kind: CandidateRelaxationKind
+  value: string | null
+  count: number
+}
+
+/** How many candidates each option leaves, the other filters staying as they are. */
+export type CandidateFacetsDto = {
+  /** Candidates of the view and the text query before the filters. */
+  total: number
+  /** Candidates matching every filter. */
+  count: number
+  /** The option chosen alone in its group. */
+  specializations: OptionCountDto[]
+  grades: OptionCountDto[]
+  verified: number
+  fsp: number
+  fspResults: OptionCountDto[]
+  fspDisciplines: OptionCountDto[]
+  /** «1», «3», «5» years and more. */
+  experience: OptionCountDto[]
+  workFormats: OptionCountDto[]
+  /** Each city alone, without relocation; the most frequent first. */
+  cities: OptionCountDto[]
+  relocation: number
+  employmentTypes: OptionCountDto[]
+  jobStatuses: OptionCountDto[]
+  active: number
+  /** Matching candidates knowing each technology of the bank, the most frequent first. */
+  stack: OptionCountDto[]
+  /** Up to three, only when nobody matched. */
+  relaxations: CandidateRelaxationDto[]
+}
+
+/** An own vacancy in the search's mode list with its requirements as filters. */
+export type VacancyPresetDto = {
+  vacancyId: string
+  title: string
+  workFormat: WorkFormat
+  city: string | null
+  salaryTo: number
+  published: boolean
+  filters: CandidateFiltersDto
+  count: number
+}
+
+export type CandidatePresetsDto = {
+  /** Free search: every candidate of the view. */
+  total: number
+  vacancies: VacancyPresetDto[]
 }
 
 export const candidateKeys = {
@@ -226,6 +337,8 @@ export const candidateKeys = {
   detail: (id: string) => [...candidateKeys.all, 'detail', id] as const,
   mine: () => [...candidateKeys.all, 'mine'] as const,
   search: (params: CandidateSearchParams) => [...candidateKeys.all, 'search', params] as const,
+  facets: (params: CandidateFilterParams) => [...candidateKeys.all, 'facets', params] as const,
+  presets: (view: FeedView) => [...candidateKeys.all, 'presets', view] as const,
   reactionCounts: () => [...candidateKeys.all, 'reaction-counts'] as const,
 }
 
@@ -249,6 +362,20 @@ export const candidateQueries = {
       queryKey: candidateKeys.search(params),
       queryFn: ({ signal }) =>
         http.get<CandidateSearchDto>('/candidates', { query: params, signal }),
+    }),
+  /** Counts next to the search's filter options and the ways out of an empty list. */
+  facets: (params: CandidateFilterParams) =>
+    queryOptions({
+      queryKey: candidateKeys.facets(params),
+      queryFn: ({ signal }) =>
+        http.get<CandidateFacetsDto>('/candidates/facets', { query: params, signal }),
+    }),
+  /** Own vacancies as ready-made filters. */
+  presets: (view: FeedView = 'all') =>
+    queryOptions({
+      queryKey: candidateKeys.presets(view),
+      queryFn: ({ signal }) =>
+        http.get<CandidatePresetsDto>('/candidates/presets', { query: { view }, signal }),
     }),
   mine: () =>
     queryOptions({

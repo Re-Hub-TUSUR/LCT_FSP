@@ -2,43 +2,138 @@
 
 import logging
 import uuid
-from dataclasses import dataclass, replace
+from collections.abc import Sequence
+from dataclasses import dataclass, field, replace
+from datetime import UTC, datetime, timedelta
+from typing import Final
 
 from app.core.errors import NotFoundError
 from app.dependencies.common import Pagination
-from app.models import CandidateReaction, Grade, ReactionKind, User, WorkFormat
+from app.models import (
+    CandidateProfile,
+    CandidateReaction,
+    Grade,
+    ReactionKind,
+    User,
+    Vacancy,
+    WorkFormat,
+)
+from app.models.enums import EmploymentType, FspResult
 from app.repositories.candidate import CandidateRepository
 from app.repositories.company import CompanyRepository
 from app.repositories.reaction import ReactionRepository, ids_with
 from app.repositories.vacancy import VacancyRepository
-from app.schemas.candidate import CandidateMatch, CandidateSearchPage, SearchEngine
+from app.schemas.candidate import (
+    CandidateFacets,
+    CandidateFilterSet,
+    CandidateMatch,
+    CandidatePresets,
+    CandidateSearchPage,
+    SearchEngine,
+    VacancyPreset,
+)
 from app.schemas.reaction import FeedView, ReactionCounts
 from app.search.base import CandidateSearchQuery, CandidateSort, SearchHits, SearchUnavailableError
 from app.search.database import DatabaseCandidateSearch
 from app.search.elastic import ElasticCandidateSearch, ElasticErrors, ElasticSearchState
+from app.search.facets import candidate_facets
+from app.search.filters import FilterFacts, passes
 from app.services.matching import CandidateFacts, VacancyFacts, candidate_reasons, fit
 from app.services.presenters import candidate_read
 
 logger = logging.getLogger(__name__)
+
+# Facets count every candidate a text query finds, far beyond one page.
+TEXT_MATCHES_LIMIT: Final = 10_000
+# No filters: what a view and a text query narrow down.
+_ANY: Final = CandidateSearchQuery()
 
 
 @dataclass(frozen=True, slots=True)
 class CandidateSearchParams:
     """What the recruiter asked for, before access checks and reactions are applied."""
 
+    filters: CandidateFilterSet = field(default_factory=CandidateFilterSet)
     text: str | None = None
-    specialization: str | None = None
-    grades: tuple[Grade, ...] = ()
-    stack: tuple[str, ...] = ()
-    has_fsp: bool | None = None
-    verified_only: bool = False
-    work_formats: tuple[WorkFormat, ...] = ()
-    city: str | None = None
-    salary_max: int | None = None
-    experience_min: int | None = None
     vacancy_id: uuid.UUID | None = None
     view: FeedView = "all"
     sort: CandidateSort = "relevance"
+
+
+def _terms(values: Sequence[str]) -> tuple[str, ...]:
+    return tuple(dict.fromkeys(value.strip() for value in values if value.strip()))
+
+
+def candidate_query(
+    filters: CandidateFilterSet, *, text: str | None, now: datetime
+) -> CandidateSearchQuery:
+    """The recruiter's filters as both search engines take them."""
+    return CandidateSearchQuery(
+        text=text.strip() if text and text.strip() else None,
+        specializations=_terms(filters.specializations),
+        grades=tuple(filters.grades),
+        stack=_terms(filters.stack),
+        nice_stack=_terms(filters.nice),
+        has_fsp=filters.has_fsp,
+        fsp_result=filters.fsp_result,
+        fsp_discipline=filters.fsp_discipline,
+        verified_only=filters.verified_only,
+        experience_min=filters.experience_min or None,
+        salary_min=filters.salary_min,
+        salary_max=filters.salary_max,
+        work_formats=tuple(filters.work_formats),
+        cities=_terms(filters.cities),
+        include_relocation=filters.relocation,
+        employment_types=tuple(filters.employment_types),
+        job_statuses=tuple(filters.job_statuses),
+        active_since=now - timedelta(days=filters.active_days) if filters.active_days else None,
+    )
+
+
+def vacancy_filters(vacancy: Vacancy) -> CandidateFilterSet:
+    """A vacancy's requirements as the filters the search opens with when it is selected."""
+    split = bool(vacancy.stack_required or vacancy.stack_nice)
+    onsite = vacancy.work_format != WorkFormat.REMOTE
+    wants_fsp = vacancy.fsp_best_result is not None or vacancy.fsp_discipline is not None
+    return CandidateFilterSet(
+        specializations=[vacancy.specialization],
+        grades=[Grade(grade) for grade in vacancy.grades] or [vacancy.grade],
+        verified_only=vacancy.verified_grade_only,
+        has_fsp=True if wants_fsp else None,
+        # Taking part is any result.
+        fsp_result=None
+        if vacancy.fsp_best_result == FspResult.PARTICIPANT
+        else vacancy.fsp_best_result,
+        fsp_discipline=vacancy.fsp_discipline,
+        experience_min=vacancy.min_experience_years or None,
+        stack=list(vacancy.stack_required),
+        # A vacancy saved before the stack was split: its stack only ranks, it filters nobody out.
+        nice=list(vacancy.stack_nice if split else vacancy.stack),
+        salary_max=vacancy.salary_to,
+        work_formats=[vacancy.work_format],
+        cities=[vacancy.city] if onsite and vacancy.city else [],
+        employment_types=[EmploymentType(kind) for kind in vacancy.employment_types],
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _Scope:
+    """The recruiter's own decisions and which candidates a view lists because of them."""
+
+    view: FeedView
+    reactions: dict[uuid.UUID, CandidateReaction]
+    matched: set[uuid.UUID]
+
+    def apply(self, query: CandidateSearchQuery) -> CandidateSearchQuery:
+        if self.view == "liked":
+            return replace(query, include_ids=ids_with(self.reactions, (ReactionKind.LIKE,)))
+        if self.view == "skipped":
+            return replace(query, include_ids=ids_with(self.reactions, (ReactionKind.SKIP,)))
+        if self.view == "matched":
+            return replace(query, include_ids=tuple(self.matched))
+        # The feed hides skipped candidates; the swipe deck hides everyone already decided on.
+        hidden = (ReactionKind.SKIP,) if self.view == "all" else tuple(ReactionKind)
+        return replace(query, exclude_ids=ids_with(self.reactions, hidden))
 
 
 class CandidateSearchService:
@@ -57,14 +152,19 @@ class CandidateSearchService:
         self._elastic = elastic
 
     async def search(
-        self, user: User, params: CandidateSearchParams, pagination: Pagination
+        self,
+        user: User,
+        params: CandidateSearchParams,
+        pagination: Pagination,
+        *,
+        now: datetime | None = None,
     ) -> CandidateSearchPage:
         vacancy = await self._own_vacancy(user, params.vacancy_id)
-        reactions = await self._reactions.for_candidates(user.id)
-        matched = await self._matched(user)
-        query = self._query(params, vacancy, reactions, matched)
+        scope = await self._scope(user, params.view)
+        query = candidate_query(params.filters, text=params.text, now=now or datetime.now(UTC))
+        query = replace(scope.apply(query), vacancy=vacancy, sort=params.sort)
 
-        engine, hits = await self._run(query, pagination)
+        engine, hits = await self._run(query, offset=pagination.offset, limit=pagination.per_page)
         profiles = await self._candidates.by_ids(hits.ids)
         items = []
         for candidate_id in hits.ids:
@@ -73,17 +173,17 @@ class CandidateSearchService:
                 continue
             facts = CandidateFacts.of(profile)
             result = fit(facts, vacancy, bonus=facts.strength) if vacancy else None
-            reaction = reactions.get(candidate_id)
+            reaction = scope.reactions.get(candidate_id)
             items.append(
                 CandidateMatch(
                     candidate=candidate_read(profile),
                     match_score=result.score if result else None,
                     profile_strength=facts.strength,
                     reasons=candidate_reasons(
-                        facts, result, vacancy=vacancy, stack_filter=params.stack
+                        facts, result, vacancy=vacancy, stack_filter=query.stack + query.nice_stack
                     ),
                     reaction=reaction.kind if reaction else None,
-                    matched=candidate_id in matched,
+                    matched=candidate_id in scope.matched,
                 )
             )
         return CandidateSearchPage.build(
@@ -93,6 +193,42 @@ class CandidateSearchService:
             per_page=pagination.per_page,
             engine=engine,
         )
+
+    async def facets(
+        self, user: User, params: CandidateSearchParams, *, now: datetime | None = None
+    ) -> CandidateFacets:
+        """Counts next to every filter option of the search with these parameters."""
+        now = now or datetime.now(UTC)
+        scope = await self._scope(user, params.view)
+        query = scope.apply(candidate_query(params.filters, text=params.text, now=now))
+        return candidate_facets(await self._base(query), query, now=now)
+
+    async def presets(
+        self, user: User, *, view: FeedView = "all", now: datetime | None = None
+    ) -> CandidatePresets:
+        """The search's modes: free search and every own vacancy with its filters filled in."""
+        now = now or datetime.now(UTC)
+        company = await self._companies.get_by_owner(user.id)
+        rows = await self._vacancies.for_company(company.id) if company else []
+        scope = await self._scope(user, view)
+        facts = [FilterFacts.of(profile) for profile in await self._base(scope.apply(_ANY))]
+        presets = []
+        for vacancy, _ in rows:
+            filters = vacancy_filters(vacancy)
+            query = candidate_query(filters, text=None, now=now)
+            presets.append(
+                VacancyPreset(
+                    vacancy_id=vacancy.id,
+                    title=vacancy.title,
+                    work_format=vacancy.work_format,
+                    city=vacancy.city,
+                    salary_to=vacancy.salary_to,
+                    published=vacancy.published_at is not None,
+                    filters=filters,
+                    count=sum(passes(item, query) for item in facts),
+                )
+            )
+        return CandidatePresets(total=len(facts), vacancies=presets)
 
     async def counts(self, user: User) -> ReactionCounts:
         """Sizes of the lists `liked`, `matched` and `skipped` as the search would show them."""
@@ -107,6 +243,11 @@ class CandidateSearchService:
             liked=await shown(ids_with(reactions, (ReactionKind.LIKE,))),
             matched=await shown(tuple(matched)),
             skipped=await shown(ids_with(reactions, (ReactionKind.SKIP,))),
+        )
+
+    async def _scope(self, user: User, view: FeedView) -> _Scope:
+        return _Scope(
+            view, await self._reactions.for_candidates(user.id), await self._matched(user)
         )
 
     async def _matched(self, user: User) -> set[uuid.UUID]:
@@ -126,42 +267,24 @@ class CandidateSearchService:
             raise NotFoundError("Вакансия не найдена")
         return VacancyFacts.of(row[0])
 
-    @staticmethod
-    def _query(
-        params: CandidateSearchParams,
-        vacancy: VacancyFacts | None,
-        reactions: dict[uuid.UUID, CandidateReaction],
-        matched: set[uuid.UUID],
-    ) -> CandidateSearchQuery:
-        query = CandidateSearchQuery(
-            text=params.text.strip() if params.text and params.text.strip() else None,
-            specialization=params.specialization,
-            grades=params.grades,
-            stack=tuple(item.strip() for item in params.stack if item.strip()),
-            has_fsp=params.has_fsp,
-            verified_only=params.verified_only,
-            work_formats=params.work_formats,
-            city=params.city.strip() if params.city and params.city.strip() else None,
-            salary_max=params.salary_max,
-            experience_min=params.experience_min,
-            vacancy=vacancy,
-            sort=params.sort,
+    async def _base(self, query: CandidateSearchQuery) -> list[CandidateProfile]:
+        """Candidates of the view that match the text query, whatever the filters say."""
+        if query.text is None:
+            profiles = await self._candidates.searchable(
+                include_ids=query.include_ids, exclude_ids=query.exclude_ids
+            )
+            return list(profiles)
+        text_only = replace(
+            _ANY, text=query.text, include_ids=query.include_ids, exclude_ids=query.exclude_ids
         )
-        # Lists of the recruiter's own decisions.
-        if params.view == "liked":
-            return replace(query, include_ids=ids_with(reactions, (ReactionKind.LIKE,)))
-        if params.view == "skipped":
-            return replace(query, include_ids=ids_with(reactions, (ReactionKind.SKIP,)))
-        if params.view == "matched":
-            return replace(query, include_ids=tuple(matched))
-        # The feed hides skipped candidates; the swipe deck hides everyone already decided on.
-        hidden = (ReactionKind.SKIP,) if params.view == "all" else tuple(ReactionKind)
-        return replace(query, exclude_ids=ids_with(reactions, hidden))
+        _, hits = await self._run(text_only, offset=0, limit=TEXT_MATCHES_LIMIT)
+        found = await self._candidates.by_ids(hits.ids)
+        return [found[candidate_id] for candidate_id in hits.ids if candidate_id in found]
 
     async def _run(
-        self, query: CandidateSearchQuery, pagination: Pagination
+        self, query: CandidateSearchQuery, *, offset: int, limit: int
     ) -> tuple[SearchEngine, SearchHits]:
-        window = {"offset": pagination.offset, "limit": pagination.per_page}
+        window = {"offset": offset, "limit": limit}
         if self._elastic is not None and await self._elastic.ready(self._candidates.all):
             try:
                 await self._elastic.sync(self._candidates.updated_since)

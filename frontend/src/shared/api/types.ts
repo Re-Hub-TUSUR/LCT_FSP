@@ -19,3 +19,9 @@ export type SalaryRangeDto = {
   from: number
   to: number
 }
+
+/** A filter option and how many results the list would have after choosing it. */
+export type OptionCountDto = {
+  value: string
+  count: number
+}

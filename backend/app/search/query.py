@@ -11,6 +11,7 @@ from typing import Any
 from app.models import Grade, WorkFormat
 from app.search.base import CandidateSearchQuery
 from app.search.documents import TEXT_FIELDS
+from app.search.filters import fsp_mark, wants_fsp
 from app.services.matching import (
     GRADES,
     HALF,
@@ -112,51 +113,84 @@ def _fit_params(vacancy: VacancyFacts) -> dict[str, Any]:
 
 
 def _filters(query: CandidateSearchQuery) -> list[dict[str, Any]]:
+    """The conditions of `app.search.filters.check`, group by group."""
     filters: list[dict[str, Any]] = [
         {"term": {"visible": True}},
         {"term": {"categorized": True}},
     ]
-    if query.specialization:
-        filters.append({"term": {"specialization": query.specialization}})
+    if query.specializations:
+        filters.append({"terms": {"specialization": list(query.specializations)}})
     if query.grades:
         filters.append({"terms": {"grade": [Grade(grade).value for grade in query.grades]}})
-    # Every listed technology is required; the keyword normaliser makes the terms case-insensitive.
-    filters.extend({"term": {"stack": item}} for item in query.stack)
-    if query.has_fsp is not None:
-        filters.append({"term": {"has_fsp": query.has_fsp}})
     if query.verified_only:
         filters.append({"term": {"verified": True}})
-    if query.work_formats:
-        filters.append({"terms": {"work_formats": [fmt.value for fmt in query.work_formats]}})
-    if query.city:
-        filters.append(
-            {
-                "bool": {
-                    "should": [
-                        {"term": {"city": query.city}},
-                        {"term": {"relocation_ready": True}},
-                    ],
-                    "minimum_should_match": 1,
-                }
-            }
-        )
-    if query.salary_max is not None:
-        filters.append(
-            {
-                "bool": {
-                    "should": [
-                        {"range": {"salary_expectation": {"lte": query.salary_max}}},
-                        {"bool": {"must_not": {"exists": {"field": "salary_expectation"}}}},
-                    ],
-                    "minimum_should_match": 1,
-                }
-            }
-        )
+    if query.has_fsp is False:
+        filters.append({"term": {"has_fsp": False}})
+    elif wants_fsp(query):
+        filters.append({"term": {"fsp_marks": fsp_mark(query)}})
     if query.experience_min is not None:
         filters.append({"range": {"experience_years": {"gte": query.experience_min}}})
+    # Every listed technology is required; the keyword normaliser makes the terms case-insensitive.
+    filters.extend({"term": {"stack": normalize_term(item)}} for item in query.stack)
+    filters.extend(_salary(query))
+    location = _location(query)
+    if location is not None:
+        filters.append(location)
+    if query.employment_types:
+        employment = [item.value for item in query.employment_types]
+        filters.append({"terms": {"employment_types": employment}})
+    if query.job_statuses:
+        filters.append({"terms": {"job_status": [item.value for item in query.job_statuses]}})
+    if query.active_since is not None:
+        filters.append({"range": {"last_active_at": {"gte": query.active_since.isoformat()}}})
     if query.include_ids is not None:
         filters.append({"ids": {"values": [str(value) for value in query.include_ids]}})
     return filters
+
+
+def _or_unknown(condition: dict[str, Any], field: str) -> dict[str, Any]:
+    """The condition, or no value at all: a candidate without an expectation is not excluded."""
+    return {
+        "bool": {
+            "should": [condition, {"bool": {"must_not": {"exists": {"field": field}}}}],
+            "minimum_should_match": 1,
+        }
+    }
+
+
+def _salary(query: CandidateSearchQuery) -> list[dict[str, Any]]:
+    bounds: dict[str, int] = {}
+    if query.salary_min is not None:
+        bounds["gte"] = query.salary_min
+    if query.salary_max is not None:
+        bounds["lte"] = query.salary_max
+    if not bounds:
+        return []
+    return [_or_unknown({"range": {"salary_expectation": bounds}}, "salary_expectation")]
+
+
+def _location(query: CandidateSearchQuery) -> dict[str, Any] | None:
+    """`app.search.filters.location_fits`: remote needs no city, the other formats need one."""
+    city_ok: dict[str, Any] | None = None
+    if query.cities:
+        options: list[dict[str, Any]] = [
+            {"terms": {"city": [normalize_term(city) for city in query.cities]}}
+        ]
+        if query.include_relocation:
+            options.append({"term": {"relocation_ready": True}})
+        city_ok = {"bool": {"should": options, "minimum_should_match": 1}}
+    if not query.work_formats:
+        return city_ok
+    ways: list[dict[str, Any]] = []
+    if WorkFormat.REMOTE in query.work_formats:
+        ways.append({"term": {"work_formats": WorkFormat.REMOTE.value}})
+    onsite = [fmt.value for fmt in query.work_formats if fmt != WorkFormat.REMOTE]
+    if onsite:
+        needs: list[dict[str, Any]] = [{"terms": {"work_formats": onsite}}]
+        if city_ok is not None:
+            needs.append(city_ok)
+        ways.append({"bool": {"must": needs}})
+    return {"bool": {"should": ways, "minimum_should_match": 1}}
 
 
 def _text(text: str) -> dict[str, Any]:
@@ -189,6 +223,29 @@ def _text(text: str) -> dict[str, Any]:
 
 
 _TIE_BREAK: list[dict[str, Any]] = [{"profile_strength": "desc"}, {"id": "asc"}]
+
+# `app.search.filters.nice_matches`: how many «nice to have» technologies the candidate has.
+NICE_SCRIPT = """
+int matched = 0;
+for (String item : params.nice) {
+  if (doc['stack'].contains(item)) {
+    matched++;
+  }
+}
+return matched;
+"""
+
+
+def _nice_sort(query: CandidateSearchQuery) -> dict[str, Any]:
+    nice = list(dict.fromkeys(normalize_term(item) for item in query.nice_stack))
+    return {
+        "_script": {
+            "type": "number",
+            "order": "desc",
+            "script": {"lang": "painless", "source": NICE_SCRIPT, "params": {"nice": nice}},
+        }
+    }
+
 
 _FIELD_SORT: dict[str, dict[str, Any]] = {
     "assessment": {"assessment_score": {"order": "desc", "missing": "_last"}},
@@ -240,6 +297,8 @@ def build_search_body(query: CandidateSearchQuery, *, offset: int, limit: int) -
         # Inside a category: the strongest confirmed profile first (ТЗ 2.1).
         es_query, sort = boolean, list(_TIE_BREAK)
 
+    if query.sort == "relevance" and query.nice_stack:
+        sort = [_nice_sort(query), *sort]
     return {
         "query": es_query,
         "sort": sort,

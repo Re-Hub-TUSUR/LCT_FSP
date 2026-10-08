@@ -4,13 +4,11 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router'
 import { candidateQueries } from '@/entities/candidate'
 import type { CandidateMatchDto, CandidateSort } from '@/entities/candidate'
-import { categoryQueries, GRADE_LABELS, GRADES } from '@/entities/category'
-import type { Grade } from '@/entities/category'
-import { parseListView, vacancyQueries, WORK_FORMAT_LABELS, WORK_FORMATS } from '@/entities/vacancy'
-import type { ListView, WorkFormat } from '@/entities/vacancy'
+import type { ListView } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
+import { CandidateFilters, useCandidateFilters } from '@/features/filter-candidates'
 import { plural } from '@/shared/lib'
-import { Chip, EmptyState, FeedSkeleton, Pagination, QueryState } from '@/shared/ui'
+import { EmptyState, FeedSkeleton, Pagination, QueryState } from '@/shared/ui'
 import { CandidatePanel } from './candidate-panel'
 import { CandidateRow } from './candidate-row'
 
@@ -37,12 +35,6 @@ const EMPTY: Record<ListView, { title: string; text: string }> = {
   },
 }
 
-const list = (value: string | null) =>
-  (value ?? '')
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-
 /**
  * Recruiter's feed: full-text search (Elasticsearch on the backend) plus deep filters.
  * Inside a category the strongest confirmed profile (test + FSP) goes first.
@@ -51,64 +43,36 @@ export function CandidateFeed() {
   const [params, setParams] = useSearchParams()
   const page = Math.max(1, Number(params.get('page')) || 1)
   const perPage = Number(params.get('perPage')) || 10
-  const view = parseListView(params.get('view'))
-  const q = params.get('q') ?? ''
-  const grades = params.getAll('grade') as Grade[]
-  const formats = params.getAll('workFormat') as WorkFormat[]
-  const stack = list(params.get('stack'))
+  const { view, text: q, vacancyId, query: filters, active } = useCandidateFilters()
   const sort = (params.get('sort') as CandidateSort | null) ?? 'relevance'
-  const vacancyId = params.get('vacancyId') ?? undefined
   const [text, setText] = useState(q)
   const [open, setOpen] = useState<CandidateMatchDto | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const closePanel = useCallback(() => setOpen(null), [setOpen])
 
-  const dictionary = useQuery(categoryQueries.dictionary())
-  const mine = useQuery(vacancyQueries.mine())
   const query = useQuery({
     ...candidateQueries.search({
+      ...filters,
       page,
       perPage,
       view,
       q: q || undefined,
-      specialization: params.get('specialization') ?? undefined,
-      grade: grades,
-      stack,
-      hasFspAchievements: params.get('fsp') === '1' ? true : undefined,
-      verifiedOnly: params.get('verified') === '1' || undefined,
-      workFormat: formats,
-      city: params.get('city') ?? undefined,
-      salaryMax: Number(params.get('salaryMax')) || undefined,
-      vacancyId,
+      vacancyId: vacancyId ?? undefined,
       sort,
     }),
     placeholderData: keepPreviousData,
   })
   const data = query.data
 
-  const update = (patch: Record<string, string | string[] | null>) => {
+  const update = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams(params)
     for (const [key, value] of Object.entries(patch)) {
       next.delete(key)
-      if (Array.isArray(value)) value.forEach((item) => next.append(key, item))
-      else if (value) next.set(key, value)
+      if (value) next.set(key, value)
     }
     if (!('page' in patch)) next.delete('page')
     setParams(next, { replace: true })
   }
-
-  const toggle = <T extends string>(key: string, values: T[], value: T) =>
-    update({
-      [key]: values.includes(value) ? values.filter((v) => v !== value) : [...values, value],
-    })
-
-  // What the «Фильтры» button reports on a narrow screen.
-  const active =
-    ['specialization', 'stack', 'city', 'salaryMax', 'vacancyId', 'verified', 'fsp'].filter((key) =>
-      params.get(key),
-    ).length +
-    grades.length +
-    formats.length
 
   const onSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -130,128 +94,7 @@ export function CandidateFeed() {
         className={filtersOpen ? 'feed__filters is-open' : 'feed__filters'}
         aria-label="Фильтры поиска"
       >
-        <h2 className="feed__title">Фильтры</h2>
-        <label className="feed__group">
-          <span className="feed__label">Подбор под вакансию</span>
-          <select
-            className="feed__select"
-            value={vacancyId ?? ''}
-            onChange={(e) => update({ vacancyId: e.target.value || null })}
-          >
-            <option value="">Без вакансии — по силе профиля</option>
-            {mine.data?.items.map((vacancy) => (
-              <option key={vacancy.id} value={vacancy.id}>
-                {vacancy.title}
-                {vacancy.publishedAt ? '' : ' (черновик)'}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="feed__group">
-          <span className="feed__label">Специализация</span>
-          <select
-            className="feed__select"
-            value={params.get('specialization') ?? ''}
-            onChange={(e) => update({ specialization: e.target.value || null })}
-          >
-            <option value="">Все специализации</option>
-            {dictionary.data?.specializations.map((item) => (
-              <option key={item.code} value={item.code}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div className="feed__group">
-          <p className="feed__label">Грейд</p>
-          <div className="feed__chips">
-            {GRADES.map((grade) => (
-              <Chip
-                key={grade}
-                active={grades.includes(grade)}
-                onClick={() => toggle('grade', grades, grade)}
-              >
-                {GRADE_LABELS[grade]}
-              </Chip>
-            ))}
-          </div>
-        </div>
-
-        <label className="feed__group">
-          <span className="feed__label">Стек (все через запятую)</span>
-          <input
-            className="feed__input"
-            placeholder="Python, Kafka"
-            defaultValue={stack.join(', ')}
-            onBlur={(e) => update({ stack: list(e.target.value).join(',') || null })}
-          />
-        </label>
-
-        <div className="feed__group">
-          <p className="feed__label">Подтверждение</p>
-          <label className="feed__toggle">
-            <input
-              type="checkbox"
-              checked={params.get('verified') === '1'}
-              onChange={(e) => update({ verified: e.target.checked ? '1' : null })}
-            />
-            Грейд подтверждён тестом
-          </label>
-          <label className="feed__toggle">
-            <input
-              type="checkbox"
-              checked={params.get('fsp') === '1'}
-              onChange={(e) => update({ fsp: e.target.checked ? '1' : null })}
-            />
-            Есть результаты ФСП
-          </label>
-        </div>
-
-        <div className="feed__group">
-          <p className="feed__label">Формат</p>
-          <div className="feed__chips">
-            {WORK_FORMATS.map((format) => (
-              <Chip
-                key={format}
-                active={formats.includes(format)}
-                onClick={() => toggle('workFormat', formats, format)}
-              >
-                {WORK_FORMAT_LABELS[format]}
-              </Chip>
-            ))}
-          </div>
-        </div>
-
-        <label className="feed__group">
-          <span className="feed__label">Город (+ готовые к переезду)</span>
-          <input
-            className="feed__input"
-            placeholder="Москва"
-            defaultValue={params.get('city') ?? ''}
-            onBlur={(e) => update({ city: e.target.value.trim() || null })}
-          />
-        </label>
-
-        <label className="feed__group">
-          <span className="feed__label">Бюджет до, ₽</span>
-          <input
-            className="feed__input"
-            inputMode="numeric"
-            placeholder="300 000"
-            defaultValue={params.get('salaryMax') ?? ''}
-            onBlur={(e) => update({ salaryMax: e.target.value.replace(/\D/g, '') || null })}
-          />
-        </label>
-
-        <button
-          type="button"
-          className="feed__reset"
-          onClick={() => setParams(new URLSearchParams())}
-        >
-          Сбросить фильтры
-        </button>
+        <CandidateFilters />
       </aside>
 
       <section className="feed__results" aria-label="Кандидаты">
@@ -324,7 +167,7 @@ export function CandidateFeed() {
                             target="candidate"
                             id={match.candidate.id}
                             initial={match.reaction}
-                            vacancyId={vacancyId}
+                            vacancyId={vacancyId ?? undefined}
                           />
                         }
                       />
@@ -361,7 +204,7 @@ export function CandidateFeed() {
               target="candidate"
               id={open.candidate.id}
               initial={open.reaction}
-              vacancyId={vacancyId}
+              vacancyId={vacancyId ?? undefined}
             />
           }
         />

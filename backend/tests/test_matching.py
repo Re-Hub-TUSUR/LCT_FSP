@@ -192,11 +192,11 @@ def test_elasticsearch_query_mirrors_filters_and_fit() -> None:
     job = vacancy(work_format=WorkFormat.HYBRID, city="Москва")
     body = build_search_body(
         CandidateSearchQuery(
-            specialization="backend",
+            specializations=("backend",),
             grades=(Grade.MIDDLE, Grade.SENIOR),
             stack=("Python", "Kafka"),
             has_fsp=True,
-            city="Москва",
+            cities=("Москва",),
             vacancy=job,
             exclude_ids=(),
         ),
@@ -209,8 +209,9 @@ def test_elasticsearch_query_mirrors_filters_and_fit() -> None:
     params = scored["script_score"]["script"]["params"]
     assert {"term": {"visible": True}} in filters
     assert {"terms": {"grade": ["middle", "senior"]}} in filters
-    assert {"term": {"stack": "Python"}} in filters
-    assert {"term": {"stack": "Kafka"}} in filters
+    assert {"term": {"stack": "python"}} in filters
+    assert {"term": {"stack": "kafka"}} in filters
+    assert {"term": {"fsp_marks": "any:participant"}} in filters
     assert params["stack"] == ["python", "postgresql", "redis", "kafka"]
     assert params["city"] == "москва"
     assert params["related"] == ["data-engineering", "fullstack"]

@@ -26,6 +26,13 @@ export function formatDate(iso: string): string {
   return date.format(new Date(iso))
 }
 
+const number = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 })
+
+/** 350000 → «350 000». */
+export function formatNumber(value: number): string {
+  return number.format(value)
+}
+
 /** Russian plural form for a count: `plural(3, ['кандидат', 'кандидата', 'кандидатов'])`. */
 export function plural(count: number, forms: readonly [string, string, string]): string {
   const n = Math.abs(count) % 100

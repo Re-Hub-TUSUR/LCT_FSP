@@ -54,7 +54,10 @@ async def test_vacancy_feed_is_personal_ranked_and_paginated(
     grades = {Grade.MIDDLE, *neighbour_grades(Grade.MIDDLE)}
     for item in everything["items"]:
         assert item["vacancy"]["category"]["specialization"] in relevant
-        assert item["vacancy"]["category"]["grade"] in grades
+        # A vacancy takes one grade or two neighbouring ones: one of them is close to the profile.
+        assert grades.intersection(
+            item["vacancy"]["grades"] or [item["vacancy"]["category"]["grade"]]
+        )
         assert item["vacancy"]["publishedAt"] is not None
         assert item["reasons"]
 
@@ -356,3 +359,168 @@ async def test_profile_visibility_and_contacts(client: AsyncClient, data: SeedDa
     assert seen_by_employer["contacts"] is None
     assert own["contacts"]["email"] == DEMO_CANDIDATE_EMAIL
     assert foreign.status_code == private.status_code == 404
+
+
+# --- filters: counts next to the options, ways out of an empty list, ready-made presets ----------
+
+
+def candidate_params(filters: dict[str, Any]) -> dict[str, Any]:
+    """A recruiter preset's filters as the search's query parameters."""
+    params = {
+        "specialization": filters["specializations"],
+        "grade": filters["grades"],
+        "verifiedOnly": filters["verifiedOnly"],
+        "hasFspAchievements": filters["hasFsp"],
+        "fspResult": filters["fspResult"],
+        "fspDiscipline": filters["fspDiscipline"],
+        "experienceMin": filters["experienceMin"],
+        "stack": filters["stack"],
+        "nice": filters["nice"],
+        "salaryMin": filters["salaryMin"],
+        "salaryMax": filters["salaryMax"],
+        "workFormat": filters["workFormats"],
+        "city": filters["cities"],
+        "relocation": filters["relocation"],
+        "employment": filters["employmentTypes"],
+        "jobStatus": filters["jobStatuses"],
+        "activeDays": filters["activeDays"],
+    }
+    return {key: value for key, value in params.items() if value not in (None, [])}
+
+
+def vacancy_params(filters: dict[str, Any]) -> dict[str, Any]:
+    """The candidate's profile preset as the feed's query parameters."""
+    params = {
+        "salaryMin": filters["salaryMin"],
+        "workFormat": filters["workFormats"],
+        "city": filters["cities"],
+        "relocation": filters["relocation"],
+        "employment": filters["employmentTypes"],
+        "stack": filters["stack"],
+        "nice": filters["nice"],
+        "benefit": filters["benefits"],
+        "accredited": filters["accredited"],
+    }
+    return {key: value for key, value in params.items() if value not in (None, [])}
+
+
+async def test_candidate_facets_count_what_each_click_leaves(
+    client: AsyncClient, data: SeedData
+) -> None:
+    token = await login(client, DEMO_EMPLOYER_EMAIL)
+    base = {"specialization": ["backend", "fullstack"], "verifiedOnly": "true"}
+    facets = await get(client, "/candidates/facets", token, **base)
+    found = await get(client, "/candidates", token, perPage=1, **base)
+
+    assert facets["count"] == found["total"] > 0
+    assert facets["relaxations"] == []
+    for option in facets["grades"]:
+        chosen = await get(client, "/candidates", token, perPage=1, grade=option["value"], **base)
+        assert option["count"] == chosen["total"], option
+    city = facets["cities"][0]
+    alone = await get(
+        client, "/candidates", token, perPage=1, city=city["value"], relocation="false", **base
+    )
+    assert city["count"] == alone["total"] > 0
+    technology = facets["stack"][0]
+    required = await get(client, "/candidates", token, perPage=1, stack=technology["value"], **base)
+    assert technology["count"] == required["total"] > 0
+
+
+async def test_empty_search_suggests_what_to_loosen(client: AsyncClient, data: SeedData) -> None:
+    token = await login(client, DEMO_EMPLOYER_EMAIL)
+    strict: dict[str, Any] = {
+        "specialization": "backend",
+        "stack": ["Python", "Swift"],
+        "salaryMax": 150_000,
+    }
+
+    def without(key: str) -> dict[str, Any]:
+        return {name: value for name, value in strict.items() if name != key}
+
+    def loosen(kind: str, value: str | None) -> dict[str, Any]:
+        if kind == "stack":
+            return {**strict, "stack": [item for item in strict["stack"] if item != value]}
+        return without({"salary_max": "salaryMax", "specializations": "specialization"}[kind])
+
+    facets = await get(client, "/candidates/facets", token, **strict)
+
+    assert facets["count"] == 0
+    counts = [item["count"] for item in facets["relaxations"]]
+    assert 0 < len(counts) <= 3
+    assert counts == sorted(counts, reverse=True)
+    for item in facets["relaxations"]:
+        params = loosen(item["kind"], item["value"])
+        assert (await get(client, "/candidates", token, perPage=1, **params))["total"] == item[
+            "count"
+        ], item
+
+
+async def test_own_vacancies_fill_the_search_filters(client: AsyncClient, data: SeedData) -> None:
+    token = await login(client, DEMO_EMPLOYER_EMAIL)
+    presets = await get(client, "/candidates/presets", token)
+    everyone = await get(client, "/candidates", token, perPage=1)
+
+    assert presets["total"] == everyone["total"]
+    assert presets["vacancies"]
+    for preset in presets["vacancies"]:
+        vacancy = await get(client, f"/vacancies/{preset['vacancyId']}", token)
+        filters = preset["filters"]
+        assert filters["specializations"] == [vacancy["category"]["specialization"]]
+        assert filters["grades"] == vacancy["grades"]
+        assert filters["stack"] == vacancy["stackRequired"]
+        assert filters["nice"] == vacancy["stackNice"]
+        assert filters["salaryMax"] == vacancy["salary"]["to"]
+        assert filters["workFormats"] == [vacancy["workFormat"]]
+        found = await get(
+            client,
+            "/candidates",
+            token,
+            perPage=1,
+            vacancyId=preset["vacancyId"],
+            **candidate_params(filters),
+        )
+        assert found["total"] == preset["count"], preset["title"]
+
+
+async def test_vacancy_feed_modes_counts_and_conditions(
+    client: AsyncClient, data: SeedData
+) -> None:
+    token = await login(client, DEMO_CANDIDATE_EMAIL)
+    presets = await get(client, "/vacancies/feed/presets", token)
+    params = vacancy_params(presets["profile"])
+    matched = await get(client, "/vacancies/feed", token, perPage=100, **params)
+    facets = await get(client, "/vacancies/feed/facets", token, **params)
+    free = await get(client, "/vacancies/feed", token, perPage=100, mode="free")
+
+    assert presets["personalized"] is True
+    assert presets["category"]["code"] == "backend:middle"
+    assert presets["profileCount"] == matched["total"] == facets["count"] > 0
+    assert presets["freeCount"] == free["total"] > matched["total"]
+    published = [item["vacancy"]["publishedAt"] for item in free["items"]]
+    assert published == sorted(published, reverse=True)
+    nice = {item.lower() for item in presets["profile"]["nice"]}
+    lifted = [
+        len(nice & {t.lower() for t in item["vacancy"]["stack"]}) for item in matched["items"]
+    ]
+    assert lifted == sorted(lifted, reverse=True)
+    for option in facets["employmentTypes"]:
+        wider = sorted({*params.get("employment", []), option["value"]})
+        widened = await get(
+            client, "/vacancies/feed", token, perPage=1, **{**params, "employment": wider}
+        )
+        assert option["count"] == widened["total"], option
+
+    dms = await get(client, "/vacancies/feed", token, perPage=100, mode="free", benefit="dms")
+    accredited = await get(
+        client, "/vacancies/feed", token, perPage=100, mode="free", accredited="true"
+    )
+    python = await get(client, "/vacancies/feed", token, perPage=100, mode="free", stack="python")
+    assert dms["items"]
+    assert all("dms" in item["vacancy"]["benefits"] for item in dms["items"])
+    assert accredited["items"]
+    assert all(item["vacancy"]["company"]["itAccredited"] for item in accredited["items"])
+    assert python["items"]
+    assert all(
+        "python" in {t.lower() for t in item["vacancy"]["stack"]} for item in python["items"]
+    )

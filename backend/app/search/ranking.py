@@ -4,10 +4,11 @@ from collections.abc import Callable
 
 from app.models import CandidateProfile
 from app.search.base import CandidateSearchQuery
+from app.search.filters import FilterFacts, nice_matches
 from app.services.matching import CandidateFacts, fit
 
 # Sort key for one profile; smaller sorts first.
-SortKey = tuple[float, float, str]
+SortKey = tuple[float, ...] | tuple[float | str, ...]
 
 
 def _strength(profile: CandidateProfile) -> float:
@@ -19,10 +20,12 @@ def sort_key(query: CandidateSearchQuery) -> Callable[[CandidateProfile], SortKe
 
     def relevance(profile: CandidateProfile) -> SortKey:
         facts = CandidateFacts.of(profile)
+        # «Nice to have» technologies lift a candidate above the rest, then the usual order.
+        nice = -float(nice_matches(FilterFacts.of(profile), query)) if query.nice_stack else 0.0
         if query.vacancy is None:
-            return (-facts.strength, 0.0, str(profile.id))
+            return (nice, -facts.strength, 0.0, str(profile.id))
         points = fit(facts, query.vacancy, bonus=facts.strength).points
-        return (-points, -facts.strength, str(profile.id))
+        return (nice, -points, -facts.strength, str(profile.id))
 
     def assessment(profile: CandidateProfile) -> SortKey:
         score = profile.assessment_score

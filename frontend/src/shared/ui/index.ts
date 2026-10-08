@@ -20,3 +20,24 @@ export { HackerText } from './hacker-text/hacker-text'
 export { Sheet, SheetSection } from './sheet/sheet'
 export { Segmented, Tabs } from './tabs/tabs'
 export type { TabItem } from './tabs/tabs'
+export {
+  CheckRow,
+  CountChip,
+  FilterDeadEnd,
+  FilterDisclosure,
+  FilterGroup,
+  FilterHead,
+  FilterSubLabel,
+  ModeSelect,
+  MoneyField,
+  SourceMark,
+  TagCombobox,
+  UndoToast,
+} from './filter-kit/filter-kit'
+export type {
+  ComboOption,
+  MarkState,
+  ModeOption,
+  Relaxation,
+  ToastState,
+} from './filter-kit/filter-kit'
