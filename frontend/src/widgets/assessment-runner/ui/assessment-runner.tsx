@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { SyntheticEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   TASK_KIND_LABELS,
@@ -58,6 +59,14 @@ function formatClock(ms: number) {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
 }
 
+/** What the candidate types (the editor, text fields) stays copyable; the tasks do not. */
+function inOwnAnswer(target: EventTarget) {
+  return (
+    target instanceof Element &&
+    target.closest('textarea, input, [contenteditable="true"]') !== null
+  )
+}
+
 type RunnerProps = Omit<Props, 'attemptId'> & { attempt: AttemptDetailDto }
 
 function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
@@ -70,6 +79,7 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
   const [runsLeft, setRunsLeft] = useState(attempt.runsLeft)
   const [confirming, setConfirming] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [copyBlocked, setCopyBlocked] = useState(false)
 
   // The countdown follows the server clock, not the device one.
   const { clockOffset } = attempt
@@ -149,6 +159,13 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
     return () => window.removeEventListener('blur', onBlur)
   }, [attempt.id])
 
+  // Statements and options must not leave the page: no copy, cut, context menu or drag.
+  const guardCopy = (event: SyntheticEvent) => {
+    if (inOwnAnswer(event.target)) return
+    event.preventDefault()
+    setCopyBlocked(true)
+  }
+
   const changeAnswer = (task: AttemptTaskDto, answer: TaskAnswerDto) => {
     setAnswers((prev) => ({ ...prev, [task.id]: answer }))
     if (TASK_TRAITS[task.kind].save === 'draft') return drafts.change(task.id, answer)
@@ -165,7 +182,16 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
   if (!task) return null
 
   return (
-    <section className="runner" aria-label={`Тест: ${attempt.title}`}>
+    // The handlers only cancel copying; nothing here is operated with them.
+    // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+    <section
+      className="runner"
+      aria-label={`Тест: ${attempt.title}`}
+      onCopy={guardCopy}
+      onCut={guardCopy}
+      onContextMenu={guardCopy}
+      onDragStart={guardCopy}
+    >
       <header className="runner__bar">
         <div>
           <p className="runner__eyebrow">{attempt.title}</p>
@@ -219,6 +245,12 @@ function Runner({ attempt, runnerAvailable, onFinished }: RunnerProps) {
           onRunsLeft={setRunsLeft}
         />
       </div>
+
+      {copyBlocked && (
+        <p className="runner__note" role="status">
+          Копировать условия заданий нельзя. Свой ответ копировать можно.
+        </p>
+      )}
 
       {(saveError || finish.isError) && (
         <p className="runner__error" role="alert">

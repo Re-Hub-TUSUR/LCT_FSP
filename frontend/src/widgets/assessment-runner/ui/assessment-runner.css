@@ -88,12 +88,29 @@
   min-height: 320px;
 }
 
+/* Tasks cannot be selected; what the candidate types can */
+.runner__nav,
+.runner__task {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.runner__task :is(textarea, input, .cm-editor) {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.runner__note,
 .runner__error {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 1.5;
   color: var(--red-text);
+}
+
+.runner__note {
+  color: var(--muted);
 }
 
 .runner__footer {
