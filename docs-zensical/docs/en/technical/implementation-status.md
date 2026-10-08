@@ -36,4 +36,6 @@ The BRD does not change because of this page.
 | Take-homes, FR-Р-21 | Done as company assignments and a candidate taking them. Assembly from patterns with load-bearing elements is absent |
 | Admin patterns and validation, FR-А-02 through FR-А-22 | Partial. The `app/admin` package: task bank, analytics on a button, parameters, dictionaries, audit log, ban list, company verification. LLM-persona calibration, one-shot, a proctoring queue, and K1/K2 reference runs were not found in the routes |
 
+ATS from criterion 6 is a separate poll and our filters, see [ATS](ats.md). It does not write into the candidate bank.
+
 Where this page says «not compared» or «not found», that is the edge of this cut, not proof that the behaviour is absent from every frontend file.

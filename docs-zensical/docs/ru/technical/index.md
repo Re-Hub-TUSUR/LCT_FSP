@@ -10,6 +10,7 @@ icon: lucide/server
 
 - `docs/ARCHITECTURE.md` — слои и правила импортов. Таблица статусов API в нём устарела, сюда она не скопирована.
 - `docs/FSP_INTEGRATION.md` — контракт FSP ID.
+- `docs/ATS_INTEGRATION.md` — коннектор ATS.
 - `docs/ADMIN.md` — вкладки админки.
 
 | Страница | О чём |
@@ -19,4 +20,5 @@ icon: lucide/server
 | [Модель данных](data-model.md) | Таблицы, которые есть в коде |
 | [Локальный запуск](local-start.md) | Как поднять проект |
 | [FSP ID](fsp-id.md) | Привязка к реестру |
+| [ATS](ats.md) | Опрос внешней ATS и наши фильтры |
 | [Статус реализации](implementation-status.md) | Сделано, частично, нет |

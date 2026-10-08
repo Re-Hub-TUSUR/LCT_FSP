@@ -8,6 +8,16 @@ from app.models.assessment import (
     AssessmentTaskTime,
     AssessmentTest,
 )
+from app.models.ats import (
+    AtsApplication,
+    AtsCandidate,
+    AtsConnection,
+    AtsJob,
+    AtsRawEvent,
+    AtsSyncLog,
+    ScreeningJob,
+    ScreeningResult,
+)
 from app.models.candidate import CandidateProfile
 from app.models.candidate_category import CandidateCategory
 from app.models.company import Company
@@ -47,6 +57,12 @@ __all__ = [
     "AssessmentTaskTime",
     "AssessmentTest",
     "AssignmentStatus",
+    "AtsApplication",
+    "AtsCandidate",
+    "AtsConnection",
+    "AtsJob",
+    "AtsRawEvent",
+    "AtsSyncLog",
     "AttemptStatus",
     "CandidateCategory",
     "CandidateProfile",
@@ -69,6 +85,8 @@ __all__ = [
     "ReactionKind",
     "RefreshToken",
     "SavedSearch",
+    "ScreeningJob",
+    "ScreeningResult",
     "TaskDifficulty",
     "TaskKind",
     "TestAssignment",

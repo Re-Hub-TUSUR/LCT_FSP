@@ -21,6 +21,7 @@ const NAV_BY_ROLE: Record<UserRole | 'guest', NavItem[]> = {
     { label: 'Лента', to: ROUTES.feed },
     { label: 'Мои отклики', to: ROUTES.responses },
     { label: 'Вакансии', to: ROUTES.vacancies },
+    { label: 'ATS', to: ROUTES.ats },
     { label: 'Тестовые', to: ROUTES.testing },
     { label: 'Календарь', to: ROUTES.calendar },
   ],

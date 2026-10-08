@@ -5,6 +5,7 @@ from app.api.routes import (
     admin,
     applications,
     assessments,
+    ats,
     auth,
     calendar,
     candidates,
@@ -46,6 +47,7 @@ for module in (
     conversations,
     notifications,
     assessments,
+    ats,
     admin,
 ):
     api_router.include_router(module.router)

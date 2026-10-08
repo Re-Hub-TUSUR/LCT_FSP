@@ -21,6 +21,7 @@ export const ROUTES = {
   candidate: '/candidates/:candidateId',
   calendar: '/calendar',
   matching: '/matching',
+  ats: '/ats',
   matchingProfile: '/matching/:kind/:id',
   testing: '/testing',
   testBuilder: '/testing/builder',

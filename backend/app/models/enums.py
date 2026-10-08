@@ -207,3 +207,22 @@ class MessageKind(StrEnum):
     TEXT = "text"
     ATTACHMENT = "attachment"
     MEETING = "meeting"
+
+
+class ScreeningJobStatus(StrEnum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    DONE = "done"
+    FAILED = "failed"
+
+
+class ScreeningDecision(StrEnum):
+    PASSED = "pass"
+    REJECT = "reject"
+    REVIEW = "review"
+
+
+class AtsSyncKind(StrEnum):
+    TAG = "tag"
+    NOTE = "note"
+    SCORE = "score"

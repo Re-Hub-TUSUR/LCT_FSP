@@ -1,0 +1,24 @@
+{
+  "items": [
+    {
+      "eventId": "fx-evt-1",
+      "person": {
+        "ref": "fx-person-1",
+        "fullName": "Анна Белова",
+        "skillTags": ["Python", "PostgreSQL"],
+        "years": 4,
+        "location": "Казань",
+        "payWish": 180000,
+        "cvText": "Четыре года на Python и PostgreSQL."
+      },
+      "opening": {
+        "ref": "fx-job-1",
+        "label": "Сервис заказов",
+        "mustHave": ["Python", "PostgreSQL"],
+        "payFloor": 150000,
+        "payCeiling": 250000,
+        "place": "Казань"
+      }
+    }
+  ]
+}

@@ -7,6 +7,7 @@ os.environ["JWT_SECRET"] = "test-only-secret-that-is-long-enough-123456"
 os.environ["CORS_ORIGINS"] = ""
 # A key in a developer's .env must never make the tests call the paid model.
 os.environ["ROUTERAI_API_KEY"] = ""
+os.environ["ATS_POLL_SECONDS"] = "0"
 
 import zlib
 from collections.abc import AsyncIterator

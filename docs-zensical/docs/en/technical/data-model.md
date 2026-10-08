@@ -49,3 +49,7 @@ Grades in code (`Grade`): intern, junior, middle, senior, lead. The eleven sub-l
 Attempt statuses include `interview` and `grading`. Separate proctoring tables (screen recording, face flags) were not found in the models.
 
 A need as its own entity, shortlist versions, and a one-off offer were not found in the models. Matching in the code hangs off vacancies, reactions, and profile strength.
+
+## ATS
+
+Tables `ats_connections`, `ats_jobs`, `ats_candidates`, `ats_applications`, `ats_raw_events`, `screening_jobs`, `screening_results`, `ats_sync_log`. These are external applications, not platform profiles.

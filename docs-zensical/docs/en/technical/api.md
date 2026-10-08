@@ -26,6 +26,7 @@ Prefix `/api/v1`. The router is assembled in `backend/app/api/router.py`. OpenAP
 | notifications | `/notifications` | Event feed |
 | assessments | `/assessments` | Categories, templates, attempts, code run, finish, interview, incoming take-homes. The survey `/survey` is `501` |
 | admin | `/admin` | Users, plus the `app/admin` package: bank, analytics, employers, ban list, settings, verification |
+| ats | `/ats` | ATS connection, poll, external applications and the decision. Does not change the candidate bank |
 
 The FSP ID and registry emulation (`/mock/...`) is mounted only when `FSP_ID_MODE=mock`.
 

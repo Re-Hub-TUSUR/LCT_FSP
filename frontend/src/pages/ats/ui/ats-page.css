@@ -1,0 +1,34 @@
+.ats-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ats-page__meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The shared fact rule paints every chip with the page ground. Keep the decision blue, as the category chip on a swipe card. */
+.ats-list .match-card:not(.match-card--frame) .match-card__fact--accent {
+  background: var(--blue);
+  color: #fff;
+}
+
+.ats-skill--missing {
+  border-color: var(--red);
+  color: var(--red-text);
+}

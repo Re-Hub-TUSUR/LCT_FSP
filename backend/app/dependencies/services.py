@@ -23,6 +23,7 @@ from app.repositories.vacancy import VacancyRepository
 from app.search.elastic import ElasticSearchState
 from app.services.assessment_bank import AssessmentBankService
 from app.services.assessments import AssessmentService
+from app.services.ats import AtsService
 from app.services.attempt_context import AttemptContextService
 from app.services.auth import AuthService
 from app.services.calendar import CalendarService
@@ -317,3 +318,10 @@ def get_assessment_bank_service(
 
 
 AssessmentBankServiceDep = Annotated[AssessmentBankService, Depends(get_assessment_bank_service)]
+
+
+def get_ats_service(session: SessionDep, settings: SettingsDep) -> AtsService:
+    return AtsService(session, settings)
+
+
+AtsServiceDep = Annotated[AtsService, Depends(get_ats_service)]

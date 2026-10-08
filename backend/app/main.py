@@ -16,6 +16,7 @@ from app.core.logging import configure_logging, request_logging_middleware
 from app.db.session import get_engine, get_sessionmaker
 from app.repositories.candidate import CandidateRepository
 from app.search.elastic import ElasticSearchState, create_client
+from app.services.ats import run_ats_poll
 from app.services.notifications import NotificationHub
 from app.services.saved_searches import run_alerts
 
@@ -43,6 +44,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             app.state.elastic = elastic
             await _prepare_search(elastic)
         alerts = None
+        ats_poll = None
+        if settings.ats_poll_seconds:
+            ats_poll = asyncio.create_task(
+                run_ats_poll(
+                    timedelta(seconds=settings.ats_poll_seconds),
+                    get_sessionmaker(),
+                    settings,
+                )
+            )
         if settings.saved_search_alert_minutes:
             alerts = asyncio.create_task(
                 run_alerts(
@@ -53,6 +63,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 )
             )
         yield
+        if ats_poll is not None:
+            ats_poll.cancel()
+            with suppress(asyncio.CancelledError):
+                await ats_poll
         if alerts is not None:
             alerts.cancel()
             with suppress(asyncio.CancelledError):

@@ -149,6 +149,13 @@ export const routes: RouteObject[] = [
             }),
           },
           {
+            path: ROUTES.ats,
+            lazy: lazyPage(() => import('@/pages/ats').then((m) => m.AtsPage), {
+              auth: true,
+              roles: ['employer'],
+            }),
+          },
+          {
             // Legacy entry point of the employer's swipe deck.
             path: ROUTES.matching,
             lazy: lazyPage(() => import('@/pages/feed').then((m) => m.FeedSwipePage), {

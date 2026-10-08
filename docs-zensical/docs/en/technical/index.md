@@ -10,6 +10,7 @@ Developer sources this site does not replace:
 
 - `docs/ARCHITECTURE.md` — layers and import rules. Its API status table is stale and is not copied here.
 - `docs/FSP_INTEGRATION.md` — the FSP ID contract.
+- `docs/ATS_INTEGRATION.md` — the ATS connector.
 - `docs/ADMIN.md` — admin tabs.
 
 | Page | About |
@@ -19,4 +20,5 @@ Developer sources this site does not replace:
 | [Data model](data-model.md) | Tables that exist in the code |
 | [Local start](local-start.md) | How to run the project |
 | [FSP ID](fsp-id.md) | Linking to the registry |
+| [ATS](ats.md) | Polling an external ATS with our filters |
 | [Implementation status](implementation-status.md) | Done, partial, absent |

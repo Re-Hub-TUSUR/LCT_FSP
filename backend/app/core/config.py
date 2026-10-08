@@ -87,6 +87,12 @@ class Settings(BaseSettings):
     fsp_id_redirect_uri: str = "http://localhost:5173/profile/fsp/callback"
     fsp_registry_url: str = ""
 
+    # ATS connector, `app.integrations.ats`. `mock` is the in-process demo. `fixture` reads a
+    # JSON file with different field names. A live vendor is another value and another adapter.
+    # Polling interval in seconds; 0 leaves the background loop off (the employer can still poll).
+    ats_mode: Literal["mock", "fixture"] = "mock"
+    ats_poll_seconds: int = Field(default=60, ge=0, le=24 * 60 * 60)
+
     @field_validator("resend_from")
     @classmethod
     def _default_from(cls, value: str) -> str:
