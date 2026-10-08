@@ -1,31 +1,52 @@
 .review {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 20px;
+  gap: 16px;
+  min-width: 0;
+}
+
+.review__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 4px;
+}
+
+.review__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  background: var(--surface);
+}
+
+.review__tile-label {
+  margin: 0;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .review__summary {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(20px, 2vw, 26px);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .review__signals,
 .review__guidance,
-.review__empty {
+.review__empty,
+.review__hint {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--text-mute);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
 }
 
 .review__tasks {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 4px;
   width: 100%;
   margin: 0;
   padding: 0;
@@ -37,81 +58,106 @@
   flex-direction: column;
   gap: 12px;
   min-width: 0;
-  padding: 20px;
+  padding: 18px;
   border: 1px solid var(--line);
-  background: var(--fill-ghost);
+}
+
+/* An answer nobody has graded yet asks for attention. */
+.review__task.is-waiting {
+  border-color: var(--red);
 }
 
 .review__head {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
   gap: 12px;
 }
 
 .review__label,
 .review__points {
   margin: 0;
-  font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--muted);
+}
+
+.review__label {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.review__num {
+  font-family: var(--font-accent);
+  font-size: 20px;
+  letter-spacing: 0;
+  line-height: 1;
+  color: var(--blue-light);
 }
 
 .review__points {
   font-variant-numeric: tabular-nums;
-  color: var(--text);
+  color: var(--ink);
+}
+
+.review__task.is-waiting .review__points {
+  color: var(--red-text);
 }
 
 .review__title {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 18px;
-  line-height: 1.35;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .review__statement,
 .review__text {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: 300;
-  font-size: 16px;
+  font-size: 13.5px;
   line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  color: var(--ink-2);
 }
 
 .review__text {
-  padding-left: 14px;
-  border-left: 2px solid var(--brand-blue);
+  padding: 12px 14px;
+  background: var(--surface);
+  color: var(--ink);
 }
 
 .review__options {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   margin: 0;
-  padding-left: 20px;
-  font-family: var(--font-display);
-  font-weight: 300;
-  font-size: 16px;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+}
+
+.review__options li {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
 }
 
 .review__options span {
-  font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--muted);
 }
 
 .review__options .is-correct {
-  color: #7be3b4;
+  border-color: var(--blue);
+  background: var(--blue-tint-soft);
 }
 
 .review__options .is-wrong {
-  color: var(--error);
+  border-color: var(--red);
 }
 
 .review__code {
@@ -120,29 +166,56 @@
   padding: 14px;
   overflow: auto;
   border: 1px solid var(--line);
-  background: #05060d;
+  background: var(--bg-deep);
   font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12.5px;
+  line-height: 1.55;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
 }
 
 .review__grade {
   display: grid;
-  grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
-  gap: 24px;
-  padding-top: 12px;
+  grid-template-columns: minmax(140px, 180px) minmax(0, 1fr);
+  gap: 16px;
+  padding-top: 4px;
+}
+
+.review__grade .field:first-child .field__input {
+  font-family: var(--font-accent);
+  font-size: 20px;
+}
+
+/* Stays at the bottom of the scrolling sheet, with the hint or the error next to the button. */
+.review__foot {
+  position: sticky;
+  bottom: -24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px 16px;
+  margin: 0 -24px -24px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--line-soft);
+  background: var(--bg);
 }
 
 .review__error {
   margin: 0;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--error);
+  font-size: 12.5px;
+  color: var(--red-text);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .review__grade {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 22px;
+  }
+
+  .review__foot {
+    bottom: -20px;
+    margin: 0 -16px -20px;
+    padding-inline: 16px;
   }
 }

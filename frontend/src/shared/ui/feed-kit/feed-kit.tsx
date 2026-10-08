@@ -19,15 +19,26 @@ export function Chip({
   )
 }
 
-/** Horizontal meter for a 0..1 value: match to a vacancy, profile strength. */
-export function MatchMeter({ value, label }: { value: number; label: string }) {
-  const percent = Math.round(Math.max(0, Math.min(1, value)) * 100)
-  const tone = percent >= 75 ? 'high' : percent >= 50 ? 'mid' : 'low'
+/**
+ * Horizontal meter for a 0..1 value: match to a vacancy, profile strength.
+ * `compact` drops the visible label (a table column already names it); `null` draws a dash.
+ */
+export function MatchMeter({
+  value,
+  label,
+  compact = false,
+}: {
+  value: number | null
+  label: string
+  compact?: boolean
+}) {
+  const percent = value === null ? null : Math.round(Math.max(0, Math.min(1, value)) * 100)
+  const tone = percent === null ? 'none' : percent >= 75 ? 'high' : percent >= 50 ? 'mid' : 'low'
   return (
-    <div className={`meter meter--${tone}`}>
+    <div className={`meter meter--${tone}${compact ? ' meter--compact' : ''}`}>
       <div className="meter__head">
-        <span className="meter__label">{label}</span>
-        <span className="meter__value">{percent}%</span>
+        {!compact && <span className="meter__label">{label}</span>}
+        <span className="meter__value">{percent === null ? '—' : `${percent}%`}</span>
       </div>
       <div
         className="meter__track"
@@ -35,9 +46,10 @@ export function MatchMeter({ value, label }: { value: number; label: string }) {
         aria-label={label}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-valuenow={percent}
+        aria-valuenow={percent ?? 0}
+        aria-valuetext={percent === null ? 'нет данных' : undefined}
       >
-        <span className="meter__fill" style={{ width: `${percent}%` }} />
+        <span className="meter__fill" style={{ width: `${percent ?? 0}%` }} />
       </div>
     </div>
   )

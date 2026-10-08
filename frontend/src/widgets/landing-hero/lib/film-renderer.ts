@@ -82,7 +82,7 @@ void main(){
   vec2 p = (vUv - 0.5) * vec2(uAspect, 1.0);
   float g = exp(-(p.x * p.x * 0.9 + p.y * p.y * 7.0));
   float g2 = exp(-dot(p, p) * 0.8);
-  vec3 c = vec3(0.008, 0.010, 0.022) + vec3(0.03, 0.036, 0.095) * g + vec3(0.01, 0.012, 0.028) * g2;
+  vec3 c = vec3(0.011, 0.011, 0.016) + vec3(0.02, 0.0, 0.17) * g + vec3(0.01, 0.012, 0.028) * g2;
   o = vec4(c, 0.0);
 }`
 

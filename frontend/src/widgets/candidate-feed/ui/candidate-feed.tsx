@@ -6,16 +6,10 @@ import { candidateQueries } from '@/entities/candidate'
 import type { CandidateMatchDto, CandidateSort } from '@/entities/candidate'
 import { categoryQueries, GRADE_LABELS, GRADES } from '@/entities/category'
 import type { Grade } from '@/entities/category'
-import {
-  DECISION_VIEW_LABELS,
-  DECISION_VIEWS,
-  parseListView,
-  vacancyQueries,
-  WORK_FORMAT_LABELS,
-  WORK_FORMATS,
-} from '@/entities/vacancy'
+import { parseListView, vacancyQueries, WORK_FORMAT_LABELS, WORK_FORMATS } from '@/entities/vacancy'
 import type { ListView, WorkFormat } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
+import { plural } from '@/shared/lib'
 import { Chip, EmptyState, FeedSkeleton, Pagination, QueryState } from '@/shared/ui'
 import { CandidatePanel } from './candidate-panel'
 import { CandidateRow } from './candidate-row'
@@ -66,6 +60,7 @@ export function CandidateFeed() {
   const vacancyId = params.get('vacancyId') ?? undefined
   const [text, setText] = useState(q)
   const [open, setOpen] = useState<CandidateMatchDto | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const closePanel = useCallback(() => setOpen(null), [setOpen])
 
   const dictionary = useQuery(categoryQueries.dictionary())
@@ -107,6 +102,14 @@ export function CandidateFeed() {
       [key]: values.includes(value) ? values.filter((v) => v !== value) : [...values, value],
     })
 
+  // What the «Фильтры» button reports on a narrow screen.
+  const active =
+    ['specialization', 'stack', 'city', 'salaryMax', 'vacancyId', 'verified', 'fsp'].filter((key) =>
+      params.get(key),
+    ).length +
+    grades.length +
+    formats.length
+
   const onSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     update({ q: text.trim() || null })
@@ -114,7 +117,20 @@ export function CandidateFeed() {
 
   return (
     <div className="feed">
-      <aside className="feed__filters" aria-label="Фильтры поиска">
+      <button
+        type="button"
+        className="feed__filters-toggle"
+        aria-expanded={filtersOpen}
+        onClick={() => setFiltersOpen((value) => !value)}
+      >
+        Фильтры
+        <span>{filtersOpen ? 'Скрыть' : active > 0 ? `${active} активно` : '+'}</span>
+      </button>
+      <aside
+        className={filtersOpen ? 'feed__filters is-open' : 'feed__filters'}
+        aria-label="Фильтры поиска"
+      >
+        <h2 className="feed__title">Фильтры</h2>
         <label className="feed__group">
           <span className="feed__label">Подбор под вакансию</span>
           <select
@@ -131,20 +147,6 @@ export function CandidateFeed() {
             ))}
           </select>
         </label>
-
-        <div className="feed__group">
-          <p className="feed__label">Показать</p>
-          <div className="feed__chips">
-            <Chip active={view === 'all'} onClick={() => update({ view: null })}>
-              Все
-            </Chip>
-            {DECISION_VIEWS.map((item) => (
-              <Chip key={item} active={view === item} onClick={() => update({ view: item })}>
-                {DECISION_VIEW_LABELS[item]}
-              </Chip>
-            ))}
-          </div>
-        </div>
 
         <label className="feed__group">
           <span className="feed__label">Специализация</span>
@@ -264,9 +266,21 @@ export function CandidateFeed() {
         </form>
 
         <div className="feed__toolbar">
+          <p className="feed__found">
+            {data && (
+              <>
+                <span className="feed__found-count">{data.total}</span>
+                <span className="feed__label">
+                  {plural(data.total, ['кандидат', 'кандидата', 'кандидатов'])}
+                </span>
+                <span className="feed__label">
+                  Поиск: {data.engine === 'elasticsearch' ? 'Elasticsearch' : 'база данных'}
+                </span>
+              </>
+            )}
+          </p>
           <select
-            className="feed__select"
-            style={{ width: 'auto' }}
+            className="feed__select feed__select--sort"
             aria-label="Сортировка"
             value={sort}
             onChange={(e) =>
@@ -279,37 +293,45 @@ export function CandidateFeed() {
               </option>
             ))}
           </select>
-          {data && (
-            <span className="feed__label">
-              Поиск: {data.engine === 'elasticsearch' ? 'Elasticsearch' : 'база данных'}
-            </span>
-          )}
         </div>
 
         {data ? (
           data.items.length === 0 ? (
-            <EmptyState title={EMPTY[view].title}>{EMPTY[view].text}</EmptyState>
+            <div className="feed-table">
+              <EmptyState title={EMPTY[view].title}>{EMPTY[view].text}</EmptyState>
+            </div>
           ) : (
             <>
-              <ol className="feed__list">
-                {data.items.map((match) => (
-                  <li key={match.candidate.id}>
-                    <CandidateRow
-                      match={match}
-                      selected={open?.candidate.id === match.candidate.id}
-                      onOpen={() => setOpen(match)}
-                      actions={
-                        <ReactionButtons
-                          target="candidate"
-                          id={match.candidate.id}
-                          initial={match.reaction}
-                          vacancyId={vacancyId}
-                        />
-                      }
-                    />
-                  </li>
-                ))}
-              </ol>
+              <div className="feed-table">
+                <div className="feed-table__head candidate-row__grid" aria-hidden="true">
+                  <span>Кандидат</span>
+                  <span>Категория · тест</span>
+                  <span>Под вакансию</span>
+                  <span>Сила профиля</span>
+                  <span>Ожидания</span>
+                  <span>Решение</span>
+                </div>
+                <ol className="feed__list">
+                  {data.items.map((match) => (
+                    <li key={match.candidate.id}>
+                      <CandidateRow
+                        match={match}
+                        dimmed={match.reaction === 'skip' && view !== 'skipped'}
+                        selected={open?.candidate.id === match.candidate.id}
+                        onOpen={() => setOpen(match)}
+                        actions={
+                          <ReactionButtons
+                            target="candidate"
+                            id={match.candidate.id}
+                            initial={match.reaction}
+                            vacancyId={vacancyId}
+                          />
+                        }
+                      />
+                    </li>
+                  ))}
+                </ol>
+              </div>
               <Pagination
                 page={data.page}
                 pages={data.pages}

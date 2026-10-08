@@ -1,14 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useCallback, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import {
-  DECISION_VIEW_LABELS,
-  DECISION_VIEWS,
-  parseListView,
-  vacancyQueries,
-  WORK_FORMAT_LABELS,
-  WORK_FORMATS,
-} from '@/entities/vacancy'
+import { parseListView, vacancyQueries, WORK_FORMAT_LABELS, WORK_FORMATS } from '@/entities/vacancy'
 import type { ListView, VacancyMatchDto, WorkFormat } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
 import { Chip, EmptyState, FeedSkeleton, Notice, Pagination, QueryState } from '@/shared/ui'
@@ -45,6 +38,8 @@ export function VacancyFeed() {
   const formats = params.getAll('workFormat') as WorkFormat[]
   const salaryMin = Number(params.get('salaryMin')) || undefined
   const [open, setOpen] = useState<VacancyMatchDto | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const active = formats.length + (salaryMin ? 1 : 0)
   const closePanel = useCallback(() => setOpen(null), [setOpen])
 
   const query = useQuery({
@@ -73,20 +68,20 @@ export function VacancyFeed() {
 
   return (
     <div className="feed">
-      <aside className="feed__filters" aria-label="Фильтры ленты">
-        <div className="feed__group">
-          <p className="feed__label">Показать</p>
-          <div className="feed__chips">
-            <Chip active={view === 'all'} onClick={() => update({ view: null })}>
-              Подходящие
-            </Chip>
-            {DECISION_VIEWS.map((item) => (
-              <Chip key={item} active={view === item} onClick={() => update({ view: item })}>
-                {DECISION_VIEW_LABELS[item]}
-              </Chip>
-            ))}
-          </div>
-        </div>
+      <button
+        type="button"
+        className="feed__filters-toggle"
+        aria-expanded={filtersOpen}
+        onClick={() => setFiltersOpen((value) => !value)}
+      >
+        Фильтры
+        <span>{filtersOpen ? 'Скрыть' : active > 0 ? `${active} активно` : '+'}</span>
+      </button>
+      <aside
+        className={filtersOpen ? 'feed__filters is-open' : 'feed__filters'}
+        aria-label="Фильтры ленты"
+      >
+        <h2 className="feed__title">Фильтры</h2>
         <div className="feed__group">
           <p className="feed__label">Формат</p>
           <div className="feed__chips">
@@ -132,28 +127,32 @@ export function VacancyFeed() {
         )}
         {data ? (
           data.items.length === 0 ? (
-            <EmptyState title={EMPTY[view].title}>{EMPTY[view].text}</EmptyState>
+            <div className="feed-table">
+              <EmptyState title={EMPTY[view].title}>{EMPTY[view].text}</EmptyState>
+            </div>
           ) : (
             <>
-              <ol className="feed__list">
-                {data.items.map((match) => (
-                  <li key={match.vacancy.id}>
-                    <VacancyRow
-                      match={match}
-                      profileStack={data.basis?.stack ?? []}
-                      selected={open?.vacancy.id === match.vacancy.id}
-                      onOpen={() => setOpen(match)}
-                      actions={
-                        <ReactionButtons
-                          target="vacancy"
-                          id={match.vacancy.id}
-                          initial={match.reaction}
-                        />
-                      }
-                    />
-                  </li>
-                ))}
-              </ol>
+              <div className="feed-table">
+                <ol className="feed__list">
+                  {data.items.map((match) => (
+                    <li key={match.vacancy.id}>
+                      <VacancyRow
+                        match={match}
+                        profileStack={data.basis?.stack ?? []}
+                        selected={open?.vacancy.id === match.vacancy.id}
+                        onOpen={() => setOpen(match)}
+                        actions={
+                          <ReactionButtons
+                            target="vacancy"
+                            id={match.vacancy.id}
+                            initial={match.reaction}
+                          />
+                        }
+                      />
+                    </li>
+                  ))}
+                </ol>
+              </div>
               <Pagination
                 page={data.page}
                 pages={data.pages}

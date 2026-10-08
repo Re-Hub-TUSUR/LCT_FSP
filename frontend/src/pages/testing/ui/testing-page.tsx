@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router'
 import {
   ATTEMPT_STATUS_LABELS,
   TASK_KIND_LABELS,
@@ -17,7 +16,7 @@ import { StartAssessmentForm } from '@/features/start-assessment'
 import { getErrorMessage } from '@/shared/api'
 import { formatDate } from '@/shared/lib'
 import { ROUTES } from '@/shared/config'
-import { Page, QueryState, Section, Tag } from '@/shared/ui'
+import { ButtonLink, Page, QueryState, Section, Tag } from '@/shared/ui'
 import { AssessmentRunner } from '@/widgets/assessment-runner'
 import { AssignmentInbox } from '@/widgets/assignment-inbox'
 import { AttemptInterview } from '@/widgets/attempt-interview'
@@ -113,27 +112,29 @@ function AttemptResult({
         </p>
       )}
       {attempt.breakdown && attempt.breakdown.length > 0 && (
-        <table className="test-table">
-          <caption className="visually-hidden">Результат по темам</caption>
-          <thead>
-            <tr>
-              <th scope="col">Тема</th>
-              <th scope="col">Тип</th>
-              <th scope="col">Заданий</th>
-              <th scope="col">Результат</th>
-            </tr>
-          </thead>
-          <tbody>
-            {attempt.breakdown.map((item) => (
-              <tr key={`${item.kind}:${item.topic}`}>
-                <td>{topicLabel(item.topic)}</td>
-                <td>{TASK_KIND_LABELS[item.kind]}</td>
-                <td>{item.total}</td>
-                <td>{Math.round(item.earned * 100)}%</td>
+        <div className="test-table-wrap">
+          <table className="test-table">
+            <caption className="visually-hidden">Результат по темам</caption>
+            <thead>
+              <tr>
+                <th scope="col">Тема</th>
+                <th scope="col">Тип</th>
+                <th scope="col">Заданий</th>
+                <th scope="col">Результат</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {attempt.breakdown.map((item) => (
+                <tr key={`${item.kind}:${item.topic}`}>
+                  <td>{topicLabel(item.topic)}</td>
+                  <td>{TASK_KIND_LABELS[item.kind]}</td>
+                  <td>{item.total}</td>
+                  <td>{Math.round(item.earned * 100)}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )
@@ -162,59 +163,61 @@ function Tracks({
 
   return (
     <>
-      <table className="test-table">
-        <thead>
-          <tr>
-            <th scope="col">Специализация</th>
-            <th scope="col">Грейд</th>
-            <th scope="col">Балл</th>
-            <th scope="col">Следующая попытка</th>
-            <th scope="col">Видят работодатели</th>
-          </tr>
-        </thead>
-        <tbody>
-          {status.tracks.map((track) => (
-            <tr key={track.specialization}>
-              <td>{label(track.specialization)}</td>
-              <td>
-                {track.grade ? gradeLabel(track.grade) : 'Не подтверждён'}
-                {track.recommendation && (
-                  <button
-                    type="button"
-                    className="test-link test-link--hint"
-                    onClick={() =>
-                      onRecommended({
-                        specialization: track.specialization,
-                        grade: track.recommendation!.grade,
-                      })
-                    }
-                  >
-                    Рекомендуем {gradeLabel(track.recommendation.grade)}
-                  </button>
-                )}
-              </td>
-              <td>{track.score === null ? '—' : Math.round(track.score)}</td>
-              <td>{track.nextAttemptAt ? formatDate(track.nextAttemptAt) : 'Доступна'}</td>
-              <td>
-                {track.isPrimary ? (
-                  <Tag>Основная</Tag>
-                ) : track.status === 'passed' ? (
-                  <button
-                    type="button"
-                    className="test-link"
-                    disabled={setPrimary.isPending}
-                    onClick={() => setPrimary.mutate(track.specialization)}
-                  >
-                    Сделать основной
-                  </button>
-                ) : (
-                  '—'
-                )}
-              </td>
+      <div className="test-table-wrap">
+        <table className="test-table">
+          <thead>
+            <tr>
+              <th scope="col">Специализация</th>
+              <th scope="col">Грейд</th>
+              <th scope="col">Балл</th>
+              <th scope="col">Следующая попытка</th>
+              <th scope="col">Видят работодатели</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {status.tracks.map((track) => (
+              <tr key={track.specialization}>
+                <td>{label(track.specialization)}</td>
+                <td>
+                  {track.grade ? gradeLabel(track.grade) : 'Не подтверждён'}
+                  {track.recommendation && (
+                    <button
+                      type="button"
+                      className="test-link test-link--hint"
+                      onClick={() =>
+                        onRecommended({
+                          specialization: track.specialization,
+                          grade: track.recommendation!.grade,
+                        })
+                      }
+                    >
+                      Рекомендуем {gradeLabel(track.recommendation.grade)}
+                    </button>
+                  )}
+                </td>
+                <td>{track.score === null ? '—' : Math.round(track.score)}</td>
+                <td>{track.nextAttemptAt ? formatDate(track.nextAttemptAt) : 'Доступна'}</td>
+                <td>
+                  {track.isPrimary ? (
+                    <Tag>Основная</Tag>
+                  ) : track.status === 'passed' ? (
+                    <button
+                      type="button"
+                      className="test-link"
+                      disabled={setPrimary.isPending}
+                      onClick={() => setPrimary.mutate(track.specialization)}
+                    >
+                      Сделать основной
+                    </button>
+                  ) : (
+                    '—'
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {setPrimary.isError && (
         <p className="test-note test-note--error" role="alert">
           {getErrorMessage(setPrimary.error)}
@@ -270,26 +273,28 @@ function Overview({
 
       {status.history.length > 0 && (
         <Section title="История попыток">
-          <table className="test-table">
-            <thead>
-              <tr>
-                <th scope="col">Тест</th>
-                <th scope="col">Дата</th>
-                <th scope="col">Итог</th>
-                <th scope="col">Балл</th>
-              </tr>
-            </thead>
-            <tbody>
-              {status.history.map((attempt) => (
-                <tr key={attempt.id}>
-                  <td>{attempt.title}</td>
-                  <td>{formatDate(attempt.startedAt)}</td>
-                  <td>{ATTEMPT_STATUS_LABELS[attempt.status]}</td>
-                  <td>{attempt.score === null ? '—' : Math.round(attempt.score)}</td>
+          <div className="test-table-wrap">
+            <table className="test-table">
+              <thead>
+                <tr>
+                  <th scope="col">Тест</th>
+                  <th scope="col">Дата</th>
+                  <th scope="col">Итог</th>
+                  <th scope="col">Балл</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {status.history.map((attempt) => (
+                  <tr key={attempt.id}>
+                    <td>{attempt.title}</td>
+                    <td>{formatDate(attempt.startedAt)}</td>
+                    <td>{ATTEMPT_STATUS_LABELS[attempt.status]}</td>
+                    <td>{attempt.score === null ? '—' : Math.round(attempt.score)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Section>
       )}
     </>
@@ -341,9 +346,9 @@ export function TestingPage() {
         title="Тестовые"
         lead="Тесты компании, отправленные кандидатам"
         actions={
-          <Link className="feed__link" to={ROUTES.testBuilder}>
+          <ButtonLink variant="ghost" to={ROUTES.testBuilder}>
             Конструктор тестов →
-          </Link>
+          </ButtonLink>
         }
       >
         <AssignmentReview />

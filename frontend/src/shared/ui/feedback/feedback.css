@@ -1,49 +1,64 @@
 .feedback {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 28px 0;
+  align-items: center;
+  gap: 14px;
+  padding: clamp(40px, 7vw, 88px) 24px;
+  text-align: center;
 }
 
 .feedback__title {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-weight: 300;
-  font-size: 20px;
-  color: var(--text);
+  font-size: clamp(20px, 2vw, 28px);
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--ink);
 }
 
 .feedback__text {
   margin: 0;
+  max-width: 44ch;
   font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
 }
 
 .feedback--error .feedback__title {
-  color: var(--error);
+  color: var(--red-text);
 }
 
 /* A short delay keeps the loader from flashing when the data is already there. */
 .feedback--loading {
-  align-items: center;
-  gap: 18px;
+  gap: 16px;
   padding: 56px 0;
   animation: feedback-in 0.4s var(--ease-premium) 0.12s both;
 }
 
-.feedback__mark {
-  width: 40px;
-  height: 40px;
-  color: var(--brand-light);
+.feedback--loading .feedback__text {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
-.feedback__hole {
-  fill: var(--bg);
-  animation: feedback-hole 1.4s ease-in-out infinite;
+/* The ФСП sign «[•]»: blue brackets, red dot */
+.fsp-mark {
+  display: inline-flex;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 36px;
+  line-height: 1;
+  color: var(--blue);
+}
+
+.fsp-mark__dot {
+  color: var(--red);
+}
+
+.fsp-mark--pulse .fsp-mark__dot {
+  animation: fsp-mark-pulse 1.2s ease-in-out infinite;
 }
 
 @keyframes feedback-in {
@@ -52,13 +67,12 @@
   }
 }
 
-@keyframes feedback-hole {
+@keyframes fsp-mark-pulse {
   0%,
-  55%,
   100% {
-    fill: var(--bg);
+    opacity: 1;
   }
-  20% {
-    fill: var(--brand-blue-hover);
+  50% {
+    opacity: 0.15;
   }
 }

@@ -24,11 +24,11 @@
 .company-form__legend {
   margin: 0 0 22px;
   padding: 0;
-  font-family: var(--font-mono), monospace;
-  font-size: 12px;
-  letter-spacing: 0.14em;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--muted);
 }
 
 .logo-field {
@@ -45,11 +45,11 @@
   height: 88px;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--fill-ghost);
-  font-family: var(--font-display), sans-serif;
-  font-size: 34px;
-  color: var(--text-dim);
+  border-radius: 0;
+  background: var(--surface);
+  font-family: var(--font-accent);
+  font-size: 32px;
+  color: var(--muted);
 }
 
 .logo-field__preview img {
@@ -70,33 +70,31 @@
 
 .logo-field__title {
   margin: 0;
-  font-weight: 500;
-  font-size: 16px;
+  font-weight: 600;
+  font-size: 13.5px;
 }
 
 .form-hint,
 .form-status {
   margin: 22px 0 0;
   max-width: 62ch;
-  font-weight: 300;
-  font-size: 14px;
+  font-size: 12.5px;
   line-height: 1.5;
-  color: var(--text-dim);
+  color: var(--muted);
 }
 
 .form-status {
   margin: 0;
-  color: var(--text);
-  font-size: 16px;
+  color: var(--ink);
+  font-size: 13.5px;
 }
 
 .form-banner {
   margin: 0;
-  font-family: var(--font-mono), monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
-  letter-spacing: 0.02em;
   line-height: 1.4;
-  color: var(--error);
+  color: var(--red-text);
 }
 
 .form-actions {
@@ -114,14 +112,13 @@
 .company-panels__text {
   margin: 0;
   max-width: 72ch;
-  font-weight: 300;
-  font-size: 17px;
+  font-size: 14px;
   line-height: 1.55;
   white-space: pre-line;
 }
 
 .company-panels__text--dim {
-  color: var(--text-dim);
+  color: var(--muted);
 }
 
 @media (max-width: 720px) {

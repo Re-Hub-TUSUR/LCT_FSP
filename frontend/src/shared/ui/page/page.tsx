@@ -2,18 +2,21 @@ import type { ReactNode } from 'react'
 import './page.css'
 
 type PageProps = {
-  title: string
+  title: ReactNode
+  /** Small line above the title: a chip, a back link. */
+  eyebrow?: ReactNode
   lead?: ReactNode
   actions?: ReactNode
   children?: ReactNode
   className?: string
 }
 
-export function Page({ title, lead, actions, children, className }: PageProps) {
+export function Page({ title, eyebrow, lead, actions, children, className }: PageProps) {
   return (
     <section className={className ? `page ${className}` : 'page'} aria-labelledby="page-title">
       <header className="page__header">
         <div>
+          {eyebrow && <div className="page__eyebrow">{eyebrow}</div>}
           <h1 id="page-title" className="page__title">
             {title}
           </h1>

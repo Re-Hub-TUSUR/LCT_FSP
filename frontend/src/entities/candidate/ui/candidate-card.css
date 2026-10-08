@@ -2,9 +2,8 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 28px;
-  border: 1px solid var(--line);
-  background: var(--fill-ghost);
+  padding: 24px;
+  background: var(--surface);
 }
 
 .candidate-card__header {
@@ -17,25 +16,26 @@
 
 .candidate-card__name {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: 300;
-  font-size: 28px;
+  font-family: var(--font-accent);
+  font-size: 26px;
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 .candidate-card__headline {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: 300;
-  color: var(--text);
+  font-size: 13.5px;
+  color: var(--muted);
 }
 
 .candidate-card__meta {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--muted);
 }
 
 .candidate-card__stack {
@@ -50,12 +50,13 @@
 .candidate-card__fsp ul {
   margin: 0;
   padding-left: 18px;
-  font-family: var(--font-display);
-  font-weight: 300;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
 }
 
 .candidate-card__actions {
   display: flex;
-  gap: 12px;
+  gap: 4px;
   padding-top: 8px;
 }

@@ -7,7 +7,7 @@ import { useSession } from '@/entities/session'
 import { MeetingDetailsDialog, MeetingFormDialog } from '@/features/manage-meeting'
 import { getErrorMessage } from '@/shared/api'
 import { addDays, addMonths, startOfDay, startOfWeek } from '@/shared/lib'
-import { Button, Chip, ErrorState } from '@/shared/ui'
+import { Button, ErrorState, Segmented } from '@/shared/ui'
 import { MonthGrid } from './month-grid'
 import { WeekGrid } from './week-grid'
 import './meeting-calendar.css'
@@ -20,6 +20,11 @@ type Dialog =
   | { kind: 'edit'; event: CalendarEventDto }
 
 const STATUSES: MeetingStatus[] = ['confirmed', 'pending', 'declined']
+
+const VIEWS = [
+  { value: 'week', label: 'Неделя' },
+  { value: 'month', label: 'Месяц' },
+] as const
 
 const rangeFormat = new Intl.DateTimeFormat('ru-RU', {
   day: 'numeric',
@@ -109,7 +114,13 @@ export function MeetingCalendar() {
           >
             →
           </button>
-          <Chip onClick={() => setAnchor(startOfDay(new Date()))}>Сегодня</Chip>
+          <button
+            type="button"
+            className="cal__today"
+            onClick={() => setAnchor(startOfDay(new Date()))}
+          >
+            Сегодня
+          </button>
           <h2 className="cal__period" aria-live="polite">
             {view === 'week'
               ? rangeFormat.formatRange(from, addDays(from, 6))
@@ -117,12 +128,7 @@ export function MeetingCalendar() {
           </h2>
         </div>
         <div className="cal__views">
-          <Chip active={view === 'week'} onClick={() => setView('week')}>
-            Неделя
-          </Chip>
-          <Chip active={view === 'month'} onClick={() => setView('month')}>
-            Месяц
-          </Chip>
+          <Segmented label="Масштаб" items={VIEWS} value={view} onChange={setView} />
           {isEmployer && (
             <Button
               size="inline"
@@ -139,8 +145,11 @@ export function MeetingCalendar() {
           {isEmployer
             ? 'Нажмите на свободное время в сетке, чтобы назначить встречу кандидату'
             : 'Здесь появляются встречи, на которые вас пригласили компании'}
-          {pending > 0 &&
-            ` · ${isEmployer ? 'ждут ответа кандидатов' : 'ждут вашего ответа'}: ${pending}`}
+          {pending > 0 && (
+            <span className="cal__pending">
+              {` · ${isEmployer ? 'ждут ответа кандидатов' : 'ждут вашего ответа'}: ${pending}`}
+            </span>
+          )}
         </p>
         <ul className="cal__legend" aria-label="Статусы встреч">
           {STATUSES.map((status) => (

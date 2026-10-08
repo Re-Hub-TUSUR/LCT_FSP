@@ -15,7 +15,7 @@ type Props = {
 /** «Are you sure?» for actions that cannot be undone. */
 export function ConfirmDialog({ title, children, confirmLabel, busy, onConfirm, onCancel }: Props) {
   return (
-    <Modal title={title} onClose={onCancel}>
+    <Modal title={title} onClose={onCancel} danger>
       {children && <div className="modal__text">{children}</div>}
       <div className="modal__actions">
         <Button disabled={busy} onClick={onConfirm}>

@@ -15,13 +15,13 @@ type Props = {
 function Check() {
   return (
     <svg className="verified-mark__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <circle cx="8" cy="8" r="8" />
+      <rect width="16" height="16" />
       <path d="M4.6 8.3 7 10.6l4.4-4.9" />
     </svg>
   )
 }
 
-/** Check mark next to a company name, like a verified account in Telegram. */
+/** Check mark next to a company name: a blue square with a tick, as in the ФСП style. */
 export function VerifiedMark({ text = DEFAULT_TEXT, interactive = true }: Props) {
   const id = useId()
   const [open, setOpen] = useState(false)

@@ -14,6 +14,8 @@ const weekdayFormat = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' })
 const dayLabelFormat = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long' })
 const timeFormat = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' })
 
+const isWeekend = (date: Date) => date.getDay() === 0 || date.getDay() === 6
+
 const clock = (minutes: number) =>
   `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
 
@@ -52,7 +54,13 @@ export function WeekGrid({ weekStart, events, now, labelOf, onEvent, onSlot }: P
           {days.map(({ date }) => (
             <div
               key={date.getTime()}
-              className={isSameDay(date, now) ? 'cal-week__day is-today' : 'cal-week__day'}
+              className={[
+                'cal-week__day',
+                isSameDay(date, now) && 'is-today',
+                isWeekend(date) && 'is-weekend',
+              ]
+                .filter(Boolean)
+                .join(' ')}
             >
               <span className="cal-week__weekday">{weekdayFormat.format(date)}</span>
               <span className="cal-week__date">{date.getDate()}</span>
@@ -72,7 +80,7 @@ export function WeekGrid({ weekStart, events, now, labelOf, onEvent, onSlot }: P
             return (
               <div
                 key={date.getTime()}
-                className="cal-week__col"
+                className={isWeekend(date) ? 'cal-week__col is-weekend' : 'cal-week__col'}
                 role="group"
                 aria-label={dayLabelFormat.format(date)}
               >

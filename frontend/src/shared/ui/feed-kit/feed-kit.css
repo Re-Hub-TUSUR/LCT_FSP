@@ -1,14 +1,13 @@
 /* ── Chip ──────────────────────────────────────────── */
 
 .chip-toggle {
-  padding: 9px 14px;
-  border: 1px solid var(--line-strong);
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
   background: transparent;
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink);
   cursor: pointer;
   transition:
     background 0.2s ease,
@@ -17,13 +16,12 @@
 }
 
 .chip-toggle:hover {
-  color: var(--text);
-  border-color: var(--text-dim);
+  border-color: var(--blue);
 }
 
 .chip-toggle.is-active {
-  background: var(--fill-brand);
-  border-color: var(--brand-blue);
+  background: var(--blue);
+  border-color: var(--blue);
   color: #fff;
 }
 
@@ -31,7 +29,7 @@
 .pager button:focus-visible,
 .pager select:focus-visible,
 .reel__act:focus-visible {
-  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 
@@ -40,50 +38,65 @@
 .meter {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 150px;
+  gap: 6px;
+  min-width: 130px;
 }
 
 .meter__head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
+  gap: 10px;
 }
 
 .meter__label {
-  font-family: var(--font-mono), monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--muted);
 }
 
 .meter__value {
-  font-family: var(--font-display), sans-serif;
-  font-weight: 200;
-  font-size: 30px;
+  font-family: var(--font-accent);
+  font-weight: 400;
+  font-size: 26px;
   line-height: 1;
 }
 
 .meter__track {
   height: 3px;
-  background: var(--fill-solid);
+  background: var(--line);
 }
 
 .meter__fill {
   display: block;
   height: 100%;
-  background: var(--text-dim);
+  background: var(--muted);
   transition: width 0.5s var(--ease-premium);
 }
 
 .meter--high .meter__fill {
-  background: var(--brand-blue);
+  background: var(--blue);
 }
 
 .meter--high .meter__value {
-  color: #8f86ff;
+  color: var(--blue-light);
+}
+
+/* No value yet: a dash in the text face (the accent face has no dash glyph). */
+.meter--none .meter__value {
+  font-family: var(--font-mono);
+  color: var(--dim);
+}
+
+/* In a table row: the column head names the meter. */
+.meter--compact {
+  min-width: 0;
+}
+
+.meter--compact .meter__value {
+  font-size: 20px;
 }
 
 /* ── Pagination ────────────────────────────────────── */
@@ -94,13 +107,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
-  font-family: var(--font-mono), monospace;
+  padding-top: 16px;
+  font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--muted);
 }
 
 .pager__total {
@@ -114,19 +126,20 @@
 
 .pager button,
 .pager select {
-  min-width: 40px;
-  height: 40px;
+  min-width: 36px;
+  height: 36px;
   padding: 0 10px;
   border: 1px solid var(--line);
+  border-radius: 0;
   background: transparent;
-  font-family: var(--font-mono), monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--text);
+  color: var(--ink);
   cursor: pointer;
 }
 
 .pager button:hover:not(:disabled) {
-  border-color: var(--text-dim);
+  border-color: var(--blue);
 }
 
 .pager button:disabled {
@@ -135,8 +148,9 @@
 }
 
 .pager button.is-current {
-  background: var(--brand-blue);
-  border-color: var(--brand-blue);
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
 }
 
 .pager__gap {
@@ -151,39 +165,31 @@
 }
 
 .pager select {
-  background: #000;
+  background: var(--bg-deep);
 }
 
 /* ── Notice & skeleton ─────────────────────────────── */
 
 .notice {
   margin: 0;
-  padding: 12px 16px;
-  border-left: 2px solid var(--brand-red);
-  background: var(--fill-ghost);
-  font-family: var(--font-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  line-height: 1.6;
-  text-transform: uppercase;
-  color: var(--text-dim);
+  padding: 12px 14px;
+  box-shadow: inset 4px 0 0 var(--red);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
 }
 
 .feed-skeleton {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 4px;
 }
 
 .feed-skeleton__card {
-  height: 220px;
-  border: 1px solid var(--line);
-  background: linear-gradient(
-    100deg,
-    var(--fill-ghost) 30%,
-    rgba(255, 255, 255, 0.08) 50%,
-    var(--fill-ghost) 70%
-  );
+  height: 84px;
+  background: linear-gradient(100deg, var(--surface) 30%, var(--line) 50%, var(--surface) 70%);
   background-size: 300% 100%;
   animation: feed-shimmer 1.4s ease-in-out infinite;
 }
@@ -217,8 +223,8 @@
   min-height: 0;
   overflow: hidden;
   cursor: grab;
-  background: #070910;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  background: var(--bg-deep);
+  border-block: 1px solid var(--line-soft);
   /* A drag must move the frame, not select its text or scroll the page sideways. */
   touch-action: pan-y;
   user-select: none;
@@ -245,23 +251,23 @@
 
 .reel__placeholder .feedback {
   align-items: center;
-  max-width: 22em;
+  max-width: 34em;
   padding: 0;
   gap: 18px;
   text-align: center;
 }
 
+.reel__placeholder .fsp-mark {
+  font-size: 44px;
+}
+
 .reel__placeholder .feedback__title {
-  font-size: clamp(26px, 2.6vw, 40px);
-  font-weight: 300;
+  font-size: clamp(24px, 2.4vw, 36px);
   line-height: 1.2;
 }
 
 .reel__placeholder .feedback__text {
   max-width: 34em;
-  font-size: 12px;
-  line-height: 1.7;
-  letter-spacing: 0.08em;
 }
 
 /* Five cells of 75% of the gate each; `ReelEngine` relies on these shares. */
@@ -284,16 +290,17 @@
   flex: none;
   height: auto;
   min-height: 0;
-  background: #070910;
+  background: var(--bg-deep);
 }
 
+/* The ornament runs where the sprocket holes of a film would be. */
 .reel__holes {
   flex: none;
+  align-items: center;
   height: 28px;
-  background-color: #070910;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='28'><rect x='11' y='6' width='14' height='16' rx='3.5' fill='%23e7e8f4'/></svg>");
-  background-repeat: repeat-x;
-  background-size: 36px 28px;
+  padding: 0 6px;
+  font-size: 18px;
+  background: var(--bg-deep);
 }
 
 .reel__window {
@@ -302,7 +309,8 @@
   min-height: 0;
   margin-inline: 4px;
   overflow: hidden;
-  background: #10121c;
+  border: 1px solid var(--line);
+  background: var(--bg);
 }
 
 .reel__card {
@@ -350,9 +358,9 @@
 }
 
 .reel__nib {
-  fill: #eafff4;
+  fill: #f3f2ff;
   opacity: 0;
-  filter: drop-shadow(0 0 4px rgba(61, 204, 138, 0.9));
+  filter: drop-shadow(0 0 4px rgba(125, 114, 255, 0.9));
 }
 
 /* Sparks fly over the whole gate and do not travel with the strip. */
@@ -368,8 +376,8 @@
 
 .reel__window .match-card--frame {
   height: 100%;
-  gap: 8px;
-  padding: 12px 16px 10px;
+  gap: 10px;
+  padding: 14px 18px 12px;
   overflow: hidden;
 }
 
@@ -378,11 +386,11 @@
 }
 
 .reel__window .match-card--frame .match-card__head {
-  gap: 16px;
+  gap: 12px 20px;
 }
 
 .reel__window .match-card--frame .match-card__titles {
-  gap: 6px;
+  gap: 5px;
 }
 
 .match-card__contents {
@@ -393,7 +401,7 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   min-height: 0;
   overflow: hidden;
 }
@@ -409,7 +417,6 @@
 .reel__window .match-card--frame .match-card__why {
   flex: none;
   overflow: visible;
-  padding: 12px 14px;
 }
 
 .reel__window .match-card--frame .match-card__why ul {
@@ -424,9 +431,9 @@
   gap: 8px;
   margin: 0;
   overflow: visible;
-  font-weight: 300;
-  line-height: 1.45;
-  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-2);
   white-space: pre-line;
 }
 
@@ -438,6 +445,7 @@
   flex: none;
   align-self: flex-end;
   min-height: 44px;
+  margin-top: 6px;
 }
 
 /* ── Skip / like buttons ───────────────────────────── */
@@ -462,8 +470,8 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--text);
-  font-family: var(--font-mono), monospace;
+  color: var(--ink);
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.08em;
   line-height: 1.2;
@@ -494,7 +502,6 @@
 }
 
 .reel__act:focus-visible {
-  outline: 1px solid rgba(255, 255, 255, 0.7);
   outline-offset: 6px;
 }
 
@@ -509,7 +516,6 @@
 .reel__ring {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
   transform: scale(1.14);
   transition:
     transform 0.45s ease,
@@ -518,13 +524,13 @@
 }
 
 .reel__act--skip .reel__ring {
-  background: #ff4d3d;
-  box-shadow: 0 0 14px rgba(255, 77, 61, 0.7);
+  background: var(--red);
+  box-shadow: 0 0 14px rgba(236, 29, 53, 0.7);
 }
 
 .reel__act--like .reel__ring {
-  background: #3dcc8a;
-  box-shadow: 0 0 14px rgba(61, 204, 138, 0.7);
+  background: var(--blue);
+  box-shadow: 0 0 14px rgba(64, 47, 255, 0.7);
 }
 
 .reel__act img {
@@ -534,8 +540,7 @@
   width: 64px;
   height: 64px;
   padding: 12px;
-  border-radius: 50%;
-  background: #f4f5fb;
+  background: var(--ink);
   object-fit: contain;
   transition: transform 0.2s var(--ease-premium);
 }
@@ -549,7 +554,7 @@
 
   .reel__holes {
     height: 20px;
-    background-size: 25.7px 20px;
+    font-size: 13px;
   }
 
   .reel__window .match-card--frame {

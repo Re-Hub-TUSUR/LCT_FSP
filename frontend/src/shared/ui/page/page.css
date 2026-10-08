@@ -1,10 +1,10 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: clamp(28px, 3vw, 48px);
-  width: min(100%, 1200px);
+  gap: 24px;
+  width: min(100%, 1440px);
   margin: 0 auto;
-  padding: clamp(24px, 3vw, 48px) var(--gutter) 64px;
+  padding: clamp(24px, 3vw, 40px) var(--gutter) 72px;
 }
 
 .page__header {
@@ -12,41 +12,45 @@
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 24px;
-  padding-bottom: 24px;
+  gap: 16px 32px;
+  padding-bottom: 20px;
   border-bottom: 1px solid var(--line);
+}
+
+.page__header > :first-child {
+  min-width: 0;
 }
 
 .page__title {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: 200;
-  font-size: clamp(36px, 4vw, 64px);
-  letter-spacing: 0.03em;
-  line-height: 1;
+  font-family: var(--font-mono);
+  font-weight: 300;
+  font-size: clamp(30px, 3vw, 48px);
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 .page__lead {
-  margin: 14px 0 0;
-  max-width: 64ch;
+  margin: 8px 0 0;
+  max-width: 60ch;
   font-family: var(--font-mono);
   font-weight: 400;
   font-size: 13px;
-  letter-spacing: 0.1em;
-  line-height: 1.5;
-  text-transform: uppercase;
-  color: var(--text-dim);
+  line-height: 1.55;
+  color: var(--muted);
 }
 
 .page__actions {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .page__body {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 24px;
 }
 
 body:has(.page--swipe) {
@@ -87,9 +91,9 @@ body:has(.page--swipe) main {
   flex: none;
   width: min(100%, 1200px);
   margin-inline: auto;
-  padding-inline: var(--gutter);
-  padding-bottom: 10px;
-  gap: 8px;
+  padding: 10px var(--nav-gutter);
+  gap: 8px 24px;
+  border-bottom: 0;
   box-sizing: border-box;
 }
 
@@ -98,15 +102,14 @@ body:has(.page--swipe) main {
 }
 
 .page--swipe .page__title {
-  font-size: clamp(28px, 3vw, 42px);
+  font-size: clamp(26px, 2.6vw, 40px);
 }
 
 .page--swipe .page__lead {
   max-width: none;
   margin-top: 6px;
-  font-size: clamp(9px, 1.22vw, 12px);
-  letter-spacing: 0.04em;
-  white-space: nowrap;
+  font-size: clamp(11px, 1.1vw, 13px);
+  line-height: 1.5;
 }
 
 .page--swipe .page__body {
@@ -115,7 +118,7 @@ body:has(.page--swipe) main {
   flex-direction: column;
   min-height: 0;
   gap: 0;
-  padding-top: clamp(28px, 6vh, 72px);
+  padding-top: clamp(16px, 4vh, 48px);
   padding-bottom: 12px;
 }
 
@@ -125,21 +128,17 @@ body:has(.page--swipe) main {
 }
 
 @media (max-width: 720px) {
-  /* One line is cut off on a phone: let the hint wrap. */
-  .page--swipe .page__lead {
-    white-space: normal;
-  }
-
   .page--swipe .page__body {
-    padding-top: 16px;
+    padding-top: 12px;
   }
 }
 
 .page--auth {
-  min-height: calc(100svh - 120px);
+  min-height: calc(100svh - 150px);
   justify-content: center;
   align-items: center;
-  width: min(100%, 460px);
+  gap: clamp(28px, 3vw, 44px);
+  width: min(100%, 560px);
 }
 
 /* Role choice: same centred shell, wide enough for two cards */
@@ -148,15 +147,32 @@ body:has(.page--swipe) main {
 }
 
 .page--auth .page__header {
-  width: 100%;
+  width: min(100%, 460px);
   justify-content: center;
   text-align: center;
   border-bottom: 0;
   padding-bottom: 0;
 }
 
+.page--auth-wide .page__header {
+  width: 100%;
+}
+
+.page--auth .page__title {
+  font-size: clamp(28px, 3vw, 42px);
+  letter-spacing: 0.02em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.page--auth-wide .page__title {
+  font-size: clamp(34px, 4vw, 60px);
+  line-height: 1.15;
+}
+
 .page--auth .page__lead {
-  margin-inline: auto;
+  margin: 14px auto 0;
+  font-size: 14px;
 }
 
 .page--auth .page__body {
@@ -164,7 +180,7 @@ body:has(.page--swipe) main {
   align-items: center;
 }
 
-/* Inside the cabinet grid the shell already provides width and padding. */
+/* Inside the cabinet the shell already provides width and padding. */
 .page--inset {
   width: 100%;
   margin: 0;
@@ -189,8 +205,7 @@ body:has(.page--swipe) main {
 
 .page--setup .page__lead {
   margin-inline: auto;
-  font-size: 15px;
-  letter-spacing: 0.06em;
+  font-size: 14px;
 }
 
 .page--setup .page__body {
@@ -201,26 +216,35 @@ body:has(.page--swipe) main {
 .page-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  min-width: 0;
 }
 
+/* Block title over a blue rule */
 .page-section__title {
   margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--blue);
   font-family: var(--font-mono);
-  font-weight: 400;
+  font-weight: 600;
   font-size: 12px;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--ink);
 }
 
 .tag {
-  display: inline-block;
-  padding: 6px 10px;
-  background: var(--fill-solid);
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  background: var(--blue);
   font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text);
+  font-size: 11.5px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.page__eyebrow {
+  margin-bottom: 12px;
 }

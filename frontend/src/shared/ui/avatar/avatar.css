@@ -1,0 +1,43 @@
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  background: var(--blue);
+  font-family: var(--font-accent);
+  font-size: 17px;
+  line-height: 1;
+  color: #fff;
+}
+
+.avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar--dark {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.avatar--sm {
+  width: 40px;
+  height: 40px;
+  font-size: 15px;
+}
+
+.avatar--lg {
+  width: 52px;
+  height: 52px;
+  font-size: 20px;
+}
+
+.avatar--xl {
+  width: 64px;
+  height: 64px;
+  font-size: 24px;
+}

@@ -24,31 +24,29 @@
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.14em;
-  color: var(--text-dim);
+  color: var(--muted);
 }
 
 .deck__reasons {
-  padding: 20px 28px;
-  border-left: 2px solid var(--brand-blue);
-  background: var(--fill-brand);
+  padding: 12px 14px;
+  border-left: 4px solid var(--blue);
 }
 
 .deck__reasons ul {
   margin: 8px 0 0;
   padding-left: 18px;
-  font-weight: 300;
   line-height: 1.5;
 }
 
 .deck__score {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.14em;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .deck__controls {
   display: flex;
-  gap: 12px;
+  gap: 4px;
 }

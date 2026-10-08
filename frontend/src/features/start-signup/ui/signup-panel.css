@@ -1,4 +1,4 @@
-.panel {
+.signup {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -6,130 +6,116 @@
   min-width: 380px;
 }
 
-.chip {
+.signup__chip {
   font-family: var(--font-mono);
   font-weight: 600;
   font-size: clamp(12px, 0.8vw, 14px);
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
   line-height: 1;
   text-transform: uppercase;
   padding: clamp(9px, 0.8vw, 14px) clamp(14px, 1.1vw, 20px);
-  background: var(--fill-brand);
-  color: var(--text);
+  background: var(--surface);
+  color: var(--ink);
 }
 
-.chip__bracket {
-  color: var(--brand-red);
+.signup__bracket {
+  color: var(--red);
 }
 
-.panel__title {
-  margin: clamp(28px, 3vw, 52px) 0 0;
-  font-family: var(--font-display);
-  font-weight: 200;
-  font-size: clamp(54px, 6.2vw, 118px);
-  letter-spacing: 0.03em;
-  line-height: 0.95;
-  color: var(--text);
+.signup__title {
+  margin: clamp(24px, 2.6vw, 44px) 0 0;
+  font-family: var(--font-accent);
+  font-weight: 400;
+  font-size: clamp(64px, 8vw, 150px);
+  letter-spacing: 0.02em;
+  line-height: 0.9;
+  color: var(--ink);
 }
 
-.panel__tagline {
+.signup__tagline {
+  max-width: 30ch;
   margin: clamp(14px, 1.4vw, 24px) 0 0;
   font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: clamp(12.5px, 0.94vw, 17px);
-  letter-spacing: 0.14em;
-  line-height: 1.4;
-  text-transform: uppercase;
-  color: var(--text-mute);
+  font-size: clamp(14px, 1vw, 18px);
+  line-height: 1.45;
+  color: var(--muted);
 }
 
-.form {
+.signup__actions {
   display: flex;
   flex-direction: column;
-  gap: clamp(22px, 1.5vw, 26px);
+  gap: 12px;
+  position: relative;
   width: 100%;
-  margin-top: clamp(38px, 4.6vw, 82px);
+  margin-top: clamp(32px, 4vw, 72px);
 }
 
-/* The email field and the invite link stay in the layout so the panel does not reflow. */
-.panel .field__input,
-.panel .field__error,
-.panel .panel__invite {
+/* The email field is off for now: it stays in the form, out of sight and out of the flow. */
+.signup__actions .field {
+  position: absolute;
   visibility: hidden;
   pointer-events: none;
 }
 
-.panel__invite {
-  align-self: center;
-  /* 44px tap target without changing the visual rhythm */
-  margin-top: clamp(11px, 1.6vw, 31px);
-  padding: 15px 8px;
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: clamp(12.5px, 0.8vw, 14px);
-  line-height: 14px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  text-decoration: none;
-  text-align: center;
-  color: var(--text);
-  transition: color 0.25s ease;
+.signup__actions .btn {
+  min-height: 0;
+  padding: clamp(17px, 1.5vw, 25px) 20px;
+  font-size: clamp(13px, 0.9vw, 15px);
+  letter-spacing: 0.14em;
 }
 
-.panel__invite:hover {
-  color: var(--text-dim);
-  text-decoration: underline;
-  text-underline-offset: 4px;
+/* The quieter of the two: a filled grey plate instead of an outline. */
+.signup__actions .signup__employer {
+  border-color: var(--surface);
+  background: var(--surface);
+  color: var(--ink);
 }
 
-.panel__invite:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 3px;
+.signup__actions .signup__employer:hover:not(:disabled) {
+  border-color: var(--line);
+  background: var(--line);
+  color: var(--ink);
 }
 
 @media (max-width: 1100px) {
-  .panel {
+  .signup {
     width: min(70vw, 520px);
     min-width: 0;
   }
 }
 
-@media (max-width: 720px) {
-  .panel {
+@media (max-width: 899px) {
+  .signup {
     width: 100%;
     align-items: stretch;
   }
 
-  .chip {
+  .signup__chip {
     align-self: flex-start;
   }
 }
 
 @media (max-width: 380px) {
-  .panel__title {
-    font-size: clamp(44px, 15vw, 64px);
+  .signup__title {
+    font-size: clamp(48px, 17vw, 72px);
   }
 
-  .chip {
-    letter-spacing: 0.14em;
+  .signup__chip {
+    letter-spacing: 0.1em;
   }
 }
 
 @media (max-height: 640px) {
-  .panel__title {
+  .signup__title {
     margin-top: 18px;
-    font-size: clamp(36px, 7vw, 64px);
+    font-size: clamp(40px, 8vw, 72px);
   }
 
-  .panel__tagline {
+  .signup__tagline {
     margin-top: 10px;
   }
 
-  .form {
+  .signup__actions {
     margin-top: 22px;
-  }
-
-  .panel__invite {
-    margin-top: 4px;
   }
 }

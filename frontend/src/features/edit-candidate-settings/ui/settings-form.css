@@ -10,15 +10,12 @@
   align-items: center;
   gap: 12px;
   min-height: 44px;
-  font-weight: 300;
-  font-size: 16px;
+  font-size: 13.5px;
   cursor: pointer;
 }
 
 .settings-form .check input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--brand-blue);
+  margin: 0;
 }
 
 .settings-form .check:focus-within {
@@ -33,7 +30,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-weight: 300;
   line-height: 1.45;
 }
 
@@ -41,18 +37,17 @@
 .form-status {
   margin: 0;
   max-width: 62ch;
-  font-weight: 300;
-  font-size: 16px;
+  font-size: 13.5px;
   line-height: 1.5;
 }
 
 .form-hint {
-  color: var(--text-dim);
-  font-size: 14px;
+  color: var(--muted);
+  font-size: 12.5px;
 }
 
 .form-hint a {
-  color: var(--text);
+  color: var(--ink);
 }
 
 .form-hint a:focus-visible {
@@ -65,7 +60,7 @@
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 1.4;
-  color: var(--error);
+  color: var(--red-text);
 }
 
 .form-actions {

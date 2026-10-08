@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react'
+import { Ornament } from '../ornament/ornament'
 import { EditorMark } from './editor-mark'
 import heartUrl from './icons/heart.png'
 import heartBrokenUrl from './icons/heart-broken.png'
@@ -22,11 +23,11 @@ type Props<T> = {
 function Frame({ children }: { children?: ReactNode }) {
   return (
     <div className="reel__cell" aria-hidden="true">
-      <div className="reel__holes" />
+      <Ornament variant="mirror" className="reel__holes" />
       <div className="reel__window">
         {children ? <div className="reel__card reel__card--side">{children}</div> : null}
       </div>
-      <div className="reel__holes" />
+      <Ornament variant="mirror" className="reel__holes" />
     </div>
   )
 }
@@ -189,7 +190,7 @@ export function SwipeDeck<T>({
           <Frame />
           <Frame>{next ? renderCard(next) : null}</Frame>
           <div className="reel__cell">
-            <div className="reel__holes" aria-hidden="true" />
+            <Ornament variant="mirror" className="reel__holes" />
             <div ref={frame} className="reel__window">
               {current ? (
                 <>
@@ -211,7 +212,7 @@ export function SwipeDeck<T>({
                 </div>
               )}
             </div>
-            <div className="reel__holes" aria-hidden="true" />
+            <Ornament variant="mirror" className="reel__holes" />
           </div>
           <Frame>{next ? renderCard(next) : null}</Frame>
           <Frame />
