@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { BRAND, ROUTES } from '@/shared/config'
 import { isEmail } from '@/shared/lib'
-import { Button, TextField } from '@/shared/ui'
+import { Button, HackerText, TextField } from '@/shared/ui'
 import { PANEL } from '../config/content'
 import './signup-panel.css'
 
@@ -35,7 +35,9 @@ export function SignupPanel() {
         <span className="signup__bracket">]</span>
       </span>
 
-      <h1 className="signup__title">{BRAND}</h1>
+      <h1 className="signup__title">
+        <HackerText text={BRAND} />
+      </h1>
       <p className="signup__tagline">{PANEL.tagline}</p>
 
       <form className="signup__actions" action="#" method="post" noValidate onSubmit={onSubmit}>

@@ -65,7 +65,7 @@
 }
 
 .chapter__index {
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-size: clamp(32px, 2.6vw, 44px);
   line-height: 0.85;
   color: var(--blue);
@@ -87,6 +87,26 @@
   letter-spacing: -0.02em;
   line-height: 1.08;
   text-wrap: balance;
+}
+
+/* Explicit two-line break. 18ch is shorter than «проверенным уровнем.». */
+#companies-title {
+  max-width: 22ch;
+  text-wrap: wrap;
+}
+
+@media (max-width: 380px) {
+  #companies-title {
+    font-size: clamp(20px, 7vw, 24px);
+  }
+}
+
+.chapter h2 .hacker-text {
+  font-family: inherit;
+}
+
+#companies-title .hacker-text {
+  white-space: pre-line;
 }
 
 .chapter h2:focus {
@@ -162,13 +182,13 @@
   .chapter__copy {
     animation: chapter-pass linear both;
     animation-timeline: --chapter;
-    animation-range: entry 0% exit 100%;
+    animation-range: 0 100%;
   }
 
   .chapter::before {
     animation: chapter-scrim linear both;
     animation-timeline: --chapter;
-    animation-range: entry 0% exit 100%;
+    animation-range: 0 100%;
   }
 }
 

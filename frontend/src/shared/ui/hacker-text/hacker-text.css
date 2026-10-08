@@ -1,0 +1,5 @@
+/* Mono keeps every glyph the same width while ASCII is still cycling. Colour and size are inherited. */
+.hacker-text {
+  position: relative;
+  font-family: var(--font-mono), monospace;
+}

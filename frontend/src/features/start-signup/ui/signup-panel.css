@@ -7,7 +7,7 @@
 }
 
 .signup__chip {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-weight: 600;
   font-size: clamp(12px, 0.8vw, 14px);
   letter-spacing: 0.16em;
@@ -24,7 +24,7 @@
 
 .signup__title {
   margin: clamp(24px, 2.6vw, 44px) 0 0;
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-weight: 400;
   font-size: clamp(64px, 8vw, 150px);
   letter-spacing: 0.02em;
@@ -32,10 +32,15 @@
   color: var(--ink);
 }
 
+/* The scramble sits inside the title, so it keeps TDAText instead of the mono default. */
+.signup__title .hacker-text {
+  font-family: inherit;
+}
+
 .signup__tagline {
   max-width: 30ch;
   margin: clamp(14px, 1.4vw, 24px) 0 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: clamp(14px, 1vw, 18px);
   line-height: 1.45;
   color: var(--muted);

@@ -22,9 +22,15 @@
 }
 
 .auth-brand {
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-weight: 400;
   letter-spacing: 0.04em;
+}
+
+/* The scramble inherits the title: mono for the words, the pixel face for the brand. */
+.page--auth .page__title .hacker-text,
+.auth-choice__title .hacker-text {
+  font-family: inherit;
 }
 
 .auth-glyph {

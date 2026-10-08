@@ -4,7 +4,7 @@ import { AuthForm } from '@/features/auth-by-email'
 import type { AuthMode } from '@/features/auth-by-email'
 import { ROUTES } from '@/shared/config'
 import { isSafeInternalPath } from '@/shared/lib'
-import { Ornament, Page } from '@/shared/ui'
+import { HackerText, Ornament, Page } from '@/shared/ui'
 import { RoleGlyph } from './auth-page'
 
 const TITLES = {
@@ -48,7 +48,7 @@ function RoleAuthPage({ role }: { role: 'candidate' | 'employer' }) {
             <RoleGlyph role={role} />
           </>
         }
-        title={TITLES[role][mode]}
+        title={<HackerText text={TITLES[role][mode]} />}
         lead={TITLES[role].lead}
       >
         <AuthForm

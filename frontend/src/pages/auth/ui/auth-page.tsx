@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import { BRAND, ROUTES } from '@/shared/config'
-import { Ornament, Page } from '@/shared/ui'
+import { HackerText, Ornament, Page } from '@/shared/ui'
 import './auth-page.css'
 
 /** The sign of a role: a specialist writes code, a company holds a team. */
@@ -37,7 +37,10 @@ export function AuthPage() {
         eyebrow={<PlatformChip />}
         title={
           <>
-            Вход в <span className="auth-brand">{BRAND}</span>
+            <HackerText text="Вход в " />
+            <span className="auth-brand">
+              <HackerText text={BRAND} />
+            </span>
           </>
         }
         lead="Выберите, кто вы на платформе"
@@ -48,7 +51,9 @@ export function AuthPage() {
               <RoleGlyph role="candidate" />
               <span className="auth-choice__arrow">→</span>
             </span>
-            <span className="auth-choice__title">Я специалист</span>
+            <span className="auth-choice__title">
+              <HackerText text="Я специалист" />
+            </span>
             <span className="auth-choice__text">
               Опрос, тест на грейд и приглашения от работодателей с зарплатой
             </span>
@@ -58,7 +63,9 @@ export function AuthPage() {
               <RoleGlyph role="employer" />
               <span className="auth-choice__arrow">→</span>
             </span>
-            <span className="auth-choice__title">Я ищу специалистов</span>
+            <span className="auth-choice__title">
+              <HackerText text="Я ищу специалистов" />
+            </span>
             <span className="auth-choice__text">
               Подборка кандидатов по категориям и прямые приглашения
             </span>
