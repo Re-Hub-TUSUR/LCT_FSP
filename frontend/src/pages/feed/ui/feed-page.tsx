@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { CandidateMatchDto } from '@/entities/candidate'
 import { useSession } from '@/entities/session'
 import type { VacancyMatchDto } from '@/entities/vacancy'
-import { HackerRain, HackerText, Page } from '@/shared/ui'
+import { HackerRain, Page } from '@/shared/ui'
 import { CandidateFeed, CandidatePanel } from '@/widgets/candidate-feed'
 import { CandidateSwipe, DecisionCounters, FeedViewTabs, VacancySwipe } from '@/widgets/feed-swipe'
 import { VacancyFeed, VacancyPanel } from '@/widgets/vacancy-feed'
@@ -15,7 +15,7 @@ export function FeedPage() {
   return (
     <Page
       className="page--feed"
-      title={employer ? 'Кандидаты' : <HackerText text="Вакансии для вас" />}
+      title={employer ? 'Кандидаты' : 'Вакансии для вас'}
       lead={
         employer
           ? 'Банк категоризированных кандидатов: поиск, фильтры и объяснимый рейтинг'
@@ -39,7 +39,7 @@ export function FeedSwipePage() {
   return (
     <Page
       className="page--swipe"
-      title={employer ? 'Подбор свайпами' : <HackerText text="Вакансии свайпами" />}
+      title={employer ? 'Подбор свайпами' : 'Вакансии свайпами'}
       lead="Вправо — интересно, влево — пропустить. Клавиши ← и → тоже работают"
       actions={<DecisionCounters role={employer ? 'employer' : 'candidate'} />}
       backdrop={<HackerRain />}

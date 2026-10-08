@@ -16,7 +16,7 @@ import { StartAssessmentForm } from '@/features/start-assessment'
 import { getErrorMessage } from '@/shared/api'
 import { formatDate } from '@/shared/lib'
 import { ROUTES } from '@/shared/config'
-import { ButtonLink, HackerRain, HackerText, Page, QueryState, Section, Tag } from '@/shared/ui'
+import { ButtonLink, HackerRain, Page, QueryState, Section, Tag } from '@/shared/ui'
 import { AssessmentRunner } from '@/widgets/assessment-runner'
 import { AssignmentInbox } from '@/widgets/assignment-inbox'
 import { AttemptInterview } from '@/widgets/attempt-interview'
@@ -361,7 +361,7 @@ export function TestingPage() {
       <HackerRain />
       <Page
         className="page--testing"
-        title={<HackerText text="Тестирование" />}
+        title="Тестирование"
         lead="Категория подтверждается тестом, а не резюме"
       >
         <CandidateTesting />

@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router'
-import { HackerRain, HackerText, Page } from '@/shared/ui'
+import { HackerRain, Page } from '@/shared/ui'
 import { Messenger } from '@/widgets/messenger'
 import { ResponsesHub } from '@/widgets/responses-hub'
 import './responses-page.css'
@@ -11,7 +11,7 @@ export function ResponsesPage() {
   return (
     <Page
       className="page--responses"
-      title={<HackerText text="Мои отклики" />}
+      title="Мои отклики"
       lead="Пропуски, избранное, входящие симпатии и переписка после взаимного интереса"
     >
       <HackerRain />

@@ -1,5 +1,5 @@
 import { useSession } from '@/entities/session'
-import { HackerRain, HackerText, Page } from '@/shared/ui'
+import { HackerRain, Page } from '@/shared/ui'
 import { MeetingCalendar } from '@/widgets/meeting-calendar'
 import './calendar-page.css'
 
@@ -10,7 +10,7 @@ export function CalendarPage() {
   return (
     <Page
       className="page--calendar"
-      title={<HackerText text="Календарь" />}
+      title="Календарь"
       lead={user?.role === 'employer' ? 'Встречи с кандидатами' : 'Встречи с компаниями'}
       backdrop={<HackerRain />}
     >
