@@ -293,13 +293,12 @@
   background: var(--bg-deep);
 }
 
-/* The ornament runs where the sprocket holes of a film would be. */
+/* The ФСП frieze runs where the sprocket holes of a film would be, across the whole frame. */
 .reel__holes {
   flex: none;
-  align-items: center;
-  height: 28px;
-  padding: 0 6px;
-  font-size: 18px;
+  height: 36px;
+  margin-inline: 4px;
+  font-size: 20px;
   background: var(--bg-deep);
 }
 
@@ -553,8 +552,8 @@
   }
 
   .reel__holes {
-    height: 20px;
-    font-size: 13px;
+    height: 26px;
+    font-size: 15px;
   }
 
   .reel__window .match-card--frame {
