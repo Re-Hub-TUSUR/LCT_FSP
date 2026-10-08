@@ -7,6 +7,7 @@
 - `frontend/` — React 19 + TypeScript + Vite, Feature-Sliced Design ([README](frontend/README.md))
 - `backend/` — Python 3.12, FastAPI, SQLAlchemy 2 async, PostgreSQL, Alembic ([README](backend/README.md))
 - `docs/ARCHITECTURE.md` — архитектура, правила импортов, компромиссы, следующие шаги
+- `docs-zensical/` — продуктовая и инженерная документация на [Zensical](https://zensical.org/) (RU/EN). В Docker она на `http://localhost:8081`; отдельно — `pip install zensical && zensical serve` из этой папки
 - `.github/workflows/` — CI (проверки, Docker-сборка, опциональная публикация и деплой)
 
 ## Требования
@@ -27,7 +28,7 @@ cp .env.example .env        # заполните POSTGRES_PASSWORD и JWT_SECRET
 ### Всё в Docker
 
 ```bash
-docker compose up --build   # SPA: http://localhost:8080, API: http://localhost:8000/api/docs
+docker compose up --build   # SPA: http://localhost:8080, документация: http://localhost:8081, API: http://localhost:8000/api/docs
 docker compose exec backend python -m app.seed   # перезалить демо-данные (на пустой базе грузятся сами)
 ```
 
@@ -98,7 +99,8 @@ Pre-commit (husky + lint-staged) прогоняет oxlint и prettier по из
 ```
 backend/    app/{api,core,db,models,schemas,services,repositories,dependencies}, migrations/, tests/
 frontend/   src/{app,pages,widgets,features,entities,shared}, tests/
-docs/       ARCHITECTURE.md
+docs/       ARCHITECTURE.md, FSP_INTEGRATION.md, ADMIN.md
+docs-zensical/  сайт документации (BRD, use cases, user flows, инженерия)
 .github/    workflows/{ci,frontend,backend}.yml
 .cursor/    skills для агентов (design-taste-frontend, frontend-design, ui-ux-pro-max), см. skills-lock.json
 ```

@@ -1,0 +1,190 @@
+[project]
+site_name = "KADRY Documentation"
+site_description = "KADRY product documentation — BRD, use cases, user flows, and the current monorepo (EN/RU)."
+site_author = "KADRY"
+copyright = """
+Copyright &copy; 2026 The authors
+"""
+
+nav = [
+    { "Home" = "index.md" },
+    { "English" = [
+        { "Overview" = "en/index.md" },
+        { "Product" = [
+            { "Product overview" = "en/product/overview.md" },
+            { "Page map" = "en/product/pages.md" },
+            { "Use cases" = [
+                { "Catalog" = "en/use-cases/index.md" },
+                { "Shared" = "en/use-cases/common.md" },
+                { "Candidate" = "en/use-cases/candidate.md" },
+                { "Employer" = "en/use-cases/employer.md" },
+                { "Admin" = "en/use-cases/admin.md" },
+            ]},
+            { "User flows" = [
+                { "Catalog" = "en/user-flows/index.md" },
+                { "Demo" = "en/user-flows/demo.md" },
+                { "Candidate" = "en/user-flows/candidate.md" },
+                { "Employer" = "en/user-flows/employer.md" },
+                { "Admin" = "en/user-flows/admin.md" },
+            ]},
+        ]},
+        { "Business" = [
+            { "Specification" = "en/business/specification.md" },
+            { "BRD" = [
+                { "BRD overview" = "en/business/brd/index.md" },
+                { "01 Authentication" = "en/business/brd/01-auth.md" },
+                { "02 Candidate profile" = "en/business/brd/02-candidate-profile.md" },
+                { "03 Assessment" = "en/business/brd/03-assessment.md" },
+                { "04 Invitations and chat" = "en/business/brd/04-invitations-chat.md" },
+                { "05 Employer matching" = "en/business/brd/05-employer-matching.md" },
+                { "06 Vacancies and tasks" = "en/business/brd/06-vacancies-tasks.md" },
+                { "07 Admin" = "en/business/brd/07-admin.md" },
+                { "08 User data" = "en/business/brd/08-user-data.md" },
+                { "09 Parameters" = "en/business/brd/09-parameters.md" },
+            ]},
+            { "Non-functional requirements" = "en/business/nfr.md" },
+            { "Coverage" = "en/business/coverage.md" },
+        ]},
+        { "Actors" = [
+            { "Personas" = "en/actors/personas.md" },
+        ]},
+        { "Engineering" = [
+            { "Overview" = "en/technical/index.md" },
+            { "Architecture" = "en/technical/architecture.md" },
+            { "API" = "en/technical/api.md" },
+            { "Data model" = "en/technical/data-model.md" },
+            { "Local start" = "en/technical/local-start.md" },
+            { "FSP ID" = "en/technical/fsp-id.md" },
+            { "Implementation status" = "en/technical/implementation-status.md" },
+        ]},
+        { "Glossary" = "en/glossary.md" },
+    ]},
+    { "Русский" = [
+        { "Обзор" = "ru/index.md" },
+        { "Продукт" = [
+            { "Обзор продукта" = "ru/product/overview.md" },
+            { "Карта страниц" = "ru/product/pages.md" },
+            { "Use cases" = [
+                { "Каталог" = "ru/use-cases/index.md" },
+                { "Общие" = "ru/use-cases/common.md" },
+                { "Кандидат" = "ru/use-cases/candidate.md" },
+                { "Работодатель" = "ru/use-cases/employer.md" },
+                { "Администратор" = "ru/use-cases/admin.md" },
+            ]},
+            { "User flows" = [
+                { "Каталог" = "ru/user-flows/index.md" },
+                { "Демо" = "ru/user-flows/demo.md" },
+                { "Кандидат" = "ru/user-flows/candidate.md" },
+                { "Работодатель" = "ru/user-flows/employer.md" },
+                { "Администратор" = "ru/user-flows/admin.md" },
+            ]},
+        ]},
+        { "Бизнес" = [
+            { "Спецификация" = "ru/business/specification.md" },
+            { "BRD" = [
+                { "Обзор BRD" = "ru/business/brd/index.md" },
+                { "01 Авторизация" = "ru/business/brd/01-auth.md" },
+                { "02 Профиль кандидата" = "ru/business/brd/02-candidate-profile.md" },
+                { "03 Тестирование" = "ru/business/brd/03-assessment.md" },
+                { "04 Приглашения и чат" = "ru/business/brd/04-invitations-chat.md" },
+                { "05 Подбор работодателя" = "ru/business/brd/05-employer-matching.md" },
+                { "06 Вакансии и задачи" = "ru/business/brd/06-vacancies-tasks.md" },
+                { "07 Администратор" = "ru/business/brd/07-admin.md" },
+                { "08 Данные пользователя" = "ru/business/brd/08-user-data.md" },
+                { "09 Параметры" = "ru/business/brd/09-parameters.md" },
+            ]},
+            { "Нефункциональные требования" = "ru/business/nfr.md" },
+            { "Покрытие ТЗ" = "ru/business/coverage.md" },
+        ]},
+        { "Акторы" = [
+            { "Персоны" = "ru/actors/personas.md" },
+        ]},
+        { "Инженерия" = [
+            { "Обзор" = "ru/technical/index.md" },
+            { "Архитектура" = "ru/technical/architecture.md" },
+            { "API" = "ru/technical/api.md" },
+            { "Модель данных" = "ru/technical/data-model.md" },
+            { "Локальный запуск" = "ru/technical/local-start.md" },
+            { "FSP ID" = "ru/technical/fsp-id.md" },
+            { "Статус реализации" = "ru/technical/implementation-status.md" },
+        ]},
+        { "Глоссарий" = "ru/glossary.md" },
+    ]},
+]
+
+[project.theme]
+language = "ru"
+features = [
+    "announce.dismiss",
+    "content.code.annotate",
+    "content.code.copy",
+    "content.code.select",
+    "content.footnote.tooltips",
+    "content.tabs.link",
+    "content.tooltips",
+    "navigation.footer",
+    "navigation.indexes",
+    "navigation.tabs",
+    "navigation.tabs.sticky",
+    "navigation.path",
+    "navigation.sections",
+    "navigation.top",
+    "navigation.tracking",
+    "search.highlight",
+]
+
+[[project.theme.palette]]
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to light mode"
+
+[[project.extra.alternate]]
+name = "English"
+link = "/en/"
+lang = "en"
+
+[[project.extra.alternate]]
+name = "Русский"
+link = "/ru/"
+lang = "ru"
+
+[project.markdown_extensions.abbr]
+[project.markdown_extensions.admonition]
+[project.markdown_extensions.attr_list]
+[project.markdown_extensions.def_list]
+[project.markdown_extensions.footnotes]
+[project.markdown_extensions.md_in_html]
+[project.markdown_extensions.toc]
+permalink = true
+[project.markdown_extensions.pymdownx.arithmatex]
+generic = true
+[project.markdown_extensions.pymdownx.betterem]
+[project.markdown_extensions.pymdownx.caret]
+[project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions.pymdownx.emoji]
+emoji_generator = "zensical.extensions.emoji.to_svg"
+emoji_index = "zensical.extensions.emoji.twemoji"
+[project.markdown_extensions.pymdownx.highlight]
+anchor_linenums = true
+line_spans = "__span"
+pygments_lang_class = true
+[project.markdown_extensions.pymdownx.inlinehilite]
+[project.markdown_extensions.pymdownx.keys]
+[project.markdown_extensions.pymdownx.magiclink]
+[project.markdown_extensions.pymdownx.mark]
+[project.markdown_extensions.pymdownx.smartsymbols]
+[project.markdown_extensions.pymdownx.superfences]
+custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" }
+]
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true
+combine_header_slug = true
+[project.markdown_extensions.pymdownx.tasklist]
+custom_checkbox = true
+[project.markdown_extensions.pymdownx.tilde]

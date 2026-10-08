@@ -1,4 +1,4 @@
-# Local full stack: PostgreSQL + Elasticsearch + API + SPA (nginx proxies /api to the backend).
+# Local full stack: PostgreSQL + Elasticsearch + API + SPA (nginx proxies /api to the backend) + docs.
 # Usage: cp .env.example .env  (fill JWT_SECRET and POSTGRES_PASSWORD), then `docker compose up --build`.
 name: kadry
 
@@ -95,6 +95,14 @@ services:
         condition: service_healthy
     ports:
       - "8080:80"
+    restart: unless-stopped
+
+  # Static Zensical site. Starts with the stack; no API dependency.
+  docs:
+    build: ./docs-zensical
+    image: kadry-docs
+    ports:
+      - "8081:80"
     restart: unless-stopped
 
 volumes:

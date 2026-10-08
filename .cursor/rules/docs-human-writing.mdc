@@ -1,0 +1,38 @@
+---
+description: Write KADRY documentation in plain human language
+globs: docs-zensical/**/*.md
+alwaysApply: false
+---
+
+# Human-readable documentation
+
+Write docs so a tired teammate understands them on the first read. Prefer concrete scenarios over abstract jargon.
+
+## Style reference
+
+Canonical tone and concreteness: [`docs-zensical/docs/ru/product/overview.md`](docs-zensical/docs/ru/product/overview.md) (EN mirror: `docs-zensical/docs/en/product/overview.md`).
+
+Match that level of clarity: say what the person does, what the system does next, and where the data goes.
+
+## Do
+
+- Explain with a real flow: who → what happens → what they see next
+- Prefer everyday words; if a term is needed, unpack it in the same sentence
+- Name the actual thing: «на странице Приглашения», «после принятия приглашения контакты открываются этой компании»
+- Keep sentences short; one idea per sentence when possible
+- For tables: promise in the left column, plain meaning in the right — not slogans
+- Keep product UI strings in Russian, in quotes, in both locales
+
+## Don't
+
+- Vague abstractions without a scenario
+- Buzzword stacks that do not say what the user experiences
+- Assuming the reader already knows proctoring, a pattern, or a one-off offer — define in plain words on first use in the page
+- Writing like a pitch deck when the page is a product overview
+- Inventing requirements that are not in the BRD
+
+## Quick check before finishing
+
+1. Can someone outside the team retell the paragraph in their own words?
+2. Is there a concrete actor (candidate, employer, admin) or only “the system”?
+3. Did you say where data goes (resume → form → employer card) instead of only “sync”?

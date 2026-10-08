@@ -1,0 +1,41 @@
+---
+description: Keep RU/EN documentation mirrors in sync when editing docs-zensical
+globs: docs-zensical/**/*.md
+alwaysApply: false
+---
+
+# RU ↔ EN documentation mirrors
+
+When creating or editing documentation under `docs-zensical/docs/ru/` or `docs-zensical/docs/en/`, always update the **mirror file** in the other language with the **same meaning and structure**.
+
+## Mirror path
+
+| Edited | Mirror |
+|--------|--------|
+| `docs-zensical/docs/ru/.../file.md` | `docs-zensical/docs/en/.../file.md` |
+| `docs-zensical/docs/en/.../file.md` | `docs-zensical/docs/ru/.../file.md` |
+
+Same relative path after `docs/ru/` ↔ `docs/en/`.
+
+## Workflow
+
+1. Edit (or create) the file in the language you are working in.
+2. Resolve the mirror path (`ru` ↔ `en`).
+3. Write the **same content** in the other language: same sections, tables, lists, diagrams, links (locale-adjusted), and frontmatter shape.
+4. Do not leave one locale ahead of the other in the same change set.
+5. If the mirror is missing — **create it**.
+6. If a path has no locale pair by design (rare) — say so explicitly; do not silently skip.
+
+## What must stay identical
+
+- Section order and heading hierarchy
+- Tables (rows/columns); translate cell text
+- Mermaid diagrams (node labels may be translated; topology stays the same)
+- Requirement IDs (`FR-О-01`, `UC-К-25`, `NFR-19`, `П-К-01`, `T_кулдаун`)
+- Product UI strings stay in Russian in both locales (`«Принять»`, `«Я ищу работу»`). The KADRY interface is Russian (NFR-17).
+- Links: point to the same doc in the **target** locale when a mirror exists
+
+## What to translate
+
+- Prose, headings, table labels, captions, list items
+- Do not translate requirement IDs or quoted UI labels
