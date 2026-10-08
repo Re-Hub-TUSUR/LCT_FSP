@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { HackerText } from '@/shared/ui'
 import { CHAPTERS } from '../config/chapters'
 import './landing-chapters.css'
 
@@ -16,10 +17,12 @@ export function LandingChapters() {
           >
             <div className={fromRight ? 'chapter__copy' : 'chapter__copy chapter__copy--end'}>
               <div className="chapter__reveal chapter__reveal--1">
-                <p className="chapter__index">{chapter.index}</p>
-                <p className="chapter__kicker">{chapter.kicker}</p>
+                <p className="chapter__head">
+                  <span className="chapter__index">{chapter.index}</span>
+                  <span className="chapter__kicker">{chapter.kicker}</span>
+                </p>
                 <h2 id={`${chapter.id}-title`} tabIndex={-1}>
-                  {chapter.title}
+                  <HackerText text={chapter.title} whenVisible />
                 </h2>
               </div>
               <p className="chapter__lead chapter__reveal chapter__reveal--2">{chapter.lead}</p>

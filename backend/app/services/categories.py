@@ -1,6 +1,13 @@
 """MVP dictionary of specializations and grades (ТЗ: the team compiles it from common IT terms)."""
 
-from app.models.enums import FspDiscipline, Grade, WorkFormat
+from app.models.enums import (
+    FspDiscipline,
+    FspEventKind,
+    FspOutcome,
+    FspTitleKind,
+    Grade,
+    WorkFormat,
+)
 from app.schemas.category import Category, CategoryDictionary, GradeRead, SpecializationRead
 from app.search.synonyms import SYNONYM_GROUPS
 
@@ -37,6 +44,30 @@ FSP_DISCIPLINE_LABELS: dict[FspDiscipline, str] = {
     FspDiscipline.SECURITY: "программирование систем ИБ",
     FspDiscipline.ROBOTICS: "программирование робототехники",
     FspDiscipline.UAV: "программирование БАС",
+}
+
+FSP_OUTCOME_LABELS: dict[FspOutcome, str] = {
+    FspOutcome.WINNER: "победитель",
+    FspOutcome.PRIZEWINNER: "призёр",
+    FspOutcome.FINALIST: "финалист",
+    FspOutcome.PARTICIPANT: "участник",
+}
+
+FSP_EVENT_KIND_LABELS: dict[FspEventKind, str] = {
+    FspEventKind.CHAMPIONSHIP: "чемпионат",
+    FspEventKind.CUP: "кубок",
+    FspEventKind.HACKATHON: "хакатон",
+    FspEventKind.OLYMPIAD: "олимпиада",
+}
+
+FSP_TITLE_LABELS: dict[FspTitleKind, str] = {
+    FspTitleKind.RANK_3: "3-й разряд",
+    FspTitleKind.RANK_2: "2-й разряд",
+    FspTitleKind.RANK_1: "1-й разряд",
+    FspTitleKind.KMS: "КМС",
+    FspTitleKind.MS: "МС",
+    FspTitleKind.MSMK: "МСМК",
+    FspTitleKind.ZMS: "ЗМС",
 }
 
 

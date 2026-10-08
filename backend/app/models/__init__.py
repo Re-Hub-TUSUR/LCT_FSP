@@ -29,7 +29,7 @@ from app.models.enums import (
     UserRole,
     WorkFormat,
 )
-from app.models.fsp_achievement import FspAchievement
+from app.models.fsp_achievement import FspAchievement, FspSportTitle
 from app.models.invitation import Invitation
 from app.models.meeting import Meeting
 from app.models.reaction import CandidateReaction, VacancyReaction
@@ -56,6 +56,7 @@ __all__ = [
     "FspAchievement",
     "FspDiscipline",
     "FspEventLevel",
+    "FspSportTitle",
     "Grade",
     "Invitation",
     "InvitationStatus",

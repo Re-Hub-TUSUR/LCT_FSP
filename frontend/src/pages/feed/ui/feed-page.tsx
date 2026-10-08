@@ -2,10 +2,11 @@ import { useState } from 'react'
 import type { CandidateMatchDto } from '@/entities/candidate'
 import { useSession } from '@/entities/session'
 import type { VacancyMatchDto } from '@/entities/vacancy'
-import { Page } from '@/shared/ui'
+import { HackerRain, Page } from '@/shared/ui'
 import { CandidateFeed, CandidatePanel } from '@/widgets/candidate-feed'
-import { CandidateSwipe, DecisionCounters, VacancySwipe } from '@/widgets/feed-swipe'
+import { CandidateSwipe, DecisionCounters, FeedViewTabs, VacancySwipe } from '@/widgets/feed-swipe'
 import { VacancyFeed, VacancyPanel } from '@/widgets/vacancy-feed'
+import './feed-page.css'
 
 export function FeedPage() {
   const { user } = useSession()
@@ -13,12 +14,15 @@ export function FeedPage() {
 
   return (
     <Page
+      className="page--feed"
       title={employer ? 'Кандидаты' : 'Вакансии для вас'}
       lead={
         employer
           ? 'Банк категоризированных кандидатов: поиск, фильтры и объяснимый рейтинг'
           : 'Только подходящие вам вакансии — по категории, стеку и предпочтениям'
       }
+      actions={<FeedViewTabs role={employer ? 'employer' : 'candidate'} />}
+      backdrop={<HackerRain />}
     >
       {employer ? <CandidateFeed /> : <VacancyFeed />}
     </Page>
@@ -38,6 +42,19 @@ export function FeedSwipePage() {
       title={employer ? 'Подбор свайпами' : 'Вакансии свайпами'}
       lead="Вправо — интересно, влево — пропустить. Клавиши ← и → тоже работают"
       actions={<DecisionCounters role={employer ? 'employer' : 'candidate'} />}
+      backdrop={<HackerRain />}
+      overlay={
+        <>
+          {vacancy && (
+            <VacancyPanel
+              match={vacancy}
+              profileStack={profileStack}
+              onClose={() => setVacancy(null)}
+            />
+          )}
+          {candidate && <CandidatePanel match={candidate} onClose={() => setCandidate(null)} />}
+        </>
+      }
     >
       {employer ? (
         <CandidateSwipe onStudy={setCandidate} />
@@ -49,14 +66,6 @@ export function FeedSwipePage() {
           }}
         />
       )}
-      {vacancy && (
-        <VacancyPanel
-          match={vacancy}
-          profileStack={profileStack}
-          onClose={() => setVacancy(null)}
-        />
-      )}
-      {candidate && <CandidatePanel match={candidate} onClose={() => setCandidate(null)} />}
     </Page>
   )
 }

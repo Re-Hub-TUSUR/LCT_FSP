@@ -33,12 +33,12 @@ export function formatNumber(value: number): string {
   return number.format(value)
 }
 
-/** Russian plural form for a count: plural(3, ['вакансия', 'вакансии', 'вакансий']). */
-export function plural(count: number, [one, few, many]: readonly [string, string, string]) {
-  const tens = Math.abs(count) % 100
-  const units = tens % 10
-  if (tens > 10 && tens < 20) return many
-  if (units === 1) return one
-  if (units > 1 && units < 5) return few
-  return many
+/** Russian plural form for a count: `plural(3, ['кандидат', 'кандидата', 'кандидатов'])`. */
+export function plural(count: number, forms: readonly [string, string, string]): string {
+  const n = Math.abs(count) % 100
+  const last = n % 10
+  if (n > 10 && n < 20) return forms[2]
+  if (last === 1) return forms[0]
+  if (last >= 2 && last <= 4) return forms[1]
+  return forms[2]
 }

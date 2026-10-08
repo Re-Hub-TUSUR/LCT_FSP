@@ -22,6 +22,7 @@ from app.models import (
     Company,
     EmailVerificationCode,
     FspAchievement,
+    FspSportTitle,
     Invitation,
     Meeting,
     MeetingStatus,
@@ -68,6 +69,7 @@ class SeedSummary:
     vacancies: int
     candidates: int
     fsp_achievements: int
+    fsp_titles: int
 
 
 def _ago(now: datetime, days: int) -> datetime:
@@ -194,14 +196,32 @@ def _candidate(candidate: CandidateFixture, now: datetime) -> CandidateProfile:
         fsp_achievements=[
             FspAchievement(
                 id=seed_id("fsp", f"{candidate.key}:{index}"),
+                external_id=item.id,
                 event_name=item.event_name,
+                event_kind=item.event_kind,
                 discipline=item.discipline,
                 level=item.level,
                 year=item.year,
                 place=item.place,
+                result=item.result,
+                participation=item.participation,
+                team_name=item.team_name,
             )
             for index, item in enumerate(candidate.fsp_achievements)
         ],
+        fsp_titles=[
+            FspSportTitle(
+                id=seed_id("fsp-title", f"{candidate.key}:{index}"),
+                external_id=item.id,
+                kind=item.kind,
+                discipline=item.discipline,
+                awarded_year=item.awarded_year,
+            )
+            for index, item in enumerate(candidate.fsp_titles)
+        ],
+        # Demo profiles were linked at sign-up and imported from the emulated registry.
+        fsp_linked_at=registered if candidate.fsp_member_id else None,
+        fsp_synced_at=registered if candidate.fsp_member_id else None,
         phone=candidate.phone,
         telegram=candidate.telegram,
         is_visible_to_employers=candidate.is_visible_to_employers,
@@ -307,6 +327,7 @@ async def _clear(session: AsyncSession, user_ids: list[uuid.UUID]) -> None:
         ),
         delete(CandidateCategory).where(CandidateCategory.candidate_id.in_(profiles)),
         delete(FspAchievement).where(FspAchievement.candidate_id.in_(profiles)),
+        delete(FspSportTitle).where(FspSportTitle.candidate_id.in_(profiles)),
         delete(Vacancy).where(Vacancy.company_id.in_(companies)),
         delete(CompanyDocument).where(CompanyDocument.company_id.in_(companies)),
         delete(CompanyVerification).where(CompanyVerification.company_id.in_(companies)),
@@ -360,4 +381,5 @@ async def seed_database(
         vacancies=len(data.vacancies),
         candidates=len(data.candidates),
         fsp_achievements=sum(len(candidate.fsp_achievements) for candidate in data.candidates),
+        fsp_titles=sum(len(candidate.fsp_titles) for candidate in data.candidates),
     )

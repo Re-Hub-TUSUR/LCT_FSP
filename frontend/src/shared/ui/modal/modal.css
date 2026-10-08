@@ -2,22 +2,24 @@
   width: min(100% - 32px, 560px);
   max-height: calc(100dvh - 32px);
   padding: 0;
-  border: 1px solid var(--line-strong);
-  background: var(--fill-ghost-solid);
-  color: var(--text);
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
 }
 
 .modal::backdrop {
-  background: rgba(3, 4, 10, 0.72);
+  background: var(--scrim);
   backdrop-filter: blur(4px);
 }
 
 .modal__panel {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  padding: clamp(20px, 3vw, 32px);
+  gap: 22px;
+  padding: 24px;
 }
 
 .modal__head {
@@ -25,32 +27,44 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--blue);
+}
+
+/* Confirmations of something that cannot be undone are underlined in red */
+.modal--danger .modal__head {
+  border-bottom-color: var(--red);
 }
 
 .modal__title {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-weight: 300;
-  font-size: clamp(22px, 2vw, 28px);
+  font-size: clamp(20px, 2vw, 26px);
   line-height: 1.15;
+  text-transform: uppercase;
   overflow-wrap: anywhere;
 }
 
 .modal__close {
   flex: none;
+  display: grid;
+  place-items: center;
   width: 36px;
   height: 36px;
-  margin: -6px -8px 0 0;
-  border: 0;
-  background: none;
-  font-size: 26px;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 20px;
   line-height: 1;
-  color: var(--text-dim);
+  color: var(--muted);
   cursor: pointer;
 }
 
 .modal__close:hover {
-  color: var(--text);
+  border-color: var(--red);
+  color: var(--red-text);
 }
 
 .modal__close:focus-visible {
@@ -58,19 +72,19 @@
 }
 
 .modal__text {
-  font-family: var(--font-display);
-  font-weight: 300;
-  font-size: 17px;
-  line-height: 1.5;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-2);
   overflow-wrap: anywhere;
 }
 
 .modal__actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 4px;
 }
 
 .modal__actions .btn {
-  padding: 16px 12px;
+  padding-inline: 12px;
 }

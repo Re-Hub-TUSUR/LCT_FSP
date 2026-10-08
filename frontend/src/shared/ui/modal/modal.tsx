@@ -6,10 +6,12 @@ type Props = {
   title: string
   onClose: () => void
   children: ReactNode
+  /** Red underline for confirmations of something that cannot be undone. */
+  danger?: boolean
 }
 
 /** Modal dialog on the native `<dialog>`: the focus trap and Esc come from the browser. */
-export function Modal({ title, onClose, children }: Props) {
+export function Modal({ title, onClose, children, danger }: Props) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
 
@@ -22,7 +24,12 @@ export function Modal({ title, onClose, children }: Props) {
   }, [])
 
   return (
-    <dialog ref={ref} className="modal" aria-labelledby={titleId} onClose={onClose}>
+    <dialog
+      ref={ref}
+      className={danger ? 'modal modal--danger' : 'modal'}
+      aria-labelledby={titleId}
+      onClose={onClose}
+    >
       <div className="modal__panel">
         <header className="modal__head">
           <h2 id={titleId} className="modal__title">

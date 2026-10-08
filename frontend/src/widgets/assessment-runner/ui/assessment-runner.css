@@ -22,58 +22,57 @@
 .runner__progress {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-mute);
+  color: var(--muted);
 }
 
 .runner__progress {
   margin-top: 6px;
-  color: var(--text);
+  color: var(--ink);
 }
 
 .runner__clock {
   margin: 0;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: clamp(24px, 2.4vw, 34px);
+  font-family: var(--font-accent);
+  font-size: clamp(26px, 2.6vw, 38px);
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  color: var(--text);
+  color: var(--ink);
 }
 
 .runner__clock--low {
-  color: var(--error);
+  color: var(--red-text);
 }
 
 .runner__nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 4px;
 }
 
 .runner__step {
-  min-width: 44px;
-  height: 44px;
+  min-width: 40px;
+  height: 40px;
   padding: 0 10px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line);
   background: transparent;
   font-family: var(--font-mono);
   font-weight: 500;
   font-size: 13px;
-  color: var(--text-mute);
+  color: var(--muted);
   cursor: pointer;
 }
 
 .runner__step.is-answered {
-  background: var(--fill-solid);
-  color: var(--text);
+  background: var(--line);
+  color: var(--ink);
 }
 
 .runner__step.is-current {
-  border-color: var(--brand-blue);
-  background: var(--fill-brand);
+  border-color: var(--blue);
+  background: var(--blue);
   color: #fff;
 }
 
@@ -94,7 +93,7 @@
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 1.5;
-  color: var(--error);
+  color: var(--red-text);
 }
 
 .runner__footer {
@@ -112,12 +111,12 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 4px 12px;
 }
 
 .runner__confirm p {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 16px;
-  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  color: var(--ink);
 }

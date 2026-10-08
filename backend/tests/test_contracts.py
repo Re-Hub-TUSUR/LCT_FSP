@@ -19,6 +19,9 @@ EXPECTED_TAGS = {
     "notifications",
     "assessments",
     "admin",
+    "fsp-id",
+    # The emulated FSP ID realm and registry, present only with FSP_ID_MODE=mock.
+    "mock-fsp",
 }
 
 

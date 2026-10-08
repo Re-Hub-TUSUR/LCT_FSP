@@ -7,8 +7,7 @@ from typing import Any, Final
 from app.models import CandidateProfile
 from app.search.filters import fsp_marks
 from app.search.synonyms import elasticsearch_rules
-from app.services.categories import FSP_DISCIPLINE_LABELS
-from app.services.matching import CandidateFacts, as_utc
+from app.services.matching import CandidateFacts, as_utc, fsp_search_text
 from app.services.presenters import profile_category
 
 # Russian morphology (stemming) at index and search time; IT slang synonyms at search time only,
@@ -109,13 +108,10 @@ TEXT_FIELDS: tuple[str, ...] = (
 
 
 def candidate_document(profile: CandidateProfile) -> dict[str, Any]:
-    """`profile.fsp_achievements` must be loaded."""
+    """`profile.fsp_achievements` and `profile.fsp_titles` must be loaded."""
     category = profile_category(profile)
     facts = CandidateFacts.of(profile)
-    fsp_text = " ".join(
-        f"{item.event_name} {FSP_DISCIPLINE_LABELS[item.discipline]}"
-        for item in profile.fsp_achievements
-    )
+    fsp_text = fsp_search_text(profile)
     return {
         "id": str(profile.id),
         "display_name": profile.display_name,

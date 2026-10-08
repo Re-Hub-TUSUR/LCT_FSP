@@ -146,6 +146,49 @@ class FspEventLevel(StrEnum):
     INTERNATIONAL = "international"
 
 
+class FspEventKind(StrEnum):
+    CHAMPIONSHIP = "championship"
+    CUP = "cup"
+    HACKATHON = "hackathon"
+    OLYMPIAD = "olympiad"
+
+
+class FspOutcome(StrEnum):
+    """Result of one FSP event as the registry names it; ordered from the best."""
+
+    WINNER = "winner"
+    PRIZEWINNER = "prizewinner"
+    FINALIST = "finalist"
+    PARTICIPANT = "participant"
+
+    @classmethod
+    def from_place(cls, place: int | None) -> "FspOutcome":
+        if place is None:
+            return cls.PARTICIPANT
+        if place == 1:
+            return cls.WINNER
+        if place <= 3:  # noqa: PLR2004 - podium
+            return cls.PRIZEWINNER
+        return cls.FINALIST
+
+
+class FspParticipation(StrEnum):
+    INDIVIDUAL = "individual"
+    TEAM = "team"
+
+
+class FspTitleKind(StrEnum):
+    """Sport ranks (разряды) and titles (звания) of sport programming, from the lowest."""
+
+    RANK_3 = "rank_3"
+    RANK_2 = "rank_2"
+    RANK_1 = "rank_1"
+    KMS = "kms"
+    MS = "ms"
+    MSMK = "msmk"
+    ZMS = "zms"
+
+
 class ReactionKind(StrEnum):
     """Decision on a feed card: `like` keeps it in favourites, `skip` hides it from the feed."""
 

@@ -1,5 +1,7 @@
 """ORM rows → public API schemas. Only this layer decides which fields leave the backend."""
 
+from datetime import UTC, datetime
+
 from pydantic import ValidationError
 
 from app.models import CandidateProfile, Company, Vacancy, WorkFormat
@@ -10,6 +12,7 @@ from app.schemas.candidate import (
     EducationEntry,
     ExperienceEntry,
     FspAchievementRead,
+    FspSportTitleRead,
     OwnCandidateRead,
     ResumeRead,
 )
@@ -19,6 +22,13 @@ from app.schemas.company import CompanyRead
 from app.schemas.vacancy import CompanyBrief, VacancyRead
 from app.services.age import ADULT_AGE, age_on
 from app.services.categories import category_for
+
+
+def _utc(value: datetime | None) -> datetime | None:
+    """SQLite returns naive timestamps; they are stored in UTC."""
+    if value is None or value.tzinfo is not None:
+        return value
+    return value.replace(tzinfo=UTC)
 
 
 def company_read(company: Company) -> CompanyRead:
@@ -122,7 +132,7 @@ def stored_years(value: object) -> int | None:
 def candidate_read(
     profile: CandidateProfile, *, contacts: CandidateContacts | None = None
 ) -> CandidateRead:
-    """`profile.fsp_achievements` must be loaded. Contacts are passed only when allowed."""
+    """`fsp_achievements` and `fsp_titles` must be loaded. Contacts are passed only when allowed."""
     return CandidateRead(
         id=profile.id,
         display_name=profile.display_name,
@@ -143,12 +153,22 @@ def candidate_read(
         fsp_achievements=[
             FspAchievementRead(
                 event_name=item.event_name,
+                event_kind=item.event_kind,
                 year=item.year,
                 place=item.place,
+                result=item.result,
+                participation=item.participation,
+                team_name=item.team_name,
                 discipline=item.discipline,
                 level=item.level,
             )
             for item in profile.fsp_achievements
+        ],
+        fsp_titles=[
+            FspSportTitleRead(
+                kind=item.kind, discipline=item.discipline, awarded_year=item.awarded_year
+            )
+            for item in profile.fsp_titles
         ],
         fsp_linked=profile.fsp_member_id is not None,
         resumes=resume_views(profile),
@@ -193,5 +213,8 @@ def own_candidate_read(profile: CandidateProfile, *, email: str) -> OwnCandidate
             "birth_date": profile.birth_date,
             "profile_display_consent": profile.profile_display_consent,
             "fsp_sync": profile.fsp_sync,
+            "fsp_linked_at": _utc(profile.fsp_linked_at),
+            "fsp_synced_at": _utc(profile.fsp_synced_at),
+            "fsp_sync_error": profile.fsp_sync_error,
         }
     )

@@ -11,14 +11,27 @@ import type { AssignmentDto, AssignmentStatus } from '@/entities/assessment'
 import { ReviewPanel } from '@/features/review-assignment'
 import { getErrorMessage } from '@/shared/api'
 import { ROUTES, paths } from '@/shared/config'
-import { formatDate } from '@/shared/lib'
-import { Button, ConfirmDialog, EmptyState, QueryState, Section } from '@/shared/ui'
+import { formatDate, plural } from '@/shared/lib'
+import { Button, ConfirmDialog, EmptyState, QueryState, Sheet } from '@/shared/ui'
 import './assignment-review.css'
 
 /** The candidate has not started: the company may still take the test back. */
 const REVOCABLE: AssignmentStatus[] = ['sent', 'declined', 'expired']
 /** There is finished work to look at. */
 const TAKEN: AssignmentStatus[] = ['review', 'done']
+
+/** What needs the employer first: work to grade, then tests in flight, finished ones last. */
+const ORDER: AssignmentStatus[] = ['review', 'in_progress', 'sent', 'done', 'declined', 'expired']
+
+/** The date in the «Срок» column and what it means for this status. */
+function deadline(item: AssignmentDto): { date: string; note: string } {
+  if (item.finishedAt) return { date: item.finishedAt, note: 'сдано' }
+  if (item.status === 'expired') return { date: item.dueAt, note: 'срок был' }
+  return { date: item.dueAt, note: 'начать до' }
+}
+
+const sorted = (items: AssignmentDto[]) =>
+  ORDER.flatMap((status) => items.filter((item) => item.status === status))
 
 function Detail({ id }: { id: string }) {
   const detail = useQuery(assignmentQueries.detail(id))
@@ -42,10 +55,21 @@ export function AssignmentReview() {
     onSettled: () => setRevoking(null),
   })
   const opened = sent.data?.find((item) => item.id === openId)
+  const waiting = sent.data?.filter((item) => item.status === 'review').length ?? 0
 
   return (
     <>
-      <Section title="Отправленные тестовые">
+      <section className="page-section" aria-labelledby="sent-title">
+        <header className="sent__head">
+          <h2 id="sent-title" className="page-section__title">
+            Отправленные тестовые
+          </h2>
+          {waiting > 0 && (
+            <p className="sent__waiting">
+              Ждут проверки <b>{waiting}</b>
+            </p>
+          )}
+        </header>
         <QueryState query={sent}>
           {(items) =>
             items.length === 0 ? (
@@ -67,7 +91,7 @@ export function AssignmentReview() {
                     </tr>
                   </thead>
                   <tbody>
-                    {items.map((item) => (
+                    {sorted(items).map((item) => (
                       <tr key={item.id} className={item.id === openId ? 'is-open' : undefined}>
                         <td>
                           <Link to={paths.matchingProfile('candidate', item.candidate.id)}>
@@ -76,16 +100,44 @@ export function AssignmentReview() {
                         </td>
                         <td>
                           {item.title}
-                          {item.vacancy && <span className="sent__hint">{item.vacancy.name}</span>}
+                          <span className="sent__hint">
+                            {[
+                              item.vacancy?.name,
+                              `${item.tasksCount} ${plural(item.tasksCount, ['задание', 'задания', 'заданий'])}`,
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </span>
                         </td>
-                        <td>{ASSIGNMENT_STATUS_LABELS[item.status]}</td>
-                        <td>{item.score === null ? '—' : Math.round(item.score)}</td>
-                        <td>{formatDate(item.finishedAt ?? item.dueAt)}</td>
+                        <td>
+                          <span className={`sent__status sent__status--${item.status}`}>
+                            {ASSIGNMENT_STATUS_LABELS[item.status]}
+                          </span>
+                        </td>
+                        <td>
+                          {item.score === null ? (
+                            <span className="sent__score sent__score--none">—</span>
+                          ) : (
+                            <span
+                              className={
+                                item.passScore !== null && item.score < item.passScore
+                                  ? 'sent__score sent__score--low'
+                                  : 'sent__score'
+                              }
+                            >
+                              {Math.round(item.score)}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {formatDate(deadline(item).date)}
+                          <span className="sent__hint">{deadline(item).note}</span>
+                        </td>
                         <td className="sent__actions">
                           {TAKEN.includes(item.status) && (
                             <Button
                               variant={item.status === 'review' ? 'solid' : 'ghost'}
-                              size="inline"
+                              size="small"
                               onClick={() => setOpenId(item.id === openId ? null : item.id)}
                             >
                               {item.id === openId
@@ -96,7 +148,7 @@ export function AssignmentReview() {
                             </Button>
                           )}
                           {REVOCABLE.includes(item.status) && (
-                            <Button variant="ghost" size="inline" onClick={() => setRevoking(item)}>
+                            <Button variant="ghost" size="small" onClick={() => setRevoking(item)}>
                               {item.status === 'sent' ? 'Отозвать' : 'Убрать'}
                             </Button>
                           )}
@@ -114,12 +166,18 @@ export function AssignmentReview() {
             {getErrorMessage(revoke.error)}
           </p>
         )}
-      </Section>
+      </section>
 
       {opened && (
-        <Section title={`${opened.candidate.name} · ${opened.title}`}>
+        <Sheet label="Проверка" size="wide" onClose={() => setOpenId(null)}>
+          <header className="sent__sheet-head">
+            <h2 className="sent__sheet-name">{opened.candidate.name}</h2>
+            <p className="sent__sheet-test">
+              {[opened.title, opened.vacancy?.name].filter(Boolean).join(' · ')}
+            </p>
+          </header>
           <Detail id={opened.id} />
-        </Section>
+        </Sheet>
       )}
 
       {revoking && (

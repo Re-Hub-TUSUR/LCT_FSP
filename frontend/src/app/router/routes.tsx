@@ -100,6 +100,13 @@ export const routes: RouteObject[] = [
             ],
           },
           {
+            path: ROUTES.fspCallback,
+            lazy: lazyPage(() => import('@/pages/fsp-callback').then((m) => m.FspCallbackPage), {
+              auth: true,
+              roles: ['candidate'],
+            }),
+          },
+          {
             path: ROUTES.calendar,
             lazy: lazyPage(
               () => import('@/pages/calendar').then((m) => m.CalendarPage),

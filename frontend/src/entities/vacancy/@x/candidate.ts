@@ -1,5 +1,5 @@
 export type { FeedView, Reaction, ReactionCountsDto } from '../api/vacancy-api'
 export { EMPLOYMENT_LABELS } from '../model/employment'
-export type { EmploymentType } from '../model/employment'
+export type { EmploymentType, FspResult } from '../model/employment'
 export { WORK_FORMAT_LABELS } from '../model/work-format'
 export type { WorkFormat } from '../model/work-format'

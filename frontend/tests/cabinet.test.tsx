@@ -59,7 +59,8 @@ describe('personal cabinet', () => {
     await user.click(screen.getByLabelText(/обработку персональных данных/))
     await user.click(screen.getByLabelText(/работодатели увидят профиль/))
     await user.click(screen.getByLabelText('Да'))
-    expect(screen.getByText(/Синхронизация в разработке/)).toBeInTheDocument()
+    expect(screen.getByText(/привяжите ФСП ID в настройках/)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/ID участника/)).not.toBeInTheDocument()
     await user.click(screen.getByLabelText('Позже'))
     expect(manual).toBeEnabled()
 

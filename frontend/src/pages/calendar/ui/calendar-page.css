@@ -1,0 +1,5 @@
+/* Rain fills this page only and stays behind the title and the calendar. */
+.page--calendar {
+  position: relative;
+  isolation: isolate;
+}

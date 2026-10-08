@@ -9,13 +9,23 @@ Dates are stored as "days ago" and resolved when the data is loaded, so the demo
 
 import json
 import random
+import zlib
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final
 
-from app.models.enums import FspDiscipline, FspEventLevel, Grade, WorkFormat
+from app.models.enums import (
+    FspDiscipline,
+    FspEventKind,
+    FspEventLevel,
+    FspOutcome,
+    FspParticipation,
+    FspTitleKind,
+    Grade,
+    WorkFormat,
+)
 from app.seed import content
 from app.seed.content import CompanyPlan, Track, VacancyPlan
 from app.seed.fixtures import DATA_DIR
@@ -320,6 +330,83 @@ def _achievements(
     return results
 
 
+def _registry_id(prefix: str, key: str, index: int) -> str:
+    return f"{prefix}-{zlib.crc32(f'{key}:{index}'.encode()):08x}"
+
+
+def _event_kind(event_name: str) -> FspEventKind:
+    if event_name.startswith("Кубок"):
+        return FspEventKind.CUP
+    return FspEventKind.CHAMPIONSHIP
+
+
+def _registry_fields(key: str, achievements: Sequence[Record]) -> tuple[list[Record], list[Record]]:
+    """What the FSP registry adds to a result: its id, event kind, team, and the sport title.
+
+    A separate generator seeded by the candidate key: the main sequence, and with it the rest of
+    the dataset, does not depend on these fields.
+    """
+    rng = random.Random(f"fsp:{key}")  # noqa: S311 - reproducible fake data
+    results: list[Record] = []
+    for index, item in enumerate(achievements):
+        discipline = FspDiscipline(item["discipline"])
+        event_name = item["event_name"]
+        kind = _event_kind(event_name)
+        national = item["level"] == FspEventLevel.NATIONAL.value
+        hackathons = content.FSP_HACKATHON_EVENTS.get(discipline)
+        if national and hackathons:
+            if rng.random() < 0.4:  # noqa: PLR2004
+                event_name, kind = rng.choice(hackathons), FspEventKind.HACKATHON
+        elif national and discipline == FspDiscipline.ALGORITHMIC and rng.random() < 0.2:  # noqa: PLR2004
+            event_name, kind = content.FSP_OLYMPIAD_EVENT, FspEventKind.OLYMPIAD
+        team = kind == FspEventKind.HACKATHON or rng.random() < content.FSP_TEAM_SHARE[discipline]
+        results.append(
+            {
+                "id": _registry_id("ach", key, index),
+                "event_name": event_name,
+                "event_kind": kind.value,
+                "discipline": item["discipline"],
+                "level": item["level"],
+                "year": item["year"],
+                "place": item["place"],
+                "result": FspOutcome.from_place(item["place"]).value,
+                "participation": (
+                    FspParticipation.TEAM if team else FspParticipation.INDIVIDUAL
+                ).value,
+                "team_name": rng.choice(content.FSP_TEAM_NAMES) if team else None,
+            }
+        )
+    return results, _titles(rng, key, results)
+
+
+def _titles(rng: random.Random, key: str, results: Sequence[Record]) -> list[Record]:
+    """At most one sport rank or title, earned by the best individual-or-team result."""
+    if not results:
+        return []
+    best = min(results, key=lambda item: (item["place"] or 99, item["level"] != "national"))
+    place = best["place"]
+    national = best["level"] == FspEventLevel.NATIONAL.value
+    kind: FspTitleKind | None
+    if place is not None and place <= 3 and national:  # noqa: PLR2004
+        kind = FspTitleKind.KMS if rng.random() < 0.5 else FspTitleKind.RANK_1  # noqa: PLR2004
+    elif place is not None and place <= 3:  # noqa: PLR2004
+        kind = FspTitleKind.RANK_1 if rng.random() < 0.6 else None  # noqa: PLR2004
+    elif place is not None:
+        kind = FspTitleKind.RANK_2 if rng.random() < 0.4 else None  # noqa: PLR2004
+    else:
+        kind = FspTitleKind.RANK_3 if rng.random() < 0.3 else None  # noqa: PLR2004
+    if kind is None:
+        return []
+    return [
+        {
+            "id": _registry_id("ttl", key, 0),
+            "kind": kind.value,
+            "discipline": best["discipline"],
+            "awarded_year": best["year"],
+        }
+    ]
+
+
 def _fsp_sentence(achievements: Sequence[Record]) -> str | None:
     if not achievements:
         return None
@@ -453,20 +540,23 @@ def _candidate(
     # Relocation only makes sense for someone who would work from an office.
     relocation_ready = work_formats != [WorkFormat.REMOTE] and rng.random() < 0.25  # noqa: PLR2004
 
+    key = f"cand-{index + 1:03d}"
     fsp_share = content.FSP_LINK_SHARE[grade] + track.fsp_bonus
     linked = demo or rng.random() < fsp_share
     achievements: list[Record] = []
+    titles: list[Record] = []
     if linked:
         registry.fsp_linked += 1
         if demo or registry.fsp_linked % FSP_LINKED_WITHOUT_RESULTS_EVERY:
             achievements = _achievements(rng, track, grade, years, city)
+            achievements, titles = _registry_fields(key, achievements)
 
     assessed_days_ago = None if untested else rng.randint(2, 240)
     score = None if untested else round(rng.triangular(60, 99, 80), 1)
     extra_low, extra_high = RESUME_EXTRA_STACK[grade]
 
     return {
-        "key": f"cand-{index + 1:03d}",
+        "key": key,
         "track": track.key,
         "email": email,
         "display_name": f"{person.first} {person.last}",
@@ -497,6 +587,7 @@ def _candidate(
         "registered_days_ago": (assessed_days_ago or 0) + rng.randint(1, 60),
         "fsp_member_id": _fsp_member_id(rng, registry) if linked else None,
         "fsp_achievements": achievements,
+        "fsp_titles": titles,
         "phone": _phone(rng) if demo or rng.random() < 0.85 else None,  # noqa: PLR2004
         "telegram": (
             _telegram(rng, person, registry) if demo or rng.random() < 0.75 else None  # noqa: PLR2004

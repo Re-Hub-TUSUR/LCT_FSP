@@ -88,12 +88,6 @@ export function ResumeForm({ profile }: Props) {
     queryClient.setQueryData(candidateKeys.mine(), next)
   }
 
-  const linkFsp = useMutation({
-    mutationFn: candidateApi.linkFsp,
-    onSuccess: remember,
-    onError: (error) => setNotice(`ID ФСП не сохранён: ${getErrorMessage(error)}`),
-  })
-
   const save = useMutation({
     mutationFn: candidateApi.saveResume,
     onSuccess: (next) => {
@@ -102,9 +96,8 @@ export function ResumeForm({ profile }: Props) {
       setFormError('')
       setAskAnother(true)
       if (pendingPhoto) uploadPhoto.mutate(pendingPhoto)
-      const fspId = consents.fspMemberId.trim()
-      if (createdHere && consents.fspSync === 'yes' && fspId && !next.fspMemberId) {
-        linkFsp.mutate(fspId)
+      if (createdHere && consents.fspSync === 'yes' && !next.fspMemberId) {
+        setNotice('Резюме сохранено. Привяжите ФСП ID в настройках — результаты придут из реестра.')
       }
     },
     onError: (error) => setFormError(getErrorMessage(error)),

@@ -11,9 +11,9 @@ from datetime import datetime
 from typing import Final, Literal, Protocol
 
 from app.models import CandidateProfile
-from app.models.enums import FspDiscipline, FspResult, Grade, WorkFormat
+from app.models.enums import FspDiscipline, FspOutcome, FspResult, Grade, WorkFormat
 from app.search.base import CandidateSearchQuery
-from app.services.matching import PRIZE_PLACES, as_utc, normalize_term
+from app.services.matching import as_utc, normalize_term
 
 Group = Literal[
     "specialization",
@@ -47,6 +47,13 @@ RESULT_RANK: Final[dict[FspResult, int]] = {
     FspResult.FINALIST: 1,
     FspResult.PRIZEWINNER: 2,
 }
+# The registry's outcome as the filter's levels: a winner is on the podium, so a prizewinner too.
+OUTCOME_RESULT: Final[dict[FspOutcome, FspResult]] = {
+    FspOutcome.WINNER: FspResult.PRIZEWINNER,
+    FspOutcome.PRIZEWINNER: FspResult.PRIZEWINNER,
+    FspOutcome.FINALIST: FspResult.FINALIST,
+    FspOutcome.PARTICIPANT: FspResult.PARTICIPANT,
+}
 ANY_DISCIPLINE: Final = "any"
 
 
@@ -55,14 +62,7 @@ class _Achievement(Protocol):
     def discipline(self) -> FspDiscipline: ...
 
     @property
-    def place(self) -> int | None: ...
-
-
-def result_of(place: int | None) -> FspResult:
-    """The registry keeps the place: none — took part, a prize place — prizewinner, else final."""
-    if place is None:
-        return FspResult.PARTICIPANT
-    return FspResult.PRIZEWINNER if place <= PRIZE_PLACES else FspResult.FINALIST
+    def result(self) -> FspOutcome: ...
 
 
 def fsp_marks(achievements: Iterable[_Achievement]) -> frozenset[str]:
@@ -70,7 +70,7 @@ def fsp_marks(achievements: Iterable[_Achievement]) -> frozenset[str]:
     answers «a result of at least X in discipline Y» in both engines."""
     marks: set[str] = set()
     for item in achievements:
-        reached = RESULT_RANK[result_of(item.place)]
+        reached = RESULT_RANK[OUTCOME_RESULT[FspOutcome(item.result)]]
         for result, rank in RESULT_RANK.items():
             if rank <= reached:
                 marks.add(f"{FspDiscipline(item.discipline).value}:{result.value}")

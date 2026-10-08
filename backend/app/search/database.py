@@ -15,6 +15,7 @@ from app.search.base import CandidateSearchQuery, SearchHits
 from app.search.filters import FilterFacts, passes
 from app.search.ranking import sort_key
 from app.search.synonyms import alternatives
+from app.services.matching import fsp_search_text
 from app.services.presenters import profile_category
 
 _TOKEN = re.compile(r"[\w.+#-]+")
@@ -39,7 +40,7 @@ def searchable_text(profile: CandidateProfile) -> str:
         " ".join(profile.soft_skills),
         profile.city,
         category.label if category else None,
-        " ".join(item.event_name for item in profile.fsp_achievements),
+        fsp_search_text(profile),
     )
     return normalize(" ".join(part for part in parts if part))
 

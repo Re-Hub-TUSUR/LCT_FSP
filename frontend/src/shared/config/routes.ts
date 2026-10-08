@@ -9,6 +9,8 @@ export const ROUTES = {
   profileCategory: '/profile/category',
   profileSettings: '/profile/settings',
   profileCompany: '/profile/company',
+  /** Registered as the redirect URI of the platform's FSP ID client. */
+  fspCallback: '/profile/fsp/callback',
   vacancies: '/vacancies',
   feed: '/feed',
   feedSwipe: '/feed/swipe',

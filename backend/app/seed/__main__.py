@@ -92,7 +92,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     print(
         f"Demo data loaded: {summary.companies} companies, {summary.vacancies} vacancies, "
-        f"{summary.candidates} candidates, {summary.fsp_achievements} FSP results."
+        f"{summary.candidates} candidates, {summary.fsp_achievements} FSP results, "
+        f"{summary.fsp_titles} FSP sport titles."
     )
     return 0
 

@@ -1,37 +1,293 @@
+.vacancies {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Search, two selects and the format switch on one line. */
+.vacancies__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.vacancies__search {
+  flex: 1 1 320px;
+}
+
+.vacancies__filters .vacancies__select {
+  flex: 0 1 220px;
+  width: auto;
+  height: 48px;
+}
+
+.vacancies__filters .segmented {
+  height: 48px;
+}
+
+.vacancies__filters .segmented__item {
+  min-height: 0;
+}
+
 .vacancies-table__scroll {
   overflow-x: auto;
+  background: var(--surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
 }
 
 .vacancies-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: var(--font-display);
-  font-weight: 300;
+  font-size: 13.5px;
 }
 
 .vacancies-table th {
-  padding: 12px 16px 12px 0;
-  border-bottom: 1px solid var(--line-strong);
-  font-family: var(--font-mono);
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--blue);
   font-weight: 400;
-  font-size: 12px;
-  letter-spacing: 0.16em;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-align: left;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--muted);
   white-space: nowrap;
 }
 
 .vacancies-table td {
-  padding: 16px 16px 16px 0;
-  border-bottom: 1px solid var(--line);
-  vertical-align: top;
+  padding: 16px;
+  border-top: 1px solid var(--line);
+  vertical-align: middle;
 }
 
-.vacancies-table tbody tr:hover {
-  background: var(--fill-ghost);
+.vacancies-table tbody tr:first-child td {
+  border-top: 0;
 }
 
-.vacancies-table a {
-  text-underline-offset: 3px;
+.vacancies-table tbody tr {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.vacancies-table tbody tr:hover,
+.vacancies-table tbody tr.is-open {
+  background: var(--line);
+}
+
+/* The company's own vacancies come first, marked along the left edge. */
+.vacancies-table tbody tr.is-own {
+  box-shadow: inset 4px 0 0 var(--blue-light);
+}
+
+.vacancies-table__title {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.vacancies-table__title:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.vacancies-table__stack {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.vacancies-table__company {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.vacancies-table__own {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  box-shadow: inset 0 0 0 1px var(--blue-light);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--blue-light);
+}
+
+.vacancies-table__salary {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.vacancies-table td:last-child {
+  white-space: nowrap;
+}
+
+.vacancies-table__draft {
+  color: var(--red-text);
+}
+
+/* ── Side sheet ────────────────────────────────────── */
+
+.vacancy-sheet__head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.vacancy-sheet__company {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.vacancy-sheet__company b {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.vacancy-sheet__title {
+  margin: 0;
+  font-family: var(--font-accent);
+  font-weight: 400;
+  font-size: clamp(24px, 2.2vw, 32px);
+  line-height: 1.05;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.vacancy-sheet__salary {
+  margin: 0;
+  font-weight: 600;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  color: var(--blue-light);
+}
+
+.vacancy-sheet__salary span {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.vacancy-sheet__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vacancy-sheet__facts li {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  background: var(--surface);
+  font-size: 12px;
+}
+
+.vacancy-sheet__facts li.is-accent {
+  background: var(--blue);
+  color: #fff;
+}
+
+.sheet-section .vacancy-sheet__text {
+  white-space: pre-line;
+}
+
+/* Required skills are filled, nice-to-have ones are outlined. */
+.sheet-section .vacancy-sheet__stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sheet-section .vacancy-sheet__stack li {
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.sheet-section .vacancy-sheet__stack li.is-required {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #fff;
+}
+
+/* ── Cards instead of a table ──────────────────────── */
+
+@media (max-width: 1099px) {
+  .vacancies__filters .vacancies__select {
+    flex: 1 1 200px;
+  }
+
+  .vacancies-table thead {
+    display: none;
+  }
+
+  .vacancies-table,
+  .vacancies-table tbody,
+  .vacancies-table tr,
+  .vacancies-table td {
+    display: block;
+  }
+
+  .vacancies-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+    padding: 16px;
+    border-top: 1px solid var(--line);
+  }
+
+  .vacancies-table tbody tr:first-child {
+    border-top: 0;
+  }
+
+  .vacancies-table td {
+    padding: 0;
+    border: 0;
+  }
+
+  .vacancies-table td:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .vacancies-table td:not(:first-child)::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+}
+
+@media (max-width: 639px) {
+  .vacancies-table tbody tr {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .vacancies__filters .segmented {
+    width: 100%;
+  }
 }

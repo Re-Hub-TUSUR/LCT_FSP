@@ -1,6 +1,7 @@
 import { useSession } from '@/entities/session'
-import { Page } from '@/shared/ui'
+import { HackerRain, Page } from '@/shared/ui'
 import { MeetingCalendar } from '@/widgets/meeting-calendar'
+import './calendar-page.css'
 
 /** Interviews of the signed-in user: the company schedules them, the candidate answers. */
 export function CalendarPage() {
@@ -8,8 +9,10 @@ export function CalendarPage() {
 
   return (
     <Page
+      className="page--calendar"
       title="Календарь"
       lead={user?.role === 'employer' ? 'Встречи с кандидатами' : 'Встречи с компаниями'}
+      backdrop={<HackerRain />}
     >
       <MeetingCalendar />
     </Page>

@@ -17,7 +17,10 @@ class CandidateRepository:
 
     @staticmethod
     def _profiles() -> Select[CandidateProfile]:
-        return select(CandidateProfile).options(selectinload(CandidateProfile.fsp_achievements))
+        return select(CandidateProfile).options(
+            selectinload(CandidateProfile.fsp_achievements),
+            selectinload(CandidateProfile.fsp_titles),
+        )
 
     async def get(self, candidate_id: uuid.UUID) -> CandidateProfile | None:
         result = await self._session.scalars(

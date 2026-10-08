@@ -7,11 +7,11 @@ export type FilmScript = {
 }
 
 export const INK: Record<InkKind, string> = {
-  text: '#e7e9f2',
-  keyword: '#9aabff',
-  string: '#f0a3ad',
-  comment: '#7e879f',
-  number: '#e4d2a4',
+  text: '#ededed',
+  keyword: '#7d72ff',
+  string: '#ff4d63',
+  comment: '#9b9c9e',
+  number: '#d9d9d9',
 }
 
 export const SCRIPTS: readonly FilmScript[] = [

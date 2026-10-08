@@ -112,7 +112,10 @@ export function CountChip({ active, onClick, children, count, empty }: CountChip
     <Chip active={active} onClick={onClick} className={empty && !active ? 'is-empty' : undefined}>
       {children}
       {count !== undefined && count !== null && count !== '' && (
-        <span className="chip-toggle__count">{count}</span>
+        <>
+          {' '}
+          <span className="chip-toggle__count">{count}</span>
+        </>
       )}
     </Chip>
   )
@@ -131,7 +134,10 @@ export function CheckRow({ checked, onChange, children, count }: CheckRowProps) 
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       <span className="filters-check__text">{children}</span>
       {count !== undefined && count !== null && (
-        <span className="filters-check__count">{count}</span>
+        <>
+          {' '}
+          <span className="filters-check__count">{count}</span>
+        </>
       )}
     </label>
   )
@@ -159,12 +165,17 @@ export function MoneyField({ label, prefix, value, placeholder, onChange }: Mone
   // While typing the field shows its own text; otherwise it follows the value (a reset, a preset).
   const [draft, setDraft] = useState<string | null>(null)
   const timer = useRef<number | undefined>(undefined)
+  // The delayed commit must see the filters as they are then, not as they were when typing.
+  const latest = useRef({ value, onChange })
+  useEffect(() => {
+    latest.current = { value, onChange }
+  })
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
   const commit = (text: string) => {
     window.clearTimeout(timer.current)
     const next = digitsOf(text)
-    if (next !== value) onChange(next)
+    if (next !== latest.current.value) latest.current.onChange(next)
   }
 
   return (

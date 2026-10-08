@@ -1,40 +1,59 @@
 .decisions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 18px;
+  align-items: flex-end;
+  gap: 20px;
 }
 
 .decisions__link {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--line);
   font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   text-decoration: none;
-  color: var(--text-dim);
-  transition: color 0.2s ease;
+  color: var(--muted);
+  transition: border-color 0.2s ease;
 }
 
 .decisions__link:hover,
 .decisions__link:focus-visible {
-  color: var(--text);
+  border-bottom-color: var(--blue);
 }
 
 .decisions__link:focus-visible {
-  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline: var(--focus-ring);
   outline-offset: 4px;
 }
 
 .decisions__count {
-  font-size: 13px;
+  font-family: var(--font-accent);
+  font-size: clamp(28px, 2.4vw, 40px);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
-  color: var(--text);
+  line-height: 0.9;
+  color: var(--ink);
 }
 
 /* Mutual interest is the number people come back for. */
 .decisions__link--matched .decisions__count {
-  color: #7be3b4;
+  color: var(--blue-light);
+}
+
+.decisions__link--skipped .decisions__count {
+  color: var(--red-text);
+}
+
+@media (max-width: 720px) {
+  .decisions {
+    gap: 14px;
+  }
+
+  .decisions__count {
+    font-size: 22px;
+  }
 }

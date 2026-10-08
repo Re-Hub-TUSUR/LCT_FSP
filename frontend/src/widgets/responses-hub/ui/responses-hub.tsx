@@ -11,7 +11,9 @@ import {
 } from '@/entities/response'
 import { CandidateMatchCard, candidateQueries } from '@/entities/candidate'
 import { VacancyMatchCard, vacancyQueries } from '@/entities/vacancy'
-import { Button, Chip, EmptyState, QueryState } from '@/shared/ui'
+import { ReactionButtons } from '@/features/feed-reaction'
+import { formatDateTime } from '@/shared/lib'
+import { Button, EmptyState, QueryState, Tabs } from '@/shared/ui'
 import './responses-hub.css'
 
 type Props = {
@@ -88,13 +90,13 @@ export function ResponsesHub({ messagesPanel }: Props) {
 
   return (
     <div className="responses">
-      <div className="responses__tabs" role="tablist" aria-label="Мои отклики">
-        {TABS.map((item) => (
-          <Chip key={item} active={tab === item} onClick={() => setTab(item)}>
-            {TAB_LABELS[item]}
-          </Chip>
-        ))}
-      </div>
+      <Tabs
+        className="responses__tabs"
+        label="Мои отклики"
+        items={TABS.map((item) => ({ value: item, label: TAB_LABELS[item] }))}
+        value={tab}
+        onChange={setTab}
+      />
 
       {tab === 'messages' ? (
         messagesPanel
@@ -106,9 +108,10 @@ export function ResponsesHub({ messagesPanel }: Props) {
                 {data.map((item) =>
                   isCandidateInbound(item) ? (
                     <li key={item.companyId} className="responses__card">
-                      <div>
+                      <div className="responses__card-text">
                         <p className="responses__eyebrow">{item.industry ?? 'Компания'}</p>
                         <h3 className="responses__title">{item.companyName}</h3>
+                        <p className="responses__time">{formatDateTime(item.reactedAt)}</p>
                       </div>
                       <Button
                         size="inline"
@@ -125,7 +128,7 @@ export function ResponsesHub({ messagesPanel }: Props) {
                     </li>
                   ) : (
                     <li key={(item as EmployerInboundDto).candidateId} className="responses__card">
-                      <div>
+                      <div className="responses__card-text">
                         <p className="responses__eyebrow">
                           {(item as EmployerInboundDto).vacancyTitle}
                         </p>
@@ -135,6 +138,9 @@ export function ResponsesHub({ messagesPanel }: Props) {
                         {(item as EmployerInboundDto).headline ? (
                           <p className="responses__lead">{(item as EmployerInboundDto).headline}</p>
                         ) : null}
+                        <p className="responses__time">
+                          {formatDateTime((item as EmployerInboundDto).reactedAt)}
+                        </p>
                       </div>
                       <Button
                         size="inline"
@@ -167,7 +173,16 @@ export function ResponsesHub({ messagesPanel }: Props) {
               <ul className="responses__feed">
                 {data.items.map((match) => (
                   <li key={match.candidate.id}>
-                    <CandidateMatchCard match={match} />
+                    <CandidateMatchCard
+                      match={match}
+                      actions={
+                        <ReactionButtons
+                          target="candidate"
+                          id={match.candidate.id}
+                          initial={match.reaction}
+                        />
+                      }
+                    />
                   </li>
                 ))}
               </ul>
@@ -187,7 +202,16 @@ export function ResponsesHub({ messagesPanel }: Props) {
               <ul className="responses__feed">
                 {data.items.map((match) => (
                   <li key={match.vacancy.id}>
-                    <VacancyMatchCard match={match} />
+                    <VacancyMatchCard
+                      match={match}
+                      actions={
+                        <ReactionButtons
+                          target="vacancy"
+                          id={match.vacancy.id}
+                          initial={match.reaction}
+                        />
+                      }
+                    />
                   </li>
                 ))}
               </ul>

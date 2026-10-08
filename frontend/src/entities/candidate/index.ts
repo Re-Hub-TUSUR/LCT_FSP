@@ -3,7 +3,13 @@ export { dropPhotoUrl } from './lib/photo-cache'
 export type {
   CandidateContactsDto,
   CandidateDto,
+  CandidateFacetsDto,
+  CandidateFilterParams,
+  CandidateFiltersDto,
   CandidateMatchDto,
+  CandidatePresetsDto,
+  CandidateRelaxationDto,
+  CandidateRelaxationKind,
   CandidateProfileUpdate,
   CandidateSearchDto,
   CandidateSearchParams,
@@ -11,12 +17,28 @@ export type {
   EducationEntryDto,
   ExperienceEntryDto,
   FspAchievementDto,
+  FspDiscipline,
+  FspLinkRequest,
+  FspSportTitleDto,
   OwnCandidateDto,
   ResumeCreate,
   ResumeDraftDto,
   ResumeDto,
+  VacancyPresetDto,
 } from './api/candidate-api'
-export { FSP_DISCIPLINE_LABELS } from './model/fsp'
+export {
+  bestFspResult,
+  bestFspTitle,
+  FSP_DISCIPLINE_LABELS,
+  FSP_EVENT_KIND_LABELS,
+  FSP_LEVEL_LABELS,
+  FSP_OUTCOME_LABELS,
+  FSP_TITLE_LABELS,
+  fspAchievementLine,
+  fspOutcomeText,
+  fspTeamText,
+  fspTitleLine,
+} from './model/fsp'
 export {
   FSP_SYNC_LABELS,
   JOB_STATUS_HINTS,

@@ -20,7 +20,7 @@ from sqlalchemy.orm import Mapped, column_property, deferred, mapped_column, rel
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 from app.db.types import str_enum
 from app.models.enums import AssessmentStatus, FspSync, Grade, JobStatus
-from app.models.fsp_achievement import FspAchievement
+from app.models.fsp_achievement import FspAchievement, FspSportTitle
 
 _users = table("users", column("id", Uuid), column("last_active_at", DateTime(timezone=True)))
 
@@ -74,15 +74,27 @@ class CandidateProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         server_default=AssessmentStatus.NOT_TAKEN.value,
     )
 
-    # Link to the FSP participant registry (future Keycloak-based FSP ID). Null = no FSP history.
+    # Participant id from the FSP ID (Keycloak) token, see `app.integrations.fsp`.
+    # Null = no FSP history.
     fsp_member_id: Mapped[str | None] = mapped_column(String(64), unique=True)
     # Load explicitly (selectinload); deletes rely on ON DELETE CASCADE.
     fsp_achievements: Mapped[list[FspAchievement]] = relationship(
         cascade="all, delete-orphan",
         passive_deletes=True,
-        order_by=FspAchievement.year.desc(),
+        order_by=(FspAchievement.year.desc(), FspAchievement.external_id),
         lazy="raise",
     )
+    fsp_titles: Mapped[list[FspSportTitle]] = relationship(
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by=(FspSportTitle.awarded_year.desc(), FspSportTitle.external_id),
+        lazy="raise",
+    )
+    fsp_linked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Last successful import from the registry.
+    fsp_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Why the last import failed; cleared by the next successful one. The link itself stays.
+    fsp_sync_error: Mapped[str | None] = mapped_column(String(300))
 
     # Shown to an employer only after the candidate accepted an invitation or applied (ТЗ 2.2).
     phone: Mapped[str | None] = mapped_column(String(32))

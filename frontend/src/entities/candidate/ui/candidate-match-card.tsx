@@ -3,9 +3,11 @@ import { AssessmentStatusBadge } from '@/entities/assessment/@x/candidate'
 import { WORK_FORMAT_LABELS } from '@/entities/vacancy/@x/candidate'
 import { useOverflows } from '@/shared/lib'
 import { MatchMeter } from '@/shared/ui'
-import type { CandidateMatchDto, FspAchievementDto } from '../api/candidate-api'
-import { FSP_DISCIPLINE_LABELS } from '../model/fsp'
+import type { CandidateMatchDto } from '../api/candidate-api'
+import { FSP_TITLE_LABELS, bestFspResult, bestFspTitle, fspAchievementLine } from '../model/fsp'
 import { CandidateResumes } from './candidate-resumes'
+// The slice barrel re-exports this hook, but importing it from there cycles back into this file.
+// noinspection JSImportCanBeShortened
 import { useCandidatePhoto } from './use-candidate-photo'
 
 const rub = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 })
@@ -18,14 +20,16 @@ function initials(name: string) {
     .slice(0, 2)
 }
 
-/** Best place first (no place = participation), then the most recent. */
-const rank = (item: FspAchievementDto) => (item.place ?? 99) * 10_000 - item.year
-
-function bestResult(items: FspAchievementDto[]) {
-  return items.reduce<FspAchievementDto | undefined>(
-    (best, item) => (best === undefined || rank(item) < rank(best) ? item : best),
-    undefined,
-  )
+/** One line: the best confirmed result and the highest sport title. */
+function fspSummary(match: CandidateMatchDto['candidate']): string {
+  const best = bestFspResult(match.fspAchievements)
+  const title = bestFspTitle(match.fspTitles)
+  if (!best && !title) return 'Нет подтверждённой истории участия в ФСП'
+  const parts = [
+    best ? fspAchievementLine(best) : null,
+    title ? FSP_TITLE_LABELS[title.kind] : null,
+  ]
+  return `ФСП: ${parts.filter(Boolean).join(' · ')}`
 }
 
 type Props = {
@@ -40,7 +44,6 @@ type Props = {
 /** Recruiter's feed card. Contacts are never shown here: only after an accepted invitation. */
 export function CandidateMatchCard({ match, actions, frame = false, onStudy }: Props) {
   const { candidate, matchScore, profileStrength, reasons, matched } = match
-  const best = bestResult(candidate.fspAchievements)
   const [bodyRef, overflows] = useOverflows(
     frame ? `${candidate.id}:${candidate.about?.length ?? 0}:${reasons.length}` : '',
   )
@@ -114,11 +117,7 @@ export function CandidateMatchCard({ match, actions, frame = false, onStudy }: P
           ))}
         </ul>
 
-        <p className="match-card__eyebrow">
-          {best
-            ? `ФСП: ${best.place ? `${best.place}-е место` : 'участие'} · ${best.eventName} · ${FSP_DISCIPLINE_LABELS[best.discipline]}, ${best.year}`
-            : 'Нет подтверждённой истории участия в ФСП'}
-        </p>
+        <p className="match-card__eyebrow">{fspSummary(candidate)}</p>
 
         {reasons.length > 0 && (
           <section className="match-card__why" aria-label="Почему кандидат в выдаче">

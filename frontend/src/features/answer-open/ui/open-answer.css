@@ -7,7 +7,7 @@
 
 .open-answer__title {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-weight: 300;
   font-size: clamp(20px, 2vw, 28px);
   line-height: 1.3;
@@ -15,25 +15,24 @@
 
 .open-answer__statement {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 17px;
+  font-family: var(--font-mono);
+  font-size: 14px;
   line-height: 1.6;
   white-space: pre-wrap;
-  color: var(--text);
+  color: var(--ink);
 }
 
 .open-answer__field {
   min-height: 220px;
   padding: 14px;
-  border: 1px solid var(--line-strong);
   line-height: 1.6;
 }
 
 .open-answer__hint {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-mute);
+  color: var(--muted);
 }

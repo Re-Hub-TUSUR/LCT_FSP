@@ -5,7 +5,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.router import api_router
+from app.api.router import API_PREFIX, api_router
+from app.api.routes import mock_fsp
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.headers import security_headers_middleware
@@ -66,6 +67,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_exception_handlers(app)
     app.state.notifications = NotificationHub()
     app.include_router(api_router)
+    if settings.fsp_id_mode == "mock":
+        app.include_router(mock_fsp.router, prefix=API_PREFIX)
     return app
 
 

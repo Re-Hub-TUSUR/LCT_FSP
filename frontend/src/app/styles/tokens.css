@@ -1,34 +1,53 @@
 :root {
   /* ФСП России — фирменная палитра (fsp-russia.ru/press/brandbook) */
-  --brand-blue: #402fff;
-  --brand-blue-hover: #5646ff;
-  --brand-red: #ec1d35;
-  --brand-light: #ededed;
-  --brand-grey: #c8c9ca;
-  --brand-ink: #1b1c21;
+  --bg: #1b1c21;
+  --bg-deep: #141519;
+  --bg-weekend: #17181c;
+  --surface: #2d2e37;
+  --line: #3a3c46;
+  --line-soft: #2d2e37;
+  --ink: #ededed;
+  --ink-2: #b5b6b9;
+  --ink-3: #d9d9d9;
+  --muted: #9b9c9e;
+  --dim: #6e6f75;
+  --blue: #402fff;
+  --blue-hover: #5646ff;
+  --blue-light: #7d72ff;
+  --blue-tint: rgba(64, 47, 255, 0.25);
+  --blue-tint-soft: rgba(64, 47, 255, 0.16);
+  --red: #ec1d35;
+  --red-text: #ff4d63;
+  --red-tint: rgba(236, 29, 53, 0.12);
+  --scrim: rgba(10, 10, 14, 0.6);
 
-  --bg: #05060d;
-  --text: var(--brand-light);
-  --text-dim: rgba(237, 237, 237, 0.62);
-  --text-dimmer: rgba(237, 237, 237, 0.42);
-  --text-mute: #8c8f9c;
-  --error: #ff5a6e;
-  --line: rgba(255, 255, 255, 0.14);
-  --line-strong: rgba(255, 255, 255, 0.26);
-  --fill-ghost: rgba(255, 255, 255, 0.05);
-  --fill-solid: rgba(255, 255, 255, 0.1);
-  --fill-brand: rgba(64, 47, 255, 0.22);
-  --fill-ghost-solid: #101219;
-  --focus-ring: 2px solid rgba(255, 255, 255, 0.85);
+  /* Earlier names, kept so every stylesheet reads the same palette */
+  --brand-blue: var(--blue);
+  --brand-blue-hover: var(--blue-hover);
+  --brand-red: var(--red);
+  --brand-light: var(--ink);
+  --brand-grey: var(--ink-3);
+  --brand-ink: var(--bg);
+  --text: var(--ink);
+  --text-dim: var(--muted);
+  --text-dimmer: var(--dim);
+  --text-mute: var(--muted);
+  --error: var(--red-text);
+  --line-strong: var(--line);
+  --fill-ghost: var(--surface);
+  --fill-solid: var(--line);
+  --fill-brand: var(--blue-tint);
+  --fill-ghost-solid: var(--bg);
+  --focus-ring: 2px solid var(--blue-light);
 
-  --gutter: clamp(20px, 5vw, 100px);
-  --nav-offset: calc(
-    max(clamp(20px, 2.4vw, 34px), env(safe-area-inset-top)) + clamp(20px, 2.4vw, 34px) +
-      max(44px, calc(2px + clamp(12px, 1vw, 17px) * 2 + 1.2 * clamp(11px, 0.78vw, 14px)))
-  );
+  --gutter: clamp(20px, 4vw, 64px);
+  --nav-gutter: clamp(20px, 5vw, 100px);
+  --nav-pad: clamp(12px, 1.4vw, 20px);
+  --nav-offset: calc(max(var(--nav-pad), env(safe-area-inset-top)) + var(--nav-pad) + 41px);
   --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
 
-  --font-display: 'Jost', 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-mono:
-    'IBM Plex Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+    'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+  --font-accent: 'TDAText', var(--font-mono);
+  --font-display: var(--font-mono);
 }

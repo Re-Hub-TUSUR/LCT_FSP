@@ -1,62 +1,201 @@
+.sent__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px 20px;
+  border-bottom: 2px solid var(--blue);
+}
+
+.sent__head .page-section__title {
+  border-bottom: 0;
+}
+
+.sent__waiting {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sent__waiting b {
+  font-family: var(--font-accent);
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: 0;
+  line-height: 1;
+  color: var(--red-text);
+}
+
 /* Wide tables scroll inside their own box instead of widening the page */
 .sent__scroll {
   overflow-x: auto;
+  background: var(--surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
 }
 
 .sent__table {
   width: 100%;
-  min-width: 760px;
+  min-width: 860px;
   border-collapse: collapse;
-  font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 13.5px;
 }
 
 .sent__table th,
 .sent__table td {
-  padding: 12px 16px 12px 0;
-  border-bottom: 1px solid var(--line);
+  padding: 14px 16px;
+  border-top: 1px solid var(--line);
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .sent__table th {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 12px;
-  letter-spacing: 0.1em;
+  padding-block: 12px;
+  border-top: 0;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-mute);
+  white-space: nowrap;
+  color: var(--muted);
 }
 
-.sent__table td:nth-child(4),
 .sent__table td:nth-child(5) {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
+.sent__table tbody tr:hover td {
+  background: var(--line);
+}
+
 .sent__table tr.is-open td {
-  background: var(--fill-ghost);
+  background: var(--line);
+}
+
+.sent__table tr.is-open td:first-child {
+  box-shadow: inset 4px 0 0 var(--blue);
 }
 
 .sent__table a {
-  text-underline-offset: 4px;
+  font-weight: 600;
+  text-underline-offset: 3px;
 }
 
 .sent__hint {
   display: block;
   margin-top: 4px;
-  font-size: 13px;
-  color: var(--text-mute);
+  font-size: 12px;
+  color: var(--muted);
 }
 
-.sent__actions .btn {
-  margin: 0 8px 8px 0;
-  padding: 10px 14px;
+/* Status badge: a square and the wording; the fill says how urgent it is. */
+.sent__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 9px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sent__status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+}
+
+.sent__status--review {
+  background: var(--blue);
+  color: #fff;
+}
+
+.sent__status--in_progress {
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.sent__status--sent {
+  box-shadow: inset 0 0 0 1px var(--dim);
+}
+
+.sent__status--done {
+  background: var(--blue-tint);
+}
+
+.sent__status--declined {
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--dim);
+}
+
+/* Over a hovered row the outline of «Отклонено» would vanish into the fill. */
+.sent__table tbody tr:hover .sent__status--declined,
+.sent__table tr.is-open .sent__status--declined {
+  box-shadow: inset 0 0 0 1px var(--dim);
+}
+
+.sent__status--expired {
+  box-shadow: inset 0 0 0 1px var(--red);
+  color: var(--red-text);
+}
+
+.sent__score {
+  font-family: var(--font-accent);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--blue-light);
+}
+
+.sent__score--low {
+  color: var(--red-text);
+}
+
+.sent__score--none {
+  color: var(--dim);
+}
+
+.sent__actions {
+  white-space: nowrap;
+}
+
+.sent__actions .btn + .btn {
+  margin-left: 4px;
 }
 
 .sent__error {
   margin: 0;
-  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--red-text);
+}
+
+/* ── Review sheet ──────────────────────────────────── */
+
+.sent__sheet-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sent__sheet-name {
+  margin: 0;
+  font-family: var(--font-accent);
+  font-weight: 400;
+  font-size: clamp(24px, 2.2vw, 32px);
+  line-height: 1;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.sent__sheet-test {
+  margin: 0;
   font-size: 13px;
-  color: var(--error);
+  color: var(--muted);
 }

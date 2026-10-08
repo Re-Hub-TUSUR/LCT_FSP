@@ -1,0 +1,67 @@
+/* Fills a positioned, isolated ancestor and paints behind its content. */
+.hacker-rain {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  container-type: size;
+  font-family: var(--font-mono), monospace;
+  font-weight: 400;
+  line-height: 1;
+  /* Each drop overrides these from the script. */
+  --x: 0%;
+  --size: 14px;
+  --dur: 12s;
+  --delay: 0s;
+  --a: 0.55;
+  --drift: 0px;
+}
+
+.hacker-rain__drop {
+  position: absolute;
+  top: 100%;
+  left: var(--x);
+  font-size: var(--size);
+  opacity: 0;
+  animation: hacker-rain-rise var(--dur) linear var(--delay) infinite;
+}
+
+.hacker-rain__drop--ink {
+  color: var(--ink);
+}
+
+.hacker-rain__drop--blue {
+  color: var(--blue);
+}
+
+.hacker-rain__drop--red {
+  color: var(--red);
+}
+
+@keyframes hacker-rain-rise {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+
+  14% {
+    opacity: var(--a);
+  }
+
+  78% {
+    opacity: var(--a);
+  }
+
+  100% {
+    transform: translate3d(var(--drift), calc(-100cqh - 1.4em), 0);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hacker-rain {
+    display: none;
+  }
+}

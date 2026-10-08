@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router'
 import { CandidateCard, candidateQueries } from '@/entities/candidate'
 import type { OwnCandidateDto } from '@/entities/candidate'
 import { signOut, useSession } from '@/entities/session'
@@ -9,7 +10,8 @@ import { ROUTES } from '@/shared/config'
 import { formatDate } from '@/shared/lib'
 import { Button, ButtonLink, DataRows, ErrorState, Loader, Page, Panel } from '@/shared/ui'
 import { OwnerForm } from '@/features/edit-account'
-import { FspLinkForm, JobStatusForm } from '@/features/edit-candidate-settings'
+import { JobStatusForm } from '@/features/edit-candidate-settings'
+import { FspLinkPanel } from '@/features/link-fsp-id'
 import { isNotFound } from '../lib/is-not-found'
 import { LockIcon } from './cabinet-icons'
 
@@ -40,6 +42,7 @@ function AccountPanel({ user }: { user: UserDto }) {
 }
 
 function CandidateSettings({ user, profile }: { user: UserDto; profile: OwnCandidateDto }) {
+  const [params] = useSearchParams()
   return (
     <div className="cabinet-grid">
       <div className="cabinet-col">
@@ -54,8 +57,8 @@ function CandidateSettings({ user, profile }: { user: UserDto; profile: OwnCandi
           </p>
         </Panel>
 
-        <Panel title="Связь с ФСП">
-          <FspLinkForm profile={profile} />
+        <Panel title="ФСП ID">
+          <FspLinkPanel profile={profile} justLinked={params.get('fsp') === 'linked'} />
         </Panel>
 
         <Panel title="Согласия">

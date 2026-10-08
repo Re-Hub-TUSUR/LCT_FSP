@@ -1,10 +1,10 @@
 .code-editor {
-  border: 1px solid var(--line-strong);
-  font-size: 14px;
+  border: 1px solid var(--line);
+  font-size: 12.5px;
 }
 
 .code-editor:focus-within {
-  border-color: var(--brand-blue);
+  border-color: var(--blue);
 }
 
 .code-editor .cm-editor {
@@ -21,8 +21,8 @@
   justify-content: center;
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-mute);
+  color: var(--muted);
 }

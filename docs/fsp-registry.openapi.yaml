@@ -1,0 +1,204 @@
+openapi: 3.1.0
+info:
+  title: Реестр участников ФСП — контракт для KADRY
+  version: 1.0.0
+  description: |
+    API, которым платформа KADRY читает подтверждённые результаты и спортивные звания участника
+    Федерации спортивного программирования. Платформа реализует его эмулятор
+    (`GET /api/v1/mock/fsp-registry/members/{memberId}` при `FSP_ID_MODE=mock`) и клиент
+    `HttpFspRegistryClient` для настоящего реестра (`FSP_ID_MODE=keycloak`, `FSP_REGISTRY_URL`).
+
+    Номер участника (`memberId`) платформа получает из claim `fsp_member_id` ID-токена FSP ID
+    после входа кандидата. Схема интеграции — docs/FSP_INTEGRATION.md.
+
+    Платформа только читает реестр: записей и правок с её стороны нет.
+servers:
+  - url: https://registry.fsp-russia.ru/api/v1
+    description: Реестр ФСП (адрес уточняется у Федерации)
+  - url: http://localhost:8000/api/v1/mock/fsp-registry
+    description: Эмулятор внутри API KADRY (без авторизации)
+security:
+  - serviceAccount: [fsp-registry.read]
+paths:
+  /members/{memberId}:
+    get:
+      operationId: getMember
+      summary: Результаты и звания участника
+      description: |
+        Участник, о котором реестр ничего не знает, — `404`; платформа считает это пустой историей,
+        а не ошибкой. Любой другой сбой (`5xx`, тайм-аут, ответ не по схеме, запись другого
+        участника) сохраняет связь профиля и показывает кандидату «Реестр ФСП временно недоступен».
+      parameters:
+        - name: memberId
+          in: path
+          required: true
+          description: Номер участника ФСП, как в claim `fsp_member_id`.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+            pattern: '^[A-Za-z0-9._-]{1,64}$'
+          example: FSP-100101
+      responses:
+        '200':
+          description: Запись участника. Пустые списки — участник без результатов.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberRecord'
+              examples:
+                prizewinner:
+                  summary: Призёр и КМС
+                  value:
+                    memberId: FSP-100101
+                    achievements:
+                      - id: ach-7f3a
+                        eventName: Кубок России по спортивному программированию
+                        eventKind: cup
+                        discipline: algorithmic
+                        level: national
+                        year: 2025
+                        place: 2
+                        result: prizewinner
+                        participation: team
+                        teamName: NullPointer
+                      - id: ach-81c2
+                        eventName: Хакатон ФСП «Цифровой прорыв»
+                        eventKind: hackathon
+                        discipline: product
+                        level: national
+                        year: 2024
+                        place: null
+                        result: participant
+                        participation: team
+                        teamName: Сибирский код
+                    titles:
+                      - id: ttl-11
+                        kind: kms
+                        discipline: algorithmic
+                        awardedYear: 2025
+                noHistory:
+                  summary: Участник без результатов
+                  value:
+                    memberId: FSP-000000
+                    achievements: []
+                    titles: []
+        '401':
+          description: Нет или просрочен сервисный токен.
+        '404':
+          description: Участник неизвестен реестру. Платформа показывает «нет истории в ФСП».
+        '503':
+          description: Реестр временно недоступен. Эмулятор отвечает так для `FSP-000503`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Реестр ФСП временно недоступен
+components:
+  securitySchemes:
+    serviceAccount:
+      type: oauth2
+      description: |
+        Сервисный аккаунт клиента KADRY в реалме FSP ID (Keycloak), grant `client_credentials`.
+        Кандидату не нужно входить повторно, чтобы платформа обновила его данные.
+      flows:
+        clientCredentials:
+          tokenUrl: https://id.fsp-russia.ru/realms/fsp/protocol/openid-connect/token
+          scopes:
+            fsp-registry.read: Чтение результатов и званий участников
+  schemas:
+    MemberRecord:
+      type: object
+      required: [memberId]
+      properties:
+        memberId:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: Должен совпадать с запрошенным; иначе платформа отклоняет ответ.
+        achievements:
+          type: array
+          default: []
+          items:
+            $ref: '#/components/schemas/Achievement'
+        titles:
+          type: array
+          default: []
+          items:
+            $ref: '#/components/schemas/SportTitle'
+    Achievement:
+      type: object
+      description: Результат участника на соревновании ФСП.
+      required: [id, eventName, eventKind, discipline, level, year, result, participation]
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: Стабильный id результата в реестре. Платформа обновляет записи по нему.
+        eventName:
+          type: string
+          minLength: 1
+          maxLength: 300
+        eventKind:
+          $ref: '#/components/schemas/EventKind'
+        discipline:
+          $ref: '#/components/schemas/Discipline'
+        level:
+          type: string
+          enum: [regional, national, international]
+        year:
+          type: integer
+          minimum: 2000
+          maximum: 2100
+        place:
+          type: [integer, 'null']
+          minimum: 1
+          description: Место; `null` — участие без места.
+        result:
+          $ref: '#/components/schemas/Outcome'
+        participation:
+          type: string
+          enum: [individual, team]
+        teamName:
+          type: [string, 'null']
+          maxLength: 200
+          description: Только для командных результатов.
+    SportTitle:
+      type: object
+      description: Спортивный разряд или звание по спортивному программированию.
+      required: [id, kind, discipline, awardedYear]
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 64
+        kind:
+          type: string
+          enum: [rank_3, rank_2, rank_1, kms, ms, msmk, zms]
+          description: |
+            `rank_3`…`rank_1` — 3-й…1-й разряд, `kms` — КМС, `ms` — МС, `msmk` — МСМК,
+            `zms` — ЗМС.
+        discipline:
+          $ref: '#/components/schemas/Discipline'
+        awardedYear:
+          type: integer
+          minimum: 1990
+          maximum: 2100
+    EventKind:
+      type: string
+      enum: [championship, cup, hackathon, olympiad]
+    Discipline:
+      type: string
+      description: Дисциплины спортивного программирования.
+      enum: [algorithmic, product, security, robotics, uav]
+    Outcome:
+      type: string
+      description: |
+        Итог в терминах протокола соревнования: `winner` — победитель (1-е место),
+        `prizewinner` — призёр (2–3-е место или призёр без места), `finalist` — финалист,
+        `participant` — участник.
+      enum: [winner, prizewinner, finalist, participant]

@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import { http } from '@/shared/api'
-import type { Paginated, PaginationParams, SalaryRangeDto } from '@/shared/api'
+import type { OptionCountDto, Paginated, PaginationParams, SalaryRangeDto } from '@/shared/api'
 import type { CategoryDto, Grade, SpecializationCode } from '@/entities/category/@x/vacancy'
 import type { EmploymentType, FspResult, VacancyBenefit } from '../model/employment'
 import type { WorkFormat } from '../model/work-format'
@@ -80,10 +80,77 @@ export type VacancyFeedDto = Paginated<VacancyMatchDto> & {
   basis: FeedBasisDto | null
 }
 
-export type VacancyFeedParams = PaginationParams & {
+/** profile: the candidate's specializations and grades, best fit first; free: all, newest. */
+export type FeedMode = 'profile' | 'free'
+
+/** The candidate's feed filters. «Подбор по профилю» fills them in from the profile. */
+export type VacancyFiltersDto = {
+  /** The top of the vacancy's range reaches it. */
+  salaryMin: number | null
+  /** Remote vacancies fit from anywhere; office and hybrid ones need one of `cities`. */
+  workFormats: WorkFormat[]
+  cities: string[]
+  /** Also office and hybrid vacancies elsewhere that help to relocate. */
+  relocation: boolean
+  employmentTypes: EmploymentType[]
+  stack: string[]
+  nice: string[]
+  benefits: VacancyBenefit[]
+  accredited: boolean
+}
+
+/** Query parameters of the feed and of its counts. */
+export type VacancyFeedFilterParams = {
   view?: FeedView
-  workFormat?: WorkFormat[]
+  mode?: FeedMode
   salaryMin?: number
+  workFormat?: WorkFormat[]
+  city?: string[]
+  relocation?: boolean
+  employment?: EmploymentType[]
+  stack?: string[]
+  nice?: string[]
+  benefit?: VacancyBenefit[]
+  accredited?: boolean
+}
+
+export type VacancyFeedParams = PaginationParams & VacancyFeedFilterParams
+
+export type VacancyRelaxationKind =
+  'salary' | 'work_formats' | 'employment' | 'cities' | 'stack' | 'benefit' | 'accredited' | 'mode'
+
+/** A filter to loosen when nothing matched: `value` is the lowered salary, the technology or
+ * the condition. */
+export type VacancyRelaxationDto = {
+  kind: VacancyRelaxationKind
+  value: string | null
+  count: number
+}
+
+/** How many vacancies each option leaves, the other filters staying as they are. */
+export type VacancyFacetsDto = {
+  total: number
+  count: number
+  /** The option added to the ones chosen in its group. */
+  workFormats: OptionCountDto[]
+  employmentTypes: OptionCountDto[]
+  benefits: OptionCountDto[]
+  accredited: number
+  /** Vacancies of the mode in each city and asking for each technology. */
+  cities: OptionCountDto[]
+  stack: OptionCountDto[]
+  relaxations: VacancyRelaxationDto[]
+}
+
+export type VacancyFeedPresetsDto = {
+  /** False until the candidate has a category: only the free search then. */
+  personalized: boolean
+  /** What «Подбор по профилю» fills in and how many vacancies that leaves. */
+  profile: VacancyFiltersDto | null
+  profileCount: number
+  category: CategoryDto | null
+  /** Every published vacancy of the view. */
+  freeCount: number
 }
 
 export type VacancyListParams = PaginationParams & {
@@ -97,6 +164,9 @@ export const vacancyKeys = {
   all: ['vacancies'] as const,
   list: (params: VacancyListParams) => [...vacancyKeys.all, 'list', params] as const,
   feed: (params: VacancyFeedParams) => [...vacancyKeys.all, 'feed', params] as const,
+  feedFacets: (params: VacancyFeedFilterParams) =>
+    [...vacancyKeys.all, 'feed-facets', params] as const,
+  feedPresets: (view: FeedView) => [...vacancyKeys.all, 'feed-presets', view] as const,
   mine: () => [...vacancyKeys.all, 'mine'] as const,
   reactionCounts: () => [...vacancyKeys.all, 'reaction-counts'] as const,
   detail: (id: string) => [...vacancyKeys.all, 'detail', id] as const,
@@ -115,6 +185,20 @@ export const vacancyQueries = {
       queryKey: vacancyKeys.feed(params),
       queryFn: ({ signal }) =>
         http.get<VacancyFeedDto>('/vacancies/feed', { query: params, signal }),
+    }),
+  /** Counts next to the feed's filter options and the ways out of an empty feed. */
+  feedFacets: (params: VacancyFeedFilterParams) =>
+    queryOptions({
+      queryKey: vacancyKeys.feedFacets(params),
+      queryFn: ({ signal }) =>
+        http.get<VacancyFacetsDto>('/vacancies/feed/facets', { query: params, signal }),
+    }),
+  /** The feed's modes and the filters the profile fills in. */
+  feedPresets: (view: FeedView = 'all') =>
+    queryOptions({
+      queryKey: vacancyKeys.feedPresets(view),
+      queryFn: ({ signal }) =>
+        http.get<VacancyFeedPresetsDto>('/vacancies/feed/presets', { query: { view }, signal }),
     }),
   /** Candidate: how many vacancies are liked, matched and skipped. */
   reactionCounts: () =>

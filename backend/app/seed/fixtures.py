@@ -8,7 +8,16 @@ from typing import Annotated, Final, Self
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
-from app.models.enums import FspDiscipline, FspEventLevel, Grade, WorkFormat
+from app.models.enums import (
+    FspDiscipline,
+    FspEventKind,
+    FspEventLevel,
+    FspOutcome,
+    FspParticipation,
+    FspTitleKind,
+    Grade,
+    WorkFormat,
+)
 from app.services.categories import SPECIALIZATIONS
 
 DATA_DIR: Final = Path(__file__).parent / "data"
@@ -29,11 +38,35 @@ def _known_specialization(specialization: str) -> None:
 
 
 class FspAchievementFixture(Fixture):
+    """One record of the emulated FSP registry; `id` is the registry's id of the result."""
+
+    id: str = Field(min_length=1, max_length=64)
     event_name: str = Field(min_length=1, max_length=300)
+    event_kind: FspEventKind
     discipline: FspDiscipline
     level: FspEventLevel
     year: int = Field(ge=2000, le=2100)
     place: int | None = Field(gt=0)
+    result: FspOutcome
+    participation: FspParticipation
+    team_name: str | None = Field(max_length=200)
+
+    @model_validator(mode="after")
+    def _consistent(self) -> Self:
+        if self.result != FspOutcome.from_place(self.place):
+            msg = f"{self.id}: result {self.result} does not match place {self.place}"
+            raise ValueError(msg)
+        if (self.participation == FspParticipation.TEAM) != (self.team_name is not None):
+            msg = f"{self.id}: only team results name a team"
+            raise ValueError(msg)
+        return self
+
+
+class FspTitleFixture(Fixture):
+    id: str = Field(min_length=1, max_length=64)
+    kind: FspTitleKind
+    discipline: FspDiscipline
+    awarded_year: int = Field(ge=1990, le=2100)
 
 
 class CandidateFixture(Fixture):
@@ -59,6 +92,7 @@ class CandidateFixture(Fixture):
     registered_days_ago: DaysAgo
     fsp_member_id: str | None = Field(max_length=64)
     fsp_achievements: list[FspAchievementFixture]
+    fsp_titles: list[FspTitleFixture]
     phone: str | None = Field(max_length=32)
     telegram: str | None = Field(max_length=64)
     is_visible_to_employers: bool
@@ -69,7 +103,7 @@ class CandidateFixture(Fixture):
         if (self.assessment_score is None) != (self.assessed_days_ago is None):
             msg = f"{self.key}: assessment score and date go together"
             raise ValueError(msg)
-        if self.fsp_achievements and self.fsp_member_id is None:
+        if (self.fsp_achievements or self.fsp_titles) and self.fsp_member_id is None:
             msg = f"{self.key}: FSP results require an FSP ID"
             raise ValueError(msg)
         return self

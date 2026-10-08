@@ -1,0 +1,205 @@
+.sheet__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: var(--scrim);
+  animation: sheet-scrim-in 0.35s ease both;
+}
+
+.sheet__scrim.is-leaving {
+  animation: sheet-scrim-out 0.35s ease both;
+}
+
+.sheet {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 81;
+  display: flex;
+  flex-direction: column;
+  width: min(600px, 100vw);
+  background: var(--bg);
+  border-left: 1px solid var(--line);
+  animation: sheet-in 0.45s var(--ease-premium) both;
+}
+
+.sheet--wide {
+  width: min(680px, 100vw);
+}
+
+.sheet.is-leaving {
+  animation: sheet-out 0.35s var(--ease-premium) both;
+}
+
+.sheet__bar {
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.sheet__label {
+  margin: 0;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.sheet__close {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.sheet__close:hover {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #fff;
+}
+
+.sheet__close:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.sheet__ornament {
+  flex: none;
+  padding: 6px 0;
+  background: var(--bg-deep);
+}
+
+.sheet__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 24px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.sheet__foot {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 16px 24px calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line-soft);
+}
+
+.sheet__foot > * {
+  flex: 1;
+}
+
+.sheet-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sheet-section__title {
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--blue);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.sheet-section p,
+.sheet-section li {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.sheet-section ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.sheet-section .sheet-section__title {
+  color: var(--ink);
+}
+
+/* Skills stay chips in a row, not a list of lines. */
+.sheet-section .chip-list {
+  display: flex;
+  gap: 6px;
+}
+
+.sheet-section .chip-list li {
+  min-height: 0;
+  padding: 5px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+/* Quiet note at the end of a sheet: «Контакты откроются…» */
+.sheet-note {
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--surface);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .sheet__bar,
+  .sheet__foot {
+    padding-inline: 16px;
+  }
+
+  .sheet__body {
+    padding: 20px 16px;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes sheet-out {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes sheet-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes sheet-scrim-out {
+  to {
+    opacity: 0;
+  }
+}

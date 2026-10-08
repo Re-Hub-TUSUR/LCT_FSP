@@ -49,6 +49,7 @@ export function MonthGrid({ month, events, now, labelOf, onEvent, onDay, onSlot 
             'cal-month__cell',
             day.getMonth() !== month.getMonth() && 'is-outside',
             isSameDay(day, now) && 'is-today',
+            (day.getDay() === 0 || day.getDay() === 6) && 'is-weekend',
           ]
           return (
             <div key={day.getTime()} className={classes.filter(Boolean).join(' ')}>

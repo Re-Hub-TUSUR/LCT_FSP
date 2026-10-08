@@ -1,11 +1,12 @@
 import { queryOptions } from '@tanstack/react-query'
 import { http } from '@/shared/api'
-import type { Paginated, PaginationParams } from '@/shared/api'
+import type { OptionCountDto, Paginated, PaginationParams } from '@/shared/api'
 import type { AssessmentStatus } from '@/entities/assessment/@x/candidate'
 import type { CategoryDto, Grade, SpecializationCode } from '@/entities/category/@x/candidate'
 import type {
   EmploymentType,
   FeedView,
+  FspResult,
   Reaction,
   ReactionCountsDto,
   WorkFormat,
@@ -29,13 +30,30 @@ export type EducationEntryDto = {
 
 export type FspDiscipline = 'algorithmic' | 'product' | 'security' | 'robotics' | 'uav'
 
+export type FspEventKind = 'championship' | 'cup' | 'hackathon' | 'olympiad'
+export type FspOutcome = 'winner' | 'prizewinner' | 'finalist' | 'participant'
+export type FspParticipation = 'individual' | 'team'
+export type FspTitleKind = 'rank_3' | 'rank_2' | 'rank_1' | 'kms' | 'ms' | 'msmk' | 'zms'
+
+/** A result confirmed by the FSP registry. */
 export type FspAchievementDto = {
   eventName: string
+  eventKind: FspEventKind
   year: number
   /** Null = took part without a prize place. */
   place: number | null
+  result: FspOutcome
+  participation: FspParticipation
+  teamName: string | null
   discipline: FspDiscipline
   level: 'regional' | 'national' | 'international'
+}
+
+/** A sport rank or title of the federation (разряд, КМС, МС…). */
+export type FspSportTitleDto = {
+  kind: FspTitleKind
+  discipline: FspDiscipline
+  awardedYear: number
 }
 
 /** Contacts are revealed only after the candidate accepted an invitation or applied (ТЗ 2.2). */
@@ -66,6 +84,7 @@ export type CandidateDto = {
   salaryExpectation: number | null
   /** Empty list is a valid, explicitly handled state: candidate has no FSP history. */
   fspAchievements: FspAchievementDto[]
+  fspTitles: FspSportTitleDto[]
   fspLinked: boolean
   resumes?: ResumeDto[]
   hasPhoto?: boolean
@@ -86,16 +105,27 @@ export type CandidateDto = {
   matched?: boolean | null
 }
 
-/** Cabinet view: the search switch and the FSP id the candidate entered. */
+/** Cabinet view: the search switch and the FSP ID link with its sync state. */
 export type OwnCandidateDto = CandidateDto & {
   searching: boolean
+  /** Confirmed by FSP ID sign-in, never typed by the candidate. */
   fspMemberId: string | null
   /** Kept before a grade exists, so the resume can be reopened. */
   specialization: string | null
   birthDate: string | null
   profileDisplayConsent: boolean
   fspSync: FspSync | null
+  fspLinkedAt?: string | null
+  /** Last successful import from the FSP registry. */
+  fspSyncedAt?: string | null
+  /** The registry did not answer on the last import; the link stays. */
+  fspSyncError?: string | null
 }
+
+export type FspAuthorizeDto = { authorizeUrl: string }
+
+/** What FSP ID returns to `/profile/fsp/callback`. */
+export type FspLinkRequest = { code: string; state: string }
 
 export type ResumeDto = {
   id: string
@@ -177,19 +207,129 @@ export type CandidateSearchDto = Paginated<CandidateMatchDto> & {
 
 export type CandidateSort = 'relevance' | 'assessment' | 'salary' | 'experience'
 
-export type CandidateSearchParams = PaginationParams & {
+/** The recruiter's filters. Selecting a vacancy fills them in from its requirements. */
+export type CandidateFiltersDto = {
+  specializations: SpecializationCode[]
+  grades: Grade[]
+  verifiedOnly: boolean
+  /** False: no FSP results; true: some result, at least `fspResult` in `fspDiscipline`. */
+  hasFsp: boolean | null
+  fspResult: FspResult | null
+  fspDiscipline: FspDiscipline | null
+  experienceMin: number | null
+  /** «Обязательно»: every technology. «Будет плюсом»: ranks higher, filters nobody. */
+  stack: string[]
+  nice: string[]
+  salaryMin: number | null
+  salaryMax: number | null
+  /** Remote needs no city; office and hybrid need one of `cities` or readiness to relocate. */
+  workFormats: WorkFormat[]
+  cities: string[]
+  relocation: boolean
+  employmentTypes: EmploymentType[]
+  jobStatuses: JobStatus[]
+  /** Signed in within this many days. */
+  activeDays: number | null
+}
+
+/** Query parameters of the search and of its counts. */
+export type CandidateFilterParams = {
   q?: string
-  specialization?: SpecializationCode
-  grade?: Grade[]
-  stack?: string[]
-  hasFspAchievements?: boolean
-  verifiedOnly?: boolean
-  workFormat?: WorkFormat[]
-  city?: string
-  salaryMax?: number
-  vacancyId?: string
   view?: FeedView
-  sort?: CandidateSort
+  specialization?: SpecializationCode[]
+  grade?: Grade[]
+  verifiedOnly?: boolean
+  hasFspAchievements?: boolean
+  fspResult?: FspResult
+  fspDiscipline?: FspDiscipline
+  experienceMin?: number
+  stack?: string[]
+  nice?: string[]
+  salaryMin?: number
+  salaryMax?: number
+  workFormat?: WorkFormat[]
+  city?: string[]
+  relocation?: boolean
+  employment?: EmploymentType[]
+  jobStatus?: JobStatus[]
+  activeDays?: number
+}
+
+export type CandidateSearchParams = PaginationParams &
+  CandidateFilterParams & {
+    vacancyId?: string
+    sort?: CandidateSort
+  }
+
+export type CandidateRelaxationKind =
+  | 'stack'
+  | 'salary_max'
+  | 'salary_min'
+  | 'grades'
+  | 'specializations'
+  | 'verified'
+  | 'fsp_result'
+  | 'fsp_discipline'
+  | 'fsp'
+  | 'experience'
+  | 'work_formats'
+  | 'relocation'
+  | 'cities'
+  | 'employment'
+  | 'job_statuses'
+  | 'active'
+
+/** A filter to loosen when nobody matched; `value` is the technology for `stack`. */
+export type CandidateRelaxationDto = {
+  kind: CandidateRelaxationKind
+  value: string | null
+  count: number
+}
+
+/** How many candidates each option leaves, the other filters staying as they are. */
+export type CandidateFacetsDto = {
+  /** Candidates of the view and the text query before the filters. */
+  total: number
+  /** Candidates matching every filter. */
+  count: number
+  /** The option chosen alone in its group. */
+  specializations: OptionCountDto[]
+  grades: OptionCountDto[]
+  verified: number
+  fsp: number
+  fspResults: OptionCountDto[]
+  fspDisciplines: OptionCountDto[]
+  /** «1», «3», «5» years and more. */
+  experience: OptionCountDto[]
+  workFormats: OptionCountDto[]
+  /** Each city alone, without relocation; the most frequent first. */
+  cities: OptionCountDto[]
+  relocation: number
+  employmentTypes: OptionCountDto[]
+  jobStatuses: OptionCountDto[]
+  active: number
+  /** Matching candidates knowing each technology of the bank, the most frequent first. */
+  stack: OptionCountDto[]
+  /** Up to three, only when nobody matched. */
+  relaxations: CandidateRelaxationDto[]
+}
+
+/** An own vacancy in the search's mode list with its requirements as filters. */
+export type VacancyPresetDto = {
+  vacancyId: string
+  title: string
+  workFormat: WorkFormat
+  city: string | null
+  salaryTo: number
+  published: boolean
+  filters: CandidateFiltersDto
+  count: number
+}
+
+export type CandidatePresetsDto = {
+  /** Free search: every candidate of the view. */
+  total: number
+  vacancies: VacancyPresetDto[]
 }
 
 export const candidateKeys = {
@@ -197,6 +337,8 @@ export const candidateKeys = {
   detail: (id: string) => [...candidateKeys.all, 'detail', id] as const,
   mine: () => [...candidateKeys.all, 'mine'] as const,
   search: (params: CandidateSearchParams) => [...candidateKeys.all, 'search', params] as const,
+  facets: (params: CandidateFilterParams) => [...candidateKeys.all, 'facets', params] as const,
+  presets: (view: FeedView) => [...candidateKeys.all, 'presets', view] as const,
   reactionCounts: () => [...candidateKeys.all, 'reaction-counts'] as const,
 }
 
@@ -220,6 +362,20 @@ export const candidateQueries = {
       queryKey: candidateKeys.search(params),
       queryFn: ({ signal }) =>
         http.get<CandidateSearchDto>('/candidates', { query: params, signal }),
+    }),
+  /** Counts next to the search's filter options and the ways out of an empty list. */
+  facets: (params: CandidateFilterParams) =>
+    queryOptions({
+      queryKey: candidateKeys.facets(params),
+      queryFn: ({ signal }) =>
+        http.get<CandidateFacetsDto>('/candidates/facets', { query: params, signal }),
+    }),
+  /** Own vacancies as ready-made filters. */
+  presets: (view: FeedView = 'all') =>
+    queryOptions({
+      queryKey: candidateKeys.presets(view),
+      queryFn: ({ signal }) =>
+        http.get<CandidatePresetsDto>('/candidates/presets', { query: { view }, signal }),
     }),
   mine: () =>
     queryOptions({
@@ -255,7 +411,12 @@ export const candidateApi = {
   },
   setJobStatus: (jobStatus: JobStatus) =>
     http.patch<OwnCandidateDto>('/candidates/me/searching', { jobStatus }),
-  linkFsp: (fspMemberId: string) =>
-    http.post<OwnCandidateDto>('/candidates/me/fsp-link', { fspMemberId }),
+  /** Starts the FSP ID sign-in (OIDC + PKCE): the browser goes to the returned URL. */
+  authorizeFsp: (redirectUri: string) =>
+    http.post<FspAuthorizeDto>('/fsp-id/authorize', { redirectUri }),
+  linkFsp: (answer: FspLinkRequest) =>
+    http.post<OwnCandidateDto>('/candidates/me/fsp-link', answer),
+  /** Re-reads the FSP registry without a new sign-in. */
+  syncFsp: () => http.post<OwnCandidateDto>('/candidates/me/fsp-sync'),
   unlinkFsp: () => http.delete<OwnCandidateDto>('/candidates/me/fsp-link'),
 }

@@ -1,6 +1,6 @@
-import { isRouteErrorResponse, Link, useRouteError } from 'react-router'
+import { isRouteErrorResponse, useRouteError } from 'react-router'
 import { ROUTES } from '@/shared/config'
-import { ErrorState, Page } from '@/shared/ui'
+import { ButtonLink, ErrorState, Page } from '@/shared/ui'
 
 /** Last-resort boundary for render errors and failed lazy chunks. */
 export function RouteError() {
@@ -16,7 +16,11 @@ export function RouteError() {
   return (
     <Page title="Что-то пошло не так">
       <ErrorState message={message} onRetry={() => window.location.reload()} />
-      <Link to={ROUTES.landing}>На главную</Link>
+      <div>
+        <ButtonLink variant="ghost" to={ROUTES.landing}>
+          На главную
+        </ButtonLink>
+      </div>
     </Page>
   )
 }

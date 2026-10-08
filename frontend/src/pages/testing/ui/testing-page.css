@@ -1,99 +1,158 @@
-.test-note {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 18px;
-  color: var(--text);
+/* Rain fills this page only and stays behind the heading, the error, and the cards. */
+main:has(.page--testing) {
+  position: relative;
+  isolation: isolate;
 }
 
+.page--testing .feedback,
+.page--testing .runner__task,
+.page--testing .start-test,
+.page--testing .test-note {
+  background: var(--bg);
+}
+
+/* The error plate hugs the message so the rain stays the page ground around it. */
+.page--testing .feedback {
+  align-self: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 28px 36px;
+}
+
+.test-note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.test-note--error {
+  color: var(--red-text);
+}
+
+/* Result of the attempt just finished: the edge says how it went. */
 .test-result {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 24px;
-  border: 1px solid var(--line-strong);
+  padding: 22px 24px;
+  background: var(--surface);
+  box-shadow: inset 4px 0 0 var(--dim);
 }
 
 .test-result--passed {
-  border-color: #3ecf8e;
+  box-shadow: inset 4px 0 0 var(--blue);
 }
 
 .test-result--failed {
-  border-color: var(--error);
+  box-shadow: inset 4px 0 0 var(--red);
 }
 
 .test-result__title {
   margin: 0;
-  font-family: var(--font-display);
   font-weight: 300;
   font-size: clamp(22px, 2.2vw, 30px);
+  line-height: 1.15;
+  text-transform: uppercase;
 }
 
 .test-result__score {
   margin: 0;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 22px;
+  font-family: var(--font-accent), monospace;
+  font-size: 32px;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.test-result--passed .test-result__score {
+  color: var(--blue-light);
+}
+
+.test-result--failed .test-result__score {
+  color: var(--red-text);
 }
 
 .test-result__score span {
-  font-size: 13px;
-  letter-spacing: 0.06em;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-mute);
+  color: var(--muted);
 }
 
 .test-result__note {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 16px;
-  color: var(--text-mute);
+  max-width: 76ch;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.test-result__note--strong {
+  color: var(--ink);
+}
+
+.test-table-wrap {
+  overflow-x: auto;
+  background: var(--surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.test-result .test-table-wrap {
+  background: var(--bg);
 }
 
 .test-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 13.5px;
 }
 
 .test-table th,
 .test-table td {
-  padding: 12px 16px 12px 0;
-  border-bottom: 1px solid var(--line);
+  padding: 14px 16px;
+  border-top: 1px solid var(--line);
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .test-table th {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 12px;
-  letter-spacing: 0.1em;
+  padding-block: 12px;
+  border-top: 0;
+  border-bottom: 2px solid var(--blue);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-mute);
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.test-table tbody tr:first-child td {
+  border-top: 0;
 }
 
 .test-table td:nth-child(n + 3) {
   font-variant-numeric: tabular-nums;
 }
 
-.test-note--error {
-  color: var(--error);
-}
-
 .test-link {
   padding: 0;
   border: 0;
   background: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 12px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: underline;
-  text-underline-offset: 4px;
-  color: var(--text);
+  text-underline-offset: 3px;
+  color: var(--ink);
   cursor: pointer;
+}
+
+.test-link:hover:not(:disabled) {
+  color: var(--blue-light);
 }
 
 .test-link:disabled {
@@ -106,13 +165,9 @@
   outline-offset: 3px;
 }
 
-.test-result__note--strong {
-  color: var(--text);
-}
-
 .test-link--hint {
   display: block;
   margin-top: 6px;
   font-size: 11px;
-  color: #7be3b4;
+  color: var(--blue-light);
 }

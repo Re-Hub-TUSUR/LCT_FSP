@@ -2,19 +2,27 @@ export { vacancyApi, vacancyKeys, vacancyQueries } from './api/vacancy-api'
 export type {
   CompanyBriefDto,
   FeedBasisDto,
+  FeedMode,
   FeedView,
   Reaction,
   ReactionCountsDto,
   VacancyDto,
+  VacancyFacetsDto,
   VacancyFeedDto,
+  VacancyFeedFilterParams,
   VacancyFeedParams,
+  VacancyFeedPresetsDto,
+  VacancyFiltersDto,
   VacancyListParams,
   VacancyMatchDto,
+  VacancyRelaxationDto,
+  VacancyRelaxationKind,
 } from './api/vacancy-api'
 export { DECISION_VIEW_LABELS, DECISION_VIEWS, parseListView } from './model/feed-view'
 export type { DecisionView, ListView } from './model/feed-view'
 export {
   BENEFIT_LABELS,
+  BENEFITS,
   EMPLOYMENT_LABELS,
   EMPLOYMENT_TYPES,
   FSP_RESULT_LABELS,

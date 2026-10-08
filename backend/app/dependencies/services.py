@@ -3,6 +3,10 @@ from typing import Annotated
 from fastapi import Depends, Request
 
 from app.dependencies.common import SessionDep, SettingsDep
+from app.integrations.fsp import fsp_id_provider, fsp_registry
+from app.integrations.fsp.provider import FspIdProvider
+from app.integrations.fsp.registry import FspRegistryClient
+from app.integrations.fsp.sync import FspSyncService
 from app.repositories.assessment import AssessmentRepository
 from app.repositories.candidate import CandidateRepository
 from app.repositories.company import CompanyRepository
@@ -26,6 +30,7 @@ from app.services.candidates import CandidateProfileService
 from app.services.chat import ChatService
 from app.services.code_runner import CodeRunner, OnlineCompilerRunner
 from app.services.email import ResendEmailSender
+from app.services.fsp_link import FspLinkService
 from app.services.interview import AttemptInterviewService, Interviewer
 from app.services.llm import RouterAiModel
 from app.services.notifications import NotificationHub
@@ -103,6 +108,28 @@ def get_candidate_profile_service(session: SessionDep) -> CandidateProfileServic
 CandidateProfileServiceDep = Annotated[
     CandidateProfileService, Depends(get_candidate_profile_service)
 ]
+
+
+def get_fsp_id_provider(settings: SettingsDep) -> FspIdProvider:
+    return fsp_id_provider(settings)
+
+
+def get_fsp_registry(settings: SettingsDep) -> FspRegistryClient:
+    return fsp_registry(settings)
+
+
+def get_fsp_link_service(
+    session: SessionDep,
+    settings: SettingsDep,
+    provider: Annotated[FspIdProvider, Depends(get_fsp_id_provider)],
+    registry: Annotated[FspRegistryClient, Depends(get_fsp_registry)],
+) -> FspLinkService:
+    return FspLinkService(
+        CandidateRepository(session), provider, FspSyncService(registry), settings
+    )
+
+
+FspLinkServiceDep = Annotated[FspLinkService, Depends(get_fsp_link_service)]
 
 
 def get_notification_hub(request: Request) -> NotificationHub:

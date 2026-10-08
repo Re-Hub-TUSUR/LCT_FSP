@@ -1,25 +1,103 @@
+/* The rain fills `main` and stays behind the auth screens. */
+main:has(.page--auth) {
+  position: relative;
+  isolation: isolate;
+}
+
+.page--auth .page__eyebrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.auth-chip {
+  padding: 10px 16px;
+  background: var(--surface);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.auth-chip span {
+  color: var(--red);
+}
+
+.auth-brand {
+  font-family: var(--font-accent), monospace;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+/* The scramble inherits the title: mono for the words, the pixel face for the brand. */
+.page--auth .page__title .hacker-text,
+.auth-choice__title .hacker-text {
+  font-family: inherit;
+}
+
+.auth-glyph {
+  display: inline-flex;
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--blue);
+}
+
+.auth-glyph__red {
+  color: var(--red);
+}
+
+.auth-glyph__ink {
+  color: var(--ink);
+}
+
+.auth-back {
+  align-self: flex-start;
+  padding: 6px 0;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--muted);
+}
+
+.auth-back:hover {
+  color: var(--ink);
+}
+
+.auth-back:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
 .auth-choice {
   display: grid;
   width: 100%;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
 }
 
 .auth-choice__item {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 32px;
-  border: 1px solid var(--line-strong);
+  gap: 16px;
+  padding: clamp(24px, 2.4vw, 36px);
+  border: 1px solid var(--line);
+  background: var(--surface);
   text-decoration: none;
+  color: var(--ink);
   transition:
     background 0.25s ease,
     border-color 0.25s ease;
 }
 
 .auth-choice__item:hover {
-  background: var(--fill-brand);
-  border-color: var(--brand-blue);
+  background: rgba(64, 47, 255, 0.18);
+  border-color: var(--blue);
 }
 
 .auth-choice__item:focus-visible {
@@ -27,17 +105,39 @@
   outline-offset: 3px;
 }
 
+.auth-choice__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.auth-choice__top .auth-glyph {
+  font-size: clamp(34px, 3vw, 46px);
+}
+
+.auth-choice__arrow {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--muted);
+}
+
 .auth-choice__title {
-  font-family: var(--font-display);
-  font-weight: 200;
-  font-size: 32px;
+  margin-top: clamp(8px, 1.6vw, 24px);
+  font-weight: 300;
+  font-size: clamp(24px, 2vw, 30px);
+  line-height: 1.15;
 }
 
 .auth-choice__text {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  line-height: 1.5;
-  text-transform: uppercase;
-  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+/* Ornament along the bottom of the auth screens. */
+.auth-strip {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  font-size: 22px;
+  opacity: 0.55;
 }

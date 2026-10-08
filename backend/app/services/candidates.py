@@ -4,7 +4,7 @@ import uuid
 from datetime import date
 from urllib.parse import urlsplit
 
-from app.core.errors import AppError, ConflictError, NotFoundError
+from app.core.errors import AppError, NotFoundError
 from app.models import AssessmentStatus, CandidateProfile, User, UserRole
 from app.models.enums import JobStatus
 from app.repositories.candidate import CandidateRepository
@@ -104,6 +104,7 @@ class CandidateProfileService:
                 additional_resumes=[],
             )
             profile.fsp_achievements = []
+            profile.fsp_titles = []
             _apply_resume(profile, data)
             await self._candidates.add(profile)
         else:
@@ -113,23 +114,6 @@ class CandidateProfileService:
     async def set_searching(self, user: User, status: JobStatus) -> OwnCandidateRead:
         profile = await self._require(user)
         set_job_status(profile, status)
-        return own_candidate_read(profile, email=user.email)
-
-    async def link_fsp(self, user: User, member_id: str) -> OwnCandidateRead:
-        profile = await self._require(user)
-        member_id = member_id.strip()
-        other = await self._candidates.get_by_fsp_member(member_id)
-        if other is not None and other.id != profile.id:
-            raise ConflictError("Этот ID участника ФСП уже связан с другим аккаунтом")
-        if profile.fsp_member_id != member_id:
-            profile.fsp_achievements.clear()
-            profile.fsp_member_id = member_id
-        return own_candidate_read(profile, email=user.email)
-
-    async def unlink_fsp(self, user: User) -> OwnCandidateRead:
-        profile = await self._require(user)
-        profile.fsp_achievements.clear()
-        profile.fsp_member_id = None
         return own_candidate_read(profile, email=user.email)
 
     async def add_resume(self, user: User, data: ResumeCreate) -> OwnCandidateRead:

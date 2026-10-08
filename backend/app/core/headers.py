@@ -13,5 +13,6 @@ async def security_headers_middleware(
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["X-Frame-Options"] = "DENY"
-    response.headers["Content-Security-Policy"] = _API_CSP
+    # The only HTML pages (the emulated FSP ID sign-in) set a narrower policy of their own.
+    response.headers.setdefault("Content-Security-Policy", _API_CSP)
     return response

@@ -12,18 +12,17 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: 10px;
-  font-weight: 300;
-  font-size: 16px;
+  font-size: 13.5px;
 }
 
 .candidate-resumes__mark {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--ink);
 }
 
 .candidate-resumes__mark--muted {
-  color: var(--text-dim);
+  color: var(--muted);
 }
