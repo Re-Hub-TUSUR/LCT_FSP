@@ -1,11 +1,13 @@
 # KADRY — платформа подбора ИТ-специалистов ФСП
 
 Монолитный full-stack проект для кейса «ФСП, спецтрек»: банк категоризированных кандидатов
-(специализация + грейд по результатам тестирования), поиск и приглашения от работодателей с
-обязательной вилкой зарплаты, мэтчинг в формате свайпов, календарь, админка.
+(специализация + грейд по результатам тестирования, результаты ФСП), поиск и приглашения от
+работодателей с обязательной вилкой зарплаты, ленты подбора с фильтрами и сохранёнными поисками,
+мэтчинг в формате свайпов, чат, календарь, резюме в PDF, админка.
 
 - `frontend/` — React 19 + TypeScript + Vite, Feature-Sliced Design ([README](frontend/README.md))
 - `backend/` — Python 3.12, FastAPI, SQLAlchemy 2 async, PostgreSQL, Alembic ([README](backend/README.md))
+- [`search.md`](search.md) — как работает поиск: кандидатов для работодателей и вакансий для соискателей
 - `docs/ARCHITECTURE.md` — архитектура, правила импортов, компромиссы, следующие шаги
 - `docs-zensical/` — продуктовая и инженерная документация на [Zensical](https://zensical.org/) (RU/EN). В Docker она на `http://localhost:8081`; отдельно — `pip install zensical && zensical serve` из этой папки
 - `.github/workflows/` — CI (проверки, Docker-сборка, опциональная публикация и деплой)
@@ -77,7 +79,7 @@ Pre-commit (husky + lint-staged) прогоняет oxlint и prettier по из
 
 | Переменная                 | Где               | Обязательна | Описание                                  |
 | -------------------------- | ----------------- | ----------- | ----------------------------------------- |
-| `POSTGRES_DB/USER/PASSWORD`| compose           | пароль — да | учётка БД контейнера `db`                 |
+| `POSTGRES_DB/USER/PASSWORD/PORT` | compose     | пароль — да | учётка и порт БД контейнера `db`          |
 | `DATABASE_URL`             | backend           | да          | `postgresql+asyncpg://…` (в compose собирается сам) |
 | `JWT_SECRET`               | backend           | да          | подпись access-токенов, ≥ 32 символов     |
 | `ACCESS_TOKEN_TTL_MINUTES` | backend           | нет (30)    | срок жизни access-токена                  |
@@ -86,7 +88,10 @@ Pre-commit (husky + lint-staged) прогоняет oxlint и prettier по из
 | `RESEND_API_KEY`           | backend           | нет         | ключ Resend для кода подтверждения почты. Пусто — код в логе API (только не в production) |
 | `RESEND_FROM`              | backend           | нет         | отправитель письма, по умолчанию `onboarding@resend.dev` |
 | `SEED_USER_PASSWORD`       | backend (seed)    | нет         | пароль демо-аккаунтов `python -m app.seed`; пусто — пароль из backend/README |
-| `ELASTICSEARCH_URL`        | backend           | нет         | поиск кандидатов; в compose задан, пусто — поиск по базе |
+| `ELASTICSEARCH_URL`        | backend           | нет         | поиск кандидатов; в compose задан, пусто — поиск по базе ([search.md](search.md#два-движка-elasticsearch-и-база)) |
+| `SAVED_SEARCH_ALERT_MINUTES` | backend         | нет (5)     | как часто проверять сохранённые поиски и слать уведомления о новых результатах; `0` — выключено |
+| `ONLINECOMPILER_API_KEY`   | backend           | нет         | запуск кода в тестировании ([OnlineCompiler](https://onlinecompiler.io/docs)); пусто — вопросы работают, задачи на код отвечают 503 |
+| `FSP_ID_MODE`              | backend           | нет (`mock`)| FSP ID и реестр ФСП: `mock` — эмуляция внутри API, `keycloak` — настоящие системы; остальные `FSP_ID_*` и `FSP_REGISTRY_URL` — [docs/FSP_INTEGRATION.md](docs/FSP_INTEGRATION.md) |
 | `UPLOAD_DIR`               | backend           | нет         | каталог вложений чата, по умолчанию `/data/uploads`; в compose — том `upload-data` |
 | `ROUTERAI_API_KEY`         | backend           | нет         | ключ [RouterAI](https://routerai.ru/settings/keys) для распознавания резюме и ИИ-собеседования; пусто — поля заполняются вручную, грейд подтверждается без собеседования |
 | `RESUME_PARSER_MODEL`      | backend           | нет         | модель распознавания резюме, по умолчанию `yandex/aliceai-llm-flash` (только российские модели) |
@@ -100,6 +105,8 @@ Pre-commit (husky + lint-staged) прогоняет oxlint и prettier по из
 backend/    app/{api,core,db,models,schemas,services,repositories,dependencies}, migrations/, tests/
 frontend/   src/{app,pages,widgets,features,entities,shared}, tests/
 docs/       ARCHITECTURE.md, FSP_INTEGRATION.md, ADMIN.md
+search.md   как работает поиск (кандидаты и вакансии)
+ci_rules.md правила, как не ломать CI (для людей и ИИ-агентов)
 docs-zensical/  сайт документации (BRD, use cases, user flows, инженерия)
 .github/    workflows/{ci,frontend,backend}.yml
 .cursor/    skills для агентов (design-taste-frontend, frontend-design, ui-ux-pro-max), см. skills-lock.json
