@@ -153,6 +153,19 @@ class VacancyFeedService:
             free_count=len(facts),
         )
 
+    async def matching_ids(
+        self, user: User, searches: Sequence[VacancyFeedParams]
+    ) -> list[set[uuid.UUID]]:
+        """The vacancies each search finds now, as the feed shows them (skipped ones hidden)."""
+        candidate = _personal(await self._candidates.get_by_user(user.id))
+        rows = await self._rows(user, "all", set())
+        facts = [(row[0].id, VacancyFilterFacts.of(*row)) for row in rows]
+        found = []
+        for params in searches:
+            query = vacancy_query(params.filters, _scope(candidate, params))
+            found.append({vacancy_id for vacancy_id, item in facts if passes(item, query)})
+        return found
+
     async def counts(self, user: User) -> ReactionCounts:
         """Sizes of the lists `liked`, `matched` and `skipped` as the feed would show them."""
         profile = await self._candidates.get_by_user(user.id)

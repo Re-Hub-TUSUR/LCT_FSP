@@ -10,6 +10,7 @@ export type {
   CandidatePresetsDto,
   CandidateRelaxationDto,
   CandidateRelaxationKind,
+  CandidateSearchSaveDto,
   CandidateProfileUpdate,
   CandidateSearchDto,
   CandidateSearchParams,
@@ -24,6 +25,7 @@ export type {
   ResumeCreate,
   ResumeDraftDto,
   ResumeDto,
+  SavedCandidateSearchDto,
   VacancyPresetDto,
 } from './api/candidate-api'
 export {

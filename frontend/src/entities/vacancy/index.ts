@@ -6,6 +6,7 @@ export type {
   FeedView,
   Reaction,
   ReactionCountsDto,
+  SavedVacancySearchDto,
   VacancyDto,
   VacancyFacetsDto,
   VacancyFeedDto,
@@ -17,6 +18,7 @@ export type {
   VacancyMatchDto,
   VacancyRelaxationDto,
   VacancyRelaxationKind,
+  VacancySearchSaveDto,
 } from './api/vacancy-api'
 export { DECISION_VIEW_LABELS, DECISION_VIEWS, parseListView } from './model/feed-view'
 export type { DecisionView, ListView } from './model/feed-view'

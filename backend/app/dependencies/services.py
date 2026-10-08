@@ -17,6 +17,7 @@ from app.repositories.invitation import InvitationRepository
 from app.repositories.meeting import MeetingRepository
 from app.repositories.reaction import ReactionRepository
 from app.repositories.refresh_token import RefreshTokenRepository
+from app.repositories.saved_search import SavedSearchRepository
 from app.repositories.user import UserRepository
 from app.repositories.vacancy import VacancyRepository
 from app.search.elastic import ElasticSearchState
@@ -38,6 +39,7 @@ from app.services.reactions import ReactionService
 from app.services.responses import ResponsesService
 from app.services.resume_import import ResumeImportService
 from app.services.resume_reader import LlmResumeReader, ResumeReader
+from app.services.saved_searches import SavedSearchService
 from app.services.test_assignments import TestAssignmentService
 from app.services.vacancies import VacancyService
 from app.services.vacancy_feed import VacancyFeedService
@@ -94,6 +96,17 @@ def get_candidate_search_service(request: Request, session: SessionDep) -> Candi
 
 
 CandidateSearchServiceDep = Annotated[CandidateSearchService, Depends(get_candidate_search_service)]
+
+
+def get_saved_search_service(
+    session: SessionDep,
+    candidates: CandidateSearchServiceDep,
+    vacancies: Annotated[VacancyFeedService, Depends(get_vacancy_feed_service)],
+) -> SavedSearchService:
+    return SavedSearchService(SavedSearchRepository(session), candidates, vacancies)
+
+
+SavedSearchServiceDep = Annotated[SavedSearchService, Depends(get_saved_search_service)]
 
 
 def get_candidate_profile_service(session: SessionDep) -> CandidateProfileService:

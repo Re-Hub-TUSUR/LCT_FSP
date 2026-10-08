@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { candidateKeys } from '@/entities/candidate'
 import { companyKeys } from '@/entities/company'
 import { conversationKeys } from '@/entities/conversation'
 import { responseKeys } from '@/entities/response'
 import { useSession } from '@/entities/session'
+import { vacancyKeys } from '@/entities/vacancy'
 import { env } from '@/shared/config'
 
 export type CompanyLikedEvent = {
@@ -25,15 +27,27 @@ export type CompanyVerificationEvent = {
   reason: string | null
 }
 
-export type NotificationEvent = CompanyLikedEvent | MessageEvent | CompanyVerificationEvent
+/** A saved search found results that were not there when it was last opened. */
+export type SavedSearchNewEvent = {
+  type: 'saved_search_new'
+  searchId: string
+  kind: 'candidates' | 'vacancies'
+  title: string
+  /** New results since the search was last opened. */
+  count: number
+}
+
+export type NotificationEvent =
+  CompanyLikedEvent | MessageEvent | CompanyVerificationEvent | SavedSearchNewEvent
 
 type Handlers = {
   onCompanyLiked?: (event: CompanyLikedEvent) => void
   onMessage?: (event: MessageEvent) => void
   onCompanyVerification?: (event: CompanyVerificationEvent) => void
+  onSavedSearchNew?: (event: SavedSearchNewEvent) => void
 }
 
-/** SSE for employer likes, new chat messages and the IT accreditation decision. */
+/** SSE for likes, chat messages, the IT accreditation decision and saved search news. */
 export function useNotificationStream(handlers: Handlers) {
   const { session } = useSession()
   const accessToken = session?.accessToken
@@ -86,6 +100,13 @@ export function useNotificationStream(handlers: Handlers) {
               handlersRef.current.onCompanyVerification?.(payload)
               // The extract status and `itAccredited` of the company profile.
               void queryClient.invalidateQueries({ queryKey: companyKeys.all })
+            }
+            if (payload.type === 'saved_search_new') {
+              handlersRef.current.onSavedSearchNew?.(payload)
+              // «+N новых» next to the search, and the open lists with the new results.
+              void queryClient.invalidateQueries({
+                queryKey: payload.kind === 'candidates' ? candidateKeys.all : vacancyKeys.all,
+              })
             }
           }
         }

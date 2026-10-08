@@ -393,6 +393,8 @@ export type ModeOption = {
   note?: string
   /** A header shown before the first option of a section («Мои вакансии»). */
   section?: string
+  /** The note is news: «+3 новых». */
+  fresh?: boolean
 }
 
 type ModeSelectProps = {
@@ -404,6 +406,8 @@ type ModeSelectProps = {
   emptyText: string
   /** Drawn with an accent edge: the panel works for a vacancy, not the free search. */
   accented?: boolean
+  /** A button under the options, e.g. «+ Сохранить текущие фильтры». */
+  action?: { label: string; onClick: () => void }
 }
 
 /** What the filters start from: a dropdown with a search over the options. */
@@ -415,6 +419,7 @@ export function ModeSelect({
   searchPlaceholder,
   emptyText,
   accented,
+  action,
 }: ModeSelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -441,7 +446,8 @@ export function ModeSelect({
   const pick = (id: string) => {
     setOpen(false)
     button.current?.focus()
-    if (id !== value) onChange(id)
+    // The current option is picked again only when it has news: a saved search reopens.
+    if (id !== value || options.find((option) => option.id === id)?.fresh) onChange(id)
   }
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -526,6 +532,18 @@ export function ModeSelect({
               />
             ))}
           </div>
+          {action && (
+            <button
+              type="button"
+              className="filters-mode__save"
+              onClick={() => {
+                setOpen(false)
+                action.onClick()
+              }}
+            >
+              {action.label}
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -571,7 +589,13 @@ function ModeItem({
           <span className="filters-mode__title">{option.title}</span>
           <span className="filters-mode__subtitle">{option.subtitle}</span>
         </span>
-        {option.note && <span className="filters-mode__note">{option.note}</span>}
+        {option.note && (
+          <span
+            className={['filters-mode__note', option.fresh && 'is-new'].filter(Boolean).join(' ')}
+          >
+            {option.note}
+          </span>
+        )}
       </div>
     </>
   )
@@ -675,6 +699,35 @@ export function UndoToast({ toast, onClose }: { toast: ToastState; onClose: () =
           Вернуть
         </button>
       )}
+    </div>
+  )
+}
+
+/** «☆ Сохранить поиск» at the bottom of a panel; «★ Поиск сохранён» once it is. */
+export function SaveSearchButton({
+  saved,
+  pending,
+  onSave,
+  hint,
+  error,
+}: {
+  saved: boolean
+  pending: boolean
+  onSave: () => void
+  hint: string
+  error?: string | null
+}) {
+  return (
+    <div className="filters-save">
+      <button
+        type="button"
+        className={saved ? 'is-done' : undefined}
+        disabled={saved || pending}
+        onClick={onSave}
+      >
+        {saved ? '★ Поиск сохранён' : '☆ Сохранить поиск'}
+      </button>
+      {error ? <p className="filters-error">{error}</p> : <p className="filters-hint">{hint}</p>}
     </div>
   )
 }

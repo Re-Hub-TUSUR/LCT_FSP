@@ -9,12 +9,14 @@ from app.dependencies.common import PaginationDep
 from app.dependencies.filters import VacancyFeedParamsDep
 from app.dependencies.services import (
     ReactionServiceDep,
+    SavedSearchServiceDep,
     VacancyFeedServiceDep,
     VacancyServiceDep,
 )
-from app.models.enums import Grade, WorkFormat
+from app.models.enums import Grade, SavedSearchKind, WorkFormat
 from app.schemas.common import Page
 from app.schemas.reaction import FeedView, ReactionCounts, ReactionRead, ReactionRequest
+from app.schemas.saved_search import SavedVacancySearch, VacancySearchSave
 from app.schemas.vacancy import (
     VacancyCreate,
     VacancyFacets,
@@ -89,6 +91,53 @@ async def vacancy_feed_presets(
     user: CandidateUser, feed: VacancyFeedServiceDep, view: FeedView = "all"
 ) -> VacancyFeedPresets:
     return await feed.presets(user, view=view)
+
+
+@router.get(
+    "/feed/saved-searches",
+    summary="Candidate: saved searches with how many vacancies each finds and how many are new",
+)
+async def list_saved_vacancy_searches(
+    user: CandidateUser, searches: SavedSearchServiceDep
+) -> list[SavedVacancySearch]:
+    return await searches.vacancy_searches(user)
+
+
+@router.post(
+    "/feed/saved-searches",
+    status_code=status.HTTP_201_CREATED,
+    summary="Candidate: save the current feed filters",
+    description=(
+        "The vacancies found now count as seen; later ones are new and come as a notification "
+        "(`saved_search_new` in the notification stream). Up to 20 searches."
+    ),
+)
+async def save_vacancy_search(
+    data: VacancySearchSave, user: CandidateUser, searches: SavedSearchServiceDep
+) -> SavedVacancySearch:
+    return await searches.save_vacancy_search(user, data)
+
+
+@router.post(
+    "/feed/saved-searches/{search_id}/seen",
+    summary="Candidate: the search was opened, every vacancy it finds now is seen",
+)
+async def open_saved_vacancy_search(
+    search_id: uuid.UUID, user: CandidateUser, searches: SavedSearchServiceDep
+) -> SavedVacancySearch:
+    return await searches.open_vacancy_search(user, search_id)
+
+
+@router.delete(
+    "/feed/saved-searches/{search_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Candidate: delete a saved search",
+)
+async def delete_saved_vacancy_search(
+    search_id: uuid.UUID, user: CandidateUser, searches: SavedSearchServiceDep
+) -> Response:
+    await searches.delete(user, search_id, SavedSearchKind.VACANCIES)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get(

@@ -30,6 +30,7 @@ export {
   FilterSubLabel,
   ModeSelect,
   MoneyField,
+  SaveSearchButton,
   SourceMark,
   TagCombobox,
   UndoToast,

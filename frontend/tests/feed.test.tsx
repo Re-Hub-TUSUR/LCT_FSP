@@ -320,11 +320,14 @@ describe('feeds', () => {
   it('opens the lists of own decisions from the feed and marks mutual interest', async () => {
     signIn('candidate')
     const views: (string | null)[] = []
+    const rest = mockFetch({})
     vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
       const url = new URL(String(input), 'http://localhost')
       const view = url.searchParams.get('view')
-      // The app also restores the session and checks the resume on start: only the feed counts.
-      if (url.pathname.endsWith('/vacancies/feed')) views.push(view)
+      // The app also restores the session and checks the resume on start; the filters ask for
+      // their counts and saved searches: only the feed itself answers here.
+      if (!url.pathname.endsWith('/vacancies/feed')) return rest(input)
+      views.push(view)
       const items =
         view === 'matched'
           ? [{ ...vacancyMatch('v1', 'Go-разработчик в команду антифрода', 0.91), matched: true }]
