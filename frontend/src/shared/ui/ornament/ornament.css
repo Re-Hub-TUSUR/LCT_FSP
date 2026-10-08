@@ -1,7 +1,9 @@
+/* A frieze is always longer than its container: it is clipped, so it spans the full width. */
 .ornament {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 0.14em;
+  gap: 0.5em;
   overflow: hidden;
   white-space: nowrap;
   font-family: var(--font-mono);
@@ -11,8 +13,48 @@
   user-select: none;
 }
 
+/* The halves grow from the axis outwards and lose their ends evenly. */
+.ornament--mirror {
+  gap: 0.5em;
+}
+
+.ornament__half {
+  flex: 1 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ornament__half--left {
+  flex-direction: row-reverse;
+}
+
+.ornament__axis {
+  flex: none;
+}
+
+.ornament__sign {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ornament__sign--flip {
+  transform: scaleX(-1);
+}
+
 .ornament__g {
   flex: none;
+}
+
+/* Drawn shapes stand as tall as a capital letter of the strip. */
+.ornament__shape {
+  flex: none;
+  display: block;
+  height: 0.86em;
+  overflow: visible;
 }
 
 .ornament__g--b {

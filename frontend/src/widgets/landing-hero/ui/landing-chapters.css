@@ -20,27 +20,30 @@
   scroll-snap-stop: always;
 }
 
+/* The dark ground under the copy. It fades out towards the top and the bottom of the section,
+   so no edge travels across the screen between chapters, and it comes and goes with the copy. */
 .chapter::before {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 32%, #000 68%, transparent 100%);
   background: linear-gradient(
     to right,
-    rgba(27, 28, 33, 0.96) 0%,
-    rgba(27, 28, 33, 0.82) 36%,
-    rgba(27, 28, 33, 0.3) 60%,
-    transparent 78%
+    rgba(27, 28, 33, 0.8) 0%,
+    rgba(27, 28, 33, 0.62) 34%,
+    rgba(27, 28, 33, 0.2) 56%,
+    transparent 72%
   );
 }
 
 .chapter--ltr::before {
   background: linear-gradient(
     to left,
-    rgba(27, 28, 33, 0.96) 0%,
-    rgba(27, 28, 33, 0.82) 36%,
-    rgba(27, 28, 33, 0.3) 60%,
-    transparent 78%
+    rgba(27, 28, 33, 0.8) 0%,
+    rgba(27, 28, 33, 0.62) 34%,
+    rgba(27, 28, 33, 0.2) 56%,
+    transparent 72%
   );
 }
 
@@ -161,6 +164,25 @@
     animation-timeline: --chapter;
     animation-range: entry 0% exit 100%;
   }
+
+  .chapter::before {
+    animation: chapter-scrim linear both;
+    animation-timeline: --chapter;
+    animation-range: entry 0% exit 100%;
+  }
+}
+
+/* Slightly ahead of the copy: the ground is there before the text arrives. */
+@keyframes chapter-scrim {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  38%,
+  62% {
+    opacity: 1;
+  }
 }
 
 @keyframes chapter-pass {
@@ -196,9 +218,9 @@
   .chapter--ltr::before {
     background: linear-gradient(
       to bottom,
-      rgba(27, 28, 33, 0.8) 0%,
-      rgba(27, 28, 33, 0.92) 46%,
-      rgba(27, 28, 33, 0.6) 100%
+      rgba(27, 28, 33, 0.58) 0%,
+      rgba(27, 28, 33, 0.8) 50%,
+      rgba(27, 28, 33, 0.58) 100%
     );
   }
 
@@ -216,6 +238,15 @@
     animation: none;
     opacity: 1;
     transform: none;
+  }
+
+  /* Sections are as tall as their text here: a plain even ground, nothing to animate. */
+  .chapter::before,
+  .chapter--ltr::before {
+    animation: none;
+    opacity: 1;
+    mask-image: none;
+    background: rgba(27, 28, 33, 0.88);
   }
 
   .chapter {
