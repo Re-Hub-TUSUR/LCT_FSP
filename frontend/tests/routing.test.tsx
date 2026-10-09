@@ -27,20 +27,20 @@ describe('application routing', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'КАДРЫ' }, { timeout: 5000 }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Я специалист' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Я ищу работу' })).toBeInTheDocument()
   })
 
   it('takes both roles from the landing to their registration without asking for an email', async () => {
     const user = userEvent.setup()
 
     const specialist = renderApp('/')
-    await user.click(await screen.findByRole('button', { name: 'Я специалист' }, { timeout: 5000 }))
+    await user.click(await screen.findByRole('button', { name: 'Я ищу работу' }, { timeout: 5000 }))
     await waitFor(() => expect(specialist.router.state.location.pathname).toBe('/auth/candidate'))
     expect(specialist.router.state.location.search).toBe('?mode=register')
     specialist.unmount()
 
     const employer = renderApp('/')
-    await user.click(await screen.findByRole('button', { name: 'Я ищу специалистов' }))
+    await user.click(await screen.findByRole('button', { name: 'Я нанимаю' }))
     await waitFor(() => expect(employer.router.state.location.pathname).toBe('/auth/employer'))
     expect(employer.router.state.location.search).toBe('?mode=register')
   })
@@ -50,11 +50,11 @@ describe('application routing', () => {
     const user = userEvent.setup()
 
     await user.type(await screen.findByLabelText('Электронная почта'), 'dev@')
-    await user.click(screen.getByRole('button', { name: 'Я специалист' }))
+    await user.click(screen.getByRole('button', { name: 'Я ищу работу' }))
     expect(screen.getByRole('alert')).toHaveTextContent('Проверьте адрес почты')
 
     await user.type(screen.getByLabelText('Электронная почта'), 'fsp.ru')
-    await user.click(screen.getByRole('button', { name: 'Я специалист' }))
+    await user.click(screen.getByRole('button', { name: 'Я ищу работу' }))
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/auth/candidate'))
     expect(router.state.location.search).toContain('email=dev%40fsp.ru')

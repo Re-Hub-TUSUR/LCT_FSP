@@ -7,8 +7,8 @@ import type { NavItem } from '@/widgets/site-header'
 const LANDING_LINKS: NavItem[] = [
   { label: 'Специалистам', to: '#specialists' },
   { label: 'Компаниям', to: '#companies' },
-  { label: 'О платформе', to: '#about' },
-  { label: 'Контакты', to: '#contacts' },
+  { label: 'Как проверяем', to: '#testing' },
+  { label: 'Начать', to: '#start' },
 ]
 
 export function LandingPage() {
