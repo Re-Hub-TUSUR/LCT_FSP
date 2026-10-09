@@ -13,6 +13,7 @@ from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.headers import security_headers_middleware
 from app.core.logging import configure_logging, request_logging_middleware
+from app.core.openapi import TAGS_METADATA, register_docs
 from app.db.session import get_engine, get_sessionmaker
 from app.repositories.candidate import CandidateRepository
 from app.search.elastic import ElasticSearchState, create_client
@@ -79,11 +80,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title=settings.app_name,
         version="0.1.0",
         description="API платформы подбора ИТ-специалистов ФСП. Ошибки: `{error: {code, message}}`",
-        docs_url="/api/docs",
+        # The Swagger UI route is registered by hand below, with its own CSP.
+        docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
+        openapi_tags=TAGS_METADATA,
         lifespan=lifespan,
     )
+    register_docs(app, docs_url="/api/docs", openapi_url="/api/openapi.json")
 
     if settings.cors_origins:
         app.add_middleware(
