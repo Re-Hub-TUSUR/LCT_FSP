@@ -1,4 +1,4 @@
-# Local full stack: PostgreSQL + Elasticsearch + API + SPA (nginx proxies /api to the backend) + docs.
+# Local full stack: PostgreSQL + Elasticsearch + API + SPA (nginx proxies /api to the backend) + docs + admin gate.
 # Usage: cp .env.example .env  (fill JWT_SECRET and POSTGRES_PASSWORD), then `docker compose up --build`.
 name: kadry
 
@@ -70,6 +70,10 @@ services:
       FSP_ID_CLIENT_SECRET: ${FSP_ID_CLIENT_SECRET:-}
       FSP_ID_REDIRECT_URI: ${FSP_ID_REDIRECT_URI:-http://localhost:8080/profile/fsp/callback}
       FSP_REGISTRY_URL: ${FSP_REGISTRY_URL:-}
+      # Account the admin subdomain opens after the browser password. Create it with create_admin.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_GATE_SECRET: ${ADMIN_GATE_SECRET:-}
     volumes:
       - upload-data:/data/uploads
     depends_on:
@@ -103,6 +107,22 @@ services:
     image: kadry-docs
     ports:
       - "8081:80"
+    restart: unless-stopped
+
+  # Admin subdomain, same idea as docs: point admin.<domain> at this port (docs is 8081).
+  # Without ADMIN_GATE_USERS and ADMIN_GATE_SECRET the port answers 503.
+  admin:
+    build: ./deploy/admin-gate
+    image: kadry-admin
+    environment:
+      ADMIN_GATE_USERS: ${ADMIN_GATE_USERS:-}
+      ADMIN_GATE_SECRET: ${ADMIN_GATE_SECRET:-}
+      FRONTEND_UPSTREAM: http://frontend:81
+    depends_on:
+      frontend:
+        condition: service_healthy
+    ports:
+      - "8082:80"
     restart: unless-stopped
 
 volumes:

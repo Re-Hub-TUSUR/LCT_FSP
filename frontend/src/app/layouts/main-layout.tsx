@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router'
 import { useSession } from '@/entities/session'
 import type { UserRole } from '@/entities/user'
-import { ROUTES } from '@/shared/config'
+import { isAdminHost, ROUTES } from '@/shared/config'
 import { NotificationToasts } from '@/features/notification-stream'
 import { SiteHeader } from '@/widgets/site-header'
 import type { NavItem } from '@/widgets/site-header'
@@ -34,21 +34,22 @@ const NAV_BY_ROLE: Record<UserRole | 'guest', NavItem[]> = {
 export function MainLayout() {
   const { user } = useSession()
   const setup = useCabinetSetup()
+  const onAdminHost = isAdminHost()
   const links = setup.phase === 'open' ? NAV_BY_ROLE[user?.role ?? 'guest'] : []
-  const cta = !user
-    ? { label: 'Войти', to: ROUTES.auth }
-    : setup.phase === 'required'
-      ? undefined
-      : { label: 'Кабинет', to: ROUTES.profile }
+  const cta = onAdminHost
+    ? undefined
+    : !user
+      ? { label: 'Войти', to: ROUTES.auth }
+      : setup.phase === 'required'
+        ? undefined
+        : { label: 'Кабинет', to: ROUTES.profile }
+
+  const home = onAdminHost ? ROUTES.admin : setup.phase === 'required' ? setup.setupPath : undefined
 
   return (
     <>
       <div className="app-glow" aria-hidden="true" />
-      <SiteHeader
-        links={links}
-        cta={cta}
-        home={setup.phase === 'required' ? setup.setupPath : undefined}
-      />
+      <SiteHeader links={links} cta={cta} home={home} />
       <NotificationToasts />
       <main>
         <CabinetGate>

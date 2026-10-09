@@ -10,7 +10,7 @@ The platform task bank, analytics, company checks, the ban list, dictionaries, p
 
 **Priority:** MVP · К4 · **UC:** UC-А-01
 
-An administrator signs in with the same email and password as the other roles. A second factor is not required. They do not read chats.
+The admin opens on the `admin` subdomain (documentation lives on the `docs` subdomain the same way). The browser asks for a name and a password and lets in only the people listed in nginx. After the right credentials the section «Админка» is open at once. The menu beside it has «Вакансии». The account does not ask for a second factor. The administrator does not read chats.
 
 ## FR-А-02. Task card
 

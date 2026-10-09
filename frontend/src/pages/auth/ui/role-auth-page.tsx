@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
+import { sessionStore } from '@/entities/session'
 import { AuthForm } from '@/features/auth-by-email'
 import type { AuthMode } from '@/features/auth-by-email'
 import { ROUTES } from '@/shared/config'
@@ -58,6 +59,10 @@ function RoleAuthPage({ role }: { role: 'candidate' | 'employer' }) {
           initialMode={mode}
           onModeChange={setMode}
           onSuccess={(entry) => {
+            if (sessionStore.getSnapshot()?.user.role === 'admin') {
+              navigate(ROUTES.admin, { replace: true })
+              return
+            }
             const setup = role === 'candidate' ? ROUTES.profileResume : ROUTES.profileCompany
             if (entry === 'verified') {
               navigate(setup, { replace: true })

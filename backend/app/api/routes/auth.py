@@ -1,3 +1,5 @@
+import hmac
+
 from fastapi import APIRouter, Request, Response, status
 
 from app.api.auth_cookies import (
@@ -6,7 +8,7 @@ from app.api.auth_cookies import (
     require_csrf,
     set_refresh_cookie,
 )
-from app.core.errors import AuthenticationError
+from app.core.errors import AuthenticationError, NotFoundError
 from app.dependencies.common import SettingsDep
 from app.dependencies.services import AuthServiceDep
 from app.schemas.auth import (
@@ -37,6 +39,32 @@ async def login(
     data: LoginRequest, auth: AuthServiceDep, settings: SettingsDep, response: Response
 ) -> TokenResponse:
     issued = await auth.login(data)
+    set_refresh_cookie(response, issued.refresh_token, issued.refresh_ttl, settings)
+    return issued.response
+
+
+def _same_secret(provided: str, expected: str) -> bool:
+    if not provided or not expected:
+        return False
+    try:
+        return hmac.compare_digest(provided.encode(), expected.encode())
+    except (TypeError, ValueError):
+        return False
+
+
+@router.post(
+    "/admin-gate",
+    summary="Open the admin session after the browser accepted the nginx password",
+)
+async def admin_gate(
+    request: Request, auth: AuthServiceDep, settings: SettingsDep, response: Response
+) -> TokenResponse:
+    expected = settings.admin_gate_secret.get_secret_value()
+    if not expected or not settings.admin_email.strip():
+        raise NotFoundError()
+    if not _same_secret(request.headers.get("x-admin-gate", ""), expected):
+        raise AuthenticationError("Вход в админку закрыт")
+    issued = await auth.open_admin_gate(settings.admin_email)
     set_refresh_cookie(response, issued.refresh_token, issued.refresh_ttl, settings)
     return issued.response
 

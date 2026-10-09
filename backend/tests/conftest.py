@@ -8,6 +8,8 @@ os.environ["CORS_ORIGINS"] = ""
 # A key in a developer's .env must never make the tests call the paid model.
 os.environ["ROUTERAI_API_KEY"] = ""
 os.environ["ATS_POLL_SECONDS"] = "0"
+os.environ["ADMIN_EMAIL"] = "admin@kadry.test"
+os.environ["ADMIN_GATE_SECRET"] = "test-admin-gate-secret"
 
 import zlib
 from collections.abc import AsyncIterator

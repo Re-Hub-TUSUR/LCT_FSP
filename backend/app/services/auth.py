@@ -111,6 +111,15 @@ class AuthService:
             raise EmailNotVerifiedError(details={"email": user.email})
         return await self._open_session(user)
 
+    async def open_admin_gate(self, email: str) -> IssuedSession:
+        """Session for the administrator the nginx gate already let through."""
+        user = await self._users.get_by_email(normalize_email(email))
+        if user is None or user.role != UserRole.ADMIN or not user.is_email_verified:
+            raise AuthenticationError("Вход в админку закрыт")
+        if not user.is_active:
+            raise AuthenticationError("Учётная запись заблокирована")
+        return await self._open_session(user)
+
     async def refresh(self, raw_token: str) -> IssuedSession:
         claims = decode_refresh_token(raw_token, self._settings)
         stored = await self._refresh_tokens.get(claims.token_id)

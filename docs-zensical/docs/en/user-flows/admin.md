@@ -6,7 +6,7 @@ icon: lucide/route
 
 The rules: [administrator](../business/brd/07-admin.md).
 
-1. Sign in with email and password.
+1. Open the admin subdomain and enter a name and password in the browser window. «Админка» opens at once; the menu beside it is «Вакансии».
 2. Task bank: add or edit a card, open the preview.
 3. Analytics: take a snapshot of the tasks.
 4. Companies: confirm the documents or refuse.

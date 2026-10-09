@@ -1,4 +1,4 @@
-export { ApiError, configureHttp, http, request, requestBlob } from './http'
+export { ApiError, accessHeaders, configureHttp, http, request, requestBlob } from './http'
 export type { RequestOptions } from './http'
 export { getErrorMessage } from './error-message'
 export { createQueryClient } from './query-client'

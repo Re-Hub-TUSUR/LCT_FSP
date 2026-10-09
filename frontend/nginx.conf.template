@@ -1,5 +1,13 @@
+# Port 80 is the public site: a client-supplied gate header is dropped.
+# Port 81 is unpublished and used only by the admin proxy.
+map $server_port $forwarded_admin_gate {
+    default "";
+    81 $http_x_admin_gate;
+}
+
 server {
     listen 80;
+    listen 81;
     server_name _;
     root /usr/share/nginx/html;
     index index.html;
@@ -24,6 +32,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Admin-Gate $forwarded_admin_gate;
         client_max_body_size 10m;
     }
 

@@ -1,5 +1,6 @@
+import { Navigate } from 'react-router'
 import { useSession } from '@/entities/session'
-import { ROUTES } from '@/shared/config'
+import { isAdminHost, ROUTES } from '@/shared/config'
 import { LandingHero } from '@/widgets/landing-hero'
 import { SiteHeader } from '@/widgets/site-header'
 import type { NavItem } from '@/widgets/site-header'
@@ -13,6 +14,7 @@ const LANDING_LINKS: NavItem[] = [
 
 export function LandingPage() {
   const { user } = useSession()
+  if (isAdminHost()) return <Navigate to={ROUTES.admin} replace />
   const cta: NavItem = user
     ? { label: 'Кабинет', to: ROUTES.profile }
     : { label: 'Войти', to: ROUTES.auth }

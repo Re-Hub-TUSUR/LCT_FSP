@@ -1,3 +1,4 @@
+export { isAdminHost } from './admin-host'
 export { env } from './env'
 export { ROUTES, paths } from './routes'
 export type { MatchingProfileKind } from './routes'

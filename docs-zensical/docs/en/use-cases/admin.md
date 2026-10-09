@@ -8,7 +8,7 @@ The rules: [administrator](../business/brd/07-admin.md).
 
 ## UC-А-01 Sign-in
 
-**As** an administrator, **I want** to sign in with email and password, **so that** the admin opens without a second factor. FR-А-01.
+**As** an administrator, **I want** to open the admin subdomain and enter a name and password in the browser window, **so that** I land in «Админка» at once. FR-А-01.
 
 ## UC-А-02 A new task
 

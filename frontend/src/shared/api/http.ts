@@ -1,4 +1,4 @@
-import { env } from '../config'
+import { env, isAdminHost } from '../config'
 
 /** Error envelope returned by the backend: `{ "error": { code, message, details } }`. */
 type ErrorEnvelope = {
@@ -50,6 +50,16 @@ export type RequestOptions = {
 
 /** Marks our fetch calls so a foreign form cannot reuse the refresh cookie. */
 const CSRF_HEADER = { 'X-Kadry-Request': '1' }
+
+/**
+ * On the admin subdomain nginx already uses Authorization for the browser password.
+ * The JWT travels in a side header, and that nginx copies it back to Authorization.
+ */
+export function accessHeaders(token: string | null): Record<string, string> {
+  if (!token) return {}
+  const value = `Bearer ${token}`
+  return isAdminHost() ? { 'X-Kadry-Access': value } : { Authorization: value }
+}
 
 function buildUrl(path: string, query?: RequestOptions['query']) {
   const url = `${env.apiUrl}${path.startsWith('/') ? path : `/${path}`}`
@@ -105,7 +115,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
         Accept: 'application/json',
         ...CSRF_HEADER,
         ...(body !== undefined && !isForm && { 'Content-Type': 'application/json' }),
-        ...(token && { Authorization: `Bearer ${token}` }),
+        ...accessHeaders(token),
         ...headers,
       },
       body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
@@ -137,7 +147,7 @@ export async function requestBlob(path: string, options: RequestOptions = {}): P
       method: 'GET',
       signal,
       credentials: 'include',
-      headers: { ...CSRF_HEADER, ...(token && { Authorization: `Bearer ${token}` }), ...headers },
+      headers: { ...CSRF_HEADER, ...accessHeaders(token), ...headers },
     })
   } catch (cause) {
     if (cause instanceof DOMException && cause.name === 'AbortError') throw cause

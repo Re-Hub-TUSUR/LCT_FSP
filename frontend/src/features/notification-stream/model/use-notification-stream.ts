@@ -8,6 +8,7 @@ import { invitationKeys } from '@/entities/invitation'
 import { responseKeys } from '@/entities/response'
 import { useSession } from '@/entities/session'
 import { vacancyKeys } from '@/entities/vacancy'
+import { accessHeaders } from '@/shared/api'
 import { env } from '@/shared/config'
 
 export type CompanyLikedEvent = {
@@ -97,7 +98,7 @@ export function useNotificationStream(handlers: Handlers) {
         const response = await fetch(url, {
           headers: {
             Accept: 'text/event-stream',
-            Authorization: `Bearer ${accessToken}`,
+            ...accessHeaders(accessToken),
             'X-Kadry-Request': '1',
           },
           credentials: 'include',

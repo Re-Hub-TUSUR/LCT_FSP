@@ -28,6 +28,9 @@ class Settings(BaseSettings):
 
     jwt_secret: SecretStr
     jwt_algorithm: Literal["HS256", "HS384", "HS512"] = "HS256"
+    # Browser gate on the admin subdomain. An empty secret closes POST /auth/admin-gate.
+    admin_email: str = ""
+    admin_gate_secret: SecretStr = SecretStr("")
     jwt_issuer: str = "kadry"
     access_token_ttl_minutes: int = Field(default=30, ge=1, le=24 * 60)
     # Survives a closed browser. Logout revokes it; each refresh rotates it.

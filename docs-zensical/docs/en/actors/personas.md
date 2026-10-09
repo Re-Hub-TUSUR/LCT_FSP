@@ -43,4 +43,4 @@ Without a filled company profile the invitation does not go out.
 
 ## Administrator
 
-One role for the task bank, analytics, company checks, the ban list, dictionaries, parameters, and the journal. A second factor is not required.
+One role for the task bank, analytics, company checks, the ban list, dictionaries, parameters, and the journal. Entry is the browser window on the `admin` subdomain. A second factor is not required.

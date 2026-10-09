@@ -19,7 +19,9 @@ docker compose up --build
 docker compose exec backend python -m app.seed
 ```
 
-SPA: `http://localhost:8080`. Документация: `http://localhost:8081`. API: `http://localhost:8000/api/docs`.
+SPA: `http://localhost:8080`. Документация: `http://localhost:8081`. Админка: `http://localhost:8082` (поддомен `admin`, как документация на `docs`). API: `http://localhost:8000/api/docs`.
+
+Для окна браузера в `.env` нужны `ADMIN_GATE_USERS` (`имя:пароль` через запятую), `ADMIN_GATE_SECRET` и `ADMIN_EMAIL`. Аккаунт администратора: `docker compose exec backend python -m app.admin.create_admin` (`ADMIN_PASSWORD` от 12 символов).
 
 ## По частям
 
