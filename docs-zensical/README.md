@@ -29,8 +29,10 @@ Output goes to `site/` (gitignored). There is no deploy workflow in this reposit
 
 A branded A4 of the Russian site, with the FSP frieze and the product fonts:
 
+From the repository root:
+
 ```bash
 python scripts/build_pdf.py
 ```
 
-Chrome writes `kadry-ru.pdf` in this directory. The source of the text stays the Markdown.
+Chrome writes `kadry-ru.pdf` there. The source of the text stays the Markdown in this directory.

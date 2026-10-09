@@ -14,12 +14,11 @@ from pathlib import Path
 
 import markdown
 
-ROOT = Path(__file__).resolve().parents[1]
-DOCS = ROOT / "docs"
-REPO = ROOT.parent
+REPO = Path(__file__).resolve().parents[1]
+DOCS = REPO / "docs-zensical" / "docs"
 FONTS = REPO / "frontend" / "src" / "shared" / "assets" / "fonts"
-OUT_HTML = ROOT / ".cache" / "kadry-ru.html"
-OUT_PDF = ROOT / "kadry-ru.pdf"
+OUT_HTML = REPO / "docs-zensical" / ".cache" / "kadry-ru.html"
+OUT_PDF = REPO / "kadry-ru.pdf"
 CHROME = Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
 
 # Section, kicker, source path. Order matches the Russian nav in zensical.toml.
