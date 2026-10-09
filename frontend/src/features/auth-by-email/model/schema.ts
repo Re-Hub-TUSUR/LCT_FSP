@@ -11,7 +11,10 @@ export const signInSchema = z.object({
 export const signUpSchema = z.object({
   email: emailSchema,
   password: z.string().min(PASSWORD_MIN_LENGTH, `Минимум ${PASSWORD_MIN_LENGTH} символов`),
-  personalDataConsent: z.literal(true, 'Нужно согласие на обработку персональных данных'),
+  personalDataConsent: z.literal(
+    true,
+    'Нужно принять Политику конфиденциальности и Пользовательское соглашение',
+  ),
 })
 
 export type AuthMode = 'sign-in' | 'sign-up'

@@ -11,7 +11,8 @@ describe('validateAuthForm', () => {
       }),
     ).toEqual({
       password: 'Минимум 8 символов',
-      personalDataConsent: 'Нужно согласие на обработку персональных данных',
+      personalDataConsent:
+        'Нужно принять Политику конфиденциальности и Пользовательское соглашение',
     })
   })
 

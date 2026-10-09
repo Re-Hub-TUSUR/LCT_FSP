@@ -89,6 +89,22 @@
   cursor: pointer;
 }
 
+.auth-form__consent a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.auth-form__consent a:hover {
+  color: var(--muted);
+}
+
+.auth-form__consent a:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
 .auth-form__consent input {
   flex: none;
   display: grid;

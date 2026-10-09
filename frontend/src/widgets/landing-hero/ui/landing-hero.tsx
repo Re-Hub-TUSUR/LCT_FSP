@@ -1,5 +1,5 @@
 import { SignupPanel } from '@/features/start-signup'
-import { LEGAL, MEDIA } from '../config/content'
+import { MEDIA } from '../config/content'
 import { FilmGlitch } from './film-glitch'
 import { LandingChapters } from './landing-chapters'
 import './landing-hero.css'
@@ -21,16 +21,6 @@ export function LandingHero() {
         <div className="hero__body">
           <SignupPanel />
         </div>
-
-        <footer className="legal">
-          <p>
-            {LEGAL.before}
-            <a href={LEGAL.privacy.href}>{LEGAL.privacy.label}</a>
-            {LEGAL.between}
-            <a href={LEGAL.terms.href}>{LEGAL.terms.label}</a>
-            {LEGAL.after}
-          </p>
-        </footer>
       </section>
 
       <LandingChapters />

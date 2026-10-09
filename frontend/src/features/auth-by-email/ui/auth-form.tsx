@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { getErrorMessage } from '@/shared/api'
+import { ROUTES } from '@/shared/config'
 import { Button, TextField } from '@/shared/ui'
 import { validateAuthForm } from '../model/schema'
 import type { AuthFieldErrors, AuthFormValues, AuthMode } from '../model/schema'
@@ -105,7 +106,15 @@ export function AuthForm({
               onChange={(e) => update('personalDataConsent', e.target.checked)}
             />
             <span>
-              Даю согласие на обработку персональных данных в соответствии с 152-ФЗ
+              Создавая аккаунт, вы принимаете{' '}
+              <a href={ROUTES.privacy} target="_blank" rel="noopener noreferrer">
+                Политику конфиденциальности
+              </a>{' '}
+              и{' '}
+              <a href={ROUTES.terms} target="_blank" rel="noopener noreferrer">
+                Пользовательское соглашение
+              </a>
+              .
               {errors.personalDataConsent && (
                 <strong className="auth-form__consent-error" role="alert">
                   {errors.personalDataConsent}
