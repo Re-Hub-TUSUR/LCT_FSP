@@ -156,7 +156,8 @@ def upgrade() -> None:
             "connection_id",
             "provider",
             "external_event_id",
-            name="uq_ats_raw_events_provider_event",
+            # Naming convention keys unique constraints by the first column only (app/db/base.py).
+            name=op.f("uq_ats_raw_events_connection_id"),
         ),
     )
     op.create_index(op.f("ix_ats_raw_events_connection_id"), "ats_raw_events", ["connection_id"])
