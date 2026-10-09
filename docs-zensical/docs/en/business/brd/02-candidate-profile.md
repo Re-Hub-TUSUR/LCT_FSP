@@ -4,103 +4,76 @@ icon: lucide/id-card
 
 # Candidate profile
 
-The resume, what an employer sees, consents, and FSP. Screens: П-К-02, П-К-03, П-К-21 through П-К-24.
+The resume, what an employer sees on the card, and the FSP link. Screens: П-К-01, П-К-02, П-К-13, П-К-14.
 
 ## FR-К-01. Resume form
 
-**Priority:** MVP · K5  
-**UC:** UC-К-03
+**Priority:** MVP · К5 · **UC:** UC-К-02
 
-**Rule.** Required: full name, a specialization from the dictionary (at the start Backend, Frontend, Data/ML, QA), 1 to 30 skills, 0–50 years of experience, current or last job title, city, work format. Email comes from the account. Optional: phone, «О себе» up to 2000 characters, roles, soft skills, experience, education, links, expected salary from. A draft is saved every 10 seconds.
+**Rule.** The candidate fills in a resume: name, specialization, stack, years of experience, city, work format. Email comes from the account. The salary expectation is optional. Saving does not set a grade.
 
-**UI strings:** «Сохранить резюме», «Заполнить вручную».
+**UI strings:** «Сохранить резюме».
 
 ## FR-К-02. PDF recognition
 
-**Priority:** MVP · K5  
-**UC:** UC-К-02
+**Priority:** MVP · К5 · **UC:** UC-К-01
 
-**Rule.** A PDF up to 5 MB and 10 pages is accepted. Within 30 seconds the system fills name, contacts, stack, grade, roles, experience, and soft skills. Low-confidence fields are highlighted. Nothing is saved until the candidate confirms. A scan without a text layer shows a message and the manual form. On an empty screen: «Есть готовое резюме? Приложите его, а мы попробуем вытащить из него нужные данные!»
+**Rule.** The candidate attaches a PDF or DOCX. When a model key is set, the text is read and the form fields are filled. The candidate checks them before saving. Without the key, resume upload is unavailable and the form is filled by hand.
 
-## FR-К-03. Resume grade is only a hint
+## FR-К-03. A grade written in the resume is only text
 
-**Priority:** MVP · K2  
-**UC:** UC-К-02, UC-К-09
+**Priority:** MVP · К2 · **UC:** UC-К-01
 
-**Rule.** The grade taken from the resume does not affect the category, ranking, or employer filters. It is only preselected on «Выбор грейда» and shown to the employer with the caption «указано кандидатом».
+**Rule.** What the resume says does not become a category. Only a counted test sets the category.
 
-## FR-К-04. Several resumes
+## FR-К-04. A second resume
 
-**Priority:** MVP · K2  
-**UC:** UC-К-04, UC-К-23
+**Priority:** MVP · К2 · **UC:** UC-К-03
 
-**Rule.** Up to N_резюме resumes. Each has its own specialization; a repeat is forbidden. Category and cooldown are tracked separately. The test runs on the first resume, then the system offers a test for the next. A refusal does not change the first category. The banner «Создайте ещё одно резюме» stays after save until the limit is reached.
+**Rule.** A candidate may have a second resume in another profession. It does not become the primary one by itself. The category and the cooldown are kept per specialization.
 
-## FR-К-05. Standard PDF profile
+## FR-К-05. A card without contacts
 
-**Priority:** MVP · K5  
-**UC:** UC-К-05, UC-Р-19
+**Priority:** MVP · К5 · **UC:** UC-К-04
 
-**Rule.** The file is rebuilt after the resume, category, or FSP results change, from one template. It contains the category, test score and date, per-skill result, stack, experience, roles, and FSP results. Two versions: a full one for the candidate, and an employer version without contacts before reveal and without fields the candidate hid.
+**Rule.** Until an invitation is accepted, the employer does not see email or phone. The candidate can download their own resume.
 
-**UI strings:** «Скачать PDF-профиль», «До раскрытия контактов», «После».
+## FR-К-06. What the bank shows
 
-## FR-К-06. Cabinet statistics
+**Priority:** MVP · К5 · **UC:** UC-К-21
 
-**Priority:** extra · K3  
-**UC:** UC-К-24
+**Rule.** In the bank an employer sees the name, specialization, stack, city, work format, salary expectation when it is set, the test score, and FSP achievements the candidate did not hide. There are no contacts.
 
-**Rule.** On «Приглашения», counters for 30 days: profile views, invitations received and accepted, applications by status.
+## FR-К-07. Pause
 
-## FR-К-33. Privacy
+**Priority:** MVP · К1 · **UC:** UC-К-22
 
-**Priority:** MVP · K5  
-**UC:** UC-К-38, UC-К-05
+**Rule.** The status «Не ищу работу» removes the profile from the bank and the feed. Invitations and chats that are already open stay. Turning search back on shows the profile again.
 
-**Rule.** Before contacts are revealed the employer always sees the category, test score and date, stack, experience, roles, and freshness. The candidate toggles visibility of the name (full, first name and the first letter of the surname, or hidden; the default is first name and the first letter), photo, current job, city, FSP results, recurring-task answers, per-skill result, and expected salary. A change reaches search within 1 minute.
+**UI strings:** «Не ищу работу».
 
-## FR-К-34. Search pause
+## FR-К-08. Consent at sign-up
 
-**Priority:** MVP · K1  
-**UC:** UC-К-39
+**Priority:** MVP · К5 · **UC:** UC-О-02
 
-**Rule.** «Не ищу работу» removes the profile from shortlists, the bank, and recurring-task distribution within 1 minute. Active invitations, chats, and take-homes stay. Turning it off returns the profile to search.
+**Rule.** Sign-up requires consent to process the data. Without the mark the account is not created. There is no separate consent to record the screen: the test is not recorded.
 
-## FR-К-35. Consents
+## FR-К-09. FSP link
 
-**Priority:** MVP · K5  
-**UC:** UC-К-10, UC-К-40
+**Priority:** MVP · К1 · **UC:** UC-К-23, UC-К-25
 
-**Rule.** Required: personal-data processing at registration, profile publication (otherwise no shortlists and no bank), and proctoring recording before every grade test. Optional: FSP import and mailings. Each consent stores date, time, and text version. Withdrawing publication hides the profile within 1 minute. Withdrawing processing starts account deletion.
-
-**UI strings:** «Отозвать».
-
-## FR-К-36. FSP link
-
-**Priority:** MVP · K1  
-**UC:** UC-К-41, UC-К-43
-
-**Rule.** The profile links to a participant ID by signing in with FSP ID. For the hackathon this is a demonstration registry with the same sign-in flow. Results are imported immediately and then once every 24 hours. Unlinking removes them from the profile, the PDF, and ranking within 1 minute. One FSP account links to one platform account.
+**Rule.** The candidate links the profile to their FSP participant ID. The registry and the sign-in are emulated inside the API for now (`FSP_ID_MODE=mock`). Achievements are pulled when the candidate asks. Unlinking removes the imported results and titles. One FSP account is one platform account.
 
 **UI strings:** «Связать с ФСП», «Отвязать».
 
-## FR-К-37. What FSP results contain
+## FR-К-10. FSP achievements on the card
 
-**Priority:** MVP · K1  
-**UC:** UC-Р-17, UC-К-41
+**Priority:** MVP · К1 · **UC:** UC-К-23
 
-**Rule.** The employer sees disciplines, competitions from the last 3 years (name, level, date, place, team role), a sports rank or title, and the number of events. The card shows one line with the best result; the full list opens on click. The candidate controls visibility.
+**Rule.** The card shows the best line: discipline, event, place, year. The full list opens with the profile. An empty registry is not an error.
 
-## FR-К-38. No FSP history
+## FR-К-11. No FSP history
 
-**Priority:** MVP · K5  
-**UC:** UC-К-42
+**Priority:** MVP · К5 · **UC:** UC-К-24
 
-**Rule.** If there is no link or the history is empty, the candidate sees «Истории ФСП пока нет. Это не влияет на позицию в выдаче» and a link to the FSP competition calendar. The employer sees «Нет данных ФСП» without zeros or a warning colour. Ranking gives neither a bonus nor a penalty.
-
-## FR-К-39. Account deletion
-
-**Priority:** MVP · K5  
-**UC:** UC-К-45
-
-**Rule.** The password is required. The profile hides immediately. The account can be restored for 7 days, then data is deleted or anonymised within the NFR-03 term. Active invitations become «Истекло» with the note «Профиль удалён». Employer chats remain without the candidate's contacts.
+**Rule.** If there is no link or the history is empty, the card gets neither a bonus nor a penalty. The candidate sees that there is no history yet.

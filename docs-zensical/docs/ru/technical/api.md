@@ -16,10 +16,10 @@ icon: lucide/cable
 | fsp-id | `/fsp-id` | Старт входа OIDC + PKCE |
 | companies | `/companies` | Свой профиль, логотип, публичная страница, банк задач компании |
 | test-assignments | `/companies/me/test-assignments` | Отправка тестового, ответы, ручная проверка |
-| vacancies | `/vacancies` | Список, лента, свои, карточка, реакции. Создание и правка — `501` |
-| invitations | `/invitations` | Все операции — `501` |
-| applications | `/applications` | Создание и список — `501` |
-| matching | `/matching` | Потребность и рекомендации — `501` |
+| vacancies | `/vacancies` | Список, лента, свои, карточка, создание, правка, публикация, реакции |
+| invitations | `/invitations` | Создание, список, карточка, принятие и отклонение |
+| applications | `/applications` | Создание и список — `501`. Взаимный интерес идёт через `/responses` |
+| matching | `/matching` | Потребность и рекомендации — `501`. Подбор — банк, фильтры и свайпы |
 | responses | `/responses` | Входящие лайки и ответный лайк |
 | calendar | `/calendar` | Встречи за период, создание, перенос, отмена, подтверждение |
 | conversations | `/conversations` | Чаты и вложения |

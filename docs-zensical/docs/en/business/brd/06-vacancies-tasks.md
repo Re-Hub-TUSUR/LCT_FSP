@@ -2,102 +2,62 @@
 icon: lucide/list-todo
 ---
 
-# Vacancies, applications, and tasks
+# Vacancies, mutual interest, and take-homes
 
-The extra path: publishing, the candidate feed, take-homes, recurring tasks, and closing a need.
+An employer publishes a vacancy. A candidate likes it or skips it. A take-home is a separate assignment. External applications are screened by the ATS layer and are not written into the bank.
 
-## FR-К-26. Recurring tasks
+## FR-К-26. Vacancy feed
 
-**Priority:** extra · K6 · **UC:** UC-К-31, UC-К-32, UC-Р-35
+**Priority:** extra · К6 · **UC:** UC-К-20
 
-Once every F_регуляр a candidate with a category receives one task from the pool of employers in their specialization and grade ±1 sub-level. The task is the same for everyone. There is no correct answer and no verdict. The answer is text up to 5000 characters and one link or a file up to 10 MB. Suggested time is T_регуляр. Skipping has no penalty. The author sees the answer, and so does any employer on the card if the candidate allowed it.
+The candidate sees published vacancies. Salary, format, city, and stack filters narrow the feed. There is a search box: a saved search reminds them about new vacancies.
 
-**UI strings:** «Отправить решение», «Пропустить».
+**UI strings:** «Сбросить фильтры».
 
-## FR-К-27. Employer take-home
+## FR-К-27. Candidate swipes
 
-**Priority:** extra · K6 · **UC:** UC-К-30, UC-Р-32
+**Priority:** extra · К6 · **UC:** UC-К-19
 
-It arrives only in an open chat. It must be started within 7 days, with a limit of 90 minutes. At most L_тестовых are active at once. A refusal and an expiry do not affect ranking or the grade. Statuses: «Отправлено», «Начато», «Сдано», «Отклонено», «Истекло».
+One vacancy card. Right means interested, left means skip.
 
-## FR-К-28. Profile freshness
+## FR-К-28. Mutual interest
 
-**Priority:** extra · K6 · **UC:** UC-К-31, UC-Р-17
+**Priority:** extra · К1 · **UC:** UC-Р-10
 
-The date of the latest of: a counted test attempt, a submitted recurring task, a submitted take-home. The employer sees «Активен: N дней назад». It affects position only through freshness in FR-Р-06 and does not change the grade.
+Interest is mutual when the company marked the candidate and the candidate answered, or the candidate marked a vacancy and the company answered. Then a chat opens. There is no separate «Откликнуться» application with a cover letter: the `/applications` route does not work.
 
-## FR-К-29. Vacancy feed without search
+**UI strings:** «Взаимно».
 
-**Priority:** extra · K6 · **UC:** UC-К-33, UC-К-34
+## FR-Р-09. Publishing a vacancy
 
-There is no search box. The feed shows published vacancies whose specialization matches a resume and whose grade range covers the candidate's grade (confirmed, or claimed if there is no test) within ±1 sub-level. Order: stack, band versus expected salary, freshness. Filters for salary from, format, city, stack, and industry narrow the feed and do not change the order. Modes: «Карточки» and «Список».
+**Priority:** extra · К6 · **UC:** UC-Р-09
 
-## FR-К-30. Candidate swipes
+The employer creates a vacancy with a title, a description, a band, a format, and a city. A draft is not in the feed. Publishing shows it to candidates. Taking it down removes it from the feed.
 
-**Priority:** extra · K6 · **UC:** UC-К-33
+**UI strings:** «Опубликовать».
 
-One card. Right applies. Left skips. «Отмена» is available for 5 seconds. Skipped vacancies are kept for 30 days and can still be applied to.
+## FR-К-29. A take-home for the candidate
 
-## FR-К-31. Application
+**Priority:** extra · К6 · **UC:** UC-К-18
 
-**Priority:** extra · K6 · **UC:** UC-К-35, UC-К-36
+A company sends a test. The candidate takes it or refuses. A refusal and the result do not change the platform grade.
 
-An application contains a resume and an optional cover note up to 1000 characters, and reveals contacts to the vacancy's author. One application per vacancy. It can be withdrawn before «Принято». At most L_откликов per day. No reply within T_ответ sets «Истекло».
+**UI strings:** «Начать».
 
-**UI strings:** «Откликнуться», «Отозвать».
+## FR-Р-10. An employer's take-home
 
-## FR-К-32. Mutual match
+**Priority:** extra · К6 · **UC:** UC-Р-12
 
-**Priority:** extra · K1 · **UC:** UC-Р-30
+The employer builds an assignment from their tasks and sends it to a candidate. The result is that attempt's score. It does not change the platform category.
 
-A match is an application to a vacancy and the employer's favourite on that vacancy, in either order. The application becomes «Принято», both sides receive «Взаимный интерес», and a chat opens.
+**UI strings:** «Отправить тестовое».
 
-## FR-Р-19. Publishing a vacancy
+## FR-Р-11. Polling an external ATS
 
-**Priority:** extra · K6 · **UC:** UC-Р-27, UC-Р-28
+**Priority:** extra · К6 · **UC:** UC-Р-13
 
-A need with every required field can be published. The vacancy appears in feeds within 1 minute. Changing the band or the grade notifies people who applied. Unpublishing removes it from feeds; active applications stay.
+The employer connects an ATS and polls it. Applications are screened with the platform's filters: required skills, the salary band, and the city. The card shows a score, a decision, and reasons. A tag, a note, and the score are written back to the ATS. These people do not become KADRY users and do not appear in the bank.
 
-**UI strings:** «Опубликовать потребность», «Снять с публикации».
+The provider now is `ATS_MODE=mock`. A live vendor is one more adapter.
 
-## FR-Р-20. Working with applications
-
-**Priority:** extra · K6 · **UC:** UC-Р-29
-
-Applications are ranked by FR-Р-05 and FR-Р-06 and include reasons. Opening one sets «Просмотрено». «Принять» opens the chat. «Отклонить» requires a reason from the same dictionary the candidate uses.
-
-## FR-Р-21. Employer take-home
-
-**Priority:** extra · K6 · **UC:** UC-Р-32, UC-Р-33
-
-Built from the pattern bank the same way as a grade test: specialization, grade, and required skills, with a unique variant. The employer adds up to 1000 characters of context and does not change the load-bearing elements. Up to 90 minutes. Only in an open chat. The result is an autocheck or rubric score, time, and the solution. It does not affect the grade.
-
-## FR-Р-22. Recurring tasks from an employer
-
-**Priority:** extra · K6 · **UC:** UC-Р-34, UC-Р-35
-
-A task has a title, a statement up to 3000 characters, a specialization, a grade range, and a time up to T_регуляр. A correct answer is not required and is not stored. A company has at most L_задач active tasks. Answers are shown on cards under FR-К-33. From there the author can be invited or favourited.
-
-**UI strings:** «Создать задачу».
-
-## FR-Р-23. Closing a need
-
-**Priority:** extra · K6 · **UC:** UC-Р-36, UC-Р-37
-
-The outcome is one of four: «Наняли через платформу» (a candidate from an open chat), «Наняли вне платформы», «Найм отменён», «Не нашли». Closing sets active invitations to «Отозвано» with the reason «Позиция закрыта» and unpublishes the vacancy. A hire through the platform counts under FR-О-15.
-
-**UI strings:** «Закрыть потребность».
-
-## FR-Р-24. Fake-vacancy rule
-
-**Priority:** extra · K6 · **UC:** UC-А-15
-
-Counted closings are those with at least one accepted invitation or application. When there are at least M_мин_закрытий such closings and the share with a confirmed hire is below N_фикт, the company becomes «Под подозрением» and goes to an administrator. There is no automatic ban. The employer does not see this status. «Наняли вне платформы» is shown to the administrator on its own line.
-
-## FR-Р-25. ATS integration
-
-**Priority:** extra · K6 · **UC:** UC-Р-39
-
-For a candidate whose contacts are revealed, the employer exports a contact card: PDF, contacts, need, band, status, and status history. Hire statuses can come back from the ATS. In the hackathon this is a description plus a manual file export.
-
-**UI strings:** «Выгрузить в ATS».
+**UI strings:** «Подключить демо», «Опросить».

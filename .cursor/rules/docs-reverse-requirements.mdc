@@ -1,0 +1,22 @@
+---
+description: When a feature ships, write the matching FR or NFR in the same change
+alwaysApply: true
+---
+
+# Reverse requirements
+
+The BRD describes the product that exists. A new behavior is a new requirement in the same change, not a later documentation pass.
+
+## When this applies
+
+A person can do something new, or the system decides something new for them. A refactor that does not change what people see or what the API decides does not get a requirement.
+
+## What to write
+
+- A user action or a product decision is an **FR** in the chapter of its role: `FR-О`, `FR-К`, `FR-Р`, or `FR-А`. Take the next free number in that prefix. If an existing FR already covers the behavior, edit that FR. Do not add a second number for the same rule.
+- A measurable limit (time, size, availability) is an **NFR** in `docs-zensical/docs/ru/business/nfr.md`.
+- The text describes what was built. Quote UI labels in Russian, in both locales.
+- Write the same section in `docs-zensical/docs/en/` at the same path.
+- If there is a screen or a scenario, add a row on the page map and a short use case.
+
+Do not invent a requirement for behavior that is not in the product. Do not leave a requirement that describes a flow the product does not have.

@@ -41,4 +41,4 @@ Server state is TanStack Query. The session is an external store. Client access 
 
 An API error is `{"error": {"code", "message", "details"}}`. An unfinished scenario answers `501` with code `not_implemented`, without fake logic.
 
-Passwords are Argon2id. An unknown email and a wrong password return one answer. A dummy hash is verified to keep the timing even. JWT is HS256, with claims close to Keycloak (`sub`, `email`, `realm_access.roles`), so RS256 via JWKS can be accepted later. The minimum password length in the registration schema is 8 characters (`PASSWORD_MIN_LENGTH` in `schemas/auth.py`). That is shorter than NFR-04.
+Passwords are Argon2id. An unknown email and a wrong password return one answer. A dummy hash is verified to keep the timing even. JWT is HS256, with claims close to Keycloak (`sub`, `email`, `realm_access.roles`), so RS256 via JWKS can be accepted later. The minimum password length in the registration schema is 8 characters (`PASSWORD_MIN_LENGTH` in `schemas/auth.py`). That is shorter than NFR-02.

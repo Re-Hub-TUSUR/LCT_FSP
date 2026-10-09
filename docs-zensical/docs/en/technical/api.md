@@ -16,10 +16,10 @@ Prefix `/api/v1`. The router is assembled in `backend/app/api/router.py`. OpenAP
 | fsp-id | `/fsp-id` | Start of OIDC + PKCE sign-in |
 | companies | `/companies` | Own profile, logo, public page, the company's task bank |
 | test-assignments | `/companies/me/test-assignments` | Send a take-home, answers, manual review |
-| vacancies | `/vacancies` | List, feed, own, card, reactions. Create and update are `501` |
-| invitations | `/invitations` | Every operation is `501` |
-| applications | `/applications` | Create and list are `501` |
-| matching | `/matching` | Need and recommendations are `501` |
+| vacancies | `/vacancies` | List, feed, own, card, create, update, publish, reactions |
+| invitations | `/invitations` | Create, list, card, accept and decline |
+| applications | `/applications` | Create and list are `501`. Mutual interest goes through `/responses` |
+| matching | `/matching` | A need and recommendations are `501`. Search is the bank, filters, and swipes |
 | responses | `/responses` | Incoming likes and a like back |
 | calendar | `/calendar` | Meetings in a range, create, move, cancel, confirm |
 | conversations | `/conversations` | Chats and attachments |

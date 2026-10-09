@@ -4,84 +4,70 @@ icon: lucide/messages-square
 
 # Invitations, statuses, and chat
 
-The shared status vocabulary, the salary band, contact reveal, chat, meetings, notifications, reports, and hire confirmation. Incoming candidate invitations live here too.
+An employer asks a specific person. The candidate accepts or declines. After acceptance, contacts and the conversation open.
 
-## FR-О-06. Shared statuses
+## FR-О-05. Invitation statuses
 
-**Priority:** MVP · K1 · **UC:** UC-К-24, UC-К-36, UC-Р-25, UC-Р-29
+**Priority:** MVP · К1 · **UC:** UC-К-15, UC-Р-08
 
-One vocabulary for invitations and applications in both cabinets: «Отправлено», «Просмотрено», «Принято», «Отклонено», «Отозвано», «Истекло». «Отправлено» becomes «Просмотрено» when the recipient opens the card, then «Принято» or «Отклонено». From «Отправлено» and «Просмотрено» the author can set «Отозвано», and silence longer than T_ответ sets «Истекло». The other statuses are final. Both sides see the same name and the same transition date.
+An invitation is «Отправлено», «Принято», or «Отклонено». Both sides see the same status. An invitation cannot be withdrawn, and it does not become «Истекло».
 
-## FR-О-07. Salary band
+## FR-О-06. Salary band
 
-**Priority:** MVP · K1 · **UC:** UC-Р-05, UC-Р-21, UC-Р-23, UC-К-25
+**Priority:** MVP · К1 · **UC:** UC-Р-05, UC-К-15
 
-A band is required on a need, a vacancy, and an invitation: «от» and «до» in rubles, integers, «от» greater than 0, «до» at least «от» and at most «от» × K_вилка. The label «до вычета НДФЛ» or «на руки» is required. The candidate sees the band before the chat opens.
+An invitation and a vacancy require «от» and «до» in rubles, whole numbers, with «до» not below «от». The candidate sees the band before the chat.
 
-## FR-О-08. Revealing contacts
+## FR-О-07. Revealing contacts
 
-**Priority:** MVP · K1 · **UC:** UC-К-25, UC-К-35, UC-Р-17, UC-Р-19
+**Priority:** MVP · К1 · **UC:** UC-К-15
 
-Email, phone, and messenger links become visible to a company only after the candidate accepts its invitation or applies to its vacancy. Before that they are absent from the card, the PDF, and exports. Reveal applies only to that company. Before accepting, the candidate sees which contacts will open. Every view is written to the audit log.
+Email and phone become visible to that company after the candidate accepts its invitation. Before that they are not on the card. Another company does not receive them.
 
-## FR-О-09. Opening a chat
+## FR-О-08. Chat
 
-**Priority:** MVP · K1 · **UC:** UC-О-07, UC-К-25, UC-Р-29, UC-Р-30
+**Priority:** MVP · К1 · **UC:** UC-О-05
 
-A chat opens in three cases: the candidate accepted an invitation, the employer accepted an application, or there was a mutual match. One chat per candidate–need pair. A message is up to 4000 characters. Files: PDF, DOCX, PNG, JPG, ZIP, up to 10 MB. There is no video call. Thirty days after the need closes, the chat is read-only.
+A chat opens when the candidate accepts an invitation, or when interest is mutual: the company marked the person and they answered, or the other way around. A message is text. A file is up to 10 MB. There is no video call inside the product.
 
-**UI strings:** «Отправить». Empty state for the candidate: «Чат откроется, когда вы примете приглашение». For the employer: «Чат откроется, когда кандидат примет приглашение».
+**UI strings:** «Отправить».
 
-## FR-О-10. Meetings
+## FR-О-09. Meetings
 
-**Priority:** extra · K1 · **UC:** UC-О-08, UC-К-29, UC-Р-31
+**Priority:** extra · К1 · **UC:** UC-О-06
 
-Only a recruiter schedules a meeting, and only from an open chat: date, time, duration 15–180 minutes, and a required link to an external call. Both calendars show «Назначена». The candidate sets «Подтверждена» or «Запрошен перенос» with a comment and up to 3 slots. The recruiter reschedules or sets «Отменена». After it ends the status is «Прошла». Reminders go out 24 hours and 15 minutes before.
+The employer sets a meeting: date, time, and a link to an external call. The candidate confirms or declines. The employer can move or cancel it.
 
-**UI strings:** «Назначить встречу», «Подтвердить», «Попросить перенос».
+**UI strings:** «Назначить встречу», «Подтвердить».
 
-## FR-О-11. Notifications
+## FR-О-10. Live events
 
-**Priority:** MVP · K3 · **UC:** UC-О-09
+**Priority:** MVP · К3 · **UC:** UC-О-07
 
-Channels: the cabinet feed and email. Events: a new invitation, a status change, a mutual match, a new message (email if unread for 10 minutes), a meeting, a take-home, a test result and a review decision, a hire request, an account restriction. Email can be turned off per type, except security and administrator decisions.
+A like and a new message arrive in the open tab as a stream. There is no email digest for every event type.
 
-## FR-О-12. Reports
+## FR-О-11. Empty state
 
-**Priority:** extra · K6 · **UC:** UC-О-12, UC-К-27, UC-А-18
+**Priority:** MVP · К3
 
-A candidate reports an invitation, a vacancy, a recurring task, or a message. An employer reports a candidate's message. Reasons: «Фиктивная вакансия», «Зарплата не соответствует», «Просят оплату», «Спам», «Оскорбления», «Другое». The comment is up to 1000 characters. One report per user per object. The report goes to an administrator and counts in the company's signals.
+An empty list says what to do next: poll the ATS, take the test, fill in the company. An error is shown as text next to the action.
 
-**UI strings:** «Отправить жалобу», «Пожаловаться».
+## FR-К-23. Incoming invitations
 
-## FR-О-14. One primary action and empty states
+**Priority:** MVP · К1 · **UC:** UC-К-14
 
-**Priority:** MVP · K3 · **UC:** UC-К-01, UC-К-24, UC-Р-04, UC-Р-14
-
-Each page has one accent button from the [page map](../../product/pages.md). An empty state explains why and contains the button for the next step. An error sits next to the field and says how to fix it. Onboarding shows the steps and one button to the first unfinished step.
-
-## FR-О-15. Confirming a hire
-
-**Priority:** extra · K6 · **UC:** UC-К-37, UC-Р-36
-
-A hire counts only if the employer chose «Наняли через платформу» with a specific candidate and the candidate confirmed within T_подтверждение_найма. «Это не так» or silence yields «Не подтверждён». That closing counts as a closing without a confirmed hire.
-
-**UI strings:** «Подтвердить», «Это не так».
-
-## FR-К-23. Home screen «Приглашения»
-
-**Priority:** MVP · K1 · **UC:** UC-К-24
-
-A candidate who has a resume lands on «Приглашения» after sign-in. Unseen items first, then by date. A row shows company, title, band, format, date, and status. The menu shows an unseen counter. No category shows the banner «Пройти тест». No invitations show three tips with links: FSP, a recurring task, vacancies.
+The candidate has a list of invitations, newest first. A row shows the company, the text, the band, and the status. Without a resume the list is empty, and that is not an error.
 
 ## FR-К-24. Invitation card
 
-**Priority:** MVP · K1 · **UC:** UC-К-25, UC-К-28
+**Priority:** MVP · К1 · **UC:** UC-К-15
 
-Shows the description, band, company, format, city, contact method, the vacancy if the need is published, and the reply deadline. The first open sets «Просмотрено».
+The card shows the message, the band, the contact method, and the company. A vacancy is named when the invitation is tied to one.
 
 ## FR-К-25. Accept and decline
 
-**Priority:** MVP · K1 · **UC:** UC-К-25, UC-К-26, UC-К-28
+**Priority:** MVP · К1 · **UC:** UC-К-15, UC-К-16
 
-«Принять» sets «Принято», reveals contacts, and opens the chat. «Отклонить» sets «Отклонено» with an optional reason: «Зарплата ниже ожиданий», «Не подходит стек», «Не подходит формат», «Не интересна компания», «Не ищу работу», «Подозрительное предложение». The employer sees the reason. An expired or withdrawn invitation cannot be accepted.
+«Принять» sets «Принято», opens contacts for that company, and opens the chat. «Отклонить» sets «Отклонено». While the candidate has not answered, the same company cannot send a second invitation.
+
+**UI strings:** «Принять», «Отклонить».

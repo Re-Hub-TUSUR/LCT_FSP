@@ -26,4 +26,4 @@ sequenceDiagram
 
 An empty registry response is a normal result, not an error. Results affect profile strength inside a category and do not set the grade. Unlink is `DELETE /candidates/me/fsp-link`. Import again is `POST /candidates/me/fsp-sync`.
 
-The «once every 24 hours» schedule from FR-К-36 was not found as a background job in this pass: the routes have a manual sync and an import at the moment of linking.
+The «once every 24 hours» schedule from FR-К-09 was not found as a background job in this pass: the routes have a manual sync and an import at the moment of linking.

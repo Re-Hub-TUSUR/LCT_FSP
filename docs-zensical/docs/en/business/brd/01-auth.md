@@ -2,64 +2,38 @@
 icon: lucide/key-round
 ---
 
-# Authentication and access
+# Sign-in and access
 
-Shared rules for sign-in, roles, and lockout. Screens: [П-О-01](../../product/pages.md) through П-О-06 and П-О-11.
+Email and password, a confirmation code, one role per account. Screens: [П-О-01](../../product/pages.md) … П-О-04.
 
-## FR-О-01. Email registration
+## FR-О-01. Sign-up by email
 
-**Priority:** MVP · K5  
-**Actors:** a new user  
-**Related UC:** UC-О-02, UC-О-03, UC-О-04, UC-О-05
+**Priority:** MVP · К5  
+**UC:** UC-О-02, UC-О-03
 
-**Rule.** The account turns on only after the person follows the link in the email. The link is single-use and lives 24 hours. A resend is at most once per 60 seconds and at most 5 times per hour. Sign-in is impossible until the email is confirmed. Password recovery uses the same kind of link: the answer is the same whether the address exists or not. After a password change every session ends.
+**Rule.** The person sets email and password at once. The password is at least 8 characters. The account can sign in only after a 6-digit code from the email. Resending the code is limited. There is no password recovery. The session lives on a refresh token: logout revokes it, and each refresh issues a new one.
 
-**UI strings:** «Продолжить», «Сохранить пароль», «Отправить письмо ещё раз», «Отправить ссылку».
+**UI strings:** «Продолжить», «Отправить письмо ещё раз».
 
-## FR-О-02. Minimum registration steps
+## FR-О-02. Few steps at sign-up
 
-**Priority:** MVP · K3  
-**Actors:** a new user  
-**Related UC:** UC-О-01, UC-О-02, UC-О-03
+**Priority:** MVP · К3  
+**UC:** UC-О-01, UC-О-02
 
-**Rule.** The first screen is one email field and one required consent checkbox. The role comes from the home page: «Я ищу работу» or «Я нанимаю». The password is set after the email is confirmed. Everything else is collected later: resume, survey, company profile.
+**Rule.** The role is chosen on the home page: «Я ищу работу» or «Я нанимаю». The sign-up form is email, password, and consent. The resume and the company profile are filled in after sign-in.
 
 **UI strings:** «Я ищу работу», «Я нанимаю», «Продолжить».
 
-## FR-О-03. External sign-in
+## FR-О-03. Access
 
-**Priority:** extra · K6  
-**Actors:** a user  
-**Related UC:** UC-О-04, UC-К-41
+**Priority:** MVP · К4  
+**UC:** UC-О-08
 
-**Rule.** Yandex ID and FSP ID are additional sign-in methods. If the email matches, the system offers to link the sign-in to the existing account instead of creating a second one. Gosuslugi, Mos.ru, and Nalog.ru are a later option and are not in the hackathon. Importing FSP results is FR-К-36 and does not replace email registration.
+**Rule.** One account has one role: candidate, employer, or administrator. A candidate sees their resumes, invitations, tests, and chats. An employer sees their vacancies, invitations, take-homes, and the bank. Someone else's object is unavailable. An administrator does not read chats.
 
-## FR-О-04. Two-factor authentication
+## FR-О-04. Ban list
 
-**Priority:** MVP · K4  
-**Actors:** employer, administrator, candidate if they choose  
-**Related UC:** UC-О-06, UC-Р-01, UC-К-44, UC-А-24
+**Priority:** MVP · К6  
+**UC:** UC-А-05, UC-А-06
 
-**Rule.** 2FA is required for the employer and the administrator from the first sign-in. The candidate turns it on themselves. The authenticator code is 6 digits and lasts 30 seconds. Turning it on issues 10 one-time backup codes. Five wrong codes in a row lock sign-in for 15 minutes. Only an administrator can reset 2FA, and the reset is written to the audit log.
-
-**UI strings:** «Подтвердить код», «Включить 2FA».
-
-## FR-О-05. Access control
-
-**Priority:** MVP · K4  
-**Actors:** every role  
-**Related UC:** UC-О-10, UC-А-18
-
-**Rule.** One account has one role. A candidate sees only their resumes, invitations, applications, take-homes, and chats. An employer sees only their needs, invitations, vacancies, applications, take-homes, and tasks. Someone else's object is a 403 page and an audit entry. An administrator does not read chats except for a fragment attached to a report.
-
-**UI strings:** «На главную», «Повторить».
-
-## FR-О-13. Effects of a ban
-
-**Priority:** MVP · K6  
-**Actors:** a banned user, an administrator  
-**Related UC:** UC-О-11, UC-А-16
-
-**Rule.** A banned person cannot sign in and sees the reason and the term. The company's needs, vacancies, and recurring tasks are hidden. Active invitations become «Отозвано» with the reason «Компания заблокирована». The candidate disappears from shortlists and the bank. Registering again with the same email is unavailable.
-
-**UI strings:** «Написать в поддержку», «Компания заблокирована».
+**Rule.** An administrator blocks a company, an email, or a domain and writes a reason. Unblocking needs a reason too. Who blocked and who lifted the block is kept on the record. Signing up again with a blocked email or domain does not go through.

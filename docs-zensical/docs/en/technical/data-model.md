@@ -46,9 +46,9 @@ Grades in code (`Grade`): intern, junior, middle, senior, lead. The eleven sub-l
 | `AssessmentAttempt`, `AssessmentAnswer`, `AssessmentTaskTime` | The attempt, answers, and time |
 | `TestAssignment` | A take-home a company sent to a candidate |
 
-Attempt statuses include `interview` and `grading`. Separate proctoring tables (screen recording, face flags) were not found in the models.
+The attempt status `interview` is written questions about the code, not a screen recording. There are no proctoring tables: the product does not keep them.
 
-A need as its own entity, shortlist versions, and a one-off offer were not found in the models. Matching in the code hangs off vacancies, reactions, and profile strength.
+There is no need entity, no shortlist versions, and no one-off offer. Search hangs off the bank, vacancies, and reactions.
 
 ## ATS
 

@@ -4,7 +4,7 @@ icon: lucide/server
 
 # Engineering
 
-This section describes the current monorepo. If the code disagrees with the [BRD](../business/brd/index.md), the requirement stays in the product, and the code fact is on [implementation status](implementation-status.md).
+This section describes the current monorepo. The requirements in the [BRD](../business/brd/index.md) match the product. A new feature is written up as a requirement in the same change.
 
 Developer sources this site does not replace:
 
@@ -21,4 +21,4 @@ Developer sources this site does not replace:
 | [Local start](local-start.md) | How to run the project |
 | [FSP ID](fsp-id.md) | Linking to the registry |
 | [ATS](ats.md) | Polling an external ATS with our filters |
-| [Implementation status](implementation-status.md) | Done, partial, absent |
+| [Implementation status](implementation-status.md) | The BRD describes the current product |
