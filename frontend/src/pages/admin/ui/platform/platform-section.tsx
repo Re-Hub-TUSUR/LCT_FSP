@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { EmptyState, ErrorState, Loader } from '@/shared/ui'
 import { adminQueries } from '../../api/admin-api'
 import type { Period } from '../../api/types'
-import { errorText, formatNumber } from '../../lib/format'
+import { errorText, formatNumber, formatPercent } from '../../lib/format'
 import { Funnel } from '../common/charts'
 import { SnapshotBar } from '../common/snapshot-bar'
 
@@ -100,6 +100,62 @@ export function PlatformSection() {
                 </tbody>
               </table>
             </div>
+          )}
+          {result.gradeTests && (
+            <>
+              <h2 className="admin-card__title">Тесты на грейд</h2>
+              <p className="admin-hint">
+                Тесты, начатые за период. Доля сдавших считается от завершённых; «с расширением» — в
+                банке не хватило заданий под правило шаблона. «Повышение» — тест грейдом выше уже
+                подтверждённого у кандидата: если его сдают часто, тест плохо различает грейды.
+              </p>
+              <div className="admin-table-wrap">
+                <table className="admin-table admin-table--numbers">
+                  <thead>
+                    <tr>
+                      <th scope="col">Грейд</th>
+                      <th scope="col">Начато</th>
+                      <th scope="col">Завершено</th>
+                      <th scope="col">Сдано</th>
+                      <th scope="col">Доля сдавших</th>
+                      <th scope="col">С расширением правил</th>
+                      <th scope="col">Повышений</th>
+                      <th scope="col">Сдано повышений</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.gradeTests.grades.map((row) => (
+                      <tr key={row.grade}>
+                        <td>{row.gradeLabel}</td>
+                        <td>{row.started}</td>
+                        <td>{row.settled}</td>
+                        <td>{row.passed}</td>
+                        <td>{formatPercent(row.passShare)}</td>
+                        <td>{row.widened}</td>
+                        <td>{row.stepUp ?? '—'}</td>
+                        <td>
+                          {row.stepUp
+                            ? `${row.stepUpPassed} (${formatPercent(row.stepUpPassShare)})`
+                            : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {result.gradeTests.shortages.length > 0 && (
+                <>
+                  <h3 className="admin-card__title">Чего не хватает в банке</h3>
+                  <ul className="admin-list">
+                    {result.gradeTests.shortages.map((item) => (
+                      <li key={item.note}>
+                        {item.note} — {item.count} раз
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </>
           )}
           <ul className="admin-list admin-hint">
             {result.missing.map((item) => (

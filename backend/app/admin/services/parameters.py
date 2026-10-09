@@ -74,7 +74,5 @@ class ParameterService:
 
 
 def _check_consistent(values: dict[str, int]) -> None:
-    if not values["p_minus"] <= values["p_pass"] <= values["p_plus"]:
-        raise AppError("Пороги должны идти по возрастанию: P_минус ≤ P_проход ≤ P_плюс")
     if values["target_solve_min"] > values["target_solve_max"]:
         raise AppError("Нижняя граница целевой доли решивших больше верхней")

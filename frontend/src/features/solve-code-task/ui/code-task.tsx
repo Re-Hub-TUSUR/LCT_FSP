@@ -37,9 +37,11 @@ export function CodeTask({
   onRunsLeft,
   onPaste,
 }: Props) {
-  const { languages, samples, timeLimit } = task.content
+  const { languages, samples, timeLimit, starter } = task.content
+  // A «найди ошибку» task brings its own program; the rest start from the input template.
+  const initialCode = (id: string) => starter?.[id] ?? starterFor(id)
   const language = answer?.language ?? languages[0]?.id ?? ''
-  const code = answer?.code ?? starterFor(language)
+  const code = answer?.code ?? initialCode(language)
   const [results, setResults] = useState<RunResultDto[] | null>(null)
   const [coolingDown, setCoolingDown] = useState(false)
 
@@ -60,8 +62,8 @@ export function CodeTask({
 
   const changeLanguage = (next: string) => {
     // An untouched starter follows the language; real code is never replaced.
-    const untouched = answer === null || answer.code === starterFor(answer.language)
-    onChange({ language: next, code: untouched ? starterFor(next) : code })
+    const untouched = answer === null || answer.code === initialCode(answer.language)
+    onChange({ language: next, code: untouched ? initialCode(next) : code })
   }
 
   const canRun = runnerAvailable && !disabled && !run.isPending && !coolingDown && runsLeft > 0

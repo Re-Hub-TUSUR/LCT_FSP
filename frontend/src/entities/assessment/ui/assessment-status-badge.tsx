@@ -6,14 +6,17 @@ type Props = {
   status: AssessmentStatus
   /** Shown next to "passed": the score of the confirming test. */
   score?: number | null
+  /** The confirming test was a beta one: the grade is provisional. */
+  beta?: boolean
 }
 
 /** The three states an employer sees: passed, failed, never taken. */
-export function AssessmentStatusBadge({ status, score }: Props) {
+export function AssessmentStatusBadge({ status, score, beta }: Props) {
   return (
     <span className={`assessment-badge assessment-badge--${status}`}>
       {ASSESSMENT_STATUS_LABELS[status]}
       {status === 'passed' && score != null && ` · ${Math.round(score)}/100`}
+      {status === 'passed' && beta && ' · бета'}
     </span>
   )
 }

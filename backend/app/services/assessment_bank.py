@@ -23,6 +23,7 @@ from app.schemas.assessment import (
 from app.schemas.common import Page
 from app.services.categories import SPECIALIZATIONS
 from app.services.code_runner import CodeRunner
+from app.services.quiz_lint import option_warning
 from app.services.task_kinds import REGISTRY, spec_of
 from app.services.task_kinds.code import CodeKind, judge
 
@@ -41,12 +42,25 @@ def task_write(task: AssessmentTask) -> TaskWrite:
     )
 
 
+def task_warnings(task: AssessmentTask) -> list[str]:
+    """Advice for the author of a choice question; the task is saved either way."""
+    if task.kind != TaskKind.QUIZ:
+        return []
+    options = task.payload.get("options") or []
+    correct = set(task.payload.get("correct") or [])
+    right = [option for index, option in enumerate(options) if index in correct]
+    wrong = [option for index, option in enumerate(options) if index not in correct]
+    warning = option_warning(right, wrong)
+    return [warning] if warning else []
+
+
 def task_read(task: AssessmentTask) -> TaskRead:
     return TaskRead(
         **task_write(task).model_dump(),
         id=task.id,
         platform=task.owner_id is None,
         created_at=task.created_at,
+        warnings=task_warnings(task),
     )
 
 
@@ -62,6 +76,8 @@ def test_read(test: AssessmentTest) -> TestRead:
             "duration_minutes": test.duration_minutes,
             "pass_score": test.pass_score,
             "quiz_weight": test.quiz_weight,
+            "quiz_min": test.quiz_min,
+            "is_beta": test.is_beta,
             "composition": test.composition,
             "retry_days": test.retry_days,
             "grade_change_days": test.grade_change_days,
@@ -205,6 +221,7 @@ class AssessmentBankService:
         )
         if owner_id is not None and (
             any(value is not None for value in platform_only)
+            or data.is_beta
             or not isinstance(composition, FixedComposition)
         ):
             raise AppError("Тест компании составляется из своих задач и не привязан к грейду")
@@ -227,6 +244,8 @@ class AssessmentBankService:
         test.duration_minutes = data.duration_minutes
         test.pass_score = data.pass_score
         test.quiz_weight = data.quiz_weight
+        test.quiz_min = data.quiz_min
+        test.is_beta = data.is_beta
         test.composition = composition.model_dump(mode="json")
         test.retry_days = data.retry_days
         test.grade_change_days = data.grade_change_days

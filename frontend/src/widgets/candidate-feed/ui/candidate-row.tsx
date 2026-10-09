@@ -65,6 +65,7 @@ export function CandidateRow({ match, selected, dimmed = false, onOpen, actions 
         <AssessmentStatusBadge
           status={candidate.assessmentStatus}
           score={candidate.assessmentScore}
+          beta={candidate.gradeBeta}
         />
       </div>
 

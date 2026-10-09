@@ -33,12 +33,20 @@ export type AuditEntry = {
 export type TaskVariable = { name: string; min: number; max: number; step: number }
 
 export type QuizPayload = { options: string[]; correct: number[]; multiple: boolean }
-export type CodeGroup = { input: string; expected: string; hidden: boolean }
+export type CodeGroup = {
+  input: string
+  expected: string
+  hidden: boolean
+  /** Share of a hidden test case in the score of the task; 1 by default. */
+  weight?: number
+}
 export type CodePayload = {
   languages: string[]
   timeLimit: number
   groups: CodeGroup[]
   reference?: { language: string; code: string } | null
+  /** Compiler id → the program the candidate starts from («найди ошибку»). */
+  starter?: Record<string, string>
 }
 
 export type AdminTaskRow = {
@@ -62,6 +70,8 @@ export type AdminTaskDetail = AdminTaskRow & {
   attempts: number
   canDelete: boolean
   allowedStatuses: TaskStatus[]
+  /** What the editor should fix although the task is saved. */
+  warnings?: string[]
 }
 
 export type AdminTaskWrite = {
@@ -153,6 +163,8 @@ export type TaskCard = {
   weekly: (Metrics & { week: string })[]
   monthly: (Metrics & { month: string })[]
   histogram: { minute: number; count: number }[]
+  /** Questions only: how often every option was picked. Absent in older snapshots. */
+  options?: { text: string; correct: boolean; picks: number; share: number | null }[] | null
 }
 
 export type FunnelStep = {
@@ -177,10 +189,33 @@ export type DemandRow = {
   shortage: boolean
 }
 
+export type GradeTestRow = {
+  grade: string
+  gradeLabel: string
+  started: number
+  /** Passed, failed or expired: a result is known. */
+  settled: number
+  passed: number
+  /** Percent of the settled ones. */
+  passShare: number | null
+  /** Tests whose variant needed a rule of the template widened. */
+  widened: number
+  /** Settled tests of a grade above the one the candidate had already confirmed. */
+  stepUp?: number
+  stepUpPassed?: number
+  stepUpPassShare?: number | null
+}
+
 export type PlatformResult = {
   candidateFunnel: FunnelStep[]
   employerFunnel: FunnelStep[]
   demand: DemandRow[]
+  /** Absent in snapshots calculated before the block appeared. */
+  gradeTests?: {
+    grades: GradeTestRow[]
+    /** The most frequent cases of the bank running short of tasks for a template. */
+    shortages: { note: string; count: number }[]
+  }
   missing: string[]
 }
 

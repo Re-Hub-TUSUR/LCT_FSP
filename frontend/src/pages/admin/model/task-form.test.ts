@@ -87,6 +87,32 @@ describe('task form', () => {
     expect(toPayload(ok).payload).toMatchObject({ languages: ['python-3.14', 'go'], timeLimit: 5 })
   })
 
+  it('edits one starter and keeps the starters of other languages', () => {
+    const base = {
+      ...emptyForm('code'),
+      title: 'Эхо',
+      statement: 'Выведите ввод',
+      skill: 'io',
+      groups: [
+        { input: '1', expected: '1', hidden: false },
+        { input: '2', expected: '2', hidden: true },
+      ],
+      starterOther: { 'go-1.26': 'package main' },
+    }
+    const filled = { ...base, starterLanguage: 'python-3.14', starterCode: 'print(1)' }
+
+    expect(validate({ ...base, starterCode: 'print(1)' })).toMatch(/Стартовый код/)
+    expect(validate(filled)).toBeNull()
+    expect(toPayload(filled).payload).toMatchObject({
+      starter: { 'go-1.26': 'package main', 'python-3.14': 'print(1)' },
+    })
+    const heavy = [
+      { input: '1', expected: '1', hidden: false },
+      { input: '2', expected: '2', hidden: true, weight: 11 },
+    ]
+    expect(validate({ ...filled, groups: heavy })).toMatch(/Вес/)
+  })
+
   it('sends the time limit and grade only when set', () => {
     expect(toPayload(quiz()).timeLimitMinutes).toBeNull()
     expect(toPayload(quiz()).grade).toBeNull()

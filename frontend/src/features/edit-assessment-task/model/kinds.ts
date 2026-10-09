@@ -23,6 +23,8 @@ export type CodeDraft = {
   groups: TestGroupDto[]
   referenceLanguage: string
   referenceCode: string
+  /** Compiler id → the program the candidate has to fix; empty code = no starter. */
+  starter: Record<string, string>
 }
 
 export type OpenDraft = {
@@ -45,6 +47,9 @@ type KindEditor<K extends TaskKind> = {
   validate: (draft: KindDrafts[K]) => string | null
   toPayload: (draft: KindDrafts[K]) => KindPayloads[K]
 }
+
+const filledStarter = (starter: Record<string, string>) =>
+  Object.fromEntries(Object.entries(starter).filter(([, code]) => code.trim()))
 
 export const KIND_EDITORS: { [K in TaskKind]: KindEditor<K> } = {
   quiz: {
@@ -76,6 +81,7 @@ export const KIND_EDITORS: { [K in TaskKind]: KindEditor<K> } = {
       ],
       referenceLanguage: 'python-3.14',
       referenceCode: '',
+      starter: {},
     }),
     fromPayload: (payload) => ({
       languages: payload.languages,
@@ -83,6 +89,7 @@ export const KIND_EDITORS: { [K in TaskKind]: KindEditor<K> } = {
       groups: payload.groups,
       referenceLanguage: payload.reference?.language ?? 'python-3.14',
       referenceCode: payload.reference?.code ?? '',
+      starter: payload.starter ?? {},
     }),
     validate: (draft) => {
       const limit = Number(draft.timeLimit)
@@ -94,6 +101,12 @@ export const KIND_EDITORS: { [K in TaskKind]: KindEditor<K> } = {
       const hidden = draft.groups.filter((group) => group.hidden).length
       if (hidden === 0 || hidden === draft.groups.length)
         return 'Нужна хотя бы одна открытая и одна закрытая группа тестов'
+      const weights = draft.groups.filter((group) => group.hidden).map((group) => group.weight ?? 1)
+      if (weights.some((weight) => !(Number.isInteger(weight) && weight >= 1 && weight <= 10)))
+        return 'Вес закрытой группы — целое число от 1 до 10'
+      const started = Object.keys(filledStarter(draft.starter))
+      if (draft.languages.length > 0 && started.some((id) => !draft.languages.includes(id)))
+        return 'Стартовый код написан на языке, который не разрешён в задаче'
       return null
     },
     toPayload: (draft) => ({
@@ -103,6 +116,7 @@ export const KIND_EDITORS: { [K in TaskKind]: KindEditor<K> } = {
       reference: draft.referenceCode.trim()
         ? { language: draft.referenceLanguage, code: draft.referenceCode }
         : null,
+      starter: filledStarter(draft.starter),
     }),
   },
   open: {

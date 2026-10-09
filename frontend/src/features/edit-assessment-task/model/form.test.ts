@@ -65,6 +65,25 @@ describe('assessment task form', () => {
     expect(toPayload(values)).toMatchObject({ kind: 'code', payload: { reference: null } })
   })
 
+  it('sends only filled starters and checks the weights of hidden groups', () => {
+    const groups = [
+      { input: 'a', expected: 'a', hidden: false },
+      { input: 'b', expected: 'b', hidden: true, weight: 3 },
+    ]
+    const values = codeTask({ groups, starter: { 'python-3.14': 'print(1)', 'go-1.26': '  ' } })
+
+    expect(validateTask(values)).toBeNull()
+    expect(toPayload(values)).toMatchObject({
+      payload: { starter: { 'python-3.14': 'print(1)' }, groups },
+    })
+    expect(validateTask(codeTask({ groups: [groups[0]!, { ...groups[1]!, weight: 0 }] }))).toMatch(
+      /Вес/,
+    )
+    expect(validateTask({ ...values, code: { ...values.code, languages: ['go-1.26'] } })).toMatch(
+      /не разрешён/,
+    )
+  })
+
   it('builds an open question with reviewer notes and its own title', () => {
     const empty = toFormValues('open')
     const values = {

@@ -54,6 +54,8 @@ class TestGroup(ApiModel):
     expected: str = Field(min_length=1, max_length=MAX_EXPECTED_OUTPUT)
     # Open groups are shown to the candidate and used by "Run"; hidden ones decide the score.
     hidden: bool = False
+    # Share of a hidden group in the score of the task, relative to the other hidden groups.
+    weight: int = Field(default=1, ge=1, le=10)
 
 
 class ReferenceSolution(ApiModel):
@@ -68,6 +70,11 @@ class CodePayload(ApiModel):
     groups: list[TestGroup] = Field(min_length=2, max_length=8)
     # Author's solution: "check" runs it against every group before the task goes live.
     reference: ReferenceSolution | None = None
+    # Compiler id → the code the editor opens with instead of the empty template: a program to
+    # fix or to refactor. The hidden groups still decide the score.
+    starter: dict[str, Annotated[str, Field(min_length=1, max_length=MAX_CODE_LENGTH)]] = Field(
+        default_factory=dict
+    )
 
     @model_validator(mode="after")
     def _open_and_hidden(self) -> Self:
@@ -129,6 +136,9 @@ class TaskRead(TaskWrite):
     # True for the platform bank, false for an employer's own task.
     platform: bool
     created_at: datetime
+    # What the editor should fix although the task is saved (e.g. a right option that gives
+    # itself away by its length).
+    warnings: list[str] = Field(default_factory=list)
 
 
 class ImportResult(ApiModel):
@@ -171,6 +181,10 @@ class TestWrite(ApiModel):
     duration_minutes: int = Field(ge=5, le=180)
     pass_score: int = Field(default=60, ge=0, le=100)
     quiz_weight: int = Field(default=40, ge=0, le=100)
+    # A pass needs this share of the quiz right, percent, whatever the code earned.
+    quiz_min: int = Field(default=0, ge=0, le=100)
+    # Platform templates: the grade is offered, but its confirmation is shown as provisional.
+    is_beta: bool = False
     composition: Composition
     # Days before a retake after a failure / before a confirmed grade can be changed.
     # Null = the platform defaults.
@@ -230,6 +244,8 @@ class CodeContent(ApiModel):
     languages: list[LanguageOption]
     time_limit: float
     samples: list[SampleTest]
+    # Compiler id → the code to start from; a language without one starts from the template.
+    starter: dict[str, str] = Field(default_factory=dict)
 
 
 class CodeAnswer(ApiModel):
@@ -276,11 +292,16 @@ class AttemptRead(ApiModel):
     status: AttemptStatus
     score: float | None
     pass_score: int
+    # The least share of the quiz right a pass needs, percent.
+    quiz_min: int = 0
+    is_beta: bool = False
     started_at: datetime
     expires_at: datetime
     finished_at: datetime | None
     # Filled once the attempt is finished.
     breakdown: list[TopicResult] | None = None
+    # Share of the quiz answered right, percent: null while unfinished or without a quiz.
+    quiz_share: float | None = None
     # In the answer to "finish" only: the grade this result opens, if it was good enough.
     recommended_grade: Grade | None = None
 
@@ -358,6 +379,9 @@ class TrackRead(ApiModel):
     # The category employers see in search and feeds.
     is_primary: bool
     recommendation: Recommendation | None = None
+    # Grade of the failed test that started the pause: tests of lower grades are open at once.
+    failed_grade: Grade | None = None
+    is_beta: bool = False
 
 
 class AssessmentStatusRead(ApiModel):
@@ -391,6 +415,8 @@ class TemplateRead(ApiModel):
     specialization: str | None
     duration_minutes: int
     pass_score: int
+    quiz_min: int
+    is_beta: bool
     # Task kind → number of tasks in a variant.
     tasks: dict[TaskKind, int]
     retry_days: int
@@ -500,7 +526,8 @@ class CodeContext(ApiModel):
     # Name of the language and the last saved solution; null when nothing was submitted.
     language: str | None
     code: str | None
-    # Hidden test groups. Only their count survives the grading, not which of them failed.
+    # Hidden test groups. Only the share earned survives the grading, not which of them failed:
+    # with unequal weights the number of passed groups is an estimate.
     tests_passed: int
     tests_total: int
     time_limit: float

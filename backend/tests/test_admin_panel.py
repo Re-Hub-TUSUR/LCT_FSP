@@ -273,27 +273,31 @@ async def test_parameters_are_validated_and_journaled(
 ) -> None:
     initial = (await client.get(f"{API}/admin/parameters", headers=admin)).json()
     values = {item["key"]: item["value"] for item in initial["items"]}
-    assert values["p_pass"] == 65
+    assert values["target_solve_min"] == 50
     assert values["min_attempts_for_flags"] == 30
+    # Pass thresholds belong to the test templates, not to the parameters.
+    assert "p_pass" not in values
     assert initial["hardcoded"]
 
-    changed = await client.put(f"{API}/admin/parameters/p_pass", headers=admin, json={"value": 70})
+    changed = await client.put(
+        f"{API}/admin/parameters/target_solve_min", headers=admin, json={"value": 60}
+    )
     out_of_order = await client.put(
-        f"{API}/admin/parameters/p_plus", headers=admin, json={"value": 60}
+        f"{API}/admin/parameters/target_solve_max", headers=admin, json={"value": 55}
     )
     out_of_range = await client.put(
-        f"{API}/admin/parameters/p_pass", headers=admin, json={"value": 101}
+        f"{API}/admin/parameters/target_solve_min", headers=admin, json={"value": 101}
     )
     unknown = await client.put(f"{API}/admin/parameters/nope", headers=admin, json={"value": 1})
     assert changed.status_code == 200
-    assert {i["key"]: i["value"] for i in changed.json()["items"]}["p_pass"] == 70
+    assert {i["key"]: i["value"] for i in changed.json()["items"]}["target_solve_min"] == 60
     assert out_of_order.status_code == 400
     assert out_of_range.status_code == 400
     assert unknown.status_code == 404
 
     journal = (await client.get(f"{API}/admin/audit?entity=parameter", headers=admin)).json()
     assert journal["total"] == 1
-    assert journal["items"][0]["changes"] == {"value": [65, 70]}
+    assert journal["items"][0]["changes"] == {"value": [50, 60]}
 
 
 async def test_dictionaries(client: AsyncClient, admin: dict[str, str]) -> None:

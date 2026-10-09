@@ -315,6 +315,72 @@ async def test_task_analytics_metrics_and_flags(
     assert sum(m["attempts"] for m in result["monthly"]) == 61
     assert {h["minute"]: h["count"] for h in result["histogram"]} == {10: 24, 25: 30}
     assert result["flags"] == ["out_of_target", "variant_spread", "possible_leak"]
+    # Every one of the 54 answers picked the first option.
+    assert result["options"] == [
+        {"text": "верно", "correct": True, "picks": 54, "share": 100.0},
+        {"text": "неверно", "correct": False, "picks": 0, "share": 0.0},
+    ]
+
+
+async def test_grade_tests_by_grade(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], admin: dict[str, str]
+) -> None:
+    candidate = await _candidate(sessionmaker)
+    await _attempts(
+        sessionmaker,
+        candidate,
+        str(uuid.uuid4()),
+        started=datetime.now(UTC) - timedelta(days=3),
+        minutes=10,
+        variant="a",
+        grade=Grade.JUNIOR,
+        points=[1.0, 0.0],
+        expired=1,
+    )
+    # The same candidate then tries the next grade twice and passes once.
+    await _attempts(
+        sessionmaker,
+        candidate,
+        str(uuid.uuid4()),
+        started=datetime.now(UTC) - timedelta(days=1),
+        minutes=10,
+        variant="a",
+        grade=Grade.MIDDLE,
+        points=[0.0, 1.0],
+    )
+    async with sessionmaker() as session:
+        attempts = list(
+            await session.scalars(select(AssessmentAttempt).order_by(AssessmentAttempt.started_at))
+        )
+        attempts[0].status = AttemptStatus.PASSED
+        attempts[1].draw_notes = ["quiz ×4: не хватило 1"]
+        attempts[4].status = AttemptStatus.PASSED
+        await session.commit()
+
+    platform = await client.post(
+        f"{API}/admin/analytics/platform/recalculate", headers=admin, json={"period": "90d"}
+    )
+    assert platform.status_code == 200, platform.text
+    tests = platform.json()["result"]["gradeTests"]
+    grades = {row["grade"]: row for row in tests["grades"]}
+    assert grades["junior"] == {
+        "grade": "junior",
+        "gradeLabel": "Junior",
+        "started": 3,
+        "settled": 3,
+        "passed": 1,
+        "passShare": 33.3,
+        "widened": 1,
+        "stepUp": 0,
+        "stepUpPassed": 0,
+        "stepUpPassShare": None,
+    }
+    # Both middle tests came after the junior pass: one of the two steps up succeeded.
+    assert grades["middle"]["stepUp"] == 2
+    assert grades["middle"]["stepUpPassShare"] == 50.0
+    assert grades["senior"]["started"] == 0
+    assert grades["senior"]["passShare"] is None
+    assert tests["shortages"] == [{"note": "quiz ×4: не хватило 1", "count": 1}]
 
 
 async def test_recalculation_cooldown_and_csv(client: AsyncClient, admin: dict[str, str]) -> None:

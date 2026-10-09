@@ -105,6 +105,23 @@ function AttemptResult({
           </button>
         </p>
       )}
+      {!passed &&
+        !assigned &&
+        attempt.score !== null &&
+        attempt.score >= attempt.passScore &&
+        attempt.quizShare != null &&
+        attempt.quizMin != null &&
+        attempt.quizShare < attempt.quizMin && (
+          <p className="test-result__note">
+            Баллов хватило, но верных ответов на вопросы — {Math.round(attempt.quizShare)}% при
+            минимуме {attempt.quizMin}%: код не заменяет вопросы.
+          </p>
+        )}
+      {passed && attempt.isBeta && !assigned && (
+        <p className="test-result__note">
+          Этот тест в бета-версии: работодатели увидят, что грейд подтверждён предварительно.
+        </p>
+      )}
       {!passed && !assigned && (
         <p className="test-result__note">
           Категория не присвоена. Повторить попытку по этой специализации можно после паузы — дата

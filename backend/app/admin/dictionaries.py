@@ -43,9 +43,6 @@ class ParameterSpec:
 
 
 PARAMETERS: Final[tuple[ParameterSpec, ...]] = (
-    ParameterSpec("p_minus", "P_минус: нижний порог балла", 50, 0, 100, "баллов"),
-    ParameterSpec("p_pass", "P_проход: порог прохождения", 65, 0, 100, "баллов"),
-    ParameterSpec("p_plus", "P_плюс: порог повышения", 80, 0, 100, "баллов"),
     ParameterSpec("grade_change_cooldown_days", "T_кулдаун смены грейда", 90, 0, 365, "дней"),
     ParameterSpec("target_solve_min", "Целевая доля решивших: от", 50, 0, 100, "%"),
     ParameterSpec("target_solve_max", "Целевая доля решивших: до", 70, 0, 100, "%"),
@@ -98,11 +95,13 @@ HARDCODED: Final[tuple[HardcodedValue, ...]] = (
         "backend/app/core/config.py: assessment_retry_days (7)",
     ),
     HardcodedValue(
-        "P_проход",
-        "assessment_tests.pass_score (по умолчанию 60 в app/models/assessment.py)",
+        "Проходной балл и минимум по вопросам",
+        "шаблон теста: assessment_tests.pass_score, quiz_min (раздел «Тесты»); "
+        "стартовые значения в backend/app/seed/data/assessment/tests.json",
     ),
     HardcodedValue(
-        "P_плюс",
+        "Граница «рекомендуем следующий грейд»",
+        "шаблон теста: assessment_tests.recommend_score; без него "
         "backend/app/core/config.py: assessment_recommend_score (85)",
     ),
     HardcodedValue(

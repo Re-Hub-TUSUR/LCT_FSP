@@ -12,6 +12,7 @@ base variant.
 """
 
 import uuid
+from collections import Counter
 from collections.abc import Sequence
 from datetime import date, datetime
 from enum import Enum
@@ -31,6 +32,7 @@ from app.models import (
     AssessmentTask,
     AssessmentTaskTime,
     AttemptStatus,
+    TaskKind,
 )
 
 SETTLED: Final = (AttemptStatus.PASSED, AttemptStatus.FAILED, AttemptStatus.EXPIRED)
@@ -277,6 +279,38 @@ async def compute_task_table(
     }
 
 
+async def option_picks(
+    session: AsyncSession, task_id: uuid.UUID, since: datetime | None
+) -> list[dict[str, Any]] | None:
+    """How often every option of a question was picked in settled attempts, in the order of the
+    bank; None for other kinds. A wrong option nobody picks does no work, one picked more often
+    than the right one points at an ambiguous question."""
+    task = await session.get(AssessmentTask, task_id)
+    if task is None or task.kind != TaskKind.QUIZ:
+        return None
+    statement = (
+        select(AssessmentAnswer.answer)
+        .join(AssessmentAttempt, AssessmentAttempt.id == AssessmentAnswer.attempt_id)
+        .where(AssessmentAnswer.task_id == task_id, AssessmentAttempt.status.in_(SETTLED))
+    )
+    if since is not None:
+        statement = statement.where(AssessmentAttempt.started_at >= since)
+    answers = (await session.scalars(statement)).all()
+    picks: Counter[int] = Counter()
+    for answer in answers:
+        picks.update(set(answer.get("selected", [])))
+    correct = set(task.payload.get("correct") or [])
+    return [
+        {
+            "text": text,
+            "correct": index in correct,
+            "picks": picks[index],
+            "share": round(100 * picks[index] / len(answers), 1) if answers else None,
+        }
+        for index, text in enumerate(task.payload.get("options") or [])
+    ]
+
+
 async def compute_task_card(
     session: AsyncSession, task_id: uuid.UUID, since: datetime | None, rules: FlagRules
 ) -> dict[str, Any]:
@@ -324,4 +358,5 @@ async def compute_task_card(
         "histogram": [
             {"minute": int(row.bucket), "count": int(row.hits)} for row in histogram_rows
         ],
+        "options": await option_picks(session, task_id, since),
     }

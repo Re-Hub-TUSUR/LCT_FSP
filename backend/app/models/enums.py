@@ -15,6 +15,11 @@ class Grade(StrEnum):
     LEAD = "lead"
 
     @property
+    def rank(self) -> int:
+        """Position on the ladder: a higher grade has a higher rank."""
+        return list(Grade).index(self)
+
+    @property
     def following(self) -> "Grade | None":
         """The grade one step up; the top one has none."""
         grades = list(Grade)

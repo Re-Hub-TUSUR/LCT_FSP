@@ -65,6 +65,8 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
   const [duration, setDuration] = useState(String(test?.durationMinutes ?? 30))
   const [passScore, setPassScore] = useState(String(test?.passScore ?? 60))
   const [quizWeight, setQuizWeight] = useState(String(test?.quizWeight ?? 40))
+  const [quizMin, setQuizMin] = useState(String(test?.quizMin ?? 0))
+  const [isBeta, setIsBeta] = useState(test?.isBeta ?? false)
   const [isActive, setIsActive] = useState(test?.isActive ?? true)
   const [mode, setMode] = useState<'rules' | 'fixed'>(
     scope === 'employer' ? 'fixed' : (composition?.mode ?? 'rules'),
@@ -88,6 +90,8 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
           durationMinutes: Number(duration),
           passScore: Number(passScore),
           quizWeight: Number(quizWeight),
+          quizMin: Number(quizMin),
+          isBeta: scope === 'admin' && grade ? isBeta : false,
           composition: mode === 'rules' ? { mode, rules } : { mode, taskIds },
           retryDays: scope === 'admin' ? optionalDays(retryDays) : null,
           gradeChangeDays: scope === 'admin' ? optionalDays(gradeChangeDays) : null,
@@ -106,8 +110,10 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
     if (!title.trim()) return 'Укажите название теста'
     const minutes = Number(duration)
     if (!(minutes >= 5 && minutes <= 180)) return 'Длительность — от 5 до 180 минут'
-    if (![passScore, quizWeight].every((value) => Number(value) >= 0 && Number(value) <= 100))
-      return 'Проходной балл и вес вопросов — от 0 до 100'
+    if (
+      ![passScore, quizWeight, quizMin].every((value) => Number(value) >= 0 && Number(value) <= 100)
+    )
+      return 'Проходной балл, вес вопросов и минимум по вопросам — от 0 до 100'
     const pauses = [optionalDays(retryDays), optionalDays(gradeChangeDays)]
     if (
       pauses.some((days) => days !== null && !(Number.isInteger(days) && days >= 0 && days <= 365))
@@ -182,6 +188,13 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
           inputMode="numeric"
           value={quizWeight}
           onChange={(e) => setQuizWeight(e.target.value)}
+        />
+        <TextField
+          id="test-quiz-min"
+          label="Минимум по вопросам, % верных"
+          inputMode="numeric"
+          value={quizMin}
+          onChange={(e) => setQuizMin(e.target.value)}
         />
       </div>
 
@@ -345,6 +358,12 @@ export function TestForm({ scope, test, tasks, onDone }: Props) {
         </fieldset>
       )}
 
+      {scope === 'admin' && grade && (
+        <label className="task-form__check">
+          <input type="checkbox" checked={isBeta} onChange={(e) => setIsBeta(e.target.checked)} />
+          <span>Бета: подтверждённый грейд помечается как предварительный</span>
+        </label>
+      )}
       <label className="task-form__check">
         <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
         <span>Активен</span>

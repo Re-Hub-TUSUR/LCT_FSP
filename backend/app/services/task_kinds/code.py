@@ -57,6 +57,13 @@ class CodeKind(TaskKindSpec[CodePayload]):
             raise AppError("Неподдерживаемый язык", details={"languages": unsupported})
         if payload.reference and payload.reference.language not in allowed_languages(payload):
             raise AppError("Язык эталонного решения не разрешён в задаче")
+        foreign = [
+            language for language in payload.starter if language not in allowed_languages(payload)
+        ]
+        if foreign:
+            raise AppError(
+                "Язык стартового кода не разрешён в задаче", details={"languages": foreign}
+            )
 
     def content(self, payload: CodePayload, state: Stored | None) -> CodeContent:
         return CodeContent(
@@ -70,6 +77,7 @@ class CodeKind(TaskKindSpec[CodePayload]):
                 for group in payload.groups
                 if not group.hidden
             ],
+            starter=payload.starter,
         )
 
     def store_answer(self, payload: CodePayload, state: Stored | None, answer: Stored) -> Stored:
@@ -92,10 +100,11 @@ class CodeKind(TaskKindSpec[CodePayload]):
             )
         )
         passed = sum(
-            judge(execution, group.expected, payload.time_limit) == "ok"
+            group.weight
             for group, execution in zip(hidden, executions, strict=True)
+            if judge(execution, group.expected, payload.time_limit) == "ok"
         )
-        return passed / len(hidden)
+        return passed / sum(group.weight for group in hidden)
 
     def review(self, payload: CodePayload, state: Stored | None, stored: Stored | None) -> Stored:
         return {

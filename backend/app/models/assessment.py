@@ -4,6 +4,7 @@ from typing import Any
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -11,6 +12,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    false,
     text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -38,6 +40,10 @@ class AssessmentTask(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     statement: Mapped[str] = mapped_column(Text)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON)
     is_active: Mapped[bool] = mapped_column(default=True)
+    # Hash of the content as the starter files had it when the row was written or last synced:
+    # a row whose content still matches it follows the files, an edited one is left alone.
+    # Null for rows made in the admin panel and for rows loaded before the hash existed.
+    seed_hash: Mapped[str | None] = mapped_column(String(64))
 
 
 class AssessmentTest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -48,6 +54,7 @@ class AssessmentTest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("duration_minutes > 0", name="duration_positive"),
         CheckConstraint("pass_score >= 0 AND pass_score <= 100", name="pass_score_range"),
         CheckConstraint("quiz_weight >= 0 AND quiz_weight <= 100", name="quiz_weight_range"),
+        CheckConstraint("quiz_min >= 0 AND quiz_min <= 100", name="quiz_min_range"),
         CheckConstraint("retry_days >= 0", name="retry_days_positive"),
         CheckConstraint("grade_change_days >= 0", name="grade_change_days_positive"),
         CheckConstraint(
@@ -68,6 +75,10 @@ class AssessmentTest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     pass_score: Mapped[int] = mapped_column(default=60)
     # Share of quiz questions in the score, percent; the rest belongs to code tasks.
     quiz_weight: Mapped[int] = mapped_column(default=40)
+    # A pass also needs this share of the quiz right, percent, however well the code went.
+    quiz_min: Mapped[int] = mapped_column(default=0, server_default="0")
+    # Platform templates only: the grade is offered, but its confirmation is marked as provisional.
+    is_beta: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     composition: Mapped[dict[str, Any]] = mapped_column(JSON)
     # Days before a failed test can be retaken / a confirmed grade can be changed.
     # Null = the platform defaults from the settings.
@@ -113,6 +124,8 @@ class AssessmentAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Scoring rules are copied from the template: later edits do not change a running attempt.
     pass_score: Mapped[int]
     quiz_weight: Mapped[int]
+    quiz_min: Mapped[int] = mapped_column(default=0, server_default="0")
+    is_beta: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     # Cooldowns are copied too: they count from this attempt, whatever the template says later.
     retry_days: Mapped[int] = mapped_column(default=7, server_default="7")
     grade_change_days: Mapped[int] = mapped_column(default=90, server_default="90")
@@ -127,6 +140,8 @@ class AssessmentAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     tasks: Mapped[list[dict[str, Any]]] = mapped_column(
         JSON, default=list, server_default=text("'[]'")
     )
+    # The rules the draw had to widen because the bank ran short: see `_draw`.
+    draw_notes: Mapped[list[str]] = mapped_column(JSON, default=list, server_default=text("'[]'"))
     # task id → what the task's kind fixed for this attempt (e.g. the order of quiz options).
     task_state: Mapped[dict[str, dict[str, Any]]] = mapped_column(JSON, default=dict)
     # Per-topic result, filled on finish.

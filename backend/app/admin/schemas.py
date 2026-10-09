@@ -128,6 +128,8 @@ class AdminTaskDetail(AdminTaskRow):
     attempts: int
     can_delete: bool
     allowed_statuses: list[TaskStatus]
+    # What the editor should fix although the task is saved, see `TaskRead.warnings`.
+    warnings: list[str] = Field(default_factory=list)
 
 
 class StatusChange(ApiModel):

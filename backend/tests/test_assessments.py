@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import time
 import uuid
 from collections.abc import AsyncIterator, Sequence
@@ -6,10 +8,11 @@ from typing import Any
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.admin.models import AdminAuditLog
 from app.core.errors import ConflictError, NotFoundError
 from app.dependencies.services import get_code_runner
 from app.models import (
@@ -19,14 +22,17 @@ from app.models import (
     AssessmentTest,
     CandidateProfile,
     Grade,
+    TaskDifficulty,
     TaskKind,
 )
 from app.repositories.assessment import AssessmentRepository
 from app.schemas.assessment import (
     AttemptContext,
     CodeContext,
+    CodePayload,
     CompositionRule,
     QuizContext,
+    QuizPayload,
     RulesComposition,
 )
 from app.seed.assessment import (
@@ -34,6 +40,7 @@ from app.seed.assessment import (
     _rows,
     _template_id,
     code_tasks,
+    content_hash,
     grade_tests,
     quiz_tasks,
     seed_assessment_bank,
@@ -44,8 +51,11 @@ from app.services.assessments import _draw
 from app.services.attempt_context import AttemptContextService, render_context
 from app.services.categories import SPECIALIZATIONS
 from app.services.code_runner import COMPILERS, CodeRunnerUnavailableError, Execution
-from app.services.task_kinds.code import judge, normalize_output
+from app.services.quiz_lint import MAX_LONGEST_SHARE, longest_share, option_warning
+from app.services.task_kinds.code import CodeKind, judge, normalize_output
+from app.services.task_kinds.quiz import QuizKind
 from tests.conftest import API, bearer, create_admin, login, register_and_login
+from tests.weak_solutions import WEAK_SOLUTIONS
 
 HIDDEN_INPUT = "hidden-input-marker"
 
@@ -123,25 +133,33 @@ async def admin_token(
 
 
 async def platform_test(
-    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], *, with_code: bool = True
+    client: AsyncClient,
+    sessionmaker: async_sessionmaker[AsyncSession],
+    *,
+    with_code: bool = True,
+    extra_grades: Sequence[str] = (),
+    **template: Any,
 ) -> None:
-    """Junior template: two questions and (optionally) one code task."""
+    """Junior template: two questions and (optionally) one code task. `extra_grades` adds a twin
+    template for each of those grades; `template` fields (camelCase) override the defaults."""
     headers = bearer(await admin_token(client, sessionmaker))
     for payload in (quiz("Q1"), quiz("Q2"), *([code()] if with_code else [])):
         created = await client.post(f"{API}/admin/assessment-tasks", headers=headers, json=payload)
         assert created.status_code == 201, created.text
     rules = [{"kind": "quiz", "count": 2}, *([{"kind": "code", "count": 1}] if with_code else [])]
-    created = await client.post(
-        f"{API}/admin/assessment-tests",
-        headers=headers,
-        json={
-            "title": "Junior",
-            "grade": "junior",
-            "durationMinutes": 25,
-            "composition": {"mode": "rules", "rules": rules},
-        },
-    )
-    assert created.status_code == 201, created.text
+    for grade in ("junior", *extra_grades):
+        created = await client.post(
+            f"{API}/admin/assessment-tests",
+            headers=headers,
+            json={
+                "title": grade,
+                "grade": grade,
+                "durationMinutes": 25,
+                "composition": {"mode": "rules", "rules": rules},
+                **template,
+            },
+        )
+        assert created.status_code == 201, created.text
 
 
 async def start(client: AsyncClient, token: str, specialization: str = "backend") -> dict[str, Any]:
@@ -294,6 +312,142 @@ async def test_score_weighs_quiz_and_code(
     assert (finished.json()["status"], finished.json()["score"]) == ("failed", 40.0)
     breakdown = {item["kind"]: item["earned"] for item in finished.json()["breakdown"]}
     assert breakdown == {"quiz": 1.0, "code": 0.0}
+
+
+async def test_quiz_minimum_holds_back_a_pass_on_code_alone(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker, quizMin=50)
+    token = await register_and_login(client, "dev@fsp.ru")
+    attempt = await start(client, token)
+    assert attempt["quizMin"] == 50
+    # The code is right in full (60 points, the pass mark), the quiz is wrong from the first answer.
+    answer_code = [task for task in attempt["tasks"] if task["kind"] == "code"]
+    await answer_all(client, token, {**attempt, "tasks": answer_code}, right=True)
+
+    finished = await client.post(
+        f"{API}/assessments/attempts/{attempt['id']}/finish", headers=bearer(token)
+    )
+
+    body = finished.json()
+    assert (body["status"], body["score"], body["quizShare"]) == ("failed", 60.0, 0.0)
+    status = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+    assert status["tracks"][0]["status"] == "failed"
+
+
+async def test_quiz_minimum_lets_a_good_quiz_through(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker, quizMin=50)
+    token = await register_and_login(client, "dev@fsp.ru")
+    attempt = await start(client, token)
+    await answer_all(client, token, attempt, right=True)
+
+    finished = await client.post(
+        f"{API}/assessments/attempts/{attempt['id']}/finish", headers=bearer(token)
+    )
+
+    assert (finished.json()["status"], finished.json()["quizShare"]) == ("passed", 100.0)
+
+
+async def test_beta_test_marks_the_category_and_the_profile(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker, isBeta=True, quizMin=40)
+    token = await register_and_login(client, "dev@fsp.ru")
+    templates = (await client.get(f"{API}/assessments/templates", headers=bearer(token))).json()
+    assert [(item["isBeta"], item["quizMin"]) for item in templates] == [(True, 40)]
+    attempt = await start(client, token)
+    await answer_all(client, token, attempt, right=True)
+
+    await client.post(f"{API}/assessments/attempts/{attempt['id']}/finish", headers=bearer(token))
+
+    status = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+    assert status["tracks"][0]["isBeta"] is True
+    async with sessionmaker() as session:
+        profile = (await session.scalars(select(CandidateProfile))).one()
+        assert profile.assessment_beta is True
+
+
+async def test_lower_grade_opens_at_once_after_a_failure(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    await platform_test(client, sessionmaker, extra_grades=["intern"])
+    token = await register_and_login(client, "dev@fsp.ru")
+    attempt = await start(client, token)
+    await answer_all(client, token, attempt, right=False, program="wrong")
+    await client.post(f"{API}/assessments/attempts/{attempt['id']}/finish", headers=bearer(token))
+
+    status = (await client.get(f"{API}/assessments/me", headers=bearer(token))).json()
+    assert status["tracks"][0]["failedGrade"] == "junior"
+    assert status["tracks"][0]["nextAttemptAt"] is not None
+
+    same = await client.post(
+        f"{API}/assessments/attempts",
+        headers=bearer(token),
+        json={"specialization": "backend", "grade": "junior"},
+    )
+    lower = await client.post(
+        f"{API}/assessments/attempts",
+        headers=bearer(token),
+        json={"specialization": "backend", "grade": "intern"},
+    )
+
+    assert same.status_code == 409
+    assert lower.status_code == 201, lower.text
+
+
+async def test_template_edits_are_journaled(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession]
+) -> None:
+    headers = bearer(await admin_token(client, sessionmaker))
+    body = {
+        "title": "Junior",
+        "grade": "junior",
+        "durationMinutes": 25,
+        "composition": {"mode": "rules", "rules": [{"kind": "quiz", "count": 2}]},
+    }
+    created = await client.post(f"{API}/admin/assessment-tests", headers=headers, json=body)
+    test_id = created.json()["id"]
+
+    await client.put(
+        f"{API}/admin/assessment-tests/{test_id}",
+        headers=headers,
+        json={**body, "passScore": 75, "quizMin": 50},
+    )
+    await client.delete(f"{API}/admin/assessment-tests/{test_id}", headers=headers)
+
+    async with sessionmaker() as session:
+        entries = (
+            await session.scalars(
+                select(AdminAuditLog)
+                .where(AdminAuditLog.entity == "assessment_test")
+                .order_by(AdminAuditLog.created_at)
+            )
+        ).all()
+    assert [entry.action for entry in entries] == ["create", "update", "delete"]
+    assert entries[1].changes["pass_score"] == [60, 75]
+    assert entries[1].changes["quiz_min"] == [0, 50]
+
+
+def test_widened_draw_is_reported() -> None:
+    easy = [
+        task
+        for task in quiz_tasks()
+        if "backend" in task.specializations and task.difficulty == TaskDifficulty.EASY
+    ][:2]
+    composition = RulesComposition.model_validate(
+        {"rules": [{"kind": "quiz", "count": 4, "scope": "specialization", "difficulty": ["easy"]}]}
+    )
+    notes: list[str] = []
+
+    variant = _draw(composition, easy, "backend", set(), notes)
+
+    assert len(variant) == 2
+    assert notes, "a short pool must be reported"
+    quiet: list[str] = []
+    _draw(composition, quiz_tasks(), "backend", set(), quiet)
+    assert quiet == []
 
 
 async def test_answers_are_closed_after_the_deadline_but_finish_still_scores(
@@ -491,6 +645,8 @@ async def test_template_of_a_specialization_overrides_the_general_one(
         "specialization": "qa",
         "durationMinutes": 40,
         "passScore": 60,
+        "quizMin": 0,
+        "isBeta": False,
         "tasks": {"quiz": 1},
         "retryDays": 1,
         "gradeChangeDays": 30,
@@ -954,7 +1110,7 @@ def test_starter_bank_covers_every_category() -> None:
     assert {test.grade for test in templates} == set(Grade)
 
     for test in templates:
-        assert 25 <= test.duration_minutes <= 40
+        assert 25 <= test.duration_minutes <= 50
         composition = RulesComposition.model_validate(test.composition)
         wanted = sum(rule.count for rule in composition.rules)
         for specialization in SPECIALIZATIONS:
@@ -977,15 +1133,69 @@ def test_starter_bank_covers_every_category() -> None:
 def test_starter_bank_questions_are_well_formed() -> None:
     rows = _rows("quiz")
     assert len(rows) >= 600
-    for specialization, _topic, level, question, *options in rows:
+    for specialization, _topic, level, question, correct, *wrong in rows:
         assert specialization is None or specialization in SPECIALIZATIONS, question
         assert level in ("e", "m", "h"), question
         assert len(question) <= 200, question
-        assert len(options) == len(set(options)) == 4, question
+        # One right option and three or four wrong ones, or a list of several right ones.
+        right = [correct] if isinstance(correct, str) else correct
+        options = [*right, *wrong]
+        assert len(options) == len(set(options)), question
+        assert 4 <= len(options) <= 6, question
+        assert right, question
+        assert len(wrong) >= 2, question
 
-    # The right option must not give itself away by being the longest one.
-    longest = sum(len(row[4]) > max(len(option) for option in row[5:]) for row in rows)
-    assert longest < len(rows) / 2
+    # The right option must not give itself away by its length (`app.services.quiz_lint`).
+    for row in rows:
+        assert option_warning(row[4], row[5:]) is None, row[3]
+    assert longest_share((row[4], row[5:]) for row in rows) <= MAX_LONGEST_SHARE
+
+
+def test_quiz_lint_flags_a_right_option_that_is_much_longer() -> None:
+    assert option_warning("A" * 10, ["b" * 10, "c" * 9, "d" * 11]) is None
+    assert option_warning("A" * 30, ["b" * 10, "c" * 12, "d" * 11]) is not None
+    assert longest_share([("a" * 5, ["b", "cc"]), ("a", ["bb", "c"])]) == 0.5
+    assert option_warning("A" * 30, []) is None
+
+
+async def test_bank_task_carries_length_warnings(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession]
+) -> None:
+    headers = bearer(await admin_token(client, sessionmaker))
+
+    def question(options: list[str]) -> dict[str, Any]:
+        return {
+            "kind": "quiz",
+            "difficulty": "easy",
+            "specializations": [],
+            "topic": "algorithms",
+            "title": "Вопрос",
+            "statement": "Вопрос",
+            "payload": {"options": options, "correct": [0], "multiple": False},
+        }
+
+    leaky = await client.post(
+        f"{API}/admin/assessment-tasks",
+        json=question(["Очень подробный и длинный верный ответ на вопрос", "нет", "да", "не знаю"]),
+        headers=headers,
+    )
+    fair = await client.post(
+        f"{API}/admin/assessment-tasks",
+        json=question(
+            [
+                "Верный ответ среднего размера",
+                "Неверный ответ тоже среднего размера",
+                "Ещё один ответ среднего размера",
+                "Прочий вариант такого же размера",
+            ]
+        ),
+        headers=headers,
+    )
+
+    assert leaky.status_code == 201, leaky.text
+    assert leaky.json()["warnings"]
+    assert fair.status_code == 201, fair.text
+    assert fair.json()["warnings"] == []
 
 
 def test_reference_solutions_pass_their_own_tests() -> None:
@@ -997,6 +1207,124 @@ def test_reference_solutions_pass_their_own_tests() -> None:
             output = run(reference["code"], group["input"])
             assert normalize_output(output) == group["expected"], item["key"]
             assert time.perf_counter() - started < item["time_limit"] / 2, item["key"]
+
+
+def test_grade_thresholds_are_consistent() -> None:
+    for test in grade_tests():
+        # A strong result must stay above a plain pass, or every pass opens the next grade.
+        assert (test.recommend_score or 85) > test.pass_score, test.grade
+        # The code task alone never passes the test, and the quiz minimum is not an empty word:
+        # a pass on points with the code solved may still fall short of it.
+        assert test.pass_score > 100 - test.quiz_weight, test.grade
+        assert test.quiz_min >= 50, test.grade
+        composition = RulesComposition.model_validate(test.composition)
+        questions = sum(rule.count for rule in composition.rules if rule.kind == TaskKind.QUIZ)
+        assert questions == (15 if test.grade in (Grade.INTERN, Grade.JUNIOR) else 25), test.grade
+
+
+def test_seed_row_with_several_right_options_is_a_multiple_choice() -> None:
+    right = ["Первый верный", "Второй верный"]
+    assert option_warning(right, ["Неверный один", "Неверный два"]) is None
+    assert option_warning(["A" * 30, "B" * 28], ["c" * 10, "d" * 12, "e" * 11]) is not None
+    assert longest_share([(["aaa", "bbbb"], ["cc", "d"]), (["a", "bbbb"], ["cc", "d"])]) == 0.5
+
+
+async def test_several_right_options_earn_partial_credit() -> None:
+    spec = QuizKind()
+    payload = QuizPayload(options=["a", "b", "c", "d", "e"], correct=[0, 1], multiple=True)
+    runner = StubRunner()
+
+    async def points(*selected: int) -> float:
+        return await spec.grade(payload, {"selected": list(selected)}, runner)
+
+    assert await points(0, 1) == 1
+    assert await points(0) == 0.5
+    # A wrong option takes away what a right one earned; marking everything earns nothing.
+    assert await points(0, 2) == 0
+    assert await points(0, 1, 2) == 0.5
+    assert await points(0, 1, 2, 3, 4) == 0
+    assert await points() == 0
+    single = QuizPayload(options=["a", "b"], correct=[0])
+    assert await spec.grade(single, {"selected": [0]}, runner) == 1
+    assert await spec.grade(single, {"selected": [1]}, runner) == 0
+
+
+async def test_hidden_groups_count_by_their_weights() -> None:
+    spec = CodeKind()
+    payload = CodePayload.model_validate(
+        {
+            "groups": [
+                {"input": "1", "expected": "1"},
+                {"input": "2", "expected": "2", "hidden": True},
+                {"input": "3", "expected": "3", "hidden": True, "weight": 3},
+            ]
+        }
+    )
+
+    class HeavyGroupFails(StubRunner):
+        async def run(self, *, compiler: str, code: str, stdin: str) -> Execution:
+            return Execution(ok=True, output="?" if stdin == "3" else stdin, error="", time=0.1)
+
+    earned = await spec.grade(
+        payload, {"language": "python-3.14", "code": "echo"}, HeavyGroupFails()
+    )
+    assert earned == 0.25
+
+
+async def test_starter_code_reaches_the_candidate(
+    client: AsyncClient, sessionmaker: async_sessionmaker[AsyncSession], runner: StubRunner
+) -> None:
+    headers = bearer(await admin_token(client, sessionmaker))
+    buggy = "print(int(input()) + 1)"
+    task = code("Найди ошибку")
+    task["payload"]["starter"] = {"python-3.14": buggy}
+    foreign = code("Чужой язык")
+    foreign["payload"] |= {"languages": ["python-3.14"], "starter": {"go-1.26": "package main"}}
+    created = await client.post(f"{API}/admin/assessment-tasks", json=task, headers=headers)
+    refused = await client.post(f"{API}/admin/assessment-tasks", json=foreign, headers=headers)
+    assert created.status_code == 201, created.text
+    assert created.json()["payload"]["starter"] == {"python-3.14": buggy}
+    assert refused.status_code == 400, refused.text
+
+    template = await client.post(
+        f"{API}/admin/assessment-tests",
+        headers=headers,
+        json={
+            "title": "junior",
+            "grade": "junior",
+            "durationMinutes": 25,
+            "composition": {"mode": "rules", "rules": [{"kind": "code", "count": 1}]},
+        },
+    )
+    assert template.status_code == 201, template.text
+    token = await register_and_login(client, "starter@example.com")
+    attempt = await start(client, token)
+    (shown,) = attempt["tasks"]
+    assert shown["content"]["starter"] == {"python-3.14": buggy}
+
+
+def test_hidden_groups_reject_weak_solutions() -> None:
+    tasks = {item["key"]: item for item in _rows("code")}
+    for key, solutions in WEAK_SOLUTIONS.items():
+        hidden = [group for group in tasks[key]["groups"] if group["hidden"]]
+        for name, code in solutions.items():
+            passed = [_runs_right(code, group, timeout=2) for group in hidden]
+            assert not all(passed), f"{key}: {name} passes every hidden group"
+
+
+def _runs_right(code: str, group: dict[str, Any], *, timeout: float) -> bool:
+    try:
+        done = subprocess.run(  # noqa: S603 - our own test programs
+            [sys.executable, "-I", "-c", code],
+            input=group["input"],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return False
+    return bool(normalize_output(done.stdout) == group["expected"])
 
 
 def test_code_bank_files_are_built_from_their_sources() -> None:
@@ -1032,6 +1360,109 @@ async def test_starter_bank_loads_once(sessionmaker: async_sessionmaker[AsyncSes
     assert first.quiz >= 600
     assert first.code >= 55
     assert attempts.all() == []
+
+
+async def _seeded_quiz(
+    sessionmaker: async_sessionmaker[AsyncSession],
+) -> tuple[uuid.UUID, dict[str, Any]]:
+    """Loads the bank and returns the id and the file payload of one starter question."""
+    starter = quiz_tasks()[0]
+    async with sessionmaker() as session:
+        await seed_assessment_bank(session)
+        await session.commit()
+    return starter.id, dict(starter.payload)
+
+
+async def test_untouched_starter_task_follows_the_files(
+    sessionmaker: async_sessionmaker[AsyncSession],
+) -> None:
+    task_id, file_payload = await _seeded_quiz(sessionmaker)
+    async with sessionmaker() as session:
+        task = await session.get(AssessmentTask, task_id)
+        assert task is not None
+        # The database still holds an older wording of the options and a switched-off row.
+        task.payload = {**file_payload, "options": ["old right", "old a", "old b", "old c"]}
+        task.seed_hash = content_hash(task)
+        task.is_active = False
+        await session.commit()
+
+    async with sessionmaker() as session:
+        summary = await seed_assessment_bank(session)
+        await session.commit()
+        task = await session.get(AssessmentTask, task_id)
+        assert task is not None
+        assert task.payload == file_payload
+        assert task.is_active is False, "a switched-off starter task stays off"
+    assert summary.updated == 1
+
+    async with sessionmaker() as session:
+        assert (await seed_assessment_bank(session)).updated == 0
+
+
+async def test_edited_starter_task_is_left_alone(
+    sessionmaker: async_sessionmaker[AsyncSession],
+) -> None:
+    task_id, file_payload = await _seeded_quiz(sessionmaker)
+    edited = {**file_payload, "options": ["admin right", "admin a", "admin b", "admin c"]}
+    async with sessionmaker() as session:
+        task = await session.get(AssessmentTask, task_id)
+        assert task is not None
+        task.payload = edited  # the hash still describes the files, the content no longer does
+        await session.commit()
+
+    async with sessionmaker() as session:
+        summary = await seed_assessment_bank(session)
+        await session.commit()
+        task = await session.get(AssessmentTask, task_id)
+        assert task is not None
+        assert task.payload == edited
+    assert summary.updated == 0
+
+
+async def test_starter_task_loaded_before_the_hash_is_judged_by_its_timestamps(
+    sessionmaker: async_sessionmaker[AsyncSession],
+) -> None:
+    task_id, file_payload = await _seeded_quiz(sessionmaker)
+    async with sessionmaker() as session:
+        # Written by the same insert as the row itself: never edited since.
+        await session.execute(
+            update(AssessmentTask)
+            .where(AssessmentTask.id == task_id)
+            .values(
+                payload={**file_payload, "options": ["old right", "old a", "old b", "old c"]},
+                seed_hash=None,
+                updated_at=AssessmentTask.created_at,
+            )
+        )
+        await session.commit()
+
+    async with sessionmaker() as session:
+        await seed_assessment_bank(session)
+        await session.commit()
+        task = await session.get(AssessmentTask, task_id)
+        assert task is not None
+        assert task.payload == file_payload
+
+    async with sessionmaker() as session:
+        task = await session.get(AssessmentTask, task_id)
+        assert task is not None
+        task.payload = {**file_payload, "options": ["admin right", "admin a", "admin b", "admin c"]}
+        task.seed_hash = None
+        await session.commit()
+        await session.refresh(task)
+        await session.execute(
+            update(AssessmentTask)
+            .where(AssessmentTask.id == task_id)
+            .values(updated_at=task.created_at + timedelta(days=1))
+        )
+        await session.commit()
+
+    async with sessionmaker() as session:
+        await seed_assessment_bank(session)
+        await session.commit()
+        task = await session.get(AssessmentTask, task_id)
+        assert task is not None
+        assert task.payload["options"][0] == "admin right"
 
 
 async def test_starter_bank_switches_off_superseded_templates(

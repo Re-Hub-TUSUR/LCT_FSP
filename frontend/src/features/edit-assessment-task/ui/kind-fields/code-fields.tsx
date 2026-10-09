@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { LANGUAGES } from '@/entities/assessment'
 import type { TestGroupDto } from '@/entities/assessment'
 import { Button, Chip, CodeEditor, SelectField, TextArea, TextField } from '@/shared/ui'
@@ -12,6 +13,9 @@ type Props = {
 /** Test groups, limits, languages and the reference solution of a code task. */
 export function CodeFields({ draft, onChange }: Props) {
   const set = (patch: Partial<CodeDraft>) => onChange({ ...draft, ...patch })
+  const [starterLanguage, setStarterLanguage] = useState(
+    () => Object.keys(draft.starter)[0] ?? draft.referenceLanguage,
+  )
 
   const setGroup = (index: number, patch: Partial<TestGroupDto>) =>
     set({
@@ -51,6 +55,17 @@ export function CodeFields({ draft, onChange }: Props) {
                 />
                 <span>Закрытая: кандидат не видит, решает итог</span>
               </label>
+              {group.hidden && (
+                <TextField
+                  id={`task-weight-${index}`}
+                  label="Вес в оценке (1–10)"
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={String(group.weight ?? 1)}
+                  onChange={(e) => setGroup(index, { weight: Number(e.target.value) })}
+                />
+              )}
               <Button
                 variant="ghost"
                 size="inline"
@@ -129,6 +144,33 @@ export function CodeFields({ draft, onChange }: Props) {
           label="Эталонное решение"
           height="260px"
           onChange={(code) => set({ referenceCode: code })}
+        />
+      </div>
+
+      <div className="task-form__group">
+        <p className="task-form__legend">
+          Стартовый код (необязательно) — программа с ошибкой, которую кандидат получит вместо
+          пустого редактора. Оценку по-прежнему решают закрытые группы тестов
+        </p>
+        <SelectField
+          id="task-starter-language"
+          label="Язык стартового кода"
+          value={starterLanguage}
+          onChange={(e) => setStarterLanguage(e.target.value)}
+        >
+          {LANGUAGES.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+              {draft.starter[item.id]?.trim() ? ' · заполнен' : ''}
+            </option>
+          ))}
+        </SelectField>
+        <CodeEditor
+          value={draft.starter[starterLanguage] ?? ''}
+          language={starterLanguage}
+          label="Стартовый код"
+          height="200px"
+          onChange={(code) => set({ starter: { ...draft.starter, [starterLanguage]: code } })}
         />
       </div>
     </>

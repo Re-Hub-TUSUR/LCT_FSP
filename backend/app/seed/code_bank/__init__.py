@@ -43,6 +43,15 @@ class CodeTask:
     # A random small input for the comparison with `brute`.
     small: Callable[[random.Random], str] | None = None
     time_limit: float = 5
+    # «Найди ошибку»: the program the candidate gets instead of an empty editor, in the language
+    # of the reference solution. It must fail every hidden group, or handing it in untouched
+    # would earn points.
+    starter: str | None = None
+    # The same program in other languages, compiler id → code. The builder cannot run them:
+    # check each by hand before adding.
+    starters: dict[str, str] | None = None
+    # Weights of the hidden groups, in their order; all equal when absent.
+    weights: tuple[int, ...] | None = None
 
 
 def pack(cases: Iterable[str]) -> str:
@@ -78,7 +87,14 @@ def build(task: CodeTask) -> dict[str, Any]:
         {"input": stdin, "expected": run(task.solution, stdin).strip(), "hidden": index > 0}
         for index, stdin in enumerate([task.sample, *task.hidden(rng)])
     ]
-    return {
+    hidden = groups[1:]
+    if task.weights is not None:
+        if len(task.weights) != len(hidden):
+            msg = f"{task.key}: {len(task.weights)} weights for {len(hidden)} hidden groups"
+            raise ValueError(msg)
+        for group, weight in zip(hidden, task.weights, strict=True):
+            group["weight"] = weight
+    row = {
         "key": task.key,
         "title": task.title,
         "difficulty": task.difficulty,
@@ -89,3 +105,16 @@ def build(task: CodeTask) -> dict[str, Any]:
         "reference": {"language": REFERENCE_LANGUAGE, "code": task.solution},
         "groups": groups,
     }
+    if task.starter is not None:
+        if any(_passes(task.starter, group) for group in hidden):
+            msg = f"{task.key}: the starter passes a hidden group and would earn points untouched"
+            raise ValueError(msg)
+        row["starter"] = {REFERENCE_LANGUAGE: task.starter, **(task.starters or {})}
+    return row
+
+
+def _passes(code: str, group: dict[str, Any]) -> bool:
+    try:
+        return bool(run(code, group["input"]).strip() == group["expected"])
+    except Exception:  # a broken starter may fail in any way
+        return False

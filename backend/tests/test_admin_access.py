@@ -41,7 +41,7 @@ ADMIN_ENDPOINTS = [
     ("POST", "/admin/dictionaries/skills"),
     ("PATCH", f"/admin/dictionaries/skills/{TASK}"),
     ("GET", "/admin/parameters"),
-    ("PUT", "/admin/parameters/p_pass"),
+    ("PUT", "/admin/parameters/min_attempts_for_flags"),
     ("GET", "/admin/audit"),
     ("GET", "/admin/audit/export.csv"),
     ("GET", "/admin/users/export.csv"),
@@ -64,7 +64,7 @@ def test_every_panel_route_is_listed() -> None:
         "{skill_id}": TASK,
         "{company_id}": COMPANY,
         "{code}": "backend",
-        "{key}": "p_pass",
+        "{key}": "min_attempts_for_flags",
         "{block}": "tasks",
     }
 

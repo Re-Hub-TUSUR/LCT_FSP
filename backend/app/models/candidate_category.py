@@ -1,7 +1,15 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    String,
+    UniqueConstraint,
+    false,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -35,3 +43,5 @@ class CandidateCategory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     # Set when the confirming test was passed well: a test for this grade may start at once,
     # without waiting for `change_allowed_at`.
     recommended_grade: Mapped[Grade | None] = mapped_column(str_enum(Grade))
+    # The confirming test was a beta one: the grade is provisional for whoever reads it.
+    is_beta: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())

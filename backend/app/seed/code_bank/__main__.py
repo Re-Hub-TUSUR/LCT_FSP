@@ -6,13 +6,14 @@ from typing import Final
 from pydantic import ValidationError
 
 from app.schemas.assessment import CodePayload
-from app.seed.code_bank import CodeTask, build, easy, hard, medium
+from app.seed.code_bank import CodeTask, bugfix, build, easy, hard, medium
 
 OUT_DIR: Final = Path(__file__).parents[1] / "data" / "assessment" / "code"
 MODULES: Final[dict[str, list[CodeTask]]] = {
     "easy": easy.TASKS,
     "medium": medium.TASKS,
     "hard": hard.TASKS,
+    "bugfix": bugfix.TASKS,
 }
 
 
@@ -21,7 +22,11 @@ def render(tasks: list[CodeTask]) -> str:
     for row in rows:
         try:
             CodePayload.model_validate(
-                {key: row[key] for key in ("time_limit", "groups", "reference")}
+                {
+                    key: row[key]
+                    for key in ("time_limit", "groups", "reference", "starter")
+                    if key in row
+                }
             )
         except ValidationError as exc:
             msg = f"{row['key']}: {exc}"

@@ -74,6 +74,8 @@ MAPPINGS: dict[str, Any] = {
         "english_level": {"type": "keyword"},
         "assessment_score": {"type": "double"},
         "verified": {"type": "boolean"},
+        # The grade was confirmed by a beta test and is provisional.
+        "grade_beta": {"type": "boolean"},
         "assessment_status": {"type": "keyword"},
         "has_fsp": {"type": "boolean"},
         # `discipline:result` terms, see `app.search.filters.fsp_marks`.
@@ -132,6 +134,7 @@ def candidate_document(profile: CandidateProfile) -> dict[str, Any]:
         "english_level": profile.english_level,
         "assessment_score": profile.assessment_score,
         "verified": profile.assessment_score is not None,
+        "grade_beta": profile.assessment_beta,
         "assessment_status": profile.assessment_status.value,
         "has_fsp": bool(profile.fsp_achievements),
         "fsp_marks": sorted(fsp_marks(profile.fsp_achievements)),

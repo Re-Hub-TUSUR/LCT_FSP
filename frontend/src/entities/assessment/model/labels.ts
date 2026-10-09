@@ -87,6 +87,7 @@ const TOPIC_LABELS: Record<string, string> = {
   management: 'Управление командой',
   strings: 'Строки',
   logs: 'Журналы и события',
+  debugging: 'Поиск ошибки в коде',
   statistics: 'Статистика',
   data: 'Обработка данных',
   graphs: 'Графы',

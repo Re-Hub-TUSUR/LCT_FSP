@@ -110,6 +110,8 @@ class CandidateRead(ApiModel):
     category: Category | None
     # False: the test was skipped and the grade in `category` is self-declared.
     grade_verified: bool
+    # True: the grade was confirmed by a beta test and is provisional.
+    grade_beta: bool = False
     assessment_score: float | None
     # Three states for the employer: passed, failed, or the test was never taken.
     assessment_status: AssessmentStatus

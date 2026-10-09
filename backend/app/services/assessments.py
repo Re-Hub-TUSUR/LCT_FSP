@@ -6,12 +6,13 @@ a category and starts a cooldown) or to a test a company assigned (it does neith
 """
 
 import asyncio
+import logging
 import secrets
 import uuid
 from collections import defaultdict
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
-from typing import Final
+from typing import Any, Final
 
 from sqlalchemy.exc import IntegrityError
 
@@ -74,6 +75,8 @@ GRADING_RETRY: Final = timedelta(minutes=2)
 _ALREADY_RUNNING: Final = "У вас уже есть незавершённый тест"
 # Verdicts that close the question for the specialization until the cooldown passes.
 _SETTLED_BADLY: Final = (AttemptStatus.FAILED, AttemptStatus.EXPIRED)
+
+logger = logging.getLogger(__name__)
 
 _random = secrets.SystemRandom()
 
@@ -171,6 +174,8 @@ class AssessmentService:
                     specialization=test.specialization,
                     duration_minutes=test.duration_minutes,
                     pass_score=test.pass_score,
+                    quiz_min=test.quiz_min,
+                    is_beta=test.is_beta,
                     tasks={kind: count for kind, count in counts.items() if count},
                     retry_days=self._retry_days(test),
                     grade_change_days=self._grade_change_days(test),
@@ -226,7 +231,8 @@ class AssessmentService:
             raise ConflictError("Тест для этого грейда ещё не подготовлен")
 
         seen = {task_id for attempt in attempts for task_id in attempt.task_ids}
-        tasks = await self._compose(test, data.specialization, seen)
+        notes: list[str] = []
+        tasks = await self._compose(test, data.specialization, seen, notes)
         if not tasks:
             raise ConflictError("Банк задач для этой специализации пока пуст")
         if not self._runner.available and any(spec_of(task).code_group for task in tasks):
@@ -243,6 +249,7 @@ class AssessmentService:
             title=category.label if category else test.title,
             specialization=data.specialization,
             grade=data.grade,
+            draw_notes=notes,
         )
 
     async def start_assigned(
@@ -253,7 +260,8 @@ class AssessmentService:
         attempts = await self._settled_attempts(profile)
         if any(attempt.status == AttemptStatus.IN_PROGRESS for attempt in attempts):
             raise ConflictError(_ALREADY_RUNNING)
-        tasks = await self._compose(test, "", set())
+        notes: list[str] = []
+        tasks = await self._compose(test, "", set(), notes)
         if not tasks:
             raise ConflictError("В этом тесте не осталось доступных задач")
         if not self._runner.available and any(spec_of(task).code_group for task in tasks):
@@ -268,6 +276,7 @@ class AssessmentService:
             specialization=None,
             grade=None,
             assignment_id=assignment.id,
+            draw_notes=notes,
         )
 
     async def _open(
@@ -280,8 +289,17 @@ class AssessmentService:
         specialization: str | None,
         grade: Grade | None,
         assignment_id: uuid.UUID | None = None,
+        draw_notes: Sequence[str] = (),
     ) -> AttemptDetail:
         now = datetime.now(UTC)
+        if draw_notes:
+            # The bank ran short for the rules of the template: somebody should add tasks.
+            logger.warning(
+                "Assessment variant widened: test=%s specialization=%s notes=%s",
+                test.id,
+                specialization,
+                list(draw_notes),
+            )
         variant = [TaskSnapshot.of(task) for task in tasks]
         states = {
             str(task.id): spec_of(task).new_state(spec_of(task).payload(task)) for task in variant
@@ -296,6 +314,9 @@ class AssessmentService:
             status=AttemptStatus.IN_PROGRESS,
             pass_score=test.pass_score,
             quiz_weight=test.quiz_weight,
+            quiz_min=test.quiz_min,
+            is_beta=test.is_beta,
+            draw_notes=list(draw_notes),
             retry_days=self._retry_days(test),
             grade_change_days=self._grade_change_days(test),
             recommend_score=self._recommend_score(test),
@@ -537,6 +558,7 @@ class AssessmentService:
                 candidate_id=profile.id, specialization=attempt.specialization
             )
         category.grade = attempt.grade
+        category.is_beta = attempt.is_beta
         category.score = attempt.score or 0.0
         category.confirmed_at = attempt.finished_at
         category.change_allowed_at = attempt.finished_at + timedelta(days=attempt.grade_change_days)
@@ -562,7 +584,7 @@ class AssessmentService:
     # ── Variant ───────────────────────────────────────────────────────────────────────────
 
     async def _compose(
-        self, test: AssessmentTest, specialization: str, seen: set[str]
+        self, test: AssessmentTest, specialization: str, seen: set[str], notes: list[str]
     ) -> list[AssessmentTask]:
         composition = test_read(test).composition
         if isinstance(composition, FixedComposition):
@@ -572,7 +594,9 @@ class AssessmentService:
                 for task_id in composition.task_ids
                 if task_id in tasks and tasks[task_id].is_active
             ]
-        return _draw(composition, await self._repository.platform_pool(), specialization, seen)
+        return _draw(
+            composition, await self._repository.platform_pool(), specialization, seen, notes
+        )
 
     # ── Guards and helpers ────────────────────────────────────────────────────────────────
 
@@ -708,7 +732,11 @@ def _next_attempt_at(
         None,
     )
     if last is not None and last.finished_at is not None and last.status in _SETTLED_BADLY:
-        waits.append(_aware(last.finished_at) + timedelta(days=last.retry_days))
+        # After a failure the pause holds back the same grade and the ones above it; a test of a
+        # lower grade may start at once.
+        lower = grade is not None and last.grade is not None and grade.rank < last.grade.rank
+        if not lower:
+            waits.append(_aware(last.finished_at) + timedelta(days=last.retry_days))
     recommended = category is not None and grade is not None and category.recommended_grade == grade
     if category is not None and not recommended:
         waits.append(_aware(category.change_allowed_at))
@@ -735,6 +763,8 @@ def _track(
         status=AssessmentStatus.PASSED if category else AssessmentStatus.FAILED,
         grade=category.grade if category else None,
         score=category.score if category else None,
+        is_beta=category.is_beta if category else False,
+        failed_grade=_failed_grade(specialization, attempts),
         next_attempt_at=_next_attempt_at(specialization, category, attempts),
         is_primary=category is not None
         and profile.assessment_status == AssessmentStatus.PASSED
@@ -748,6 +778,7 @@ def _mirror(profile: CandidateProfile, category: CandidateCategory) -> None:
     profile.specialization = category.specialization
     profile.grade = category.grade
     profile.assessment_score = category.score
+    profile.assessment_beta = category.is_beta
     profile.grade_changed_at = category.confirmed_at
     profile.assessment_status = AssessmentStatus.PASSED
 
@@ -765,6 +796,9 @@ def _attempt_read(
         status=attempt.status,
         score=attempt.score,
         pass_score=attempt.pass_score,
+        quiz_min=attempt.quiz_min,
+        is_beta=attempt.is_beta,
+        quiz_share=_quiz_share_of(attempt.breakdown),
         started_at=_aware(attempt.started_at),
         expires_at=_aware(attempt.expires_at),
         finished_at=_aware(attempt.finished_at) if attempt.finished_at else None,
@@ -812,8 +846,13 @@ def settle(
     """Final score, per-topic breakdown and the verdict, once every task has its points."""
     attempt.score = _score(tasks, points, attempt.quiz_weight)
     attempt.breakdown = [item.model_dump(mode="json") for item in _breakdown(tasks, points)]
+    # Full marks for the code do not make up for a quiz answered below the minimum.
+    quiz = _quiz_share(tasks, points)
+    enough_quiz = quiz is None or round(quiz * 100, 1) >= attempt.quiz_min
     attempt.status = (
-        AttemptStatus.PASSED if attempt.score >= attempt.pass_score else AttemptStatus.FAILED
+        AttemptStatus.PASSED
+        if attempt.score >= attempt.pass_score and enough_quiz
+        else AttemptStatus.FAILED
     )
 
 
@@ -822,9 +861,11 @@ def _draw(
     pool: Sequence[AssessmentTask],
     specialization: str,
     seen: set[str],
+    notes: list[str] | None = None,
 ) -> list[AssessmentTask]:
     """Random variant by the rules. Tasks the candidate has not met yet go first; when a narrow
-    pool runs short, the rule widens (any scope, then any difficulty) instead of failing."""
+    pool runs short, the rule widens (any scope, then any difficulty) instead of failing, and
+    each widening is written to `notes`."""
     chosen: dict[uuid.UUID, AssessmentTask] = {}
 
     def fits_scope(task: AssessmentTask, scope: str) -> bool:
@@ -839,6 +880,12 @@ def _draw(
         for scope, strict in ((rule.scope, True), ("any", True), ("any", False)):
             if left == 0:
                 break
+            if notes is not None and (scope, strict) != (rule.scope, True):
+                where = "любая область" if strict else "любая область и сложность"
+                notes.append(
+                    f"{rule.kind} ×{rule.count} [{','.join(rule.difficulty) or 'любая'}/"
+                    f"{rule.scope}]: не хватило {left}, правило расширено ({where})"
+                )
             matching = [
                 task
                 for task in pool
@@ -882,3 +929,40 @@ def _breakdown(tasks: Sequence[TaskSnapshot], points: dict[uuid.UUID, float]) ->
         )
         for (kind, topic), values in groups.items()
     ]
+
+
+def _quiz_share(tasks: Sequence[TaskSnapshot], points: dict[uuid.UUID, float]) -> float | None:
+    """Mean points of the questions (every kind outside the code group), 0–1; None = none."""
+    rest = [points.get(task.id, 0.0) for task in tasks if not REGISTRY[task.kind].code_group]
+    return sum(rest) / len(rest) if rest else None
+
+
+def _quiz_share_of(breakdown: list[dict[str, Any]] | None) -> float | None:
+    """The same share in percent, rebuilt from the saved per-topic result."""
+    if breakdown is None:
+        return None
+    rows = [item for item in breakdown if not REGISTRY[TaskKind(item["kind"])].code_group]
+    total = sum(item["total"] for item in rows)
+    if not total:
+        return None
+    earned: float = sum(item["earned"] * item["total"] for item in rows)
+    return float(round(earned / total * 100, 1))
+
+
+def _failed_grade(specialization: str, attempts: Sequence[AssessmentAttempt]) -> Grade | None:
+    """Grade of the failed attempt that holds back the specialization, if any is still open."""
+    last = next(
+        (
+            a
+            for a in attempts
+            if a.specialization == specialization
+            and a.status != AttemptStatus.GRADING
+            and a.finished_at is not None
+        ),
+        None,
+    )
+    if last is None or last.finished_at is None or last.status not in _SETTLED_BADLY:
+        return None
+    if _aware(last.finished_at) + timedelta(days=last.retry_days) <= datetime.now(UTC):
+        return None
+    return last.grade

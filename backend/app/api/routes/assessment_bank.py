@@ -5,7 +5,8 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Query, status
 
-from app.dependencies.common import PaginationDep
+from app.admin.audit import AuditLog, diff
+from app.dependencies.common import PaginationDep, SessionDep
 from app.dependencies.services import AssessmentBankServiceDep
 from app.models import TaskKind, User, UserRole
 from app.schemas.assessment import (
@@ -22,6 +23,28 @@ from app.schemas.common import Page
 
 def _owner(user: User) -> uuid.UUID | None:
     return None if user.role == UserRole.ADMIN else user.id
+
+
+# Fields of a template that change what a candidate faces: the journal keeps every edit of them.
+_JOURNALED = {
+    "title",
+    "grade",
+    "specialization",
+    "duration_minutes",
+    "pass_score",
+    "quiz_weight",
+    "quiz_min",
+    "is_beta",
+    "composition",
+    "retry_days",
+    "grade_change_days",
+    "recommend_score",
+    "is_active",
+}
+
+
+def _template_fields(test: TestRead) -> dict[str, Any]:
+    return test.model_dump(mode="json", include=_JOURNALED)
 
 
 def bank_router(author: Any) -> APIRouter:
@@ -97,15 +120,31 @@ def bank_router(author: Any) -> APIRouter:
 
     @router.post("/assessment-tests", status_code=status.HTTP_201_CREATED, summary="Add a test")
     async def create_test(
-        user: author, data: TestWrite, service: AssessmentBankServiceDep
+        user: author, data: TestWrite, service: AssessmentBankServiceDep, session: SessionDep
     ) -> TestRead:
-        return await service.create_test(_owner(user), data)
+        created = await service.create_test(_owner(user), data)
+        if created.platform:
+            await AuditLog(session).record(
+                user, "assessment_test", created.id, "create", diff({}, _template_fields(created))
+            )
+        return created
 
     @router.put("/assessment-tests/{test_id}", summary="Replace a test")
     async def update_test(
-        test_id: uuid.UUID, user: author, data: TestWrite, service: AssessmentBankServiceDep
+        test_id: uuid.UUID,
+        user: author,
+        data: TestWrite,
+        service: AssessmentBankServiceDep,
+        session: SessionDep,
     ) -> TestRead:
-        return await service.update_test(_owner(user), test_id, data)
+        owner = _owner(user)
+        before = next((t for t in await service.list_tests(owner) if t.id == test_id), None)
+        updated = await service.update_test(owner, test_id, data)
+        if updated.platform and before is not None:
+            changes = diff(_template_fields(before), _template_fields(updated))
+            if changes:
+                await AuditLog(session).record(user, "assessment_test", test_id, "update", changes)
+        return updated
 
     @router.delete(
         "/assessment-tests/{test_id}",
@@ -113,8 +152,14 @@ def bank_router(author: Any) -> APIRouter:
         summary="Delete a test",
     )
     async def delete_test(
-        test_id: uuid.UUID, user: author, service: AssessmentBankServiceDep
+        test_id: uuid.UUID, user: author, service: AssessmentBankServiceDep, session: SessionDep
     ) -> None:
-        await service.delete_test(_owner(user), test_id)
+        owner = _owner(user)
+        before = next((t for t in await service.list_tests(owner) if t.id == test_id), None)
+        await service.delete_test(owner, test_id)
+        if before is not None and before.platform:
+            await AuditLog(session).record(
+                user, "assessment_test", test_id, "delete", {"title": [before.title, None]}
+            )
 
     return router

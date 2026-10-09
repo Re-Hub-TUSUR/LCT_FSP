@@ -244,6 +244,11 @@ export function AssessmentBank({ scope }: { scope: BankScope }) {
                             <tr key={task.id}>
                               <td>
                                 {task.title}
+                                {task.warnings?.map((warning) => (
+                                  <p key={warning} className="bank__check bank__check--fail">
+                                    {warning}
+                                  </p>
+                                ))}
                                 {result && (
                                   <p
                                     className={`bank__check bank__check--${result.ok ? 'ok' : 'fail'}`}

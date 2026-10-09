@@ -3,6 +3,7 @@ from datetime import date, datetime
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     CheckConstraint,
     Date,
     DateTime,
@@ -12,6 +13,7 @@ from sqlalchemy import (
     Text,
     Uuid,
     column,
+    false,
     select,
     table,
 )
@@ -73,6 +75,8 @@ class CandidateProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         default=AssessmentStatus.NOT_TAKEN,
         server_default=AssessmentStatus.NOT_TAKEN.value,
     )
+    # The confirming test of the category above was a beta one: employers see the mark.
+    assessment_beta: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
 
     # Participant id from the FSP ID (Keycloak) token, see `app.integrations.fsp`.
     # Null = no FSP history.

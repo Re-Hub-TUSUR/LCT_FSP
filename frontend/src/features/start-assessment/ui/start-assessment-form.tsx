@@ -74,7 +74,17 @@ export function StartAssessmentForm({
   const track = tracks.find((item) => item.specialization === specialization)
   // The grade a strong result recommended is not held back by the grade-change cooldown.
   const recommended = track?.recommendation?.grade === grade ? track.recommendation : null
-  const pausedUntil = recommended ? recommended.nextAttemptAt : track?.nextAttemptAt
+  // After a failed try the pause holds back the same grade and the ones above it, not the lower
+  // ones (a confirmed category keeps its own grade-change pause, which is not lifted).
+  const lowerOpen =
+    track?.status === 'failed' &&
+    Boolean(track.failedGrade) &&
+    GRADES.indexOf(grade as Grade) < GRADES.indexOf(track.failedGrade as Grade)
+  const pausedUntil = recommended
+    ? recommended.nextAttemptAt
+    : lowerOpen
+      ? null
+      : track?.nextAttemptAt
   const needsRunner = Boolean(template?.tasks.code) && !runnerAvailable
   const blocked =
     Boolean(pausedUntil) || needsRunner || (chosen && templates.isSuccess && !template)
@@ -137,6 +147,15 @@ export function StartAssessmentForm({
                 Проходной балл — {template.passScore} из 100. Если не набрать, категория не
                 присваивается, повторить можно {days(template.retryDays)}.
               </li>
+              {Boolean(template.quizMin) && (
+                <li>
+                  Нужно ответить верно не менее чем на {template.quizMin}% вопросов: баллы за код
+                  этого не заменяют.
+                </li>
+              )}
+              {template.isBeta && (
+                <li>Тест в бета-версии: подтверждённый грейд будет помечен как предварительный.</li>
+              )}
               <li>
                 После сдачи сменить грейд в этой специализации можно{' '}
                 {days(template.gradeChangeDays)}. Другие специализации это не задерживает.
@@ -161,10 +180,17 @@ export function StartAssessmentForm({
               Этот грейд рекомендован по итогам вашего прошлого теста и доступен без паузы.
             </p>
           )}
+          {lowerOpen && !pausedUntil && (
+            <p className="start-test__note" role="status">
+              Грейд ниже, чем в прошлой попытке, можно пройти сразу, без паузы.
+            </p>
+          )}
           {pausedUntil && (
             <p className="start-test__note" role="status">
               По этой специализации следующая попытка будет доступна {formatDateTime(pausedUntil)}.
-              Тест по другой специализации можно начать сейчас.
+              {track?.failedGrade && track.status === 'failed'
+                ? ' Тест грейда ниже и тест по другой специализации можно начать сейчас.'
+                : ' Тест по другой специализации можно начать сейчас.'}
             </p>
           )}
           {needsRunner && (

@@ -207,7 +207,13 @@ export function CategoryPage() {
                       {track.grade ? ` · ${gradeLabel(track.grade)}` : ''}
                     </>
                   ),
-                  note: <AssessmentStatusBadge status={track.status} score={track.score} />,
+                  note: (
+                    <AssessmentStatusBadge
+                      status={track.status}
+                      score={track.score}
+                      beta={track.isBeta}
+                    />
+                  ),
                 }))}
               />
             </Panel>

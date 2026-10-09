@@ -140,6 +140,7 @@ def candidate_read(
         about=profile.about,
         category=profile_category(profile),
         grade_verified=profile.assessment_score is not None,
+        grade_beta=profile.assessment_beta,
         assessment_score=profile.assessment_score,
         assessment_status=profile.assessment_status,
         stack=list(profile.stack),

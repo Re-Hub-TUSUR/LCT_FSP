@@ -2,58 +2,80 @@
   {
     "grade": "intern",
     "title": "Тест на грейд: стажёр",
-    "duration_minutes": 25,
+    "duration_minutes": 28,
+    "pass_score": 53,
+    "quiz_weight": 80,
+    "quiz_min": 50,
+    "recommend_score": 75,
     "rules": [
       { "kind": "quiz", "count": 6, "scope": "specialization", "difficulty": ["easy"] },
-      { "kind": "quiz", "count": 4, "scope": "general", "difficulty": ["easy"] },
+      { "kind": "quiz", "count": 9, "scope": "general", "difficulty": ["easy"] },
       { "kind": "code", "count": 1, "scope": "specialization", "difficulty": ["easy"] }
     ]
   },
   {
     "grade": "junior",
     "title": "Тест на грейд: Junior",
-    "duration_minutes": 30,
+    "duration_minutes": 28,
+    "pass_score": 64,
+    "quiz_weight": 80,
+    "quiz_min": 50,
+    "recommend_score": 82,
     "rules": [
       { "kind": "quiz", "count": 4, "scope": "specialization", "difficulty": ["easy"] },
       { "kind": "quiz", "count": 4, "scope": "specialization", "difficulty": ["medium"] },
-      { "kind": "quiz", "count": 2, "scope": "general", "difficulty": ["easy"] },
-      { "kind": "quiz", "count": 2, "scope": "general", "difficulty": ["medium"] },
+      { "kind": "quiz", "count": 3, "scope": "general", "difficulty": ["easy"] },
+      { "kind": "quiz", "count": 4, "scope": "general", "difficulty": ["medium"] },
       { "kind": "code", "count": 1, "scope": "specialization", "difficulty": ["easy"] }
     ]
   },
   {
     "grade": "middle",
     "title": "Тест на грейд: Middle",
-    "duration_minutes": 35,
+    "duration_minutes": 40,
+    "pass_score": 53,
+    "quiz_weight": 80,
+    "quiz_min": 60,
+    "recommend_score": 75,
     "rules": [
-      { "kind": "quiz", "count": 6, "scope": "specialization", "difficulty": ["medium"] },
-      { "kind": "quiz", "count": 2, "scope": "specialization", "difficulty": ["hard"] },
-      { "kind": "quiz", "count": 4, "scope": "general", "difficulty": ["medium"] },
+      { "kind": "quiz", "count": 7, "scope": "specialization", "difficulty": ["medium"] },
+      { "kind": "quiz", "count": 4, "scope": "specialization", "difficulty": ["hard"] },
+      { "kind": "quiz", "count": 10, "scope": "general", "difficulty": ["medium"] },
+      { "kind": "quiz", "count": 4, "scope": "general", "difficulty": ["hard"] },
       { "kind": "code", "count": 1, "scope": "specialization", "difficulty": ["medium"] }
     ]
   },
   {
     "grade": "senior",
     "title": "Тест на грейд: Senior",
-    "duration_minutes": 40,
+    "duration_minutes": 45,
+    "pass_score": 56,
+    "quiz_weight": 80,
+    "quiz_min": 60,
+    "recommend_score": 78,
     "rules": [
-      { "kind": "quiz", "count": 3, "scope": "specialization", "difficulty": ["medium"] },
-      { "kind": "quiz", "count": 5, "scope": "specialization", "difficulty": ["hard"] },
-      { "kind": "quiz", "count": 2, "scope": "general", "difficulty": ["medium"] },
-      { "kind": "quiz", "count": 2, "scope": "general", "difficulty": ["hard"] },
+      { "kind": "quiz", "count": 4, "scope": "specialization", "difficulty": ["medium"] },
+      { "kind": "quiz", "count": 7, "scope": "specialization", "difficulty": ["hard"] },
+      { "kind": "quiz", "count": 6, "scope": "general", "difficulty": ["medium"] },
+      { "kind": "quiz", "count": 8, "scope": "general", "difficulty": ["hard"] },
       { "kind": "code", "count": 1, "scope": "specialization", "difficulty": ["hard"] }
     ]
   },
   {
     "grade": "lead",
     "title": "Тест на грейд: Lead",
-    "duration_minutes": 40,
+    "duration_minutes": 50,
+    "pass_score": 65,
+    "quiz_weight": 80,
+    "quiz_min": 50,
+    "recommend_score": 100,
+    "is_beta": true,
     "rules": [
       { "kind": "quiz", "count": 2, "scope": "specialization", "difficulty": ["medium"] },
-      { "kind": "quiz", "count": 4, "scope": "specialization", "difficulty": ["hard"] },
-      { "kind": "quiz", "count": 3, "scope": "general", "difficulty": ["medium", "hard"], "topics": ["architecture"] },
-      { "kind": "quiz", "count": 3, "scope": "general", "difficulty": ["medium", "hard"], "topics": ["management"] },
-      { "kind": "quiz", "count": 2, "scope": "general", "difficulty": ["hard"], "topics": ["algorithms", "sql", "networks", "os", "security", "testing", "git"] },
+      { "kind": "quiz", "count": 6, "scope": "specialization", "difficulty": ["hard"] },
+      { "kind": "quiz", "count": 6, "scope": "general", "difficulty": ["medium", "hard"], "topics": ["architecture"] },
+      { "kind": "quiz", "count": 6, "scope": "general", "difficulty": ["medium", "hard"], "topics": ["management"] },
+      { "kind": "quiz", "count": 5, "scope": "general", "difficulty": ["hard"], "topics": ["algorithms", "sql", "networks", "os", "security", "testing", "git"] },
       { "kind": "code", "count": 1, "scope": "specialization", "difficulty": ["hard"] }
     ]
   }

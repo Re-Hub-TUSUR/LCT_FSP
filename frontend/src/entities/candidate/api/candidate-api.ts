@@ -71,6 +71,8 @@ export type CandidateDto = {
   category: CategoryDto | null
   /** False: the test was skipped, the grade is self-declared. */
   gradeVerified: boolean
+  /** The grade was confirmed by a beta test and is provisional. */
+  gradeBeta?: boolean
   assessmentScore: number | null
   /** Platform grade test: passed, failed or never taken. */
   assessmentStatus: AssessmentStatus

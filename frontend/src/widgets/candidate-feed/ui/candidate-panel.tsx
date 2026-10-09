@@ -66,6 +66,7 @@ export function CandidatePanel({ match, onClose, actions }: Props) {
           <AssessmentStatusBadge
             status={candidate.assessmentStatus}
             score={candidate.assessmentScore}
+            beta={candidate.gradeBeta}
           />
         </li>
         {candidate.experienceYears !== null && (

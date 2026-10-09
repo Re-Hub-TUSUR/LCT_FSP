@@ -33,7 +33,7 @@ from app.core.errors import AppError, ConflictError, NotFoundError
 from app.models import AssessmentAttempt, AssessmentTask, TaskKind, User
 from app.schemas.assessment import TaskWrite
 from app.schemas.common import Page
-from app.services.assessment_bank import AssessmentBankService
+from app.services.assessment_bank import AssessmentBankService, task_warnings
 
 _random = secrets.SystemRandom()
 _PLACEHOLDER: Final = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
@@ -225,6 +225,7 @@ class AdminBankService:
             attempts=attempts,
             can_delete=status == TaskStatus.DRAFT and attempts == 0,
             allowed_statuses=sorted(TRANSITIONS[status], key=list(TaskStatus).index),
+            warnings=task_warnings(task),
         )
 
     async def attempts_with(self, task_id: uuid.UUID) -> int:

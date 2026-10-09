@@ -456,6 +456,24 @@ function CodeFields({ form, set }: FieldsProps) {
             />
             <span>Скрытый</span>
           </label>
+          {group.hidden && (
+            <TextField
+              id={`group-${index}-weight`}
+              label="Вес"
+              type="number"
+              min={1}
+              max={10}
+              value={String(group.weight ?? 1)}
+              onChange={(event) =>
+                set(
+                  'groups',
+                  form.groups.map((item, i) =>
+                    i === index ? { ...item, weight: Number(event.target.value) } : item,
+                  ),
+                )
+              }
+            />
+          )}
           <Button
             variant="ghost"
             size="inline"
@@ -494,6 +512,22 @@ function CodeFields({ form, set }: FieldsProps) {
         rows={5}
         value={form.referenceCode}
         onChange={(event) => set('referenceCode', event.target.value)}
+      />
+      <div className="admin-form__row">
+        <TextField
+          id="code-starter-language"
+          label="Стартовый код: язык (необязательно)"
+          value={form.starterLanguage}
+          placeholder="python-3.14"
+          onChange={(event) => set('starterLanguage', event.target.value)}
+        />
+      </div>
+      <TextArea
+        id="code-starter"
+        label="Стартовый код — программа с ошибкой, которую кандидат получит в редакторе"
+        rows={5}
+        value={form.starterCode}
+        onChange={(event) => set('starterCode', event.target.value)}
       />
     </fieldset>
   )

@@ -99,11 +99,11 @@ function signIn() {
   })
 }
 
-function stubFetch() {
+function stubFetch(own?: { status?: AssessmentStatusDto; templates?: AssessmentTemplateDto[] }) {
   const fetchMock = vi.fn<typeof fetch>(
     mockFetch({
-      '/api/v1/assessments/me': { body: status },
-      '/api/v1/assessments/templates': { body: templates },
+      '/api/v1/assessments/me': { body: own?.status ?? status },
+      '/api/v1/assessments/templates': { body: own?.templates ?? templates },
       '/api/v1/categories/dictionary': { body: dictionary },
       '/api/v1/assessments/me/primary': {
         body: {
@@ -200,5 +200,55 @@ describe('testing page', () => {
       expect(screen.getByLabelText('Грейд, на который претендуете')).toHaveValue('senior'),
     )
     expect(screen.getByRole('button', { name: 'Начать тест' })).toBeEnabled()
+  })
+
+  it('opens a lower grade at once after a failure and states the quiz minimum and the beta', async () => {
+    signIn()
+    stubFetch({
+      status: {
+        ...status,
+        status: 'failed',
+        specialization: null,
+        grade: null,
+        score: null,
+        nextAttemptAt: '2027-01-10T10:00:00Z',
+        tracks: [
+          {
+            specialization: 'qa',
+            status: 'failed',
+            grade: null,
+            score: null,
+            nextAttemptAt: '2027-01-10T10:00:00Z',
+            isPrimary: false,
+            recommendation: null,
+            failedGrade: 'senior',
+          },
+        ],
+      },
+      templates: [
+        { ...templates[2]!, quizMin: 50, isBeta: true },
+        { ...templates[0]!, tasks: { quiz: 10 } },
+      ],
+    })
+    const user = userEvent.setup()
+
+    renderApp('/testing')
+    const specialization = await screen.findByLabelText('Специализация', {}, SLOW)
+    const grade = screen.getByLabelText('Грейд, на который претендуете')
+    const startButton = screen.getByRole('button', { name: 'Начать тест' })
+    await user.selectOptions(specialization, 'qa')
+
+    // The failed grade waits; its rules name the quiz minimum and the beta mark.
+    await user.selectOptions(grade, 'senior')
+    expect(await screen.findByText(/не менее чем на 50% вопросов/)).toBeInTheDocument()
+    expect(screen.getByText(/Тест в бета-версии/)).toBeInTheDocument()
+    expect(screen.getByText(/следующая попытка будет доступна/)).toBeInTheDocument()
+    expect(startButton).toBeDisabled()
+
+    // A lower grade is open without the pause.
+    await user.selectOptions(grade, 'junior')
+    expect(await screen.findByText(/можно пройти сразу, без паузы/)).toBeInTheDocument()
+    expect(screen.queryByText(/следующая попытка будет доступна/)).not.toBeInTheDocument()
+    expect(startButton).toBeEnabled()
   })
 })

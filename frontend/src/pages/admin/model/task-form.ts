@@ -28,6 +28,10 @@ export type TaskForm = {
   groups: CodeGroup[]
   referenceLanguage: string
   referenceCode: string
+  /** The one starter the form edits; starters of other languages are kept as they are. */
+  starterLanguage: string
+  starterCode: string
+  starterOther: Record<string, string>
 }
 
 const VARIABLE_NAME = /^[A-Za-z_][A-Za-z0-9_]{0,31}$/
@@ -58,6 +62,9 @@ export function emptyForm(kind: TaskKind = 'quiz'): TaskForm {
     ],
     referenceLanguage: '',
     referenceCode: '',
+    starterLanguage: '',
+    starterCode: '',
+    starterOther: {},
   }
 }
 
@@ -91,8 +98,14 @@ export function toForm(task: AdminTaskDetail): TaskForm {
     }
   }
   const payload = task.payload as CodePayload
+  const [[starterLanguage, starterCode] = ['', ''], ...otherStarters] = Object.entries(
+    payload.starter ?? {},
+  )
   return {
     ...base,
+    starterLanguage,
+    starterCode,
+    starterOther: Object.fromEntries(otherStarters),
     languages: payload.languages.join(', '),
     runLimitSeconds: String(payload.timeLimit),
     groups: payload.groups,
@@ -158,6 +171,13 @@ export function validate(form: TaskForm): string | null {
     if (Boolean(form.referenceCode.trim()) !== Boolean(form.referenceLanguage.trim())) {
       return 'Эталонное решение: укажите и язык, и код'
     }
+    if (Boolean(form.starterCode.trim()) !== Boolean(form.starterLanguage.trim())) {
+      return 'Стартовый код: укажите и язык, и код'
+    }
+    const weights = groups.filter((group) => group.hidden).map((group) => group.weight ?? 1)
+    if (weights.some((weight) => !(Number.isInteger(weight) && weight >= 1 && weight <= 10))) {
+      return 'Вес скрытого тест-кейса — целое число от 1 до 10'
+    }
   }
   return null
 }
@@ -202,6 +222,10 @@ export function toPayload(form: TaskForm): AdminTaskWrite {
       reference: form.referenceCode.trim()
         ? { language: form.referenceLanguage.trim(), code: form.referenceCode }
         : null,
+      starter: {
+        ...form.starterOther,
+        ...(form.starterCode.trim() ? { [form.starterLanguage.trim()]: form.starterCode } : {}),
+      },
     },
   }
 }

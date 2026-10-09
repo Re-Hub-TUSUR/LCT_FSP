@@ -19,7 +19,11 @@ _random = secrets.SystemRandom()
 
 
 class QuizKind(TaskKindSpec[QuizPayload]):
-    """Choice question. Options are shuffled per attempt; answers are stored as bank indexes."""
+    """Choice question. Options are shuffled per attempt; answers are stored as bank indexes.
+
+    One right option: the answer is right or wrong. Several: every right option picked earns
+    its share of the task and every wrong one takes the same share away, so marking everything
+    earns nothing."""
 
     kind: ClassVar = TaskKind.QUIZ
 
@@ -54,7 +58,10 @@ class QuizKind(TaskKindSpec[QuizPayload]):
         )
 
     async def grade(self, payload: QuizPayload, stored: Stored, runner: CodeRunner) -> float:
-        return float(sorted(stored.get("selected", [])) == sorted(payload.correct))
+        chosen, right = set(stored.get("selected", [])), set(payload.correct)
+        if not payload.multiple:
+            return float(chosen == right)
+        return max(0.0, (len(chosen & right) - len(chosen - right)) / len(right))
 
     def review(self, payload: QuizPayload, state: Stored | None, stored: Stored | None) -> Stored:
         return {

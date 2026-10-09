@@ -36,6 +36,12 @@ export type AssessmentAttemptDto = {
   status: AssessmentAttemptStatus
   score: number | null
   passScore: number
+  /** The least share of the quiz answered right a pass needs, percent. */
+  quizMin?: number
+  /** The test is a beta one: the confirmed grade is provisional. */
+  isBeta?: boolean
+  /** Share of the quiz answered right, percent; null while unfinished or without a quiz. */
+  quizShare?: number | null
   startedAt: string
   expiresAt: string
   finishedAt: string | null
@@ -70,6 +76,8 @@ export type CodeTaskDto = AttemptTaskBase & {
     languages: { id: string; label: string }[]
     timeLimit: number
     samples: { input: string; expected: string }[]
+    /** Compiler id → the code the editor opens with: a program to fix or to refactor. */
+    starter?: Record<string, string>
   }
   answer: CodeAnswerDto | null
 }
@@ -125,6 +133,10 @@ export type AssessmentTrackDto = {
   nextAttemptAt: string | null
   /** The category employers see in search and feeds. */
   isPrimary: boolean
+  /** The confirming test was a beta one. */
+  isBeta?: boolean
+  /** Grade of the failed test behind the pause: tests of lower grades are open at once. */
+  failedGrade?: string | null
   /**
    * The next grade a strong result opened: a test for it skips the grade-change cooldown.
    * `nextAttemptAt` is null when it may start now, a date after a failed try at it.
@@ -139,6 +151,9 @@ export type AssessmentTemplateDto = {
   specialization: string | null
   durationMinutes: number
   passScore: number
+  /** The least share of the quiz answered right a pass needs, percent. */
+  quizMin?: number
+  isBeta?: boolean
   tasks: Partial<Record<TaskKind, number>>
   retryDays: number
   gradeChangeDays: number
@@ -255,13 +270,21 @@ export type BankScope = 'admin' | 'employer'
 
 export type QuizPayloadDto = { options: string[]; correct: number[]; multiple: boolean }
 
-export type TestGroupDto = { input: string; expected: string; hidden: boolean }
+export type TestGroupDto = {
+  input: string
+  expected: string
+  hidden: boolean
+  /** Share of a hidden group in the score of the task, relative to the others; 1 by default. */
+  weight?: number
+}
 
 export type CodePayloadDto = {
   languages: string[]
   timeLimit: number
   groups: TestGroupDto[]
   reference: CodeAnswerDto | null
+  /** Compiler id → the code the candidate starts from instead of the empty template. */
+  starter?: Record<string, string>
 }
 
 export type OpenPayloadDto = {
@@ -289,7 +312,13 @@ export type BankTaskWrite = BankTaskBase &
     | { kind: 'open'; payload: OpenPayloadDto }
   )
 
-export type BankTaskDto = BankTaskWrite & { id: string; platform: boolean; createdAt: string }
+export type BankTaskDto = BankTaskWrite & {
+  id: string
+  platform: boolean
+  createdAt: string
+  /** What the author should fix although the task is saved. */
+  warnings?: string[]
+}
 
 export type CompositionRuleDto = {
   kind: TaskKind
@@ -310,6 +339,8 @@ export type BankTestWrite = {
   durationMinutes: number
   passScore: number
   quizWeight: number
+  quizMin: number
+  isBeta: boolean
   composition: CompositionDto
   /** Null = the platform defaults. */
   retryDays: number | null

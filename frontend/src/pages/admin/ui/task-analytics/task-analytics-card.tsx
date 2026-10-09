@@ -223,6 +223,39 @@ export function TaskAnalyticsCard({ taskId, period, onPeriod, onBack }: Props) {
             />
           </div>
 
+          {result.options && (
+            <>
+              <h2 className="admin-card__title">Выбор вариантов ответа</h2>
+              <p className="admin-hint">
+                Неверный вариант, который никто не выбирает, не работает; выбранный чаще верного —
+                признак двусмысленного вопроса.
+              </p>
+              <div className="admin-table-wrap">
+                <table className="admin-table admin-table--numbers">
+                  <thead>
+                    <tr>
+                      <th scope="col">Вариант</th>
+                      <th scope="col">Выбрали</th>
+                      <th scope="col">Доля ответов</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.options.map((option) => (
+                      <tr key={option.text}>
+                        <td>
+                          {option.correct ? '✓ ' : ''}
+                          {option.text}
+                        </td>
+                        <td>{option.picks}</td>
+                        <td>{formatPercent(option.share)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+
           <h2 className="admin-card__title">По вариантам</h2>
           <MetricsTable
             keyLabel="Вариант"

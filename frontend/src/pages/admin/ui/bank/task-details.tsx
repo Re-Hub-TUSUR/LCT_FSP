@@ -116,6 +116,11 @@ export function TaskDetails({ taskId, onBack }: { taskId: string; onBack: () => 
         </div>
       </header>
       {move.isError && !target && <p className="admin-error">{errorText(move.error)}</p>}
+      {data.warnings?.map((warning) => (
+        <p key={warning} className="admin-error" role="status">
+          {warning}
+        </p>
+      ))}
       {!data.canDelete && data.status === 'draft' && (
         <p className="admin-hint">
           Задание уже было в попытках кандидатов: удалить нельзя, только архивировать.
@@ -147,10 +152,17 @@ export function TaskDetails({ taskId, onBack }: { taskId: string; onBack: () => 
             <ul className="admin-list">
               {(data.payload as CodePayload).groups.map((group, index) => (
                 <li key={index}>
-                  {group.hidden ? 'Скрытый' : 'Открытый'}: <code>{group.input || '∅'}</code> →{' '}
-                  <code>{group.expected}</code>
+                  {group.hidden ? 'Скрытый' : 'Открытый'}
+                  {group.hidden && (group.weight ?? 1) !== 1 ? `, вес ${group.weight}` : ''}:{' '}
+                  <code>{group.input || '∅'}</code> → <code>{group.expected}</code>
                 </li>
               ))}
+              {Object.keys((data.payload as CodePayload).starter ?? {}).length > 0 && (
+                <li>
+                  Стартовый код:{' '}
+                  {Object.keys((data.payload as CodePayload).starter ?? {}).join(', ')}
+                </li>
+              )}
             </ul>
           )}
           <p className="admin-hint">Создано {formatStamp(data.createdAt)}</p>

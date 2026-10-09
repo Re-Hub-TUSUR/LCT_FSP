@@ -88,6 +88,7 @@ export function CandidateMatchCard({ match, actions, frame = false, onStudy }: P
             <AssessmentStatusBadge
               status={candidate.assessmentStatus}
               score={candidate.assessmentScore}
+              beta={candidate.gradeBeta}
             />
           </li>
           {candidate.experienceYears !== null && (

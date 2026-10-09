@@ -6,8 +6,9 @@ way an employer reaches out today: an invitation row, a like on the candidate, a
 «Accepted» is an accepted invitation or a conversation, which opens on mutual interest.
 """
 
+from collections import Counter
 from datetime import datetime
-from typing import Any
+from typing import Any, Final
 
 from sqlalchemy import (
     ColumnElement,
@@ -32,6 +33,7 @@ from app.models import (
     CandidateReaction,
     Company,
     Conversation,
+    Grade,
     Invitation,
     InvitationStatus,
     ReactionKind,
@@ -41,6 +43,7 @@ from app.models import (
     Vacancy,
 )
 from app.services.categories import GRADE_LABELS, SPECIALIZATIONS
+from app.services.matching import as_utc
 
 
 def _flag(condition: ColumnElement[bool]) -> ColumnElement[int]:
@@ -250,12 +253,89 @@ async def demand(session: AsyncSession, since: datetime | None) -> list[dict[str
     return rows
 
 
+# How many of the most frequent shortages of the bank are listed.
+SHORTAGES: Final = 20
+_SETTLED: Final = (AttemptStatus.PASSED, AttemptStatus.FAILED, AttemptStatus.EXPIRED)
+
+
+async def grade_tests(session: AsyncSession, since: datetime | None) -> dict[str, Any]:
+    """Platform grade tests started in the period, per grade: how many were started, settled
+    and passed, and how often the bank ran short of tasks for the template (`draw_notes`).
+
+    A «step up» is a test of a grade above the one the candidate had already confirmed in that
+    specialization. The grade a candidate claims is stored nowhere, so this is the closest
+    reading of «passed a grade above their own»: a test that tells grades apart lets few of
+    them through, apart from honest growth."""
+    rows = (
+        await session.execute(
+            select(
+                AssessmentAttempt.candidate_id,
+                AssessmentAttempt.specialization,
+                AssessmentAttempt.grade,
+                AssessmentAttempt.status,
+                AssessmentAttempt.started_at,
+                AssessmentAttempt.draw_notes,
+            )
+            .where(AssessmentAttempt.assignment_id.is_(None), AssessmentAttempt.grade.is_not(None))
+            .order_by(AssessmentAttempt.started_at, AssessmentAttempt.id)
+        )
+    ).all()
+    counts: dict[str, Counter[str]] = {grade.value: Counter() for grade in Grade}
+    shortages: Counter[str] = Counter()
+    # (candidate, specialization) → rank of the highest grade passed so far.
+    confirmed: dict[tuple[Any, str | None], int] = {}
+    for candidate_id, specialization, grade, status, started_at, notes in rows:
+        if grade is None:
+            continue
+        track = (candidate_id, specialization)
+        held = confirmed.get(track)
+        if status == AttemptStatus.PASSED:
+            confirmed[track] = max(grade.rank, held if held is not None else grade.rank)
+        if since is not None and as_utc(started_at) < since:
+            continue
+        count = counts[grade.value]
+        count["started"] += 1
+        count["settled"] += status in _SETTLED
+        count["passed"] += status == AttemptStatus.PASSED
+        count["widened"] += bool(notes)
+        if held is not None and grade.rank > held and status in _SETTLED:
+            count["step_up"] += 1
+            count["step_up_passed"] += status == AttemptStatus.PASSED
+        shortages.update(notes or [])
+    return {
+        "grades": [
+            {
+                "grade": grade.value,
+                "gradeLabel": label,
+                "started": counts[grade.value]["started"],
+                "settled": counts[grade.value]["settled"],
+                "passed": counts[grade.value]["passed"],
+                # Of the settled ones: a test still running or waiting for a check is not a fail.
+                "passShare": share(counts[grade.value]["passed"], counts[grade.value]["settled"]),
+                "widened": counts[grade.value]["widened"],
+                "stepUp": counts[grade.value]["step_up"],
+                "stepUpPassed": counts[grade.value]["step_up_passed"],
+                "stepUpPassShare": share(
+                    counts[grade.value]["step_up_passed"], counts[grade.value]["step_up"]
+                ),
+            }
+            for grade, label in GRADE_LABELS.items()
+        ],
+        "shortages": [
+            {"note": note, "count": count} for note, count in shortages.most_common(SHORTAGES)
+        ],
+    }
+
+
 async def compute_platform(session: AsyncSession, since: datetime | None) -> dict[str, Any]:
     return {
         "candidateFunnel": await candidate_funnel(session, since),
         "employerFunnel": await employer_funnel(session, since),
         "demand": await demand(session, since),
+        "gradeTests": await grade_tests(session, since),
         "missing": [
+            "Заявленный кандидатом грейд не хранится: вместо него в таблице тестов считается "
+            "сдача грейда выше уже подтверждённого.",
             "Посещаемость сайта: события посещений не записываются (раздел отключён).",
             "Число поисков по категориям: поисковые запросы не логируются.",
             "Найм: у вакансий нет статуса «закрыта с наймом».",

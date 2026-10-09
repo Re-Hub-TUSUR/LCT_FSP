@@ -219,6 +219,8 @@ class CandidateFacts:
     # Specializations of the non-priority resumes. They rank below an exact priority match.
     other_specializations: tuple[str, ...] = ()
     fsp_titles: tuple[FspTitleKind, ...] = ()
+    # The confirming test was a beta one.
+    assessment_beta: bool = False
 
     @classmethod
     def of(cls, profile: CandidateProfile) -> Self:
@@ -232,6 +234,7 @@ class CandidateFacts:
             relocation_ready=profile.relocation_ready,
             salary_expectation=profile.salary_expectation,
             assessment_score=profile.assessment_score,
+            assessment_beta=profile.assessment_beta,
             other_specializations=tuple(
                 str(item["specialization"])
                 for item in (profile.additional_resumes or [])
@@ -539,7 +542,8 @@ def candidate_reasons(
     """Why a candidate is in the recruiter's feed. Grammatically neutral: no gender is stored."""
     reasons: list[str] = []
     if candidate.assessment_score is not None:
-        reasons.append(f"Грейд подтверждён тестом: {candidate.assessment_score:.0f} из 100")
+        beta = ", тест в бета-версии" if candidate.assessment_beta else ""
+        reasons.append(f"Грейд подтверждён тестом: {candidate.assessment_score:.0f} из 100{beta}")
     else:
         reasons.append("Грейд указан без теста")
     best = best_fsp_result(candidate.fsp)
