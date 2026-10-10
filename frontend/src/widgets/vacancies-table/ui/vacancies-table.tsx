@@ -47,8 +47,8 @@ function matches(
 }
 
 /**
- * Published vacancies with filters in the URL. A company sees its own vacancies first, drafts
- * included; a row opens the whole vacancy in the side sheet.
+ * Vacancies with filters in the URL; a row opens the whole vacancy in the side sheet. A candidate
+ * sees every published vacancy, a company only its own, drafts included.
  */
 export function VacanciesTable() {
   const { user } = useSession()
@@ -78,6 +78,7 @@ export function VacanciesTable() {
       perPage,
     }),
     placeholderData: keepPreviousData,
+    enabled: !employer,
   })
 
   const update = (patch: Record<string, string | null>) => {
@@ -97,14 +98,6 @@ export function VacanciesTable() {
 
   const ownId = company.data?.id
   const isOwn = (vacancy: VacancyDto) => ownId !== undefined && vacancy.company.id === ownId
-  // Own vacancies (with drafts) open the first page; the public list follows without them.
-  const own =
-    page === 1
-      ? (mine.data?.items ?? []).filter((vacancy) =>
-          matches(vacancy, { q, specialization, grade, workFormat }),
-        )
-      : []
-  const ownIds = new Set((mine.data?.items ?? []).map((vacancy) => vacancy.id))
 
   return (
     <div className="vacancies">
@@ -152,10 +145,15 @@ export function VacanciesTable() {
         />
       </div>
 
-      <QueryState query={query}>
+      <QueryState query={employer ? mine : query}>
         {(data) => {
-          const rows = [...own, ...data.items.filter((vacancy) => !ownIds.has(vacancy.id))]
-          const total = data.total + own.filter((vacancy) => !vacancy.publishedAt).length
+          // The company's own list comes whole (up to 100) and is filtered here.
+          const rows = employer
+            ? data.items.filter((vacancy) =>
+                matches(vacancy, { q, specialization, grade, workFormat }),
+              )
+            : data.items
+          const total = employer ? rows.length : data.total
           return (
             <>
               <p className="feed__found">
@@ -173,7 +171,9 @@ export function VacanciesTable() {
               ) : (
                 <div className="vacancies-table__scroll">
                   <table className="vacancies-table">
-                    <caption className="visually-hidden">Опубликованные вакансии</caption>
+                    <caption className="visually-hidden">
+                      {employer ? 'Вакансии компании' : 'Опубликованные вакансии'}
+                    </caption>
                     <thead>
                       <tr>
                         <th scope="col">Вакансия</th>
@@ -249,7 +249,7 @@ export function VacanciesTable() {
                   </table>
                 </div>
               )}
-              {data.pages > 1 && (
+              {!employer && data.pages > 1 && (
                 <Pagination
                   page={data.page}
                   pages={data.pages}

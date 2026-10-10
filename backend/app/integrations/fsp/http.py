@@ -7,6 +7,8 @@ import urllib.request
 from typing import Any, Final
 from urllib.parse import urlencode
 
+from app.core.http_body import read_json
+
 TIMEOUT: Final = 10
 
 
@@ -45,7 +47,7 @@ def _call(url: str, *, data: bytes | None, headers: dict[str, str]) -> dict[str,
     )
     try:
         with urllib.request.urlopen(request, timeout=TIMEOUT) as response:  # noqa: S310
-            parsed = json.loads(response.read().decode("utf-8"))
+            parsed = read_json(response)
     except urllib.error.HTTPError as exc:
         raise HttpCallError(f"HTTP {exc.code}", exc.code) from exc
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:

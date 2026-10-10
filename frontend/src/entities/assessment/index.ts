@@ -64,6 +64,7 @@ export {
   TASK_KIND_COUNT_LABELS,
   TASK_KIND_LABELS,
   VERDICT_LABELS,
+  attemptResultLabel,
   topicLabel,
 } from './model/labels'
 export { AssessmentStatusBadge } from './ui/assessment-status-badge'

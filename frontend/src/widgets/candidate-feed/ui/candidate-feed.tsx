@@ -203,7 +203,11 @@ export function CandidateFeed() {
             <ReactionButtons
               target="candidate"
               id={open.candidate.id}
-              initial={open.reaction}
+              initial={
+                // The refreshed list knows a decision made in the row after the sheet opened.
+                (query.data?.items.find((item) => item.candidate.id === open.candidate.id) ?? open)
+                  .reaction
+              }
               vacancyId={vacancyId ?? undefined}
             />
           }

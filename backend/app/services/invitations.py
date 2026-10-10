@@ -4,8 +4,9 @@ An accepted invitation opens the candidate's contacts to that company (`Candidat
 """
 
 import uuid
+from datetime import UTC, datetime, timedelta
 
-from app.core.errors import ConflictError, NotFoundError
+from app.core.errors import ConflictError, NotFoundError, TooManyRequestsError
 from app.dependencies.common import Pagination
 from app.models import Company, Invitation, InvitationStatus, User
 from app.repositories.candidate import CandidateRepository
@@ -46,6 +47,13 @@ class InvitationService:
                 raise NotFoundError("Вакансия не найдена")
         if await self._invitations.has_open(company.id, profile.id):
             raise ConflictError("Кандидат ещё не ответил на ваше предыдущее приглашение")
+        limit = await self._invitations.invite_limit(company.id)
+        if limit is not None:
+            since = datetime.now(UTC) - timedelta(days=1)
+            if await self._invitations.sent_since(company.id, since) >= limit:
+                raise TooManyRequestsError(
+                    f"Модератор ограничил компанию: не больше {limit} приглашений в сутки"
+                )
         invitation = await self._invitations.add(
             Invitation(
                 company_id=company.id,

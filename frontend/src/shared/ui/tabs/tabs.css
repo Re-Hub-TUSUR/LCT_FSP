@@ -1,5 +1,7 @@
 .tabs {
   display: flex;
+  /* A tab without a number («Все») sits on the same line as the ones with it. */
+  align-items: flex-end;
   gap: clamp(14px, 2vw, 28px);
   overflow-x: auto;
   scrollbar-width: none;
@@ -46,6 +48,7 @@
   font-family: var(--font-accent);
   font-weight: 400;
   font-size: 18px;
+  line-height: 1;
   letter-spacing: 0;
   color: var(--ink);
 }

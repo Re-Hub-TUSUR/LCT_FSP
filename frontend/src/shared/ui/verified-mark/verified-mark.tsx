@@ -1,5 +1,34 @@
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import './verified-mark.css'
+
+const EDGE = 8
+
+/** The box the hint must fit in: the nearest ancestor that clips (a side sheet), or the window. */
+function clipBox(from: HTMLElement): { left: number; right: number } {
+  let left = 0
+  let right = window.innerWidth
+  for (let node = from.parentElement; node; node = node.parentElement) {
+    if (getComputedStyle(node).overflowX !== 'visible') {
+      const box = node.getBoundingClientRect()
+      left = Math.max(left, box.left)
+      right = Math.min(right, box.right)
+      break
+    }
+  }
+  return { left, right }
+}
+
+/** Centred under the mark, then moved sideways just enough to stay whole. */
+function fitTip(tip: HTMLElement | null) {
+  if (!tip) return
+  tip.style.setProperty('--tip-shift', '0px')
+  const box = tip.getBoundingClientRect()
+  const bounds = clipBox(tip)
+  let shift = 0
+  if (box.left < bounds.left + EDGE) shift = bounds.left + EDGE - box.left
+  else if (box.right > bounds.right - EDGE) shift = bounds.right - EDGE - box.right
+  tip.style.setProperty('--tip-shift', `${Math.round(shift)}px`)
+}
 
 const DEFAULT_TEXT = 'Компания подтвердила IT-аккредитацию Минцифры'
 
@@ -25,12 +54,20 @@ function Check() {
 export function VerifiedMark({ text = DEFAULT_TEXT, interactive = true }: Props) {
   const id = useId()
   const [open, setOpen] = useState(false)
+  const tip = useRef<HTMLSpanElement>(null)
+  const show = () => {
+    fitTip(tip.current)
+    setOpen(true)
+  }
 
   if (!interactive) {
     return (
-      <span className="verified-mark verified-mark--static">
+      <span
+        className="verified-mark verified-mark--static"
+        onMouseEnter={() => fitTip(tip.current)}
+      >
         <Check />
-        <span className="verified-mark__tip" aria-hidden="true">
+        <span ref={tip} className="verified-mark__tip" aria-hidden="true">
           {text}
         </span>
         <span className="visually-hidden">{text}</span>
@@ -39,22 +76,18 @@ export function VerifiedMark({ text = DEFAULT_TEXT, interactive = true }: Props)
   }
 
   return (
-    <span
-      className="verified-mark"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
+    <span className="verified-mark" onMouseEnter={show} onMouseLeave={() => setOpen(false)}>
       <button
         type="button"
         className="verified-mark__button"
         aria-label="IT-аккредитация"
         aria-describedby={id}
-        onFocus={() => setOpen(true)}
+        onFocus={show}
         onBlur={() => setOpen(false)}
         onClick={(event) => {
           // A tap shows the hint; the card around must not react to it.
           event.stopPropagation()
-          setOpen(true)
+          show()
         }}
         onKeyDown={(event) => {
           if (event.key === 'Escape' && open) {
@@ -65,7 +98,13 @@ export function VerifiedMark({ text = DEFAULT_TEXT, interactive = true }: Props)
       >
         <Check />
       </button>
-      <span id={id} role="tooltip" className="verified-mark__tip" data-open={open || undefined}>
+      <span
+        ref={tip}
+        id={id}
+        role="tooltip"
+        className="verified-mark__tip"
+        data-open={open || undefined}
+      >
         {text}
       </span>
     </span>

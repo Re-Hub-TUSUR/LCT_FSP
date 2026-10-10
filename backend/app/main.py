@@ -87,7 +87,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_tags=TAGS_METADATA,
         lifespan=lifespan,
     )
-    register_docs(app, docs_url="/api/docs", openapi_url="/api/openapi.json")
+    register_docs(
+        app,
+        docs_url="/api/docs",
+        openapi_url="/api/openapi.json",
+        persist_authorization=not settings.is_production,
+    )
 
     if settings.cors_origins:
         app.add_middleware(

@@ -156,10 +156,6 @@ class ChatService:
             raise AppError("Формат файла не поддерживается")
 
         storage_key = f"{conv.id}/{uuid.uuid4()}"
-        path = self._upload_root / storage_key
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
-
         attachment = await self._conversations.add_attachment(
             MessageAttachment(
                 conversation_id=conv.id,
@@ -178,6 +174,10 @@ class ChatService:
                 attachment_id=attachment.id,
             )
         )
+        # Written after the rows: a database error no longer leaves a file nobody knows of.
+        path = self._upload_root / storage_key
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
         await self._conversations.touch(conv.id, _utc(message.created_at))
         read = await self._present_message(message)
         await self._notify_message(conv, read)

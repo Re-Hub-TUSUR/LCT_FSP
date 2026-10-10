@@ -76,27 +76,33 @@ class AtsRepository:
         return True
 
     async def claim_queued(self, connection_id: uuid.UUID) -> list[AtsApplication]:
+        """The background poller and a manual poll may run at once: the job rows are locked
+        and the ones another poller holds are skipped, so every job runs once."""
+        jobs = list(
+            (
+                await self._session.execute(
+                    select(ScreeningJob)
+                    .join(AtsApplication, ScreeningJob.application_id == AtsApplication.id)
+                    .where(
+                        AtsApplication.connection_id == connection_id,
+                        ScreeningJob.status == ScreeningJobStatus.QUEUED,
+                    )
+                    .with_for_update(of=ScreeningJob, skip_locked=True)
+                )
+            ).scalars()
+        )
+        if not jobs:
+            return []
         result = await self._session.execute(
             select(AtsApplication)
-            .join(ScreeningJob, ScreeningJob.application_id == AtsApplication.id)
-            .where(
-                AtsApplication.connection_id == connection_id,
-                ScreeningJob.status == ScreeningJobStatus.QUEUED,
-            )
+            .where(AtsApplication.id.in_([job.application_id for job in jobs]))
             .options(
                 selectinload(AtsApplication.candidate),
                 selectinload(AtsApplication.job),
             )
         )
         applications = list(result.scalars())
-        if not applications:
-            return []
-        jobs = await self._session.execute(
-            select(ScreeningJob).where(
-                ScreeningJob.application_id.in_([item.id for item in applications])
-            )
-        )
-        for job in jobs.scalars():
+        for job in jobs:
             job.status = ScreeningJobStatus.RUNNING
             job.attempts += 1
         await self._session.flush()

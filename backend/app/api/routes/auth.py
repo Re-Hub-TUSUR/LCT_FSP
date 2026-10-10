@@ -1,14 +1,16 @@
-import hmac
-
 from fastapi import APIRouter, Request, Response, status
 
 from app.api.auth_cookies import (
     REFRESH_COOKIE,
+    YANDEX_COOKIE,
     clear_refresh_cookie,
+    clear_yandex_cookie,
     require_csrf,
     set_refresh_cookie,
+    set_yandex_cookie,
 )
 from app.core.errors import AuthenticationError, NotFoundError
+from app.dependencies.auth import same_secret, through_admin_gate
 from app.dependencies.common import SettingsDep
 from app.dependencies.services import AuthServiceDep, YandexAuthServiceDep
 from app.schemas.auth import (
@@ -25,6 +27,7 @@ from app.schemas.auth import (
 )
 from app.schemas.common import ErrorResponse
 from app.schemas.user import UserRead
+from app.services.yandex_auth import STATE_TTL
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -41,20 +44,19 @@ async def register(data: RegisterRequest, auth: AuthServiceDep) -> UserRead:
 
 @router.post("/login", summary="Exchange email + password for a JWT access token")
 async def login(
-    data: LoginRequest, auth: AuthServiceDep, settings: SettingsDep, response: Response
+    request: Request,
+    data: LoginRequest,
+    auth: AuthServiceDep,
+    settings: SettingsDep,
+    response: Response,
 ) -> TokenResponse:
     issued = await auth.login(data)
+    # An administrator signs in on the admin address only, behind the gate's password. The
+    # error rolls the new session back.
+    if issued.response.user.role == "admin" and not through_admin_gate(request, settings):
+        raise AuthenticationError("Неверный email или пароль")
     set_refresh_cookie(response, issued.refresh_token, issued.refresh_ttl, settings)
     return issued.response
-
-
-def _same_secret(provided: str, expected: str) -> bool:
-    if not provided or not expected:
-        return False
-    try:
-        return hmac.compare_digest(provided.encode(), expected.encode())
-    except (TypeError, ValueError):
-        return False
 
 
 @router.post(
@@ -67,7 +69,7 @@ async def admin_gate(
     expected = settings.admin_gate_secret.get_secret_value()
     if not expected or not settings.admin_email.strip():
         raise NotFoundError()
-    if not _same_secret(request.headers.get("x-admin-gate", ""), expected):
+    if not same_secret(request.headers.get("x-admin-gate", ""), expected):
         raise AuthenticationError("Вход в админку закрыт")
     issued = await auth.open_admin_gate(settings.admin_email)
     set_refresh_cookie(response, issued.refresh_token, issued.refresh_ttl, settings)
@@ -114,25 +116,33 @@ async def yandex_status(yandex: YandexAuthServiceDep) -> YandexStatusResponse:
 
 @router.post("/yandex/start", summary="Begin Yandex ID sign-in or sign-up")
 async def yandex_start(
-    data: YandexStartRequest, yandex: YandexAuthServiceDep
+    data: YandexStartRequest,
+    yandex: YandexAuthServiceDep,
+    settings: SettingsDep,
+    response: Response,
 ) -> YandexStartResponse:
-    url = await yandex.start(
+    url, nonce = await yandex.start(
         role=data.role,
         mode=data.mode,
         consent=data.personal_data_consent,
         redirect_uri=data.redirect_uri,
     )
+    set_yandex_cookie(response, nonce, int(STATE_TTL.total_seconds()), settings)
     return YandexStartResponse(authorize_url=url)
 
 
 @router.post("/yandex/callback", summary="Exchange the Yandex code for a session")
 async def yandex_callback(
+    request: Request,
     data: YandexCallbackRequest,
     yandex: YandexAuthServiceDep,
     settings: SettingsDep,
     response: Response,
 ) -> YandexCallbackResponse:
-    issued, created = await yandex.complete(code=data.code, state=data.state)
+    issued, created = await yandex.complete(
+        code=data.code, state=data.state, browser_nonce=request.cookies.get(YANDEX_COOKIE)
+    )
+    clear_yandex_cookie(response, settings)
     set_refresh_cookie(response, issued.refresh_token, issued.refresh_ttl, settings)
     token = issued.response
     return YandexCallbackResponse(

@@ -1,5 +1,6 @@
 import logging
 import logging.config
+import re
 import time
 import uuid
 from collections.abc import Awaitable, Callable
@@ -7,6 +8,7 @@ from collections.abc import Awaitable, Callable
 from fastapi import Request, Response
 
 request_logger = logging.getLogger("app.request")
+_REQUEST_ID = re.compile(r"[A-Za-z0-9._-]{1,64}")
 
 
 def configure_logging(level: str) -> None:
@@ -32,7 +34,9 @@ async def request_logging_middleware(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
     """Logs one line per request and propagates `X-Request-ID` for log correlation."""
-    request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
+    incoming = request.headers.get("X-Request-ID", "")
+    # A proxy's id is kept for correlation; anything else (newlines, kilobytes) is replaced.
+    request_id = incoming if _REQUEST_ID.fullmatch(incoming) else uuid.uuid4().hex
     started = time.perf_counter()
     response = await call_next(request)
     elapsed_ms = (time.perf_counter() - started) * 1000

@@ -6,10 +6,12 @@ import {
   conversationQueries,
   type MessageDto,
 } from '@/entities/conversation'
+import { calendarEventApi, calendarEventKeys } from '@/entities/calendar-event'
 import { useSession } from '@/entities/session'
 import { useNotificationStream } from '@/features/notification-stream'
 import { getErrorMessage } from '@/shared/api'
-import { Avatar, EmptyState, QueryState } from '@/shared/ui'
+import { isHttpUrl } from '@/shared/lib'
+import { Avatar, Button, EmptyState, QueryState } from '@/shared/ui'
 import { ChatMeetingDialog } from './chat-meeting-dialog'
 import './messenger.css'
 
@@ -42,11 +44,66 @@ function formatSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} МБ`
 }
 
+/** The candidate answers a meeting, so the same status reads differently on each side. */
+/** The API takes chat files up to 10 MB (`CHAT_ATTACHMENT_LIMIT`). */
+const ATTACHMENT_LIMIT = 10 * 1024 * 1024
+/** What the API accepts: photos, PDF and Word. A .pptx is a ZIP too, but it is refused. */
+const ATTACHMENT_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,.pdf,.doc,.docx'
+
 const MEETING_STATUS = {
-  pending: 'Ждёт ответа',
-  confirmed: 'Подтверждена',
-  declined: 'Отклонена',
+  candidate: {
+    pending: 'Ждёт вашего ответа',
+    confirmed: 'Вы подтвердили',
+    declined: 'Вы отклонили',
+  },
+  employer: {
+    pending: 'Ждёт ответа кандидата',
+    confirmed: 'Кандидат подтвердил',
+    declined: 'Кандидат отклонил',
+  },
 } as const
+
+type Side = keyof typeof MEETING_STATUS
+
+/** The candidate's answer right in the chat: the same as in the calendar. */
+function MeetingAnswer({
+  meetingId,
+  conversationId,
+}: {
+  meetingId: string
+  conversationId: string
+}) {
+  const queryClient = useQueryClient()
+  const respond = useMutation({
+    mutationFn: (accept: boolean) => calendarEventApi.respond(meetingId, accept),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: conversationKeys.messages(conversationId) })
+      void queryClient.invalidateQueries({ queryKey: calendarEventKeys.all })
+    },
+  })
+  return (
+    <>
+      <div className="chat-msg__meet-actions">
+        <Button size="inline" disabled={respond.isPending} onClick={() => respond.mutate(true)}>
+          Подтвердить
+        </Button>
+        <Button
+          size="inline"
+          variant="ghost"
+          disabled={respond.isPending}
+          onClick={() => respond.mutate(false)}
+        >
+          Отклонить
+        </Button>
+      </div>
+      {respond.isError && (
+        <p className="chat-msg__meet-error" role="alert">
+          {getErrorMessage(respond.error)}
+        </p>
+      )}
+    </>
+  )
+}
 
 function ChatAttachmentImage({ id, alt }: { id: string; alt: string }) {
   const [src, setSrc] = useState<string | null>(null)
@@ -67,7 +124,7 @@ function ChatAttachmentImage({ id, alt }: { id: string; alt: string }) {
   return <img className="chat-msg__image" src={src} alt={alt} />
 }
 
-function MessageBubble({ message, own }: { message: MessageDto; own: boolean }) {
+function MessageBubble({ message, own, side }: { message: MessageDto; own: boolean; side: Side }) {
   const stamp = (
     <time className="chat-msg__time" dateTime={message.createdAt}>
       {formatWhen(message.createdAt)}
@@ -85,16 +142,26 @@ function MessageBubble({ message, own }: { message: MessageDto; own: boolean }) 
             {formatWhen(meet.startsAt)} — {formatWhen(meet.endsAt)}
           </p>
           {meet.location ? (
-            <a
-              className="chat-msg__meet-link"
-              href={meet.location}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {meet.location}
-            </a>
+            // Only a web address becomes a link: `javascript:` and the like stay plain text.
+            isHttpUrl(meet.location) ? (
+              <a
+                className="chat-msg__meet-link"
+                href={meet.location}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {meet.location}
+              </a>
+            ) : (
+              <p className="chat-msg__meet-place">{meet.location}</p>
+            )
           ) : null}
-          <p className="chat-msg__meet-status">{MEETING_STATUS[meet.status] ?? meet.status}</p>
+          <p className="chat-msg__meet-status">
+            {MEETING_STATUS[side][meet.status] ?? meet.status}
+          </p>
+          {side === 'candidate' && meet.status === 'pending' && (
+            <MeetingAnswer meetingId={meet.id} conversationId={message.conversationId} />
+          )}
         </article>
         {stamp}
       </div>
@@ -115,9 +182,13 @@ function MessageBubble({ message, own }: { message: MessageDto; own: boolean }) 
               type="button"
               className="chat-msg__file"
               onClick={() => {
+                // Saved under its own name: a document from a chat is not rendered on our origin.
                 void conversationApi.fetchAttachmentBlob(att.id).then((blob) => {
                   const url = URL.createObjectURL(blob)
-                  window.open(url, '_blank', 'noopener,noreferrer')
+                  const link = document.createElement('a')
+                  link.href = url
+                  link.download = att.filename
+                  link.click()
                   window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
                 })
               }}
@@ -287,6 +358,7 @@ export function Messenger({ selectedId, onSelect }: Props) {
                         key={message.id}
                         message={message}
                         own={message.senderId === user?.id}
+                        side={employer ? 'employer' : 'candidate'}
                       />
                     ))}
                   </div>
@@ -307,11 +379,15 @@ export function Messenger({ selectedId, onSelect }: Props) {
                 ref={fileRef}
                 type="file"
                 hidden
-                accept="image/*,.pdf,.doc,.docx"
+                accept={ATTACHMENT_ACCEPT}
                 onChange={(event) => {
                   const file = event.target.files?.[0]
                   event.target.value = ''
                   if (!file || !selectedId) return
+                  if (file.size > ATTACHMENT_LIMIT) {
+                    setSendError('Файл больше 10 МБ: сожмите его или отправьте ссылкой.')
+                    return
+                  }
                   setSendError(null)
                   sendFile.mutate(file)
                 }}

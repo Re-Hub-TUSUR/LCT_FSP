@@ -122,9 +122,6 @@ class VerificationService:
             raise ConflictError(f"Можно загрузить не больше {MAX_DOCUMENTS} документов")
 
         storage_key = f"{company.id}/{uuid.uuid4()}.{kind}"
-        path = self._root / storage_key
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
         self._session.add(
             CompanyDocument(
                 company_id=company.id,
@@ -151,6 +148,10 @@ class VerificationService:
             verification.decided_by = None
             verification.decision_reason = None
         await self._session.flush()
+        # Written after the rows: a database error no longer leaves a file nobody knows of.
+        path = self._root / storage_key
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
         return await self.mine(user)
 
     async def remove(self, user: User, document_id: uuid.UUID) -> VerificationRead:

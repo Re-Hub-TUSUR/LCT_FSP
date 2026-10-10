@@ -33,6 +33,7 @@ from app.services.categories import (
     WORK_FORMAT_LABELS,
 )
 from app.services.matching import rub
+from app.services.uploads import MAX_IMAGE_PIXELS
 
 logger = logging.getLogger(__name__)
 
@@ -233,8 +234,12 @@ def _photo(pdf: _Resume, data: bytes) -> bool:
     """The photo in the top right corner; a broken file is left out."""
     try:
         image = Image.open(io.BytesIO(data))
+        # The header is read, the pixels are not yet: a photo saved before uploads checked the
+        # size must not unpack into gigabytes here.
+        if image.width * image.height > MAX_IMAGE_PIXELS:
+            raise ValueError("the photo is too large")
         image.load()
-    except (OSError, ValueError):
+    except (OSError, ValueError, Image.DecompressionBombError):
         logger.warning("The profile photo could not be read; the resume goes without it")
         return False
     side = min(image.size)

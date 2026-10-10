@@ -4,7 +4,9 @@
 
 .field__label {
   display: block;
-  margin-bottom: 8px;
+  /* Also a <p> or <legend> over a group of chips: no default top margin, so the row lines up. */
+  margin: 0 0 8px;
+  padding: 0;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.12em;

@@ -83,6 +83,12 @@ class CalendarService:
         profile = await self._candidates.get(data.candidate_id)
         if profile is None or not profile.is_visible_to_employers:
             raise NotFoundError("Кандидат не найден")
+        # Otherwise any company could fill a stranger's calendar with invitations.
+        if not await self._meetings.in_touch(company.id, profile):
+            raise ConflictError(
+                "Встречу можно назначить после взаимного интереса, принятого приглашения "
+                "или отклика кандидата"
+            )
         starts_at, ends_at = _utc(data.starts_at), _utc(data.ends_at)
         await self._check_slot(company.id, starts_at, ends_at)
         vacancy_title = await self._own_vacancy_title(user, data.vacancy_id)

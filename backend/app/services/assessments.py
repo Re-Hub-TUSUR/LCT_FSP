@@ -12,7 +12,7 @@ import uuid
 from collections import defaultdict
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
-from typing import Any, Final
+from typing import Any, Final, Literal
 
 from sqlalchemy.exc import IntegrityError
 
@@ -356,7 +356,8 @@ class AssessmentService:
         await self._repository.add(saved)
 
     async def run(self, user: User, attempt_id: uuid.UUID, data: RunRequest) -> RunResponse:
-        attempt = await self._running_attempt(user, attempt_id)
+        # Locked: parallel runs queue up here and each sees the counter the previous one left.
+        attempt = await self._running_attempt(user, attempt_id, lock=True)
         task = _task(attempt, data.task_id)
         spec = spec_of(task)
         if not isinstance(spec, CodeKind):
@@ -372,6 +373,8 @@ class AssessmentService:
         attempt.runs_count += 1
         attempt.last_run_at = now
         await self._repository.add(attempt)
+        # The run is reserved: the lock goes before the compiler, which may take seconds.
+        await self._repository.commit()
 
         if data.input is not None:
             execution = await self._runner.run(
@@ -619,9 +622,14 @@ class AssessmentService:
         return attempt
 
     async def _running_attempt(
-        self, user: User, attempt_id: uuid.UUID, *, grace: timedelta = timedelta(0)
+        self,
+        user: User,
+        attempt_id: uuid.UUID,
+        *,
+        grace: timedelta = timedelta(0),
+        lock: bool = False,
     ) -> AssessmentAttempt:
-        attempt = await self._attempt(user, attempt_id)
+        attempt = await self._attempt(user, attempt_id, lock=lock)
         if attempt.status != AttemptStatus.IN_PROGRESS:
             raise ConflictError("Тест уже завершён")
         if datetime.now(UTC) > _aware(attempt.expires_at) + grace:
@@ -783,11 +791,27 @@ def _mirror(profile: CandidateProfile, category: CandidateCategory) -> None:
     profile.assessment_status = AssessmentStatus.PASSED
 
 
+def _failed_by(
+    attempt: AssessmentAttempt, quiz_share: float | None
+) -> Literal["score", "quiz", "interview"] | None:
+    if attempt.status != AttemptStatus.FAILED:
+        return None
+    # Only a pass on points goes to the interview, so its record means the interview decided.
+    if attempt.interview is not None:
+        return "interview"
+    enough_points = attempt.score is not None and attempt.score >= attempt.pass_score
+    if enough_points and quiz_share is not None and quiz_share < attempt.quiz_min:
+        return "quiz"
+    return "score"
+
+
 def _attempt_read(
     attempt: AssessmentAttempt, *, recommended_grade: Grade | None = None
 ) -> AttemptRead:
+    quiz_share = _quiz_share_of(attempt.breakdown)
     return AttemptRead(
         recommended_grade=recommended_grade,
+        failed_by=_failed_by(attempt, quiz_share),
         id=attempt.id,
         assignment_id=attempt.assignment_id,
         title=attempt.title,
@@ -798,7 +822,7 @@ def _attempt_read(
         pass_score=attempt.pass_score,
         quiz_min=attempt.quiz_min,
         is_beta=attempt.is_beta,
-        quiz_share=_quiz_share_of(attempt.breakdown),
+        quiz_share=quiz_share,
         started_at=_aware(attempt.started_at),
         expires_at=_aware(attempt.expires_at),
         finished_at=_aware(attempt.finished_at) if attempt.finished_at else None,

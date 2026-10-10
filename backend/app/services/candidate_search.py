@@ -7,7 +7,7 @@ from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
 from typing import Final
 
-from app.core.errors import NotFoundError
+from app.core.errors import ConflictError, NotFoundError
 from app.dependencies.common import Pagination
 from app.models import (
     CandidateProfile,
@@ -159,6 +159,7 @@ class CandidateSearchService:
         *,
         now: datetime | None = None,
     ) -> CandidateSearchPage:
+        await self._require_company(user)
         vacancy = await self._own_vacancy(user, params.vacancy_id)
         scope = await self._scope(user, params.view)
         query = candidate_query(params.filters, text=params.text, now=now or datetime.now(UTC))
@@ -198,6 +199,7 @@ class CandidateSearchService:
         self, user: User, params: CandidateSearchParams, *, now: datetime | None = None
     ) -> CandidateFacets:
         """Counts next to every filter option of the search with these parameters."""
+        await self._require_company(user)
         now = now or datetime.now(UTC)
         scope = await self._scope(user, params.view)
         query = scope.apply(candidate_query(params.filters, text=params.text, now=now))
@@ -271,6 +273,11 @@ class CandidateSearchService:
             matched=await shown(tuple(matched)),
             skipped=await shown(ids_with(reactions, (ReactionKind.SKIP,))),
         )
+
+    async def _require_company(self, user: User) -> None:
+        """The candidate bank opens to a company, not to anyone who ticked «работодатель»."""
+        if await self._companies.get_by_owner(user.id) is None:
+            raise ConflictError("Сначала заполните профиль компании")
 
     async def _scope(self, user: User, view: FeedView) -> _Scope:
         return _Scope(

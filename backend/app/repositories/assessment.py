@@ -35,6 +35,10 @@ class AssessmentRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def commit(self) -> None:
+        """Ends the transaction early: a row lock must not be held over an external call."""
+        await self._session.commit()
+
     async def add[T: Row](self, row: T) -> T:
         self._session.add(row)
         await self._session.flush()

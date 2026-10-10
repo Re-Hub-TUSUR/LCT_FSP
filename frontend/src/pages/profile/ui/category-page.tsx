@@ -1,9 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  ATTEMPT_STATUS_LABELS,
-  AssessmentStatusBadge,
-  assessmentQueries,
-} from '@/entities/assessment'
+import { attemptResultLabel, AssessmentStatusBadge, assessmentQueries } from '@/entities/assessment'
 import { candidateQueries } from '@/entities/candidate'
 import { categoryQueries } from '@/entities/category'
 import { useSession } from '@/entities/session'
@@ -153,7 +149,7 @@ export function CategoryPage() {
                       <tr key={attempt.id}>
                         <td>{formatDate(attempt.finishedAt ?? attempt.startedAt)}</td>
                         <td>{attempt.title}</td>
-                        <td>{ATTEMPT_STATUS_LABELS[attempt.status]}</td>
+                        <td>{attemptResultLabel(attempt)}</td>
                         <td>{attempt.score != null ? Math.round(attempt.score) : '—'}</td>
                       </tr>
                     ))}

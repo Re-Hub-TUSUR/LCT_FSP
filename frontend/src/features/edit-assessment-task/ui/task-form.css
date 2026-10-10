@@ -20,6 +20,8 @@
 .task-form__row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  /* A label that wraps to two lines must not push its input below the neighbours. */
+  align-items: end;
   gap: 28px;
 }
 

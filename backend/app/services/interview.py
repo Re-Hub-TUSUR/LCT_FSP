@@ -42,6 +42,8 @@ MAX_COMMENT: Final = 400
 # The page sends the answers when its clock hits zero: that request must not lose the race.
 ANSWER_GRACE: Final = timedelta(seconds=30)
 NO_ANSWER: Final = "(нет ответа)"
+# Fewer letters and digits than this is no answer, whatever the model says about it.
+MIN_ANSWER_CHARS: Final = 15
 
 ASK: Final = f"""Ты — технический интервьюер на платформе подбора ИТ-специалистов. Кандидат прошёл
 тест на грейд, закрытые тесты его решений пройдены. Проверь, понимает ли он собственный код или
@@ -131,7 +133,9 @@ class Interviewer:
 
     async def ask(self, code: str, tasks: dict[int, str]) -> list[InterviewQuestionState]:
         """2–3 questions; `tasks` maps the number of every code task shown to its title."""
-        answer = await self._call(system=ASK, user=code, schema=ASK_SCHEMA, max_tokens=800)
+        answer = await self._call(
+            system=ASK, user=_wrapped(code), schema=ASK_SCHEMA, max_tokens=800
+        )
         questions: list[InterviewQuestionState] = []
         for item in answer.get("questions") or []:
             text = " ".join(str(item.get("question") or "").split())[:MAX_QUESTION]
@@ -149,12 +153,12 @@ class Interviewer:
         self, code: str, questions: list[InterviewQuestionState], answers: list[str]
     ) -> tuple[list[InterviewMark], str]:
         dialogue = "\n\n".join(
-            f"Вопрос {number}: {question.text}\n<ответ>\n{answer.strip() or NO_ANSWER}\n</ответ>"
+            f"Вопрос {number}: {question.text}\n<ответ>\n{_inert(answer) or NO_ANSWER}\n</ответ>"
             for number, (question, answer) in enumerate(zip(questions, answers, strict=True), 1)
         )
         answer = await self._call(
             system=MARK,
-            user=f"{code}\n\n{dialogue}",
+            user=f"{_wrapped(code)}\n\n{dialogue}",
             schema=_mark_schema(len(questions)),
             max_tokens=1200,
         )
@@ -170,6 +174,10 @@ class Interviewer:
             if isinstance(score, bool) or not isinstance(score, int | float):
                 # A mark the model did not give is not a zero: ask again later.
                 raise InterviewerUnavailableError()
+            if _too_short(answers[number - 1]):
+                # Checked here, not by the model: a text that talks the model into a high mark
+                # still has to be an answer.
+                score = 0
             marks.append(
                 InterviewMark(
                     number=number,
@@ -189,6 +197,20 @@ class Interviewer:
             )
         except LlmUnavailableError as exc:
             raise InterviewerUnavailableError() from exc
+
+
+def _inert(text: str) -> str:
+    """The candidate's answer cannot close its own `<ответ>` and write past it."""
+    return text.strip().replace("<", "‹").replace(">", "›")
+
+
+def _wrapped(code: str) -> str:
+    """The code goes in one block the prompt calls data; it cannot end that block early."""
+    return f"<код>\n{code.replace('</код>', '‹/код›')}\n</код>"
+
+
+def _too_short(answer: str) -> bool:
+    return sum(char.isalnum() for char in answer) < MIN_ANSWER_CHARS
 
 
 class AttemptInterviewService:

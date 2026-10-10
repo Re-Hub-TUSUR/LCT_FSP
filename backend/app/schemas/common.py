@@ -45,11 +45,15 @@ class Page[T](ApiModel):
         )
 
 
+# 100 million roubles a month: above any real offer, far below the 32-bit column limit.
+MAX_SALARY = 100_000_000
+
+
 class SalaryRange(ApiModel):
     """Mandatory "from–to" salary range in RUB (ТЗ 2.2, item 1)."""
 
-    from_: int = Field(alias="from", gt=0)
-    to: int = Field(gt=0)
+    from_: int = Field(alias="from", gt=0, le=MAX_SALARY)
+    to: int = Field(gt=0, le=MAX_SALARY)
 
     @model_validator(mode="after")
     def _ordered(self) -> Self:

@@ -48,6 +48,8 @@ export type AssessmentAttemptDto = {
   breakdown: TopicResultDto[] | null
   /** In the answer to «finish» only: the next grade a strong result opened. */
   recommendedGrade?: string | null
+  /** Why a failed attempt failed; the interview one had enough points. */
+  failedBy?: 'score' | 'quiz' | 'interview' | null
 }
 
 export type CodeAnswerDto = { language: string; code: string }

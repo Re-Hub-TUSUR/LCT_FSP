@@ -39,6 +39,13 @@ type Props = {
 
 export function ReactionButtons({ target, id, initial, vacancyId, likeLabel = 'Отобрать' }: Props) {
   const [reaction, setReaction] = useState<Reaction | null>(initial)
+  // The same candidate has buttons in the row and in the side sheet: a decision made in one
+  // comes back to the other with the refreshed list.
+  const [known, setKnown] = useState<Reaction | null>(initial)
+  if (initial !== known) {
+    setKnown(initial)
+    setReaction(initial)
+  }
   const mutation = useReaction()
   const likeVacancy = useLikeVacancy()
 

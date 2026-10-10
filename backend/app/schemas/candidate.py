@@ -21,7 +21,7 @@ from app.models.enums import (
     WorkFormat,
 )
 from app.schemas.category import Category
-from app.schemas.common import ApiModel, Page
+from app.schemas.common import MAX_SALARY, ApiModel, Page
 from app.schemas.facets import OptionCount
 
 _MONTH = r"^\d{4}-(0[1-9]|1[0-2])$"
@@ -312,7 +312,7 @@ class CandidateProfileUpdate(ApiModel):
     experience_years: int | None = Field(default=None, ge=0, le=50)
     city: str | None = Field(default=None, min_length=1, max_length=100)
     work_formats: list[WorkFormat] | None = None
-    salary_expectation: int | None = Field(default=None, gt=0)
+    salary_expectation: int | None = Field(default=None, gt=0, le=MAX_SALARY)
     phone: str | None = Field(default=None, max_length=32)
     telegram: str | None = Field(default=None, max_length=64)
     specialization: str | None = Field(default=None, min_length=1, max_length=64)

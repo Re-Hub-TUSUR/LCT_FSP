@@ -1,8 +1,11 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.admin.enums import EmployerCaseStatus
+from app.admin.models import AdminEmployerCase
 from app.models import Company, Invitation, InvitationStatus
 
 InvitationRow = tuple[Invitation, Company]
@@ -16,6 +19,24 @@ class InvitationRepository:
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def invite_limit(self, company_id: uuid.UUID) -> int | None:
+        """The daily limit an admin set for a restricted company; None when there is none."""
+        limit: int | None = await self._session.scalar(
+            select(AdminEmployerCase.invite_limit).where(
+                AdminEmployerCase.company_id == company_id,
+                AdminEmployerCase.status == EmployerCaseStatus.RESTRICTED,
+            )
+        )
+        return limit
+
+    async def sent_since(self, company_id: uuid.UUID, since: datetime) -> int:
+        count = await self._session.scalar(
+            select(func.count())
+            .select_from(Invitation)
+            .where(Invitation.company_id == company_id, Invitation.created_at >= since)
+        )
+        return int(count or 0)
 
     async def add(self, invitation: Invitation) -> Invitation:
         self._session.add(invitation)

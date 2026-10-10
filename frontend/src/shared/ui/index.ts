@@ -24,6 +24,7 @@ export type { TabItem } from './tabs/tabs'
 export {
   CheckRow,
   CountChip,
+  FILTER_TERMS_MAX,
   FilterDeadEnd,
   FilterDisclosure,
   FilterGroup,
@@ -32,6 +33,7 @@ export {
   ModeSelect,
   MoneyField,
   SaveSearchButton,
+  savedCountNote,
   SourceMark,
   TagCombobox,
   UndoToast,

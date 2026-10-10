@@ -1,8 +1,10 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.admin.enums import VerificationStatus
+from app.admin.models import CompanyVerification
 from app.models import Company
 
 
@@ -22,6 +24,25 @@ class CompanyRepository:
         # A computed column is not set on a new row, and a lazy load is not allowed in async.
         await self._session.refresh(company, ["it_accredited"])
         return company
+
+    async def reopen_verification(self, company: Company, reason: str) -> None:
+        """An approved check goes back to the admins; the mark is off until they decide."""
+        await self._session.execute(
+            update(CompanyVerification)
+            .where(
+                CompanyVerification.company_id == company.id,
+                CompanyVerification.status == VerificationStatus.APPROVED,
+            )
+            .values(
+                status=VerificationStatus.PENDING,
+                decided_at=None,
+                decided_by=None,
+                decision_reason=reason,
+            )
+            .execution_options(synchronize_session=False)
+        )
+        await self._session.flush()
+        await self._session.refresh(company, ["it_accredited"])
 
     async def logo_of(self, company_id: uuid.UUID) -> tuple[bytes, str] | None:
         row = (

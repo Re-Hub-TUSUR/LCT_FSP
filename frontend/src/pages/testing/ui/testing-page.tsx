@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  ATTEMPT_STATUS_LABELS,
+  attemptResultLabel,
   TASK_KIND_LABELS,
   assessmentApi,
   assessmentKeys,
@@ -305,7 +305,7 @@ function Overview({
                   <tr key={attempt.id}>
                     <td>{attempt.title}</td>
                     <td>{formatDate(attempt.startedAt)}</td>
-                    <td>{ATTEMPT_STATUS_LABELS[attempt.status]}</td>
+                    <td>{attemptResultLabel(attempt)}</td>
                     <td>{attempt.score === null ? '—' : Math.round(attempt.score)}</td>
                   </tr>
                 ))}

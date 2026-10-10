@@ -80,7 +80,8 @@
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translate(-50%, -4px);
+  /* --tip-shift keeps the hint inside a side sheet or the window (set by the component). */
+  transform: translate(calc(-50% + var(--tip-shift, 0px)), -4px);
   transition:
     opacity 0.16s var(--ease-premium),
     transform 0.16s var(--ease-premium),
@@ -91,7 +92,7 @@
 .verified-mark--static:hover .verified-mark__tip {
   opacity: 1;
   visibility: visible;
-  transform: translate(-50%, 0);
+  transform: translate(calc(-50% + var(--tip-shift, 0px)), 0);
   transition:
     opacity 0.16s var(--ease-premium),
     transform 0.16s var(--ease-premium);

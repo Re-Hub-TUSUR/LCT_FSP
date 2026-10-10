@@ -11,8 +11,12 @@ class EmailVerificationRepository:
         self._session = session
 
     async def get_for_user(self, user_id: uuid.UUID) -> EmailVerificationCode | None:
+        """Locks the row till the end of the request: parallel guesses or resends queue up
+        behind each other, so none of them reads a stale attempt counter or cooldown."""
         result = await self._session.execute(
-            select(EmailVerificationCode).where(EmailVerificationCode.user_id == user_id)
+            select(EmailVerificationCode)
+            .where(EmailVerificationCode.user_id == user_id)
+            .with_for_update()
         )
         return result.scalar_one_or_none()
 

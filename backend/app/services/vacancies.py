@@ -17,6 +17,9 @@ from app.services.inn import ORGANISATION_LENGTH as ORGANISATION_INN_LENGTH
 from app.services.presenters import company_read, vacancy_read
 from app.services.uploads import PHOTO_LIMIT, sniff_image
 
+# Details the accreditation was checked against: changing any of them reopens the check.
+CHECKED_FIELDS = ("name", "inn", "ogrn", "kpp", "legal_address")
+
 
 class VacancyService:
     def __init__(self, vacancies: VacancyRepository, companies: CompanyRepository) -> None:
@@ -129,8 +132,15 @@ class VacancyService:
         if company is None:
             company = await self._companies.add(Company(owner_id=user.id, **fields))
         else:
+            changed = any(getattr(company, name) != fields[name] for name in CHECKED_FIELDS)
             for name, value in fields.items():
                 setattr(company, name, value)
+            if changed and company.it_accredited:
+                # The accreditation was checked for the old details: another company could
+                # otherwise borrow the mark by retyping its own.
+                await self._companies.reopen_verification(
+                    company, "Реквизиты компании изменились: нужна повторная проверка"
+                )
         return company_read(company)
 
     async def set_logo(self, user: User, data: bytes) -> CompanyRead:

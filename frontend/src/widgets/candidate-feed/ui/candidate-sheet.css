@@ -89,6 +89,15 @@
   min-width: 0;
 }
 
+/* «Backend-разработка · Junior» is wider than the column: it wraps instead of covering the meter. */
+.candidate-row__tags .tag {
+  max-width: 100%;
+  padding-block: 3px;
+  line-height: 1.3;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .candidate-row__meter {
   min-width: 0;
 }

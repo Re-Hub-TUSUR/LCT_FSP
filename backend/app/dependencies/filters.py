@@ -15,6 +15,7 @@ from app.models.enums import (
     WorkFormat,
 )
 from app.schemas.candidate import CandidateFilterSet
+from app.schemas.common import MAX_SALARY
 from app.schemas.reaction import FeedView
 from app.schemas.vacancy import FeedMode, VacancyFilterSet
 from app.services.candidate_search import CandidateSearchParams
@@ -45,7 +46,7 @@ def get_candidate_search_params(
     nice: Annotated[
         Terms, Query(max_length=MAX_TERMS, description="Будет плюсом: поднимает выше")
     ] = None,
-    salary_min: Annotated[int | None, Query(alias="salaryMin", gt=0)] = None,
+    salary_min: Annotated[int | None, Query(alias="salaryMin", gt=0, le=MAX_SALARY)] = None,
     salary_max: Annotated[int | None, Query(alias="salaryMax", gt=0)] = None,
     work_format: Annotated[list[WorkFormat] | None, Query(alias="workFormat")] = None,
     city: Annotated[Terms, Query(max_length=MAX_TERMS, description="Для офиса и гибрида")] = None,
@@ -89,7 +90,7 @@ def get_vacancy_feed_params(
     mode: Annotated[
         FeedMode, Query(description="profile — по профилю и совпадению, free — все по дате")
     ] = "profile",
-    salary_min: Annotated[int | None, Query(alias="salaryMin", ge=0)] = None,
+    salary_min: Annotated[int | None, Query(alias="salaryMin", ge=0, le=MAX_SALARY)] = None,
     work_format: Annotated[list[WorkFormat] | None, Query(alias="workFormat")] = None,
     city: Annotated[Terms, Query(max_length=MAX_TERMS, description="Для офиса и гибрида")] = None,
     relocation: Annotated[

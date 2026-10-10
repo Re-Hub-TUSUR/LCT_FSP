@@ -322,6 +322,8 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
+  /* A button centres its content: a tall label would be cut at the top. */
+  justify-content: flex-start;
   gap: 2px;
   padding: 5px 8px;
   overflow: hidden;
@@ -352,6 +354,24 @@
   font-size: 10.5px;
   line-height: 1.35;
   opacity: 0.85;
+}
+
+.cal-event.is-short {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
+  padding-block: 3px;
+}
+
+.cal-event.is-short .cal-event__who {
+  flex: none;
+  max-width: 60%;
+}
+
+.cal-event.is-short .cal-event__meta {
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── Month ─────────────────────────────────────────── */

@@ -8,6 +8,8 @@ from typing import Any
 from fastapi.responses import Response
 
 BOM = "﻿"
+# Excel and LibreOffice run a cell that starts with one of these as a formula.
+FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
 
 
 def _cell(value: Any) -> Any:
@@ -19,8 +21,15 @@ def _cell(value: Any) -> Any:
         # Excel with the Russian locale reads a comma as the decimal separator.
         return f"{value:g}".replace(".", ",")
     if isinstance(value, list | tuple):
-        return ", ".join(str(item) for item in value)
+        return _text(", ".join(str(item) for item in value))
+    if isinstance(value, str):
+        return _text(value)
     return value
+
+
+def _text(value: str) -> str:
+    """Company names and emails come from users: `=HYPERLINK(...)` must stay text."""
+    return f"'{value}" if value.startswith(FORMULA_START) else value
 
 
 def render(headers: Sequence[str], rows: Iterable[Sequence[Any]]) -> str:

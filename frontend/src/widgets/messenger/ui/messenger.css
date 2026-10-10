@@ -218,6 +218,25 @@
   border-color: var(--blue);
 }
 
+/* Own files are blue like own messages: whose file it is reads at a glance. */
+.chat-row.is-own .chat-msg__file {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #fff;
+}
+
+.chat-row.is-own .chat-msg__file:hover {
+  filter: brightness(1.12);
+}
+
+.chat-row.is-own .chat-msg__file-size {
+  color: rgb(255 255 255 / 0.75);
+}
+
+.chat-row.is-own .chat-msg__image {
+  border-color: var(--blue);
+}
+
 .chat-msg__ext {
   flex: none;
   display: grid;
@@ -301,6 +320,23 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.chat-msg__meet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chat-msg .chat-msg__meet-place {
+  overflow-wrap: anywhere;
+}
+
+.chat-msg .chat-msg__meet-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--red-text);
 }
 
 .chat-msg--meeting.is-confirmed .chat-msg__meet-status {

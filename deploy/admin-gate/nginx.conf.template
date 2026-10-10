@@ -1,5 +1,13 @@
 # Browser password for the admin subdomain. The dialog is auth_basic; the app session
 # is opened afterwards by a header only this proxy may set.
+
+# The TLS proxy in front says whether the browser came over HTTPS: then the gate cookie is
+# `Secure` and never leaves the browser over plain HTTP. A local http:// run keeps working.
+map $http_x_forwarded_proto $gate_cookie_secure {
+    default "";
+    https "; Secure";
+}
+
 server {
     listen 80;
     absolute_redirect off;
@@ -72,6 +80,6 @@ server {
         proxy_set_header Authorization $http_x_kadry_access;
         proxy_set_header X-Admin-Gate ${ADMIN_GATE_SECRET};
         proxy_hide_header WWW-Authenticate;
-        add_header Set-Cookie "kadry_gate=${ADMIN_GATE_SECRET}; Path=/; HttpOnly; SameSite=Lax" always;
+        add_header Set-Cookie "kadry_gate=${ADMIN_GATE_SECRET}; Path=/; HttpOnly; SameSite=Strict; Max-Age=43200${gate_cookie_secure}" always;
     }
 }

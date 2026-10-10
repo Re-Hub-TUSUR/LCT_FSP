@@ -110,6 +110,7 @@ export function WeekGrid({ weekStart, events, now, labelOf, onEvent, onSlot }: P
                 {segments.map(({ event, start, end, lane, lanes }) => {
                   const startsAt = new Date(event.startsAt)
                   const endsAt = new Date(event.endsAt)
+                  const height = Math.max(offset(end) - offset(start), HOUR_PX / 2)
                   return (
                     <button
                       key={event.id}
@@ -118,12 +119,15 @@ export function WeekGrid({ weekStart, events, now, labelOf, onEvent, onSlot }: P
                         'cal-event',
                         `cal-event--${event.status}`,
                         endsAt <= now && 'is-past',
+                        // Half an hour has room for one line only: name and time side by side.
+                        height < HOUR_PX * 0.75 && 'is-short',
                       ]
                         .filter(Boolean)
                         .join(' ')}
                       style={{
                         top: offset(start),
-                        height: Math.max(offset(end) - offset(start), HOUR_PX / 2),
+                        // A gap, so a meeting that starts as the previous one ends doesn't cover it.
+                        height: height - 2,
                         left: `${(lane / lanes) * 100}%`,
                         width: `${100 / lanes}%`,
                       }}

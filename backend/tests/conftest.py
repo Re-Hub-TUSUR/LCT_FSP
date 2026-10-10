@@ -11,11 +11,13 @@ os.environ["ATS_POLL_SECONDS"] = "0"
 os.environ["ADMIN_EMAIL"] = "admin@kadry.test"
 os.environ["ADMIN_GATE_SECRET"] = "test-admin-gate-secret"
 
+import io
 import zlib
 from collections.abc import AsyncIterator
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from PIL import Image
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -104,6 +106,13 @@ async def create_admin(sessionmaker: async_sessionmaker[AsyncSession], email: st
 
 def bearer(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
+
+
+def tiny_image(fmt: str = "PNG") -> bytes:
+    """A real picture: uploads read its header, so magic bytes alone are not a photo."""
+    buffer = io.BytesIO()
+    Image.new("RGB", (4, 3), (64, 47, 255)).save(buffer, format=fmt)
+    return buffer.getvalue()
 
 
 def make_inn(seed: str) -> str:

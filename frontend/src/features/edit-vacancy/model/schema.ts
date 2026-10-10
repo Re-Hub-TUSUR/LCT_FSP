@@ -9,6 +9,7 @@ import type {
   VacancyWrite,
   WorkFormat,
 } from '@/entities/vacancy'
+import { MAX_SALARY, MAX_SALARY_ERROR } from '@/shared/config'
 
 export type VacancyValues = {
   title: string
@@ -111,7 +112,9 @@ export function validateVacancy(values: VacancyValues): VacancyErrors {
   const from = rubles(values.salaryFrom)
   const to = rubles(values.salaryTo)
   if (!from) errors.salaryFrom = 'Укажите нижнюю границу вилки'
+  else if (from > MAX_SALARY) errors.salaryFrom = MAX_SALARY_ERROR
   if (!to) errors.salaryTo = 'Укажите верхнюю границу вилки'
+  else if (to > MAX_SALARY) errors.salaryTo = MAX_SALARY_ERROR
   else if (from && from > to) errors.salaryTo = 'Верхняя граница меньше нижней'
   if (values.workFormat !== 'remote' && !values.city.trim()) {
     errors.city = 'Укажите город для офиса или гибрида'

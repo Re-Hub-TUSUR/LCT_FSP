@@ -1,10 +1,12 @@
+import hmac
 import uuid
 from collections.abc import Awaitable, Callable
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from app.core.config import Settings
 from app.core.errors import AuthenticationError, PermissionDeniedError
 from app.core.security import decode_access_token
 from app.dependencies.common import SessionDep, SettingsDep
@@ -61,6 +63,35 @@ def require_roles(*roles: UserRole) -> Callable[[User], Awaitable[User]]:
     return dependency
 
 
+def same_secret(provided: str, expected: str) -> bool:
+    if not provided or not expected:
+        return False
+    try:
+        return hmac.compare_digest(provided.encode(), expected.encode())
+    except (TypeError, ValueError):
+        return False
+
+
+def through_admin_gate(request: Request, settings: Settings) -> bool:
+    """The request came through the admin proxy: only it sets the gate header, and the public
+    nginx drops one sent by a client. Without a configured gate (development, tests) there is
+    no proxy in front, so nothing to check."""
+    expected = settings.admin_gate_secret.get_secret_value()
+    if not expected or not settings.is_production:
+        return True
+    return same_secret(request.headers.get("x-admin-gate", ""), expected)
+
+
+async def get_admin_user(request: Request, settings: SettingsDep, user: CurrentUser) -> User:
+    """An admin token alone is not enough: a stolen password or token must not open the admin
+    API from the public site, past the gate's own password."""
+    if user.role != UserRole.ADMIN:
+        raise PermissionDeniedError()
+    if not through_admin_gate(request, settings):
+        raise PermissionDeniedError("Админка открывается только через её адрес")
+    return user
+
+
 CandidateUser = Annotated[User, Depends(require_roles(UserRole.CANDIDATE))]
 EmployerUser = Annotated[User, Depends(require_roles(UserRole.EMPLOYER))]
-AdminUser = Annotated[User, Depends(require_roles(UserRole.ADMIN))]
+AdminUser = Annotated[User, Depends(get_admin_user)]

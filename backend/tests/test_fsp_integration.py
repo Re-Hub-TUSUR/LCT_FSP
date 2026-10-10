@@ -21,7 +21,7 @@ from app.seed.fixtures import load_seed_data
 from app.seed.generate import DEMO_CANDIDATE_EMAIL
 from app.seed.loader import seed_database
 from tests.conftest import API, PASSWORD, bearer, login, register_and_login
-from tests.test_cabinet import RESUME
+from tests.test_cabinet import RESUME, employer_with_company
 
 CALLBACK = "http://localhost:5173/profile/fsp/callback"
 REALM = f"{API}/mock/fsp-id/realms/fsp"
@@ -86,7 +86,7 @@ async def test_linking_imports_the_registry_history(client: AsyncClient) -> None
     first = body["fspAchievements"][0]
     assert {"eventKind", "result", "participation", "teamName"} <= first.keys()
 
-    employer = await register_and_login(client, "fsp-hr@fsp.ru", role="employer")
+    employer = await employer_with_company(client, "fsp-hr@fsp.ru")
     seen = await client.get(f"{API}/candidates/{body['id']}", headers=bearer(employer))
     assert len(seen.json()["fspAchievements"]) == len(record.achievements)
     assert "fspSyncError" not in seen.json()

@@ -3,9 +3,11 @@ from typing import Any
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.security import hash_password
+from app.models import CandidateProfile, ReactionKind, VacancyReaction
 from app.seed.fixtures import SeedData, load_seed_data
 from app.seed.generate import DEMO_CANDIDATE_EMAIL, DEMO_EMPLOYER_EMAIL
 from app.seed.loader import seed_database, seed_id
@@ -21,7 +23,40 @@ async def data(sessionmaker: async_sessionmaker[AsyncSession]) -> SeedData:
     async with sessionmaker() as session:
         await seed_database(session, data, password_hash=hash_password(PASSWORD))
         await session.commit()
+    # A meeting needs a reason: these candidates responded to a ПэйФлоу vacancy.
+    visible = [c for c in data.candidates if c.is_visible_to_employers]
+    responded = [data.candidates[0], *visible[:2]]
+    async with sessionmaker() as session:
+        vacancy_id = seed_id("vacancy", "payflow-02")
+        for candidate in responded:
+            user_id = await session.scalar(
+                select(CandidateProfile.user_id).where(
+                    CandidateProfile.id == seed_id("candidate", candidate.key)
+                )
+            )
+            liked = await session.scalar(
+                select(VacancyReaction.id).where(
+                    VacancyReaction.user_id == user_id, VacancyReaction.vacancy_id == vacancy_id
+                )
+            )
+            if user_id is not None and liked is None:
+                session.add(
+                    VacancyReaction(user_id=user_id, vacancy_id=vacancy_id, kind=ReactionKind.LIKE)
+                )
+        await session.commit()
     return data
+
+
+async def test_a_meeting_needs_contact_with_the_candidate(
+    client: AsyncClient, data: SeedData
+) -> None:
+    employer = await login(client, DEMO_EMPLOYER_EMAIL)
+    visible = [c for c in data.candidates if c.is_visible_to_employers]
+    stranger = seed_id("candidate", visible[-1].key)
+    response = await client.post(
+        f"{API}/calendar/events", json=meeting(stranger), headers=bearer(employer)
+    )
+    assert response.status_code == 409, response.text
 
 
 def meeting(

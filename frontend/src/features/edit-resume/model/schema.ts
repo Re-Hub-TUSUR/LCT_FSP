@@ -8,6 +8,7 @@ import type {
 } from '@/entities/candidate'
 import type { EmploymentType, WorkFormat } from '@/entities/vacancy'
 import { WORK_FORMATS } from '@/entities/vacancy'
+import { MAX_SALARY, MAX_SALARY_ERROR } from '@/shared/config'
 
 /** Form row of a place of work; `stack` is typed as a comma list. */
 export type ExperienceRow = {
@@ -256,6 +257,7 @@ export function validateResume(values: ResumeValues): ResumeErrors {
   if (values.salary.trim()) {
     const salary = wholeNumber(values.salary)
     if (salary === null || salary <= 0) errors.salary = 'Сумма — целое число больше нуля'
+    else if (salary > MAX_SALARY) errors.salary = MAX_SALARY_ERROR
   }
   return errors
 }

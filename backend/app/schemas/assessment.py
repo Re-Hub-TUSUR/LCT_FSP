@@ -304,6 +304,9 @@ class AttemptRead(ApiModel):
     quiz_share: float | None = None
     # In the answer to "finish" only: the grade this result opens, if it was good enough.
     recommended_grade: Grade | None = None
+    # Why a failed attempt failed: too few points, the quiz below its minimum, or the AI
+    # interview after a pass on points. Null for any other status.
+    failed_by: Literal["score", "quiz", "interview"] | None = None
 
 
 class AttemptDetail(AttemptRead):

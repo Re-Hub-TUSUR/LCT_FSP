@@ -2,10 +2,21 @@ import uuid
 from collections.abc import Sequence
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import exists, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import CandidateProfile, Company, Meeting, MeetingStatus, Vacancy
+from app.models import (
+    CandidateProfile,
+    Company,
+    Conversation,
+    Invitation,
+    InvitationStatus,
+    Meeting,
+    MeetingStatus,
+    ReactionKind,
+    Vacancy,
+    VacancyReaction,
+)
 
 # A meeting with what its card shows: company name, candidate name, vacancy title.
 MeetingRow = tuple[Meeting, str, str, str | None]
@@ -17,6 +28,26 @@ class MeetingRepository:
 
     async def get(self, meeting_id: uuid.UUID) -> Meeting | None:
         return await self._session.get(Meeting, meeting_id)
+
+    async def in_touch(self, company_id: uuid.UUID, candidate: CandidateProfile) -> bool:
+        """The candidate showed interest in this company: a chat after mutual likes, an
+        accepted invitation, or a like on one of its vacancies."""
+        chat = exists().where(
+            Conversation.company_id == company_id, Conversation.candidate_id == candidate.id
+        )
+        invitation = exists().where(
+            Invitation.company_id == company_id,
+            Invitation.candidate_id == candidate.id,
+            Invitation.status == InvitationStatus.ACCEPTED,
+        )
+        response = exists().where(
+            VacancyReaction.user_id == candidate.user_id,
+            VacancyReaction.kind == ReactionKind.LIKE,
+            VacancyReaction.vacancy_id == Vacancy.id,
+            Vacancy.company_id == company_id,
+        )
+        found = await self._session.scalar(select(or_(chat, invitation, response)))
+        return bool(found)
 
     async def in_range(
         self,

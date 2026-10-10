@@ -5,14 +5,17 @@ import { VacanciesTable } from '@/widgets/vacancies-table'
 
 export function VacanciesPage() {
   const { user } = useSession()
+  const employer = user?.role === 'employer'
   return (
     <Page
       title="Вакансии"
-      lead="Все опубликованные вакансии с обязательной вилкой зарплаты"
+      lead={
+        employer
+          ? 'Вакансии вашей компании: опубликованные и черновики'
+          : 'Все опубликованные вакансии с обязательной вилкой зарплаты'
+      }
       actions={
-        user?.role === 'employer' ? (
-          <ButtonLink to={ROUTES.vacancyNew}>Добавить вакансию</ButtonLink>
-        ) : undefined
+        employer ? <ButtonLink to={ROUTES.vacancyNew}>Добавить вакансию</ButtonLink> : undefined
       }
     >
       <VacanciesTable />

@@ -94,7 +94,9 @@ TAGS_METADATA: list[dict[str, str]] = [
 ]
 
 
-def register_docs(app: FastAPI, *, docs_url: str, openapi_url: str) -> None:
+def register_docs(
+    app: FastAPI, *, docs_url: str, openapi_url: str, persist_authorization: bool = True
+) -> None:
     """Serves Swagger UI at `docs_url`, under a policy that allows only what it needs to run.
 
     Call with `docs_url=None` passed to `FastAPI(...)` instead of the built-in docs route, so
@@ -110,7 +112,7 @@ def register_docs(app: FastAPI, *, docs_url: str, openapi_url: str) -> None:
             # allow; an empty URL resolves to this same page, which `img-src 'self'` already
             # permits, and the browser quietly discards it as not an image.
             swagger_favicon_url="",
-            swagger_ui_parameters={"persistAuthorization": True},
+            swagger_ui_parameters={"persistAuthorization": persist_authorization},
         )
         response.headers["Content-Security-Policy"] = _DOCS_CSP
         return response

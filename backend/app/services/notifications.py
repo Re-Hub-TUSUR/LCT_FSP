@@ -11,11 +11,21 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+# Tabs and devices of one person; every stream holds a connection and a queue.
+MAX_STREAMS_PER_USER = 8
+
+
+class TooManyStreamsError(Exception):
+    pass
+
+
 class NotificationHub:
     def __init__(self) -> None:
         self._queues: dict[uuid.UUID, set[asyncio.Queue[str]]] = defaultdict(set)
 
     def subscribe(self, user_id: uuid.UUID) -> asyncio.Queue[str]:
+        if len(self._queues.get(user_id, ())) >= MAX_STREAMS_PER_USER:
+            raise TooManyStreamsError
         queue: asyncio.Queue[str] = asyncio.Queue(maxsize=64)
         self._queues[user_id].add(queue)
         return queue

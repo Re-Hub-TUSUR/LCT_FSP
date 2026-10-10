@@ -109,6 +109,11 @@ export function AuthForm({
             aria-selected={mode === item}
             className={`auth-form__tab${mode === item ? ' is-active' : ''}`}
             onClick={() => {
+              if (item === mode) return
+              // An error of the other mode («Неверный email или пароль») says nothing about this one.
+              submit.reset()
+              setErrors({})
+              setYandexError('')
               setMode(item)
               onModeChange?.(item)
             }}

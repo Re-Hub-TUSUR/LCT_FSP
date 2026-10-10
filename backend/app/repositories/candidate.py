@@ -6,7 +6,7 @@ from sqlalchemy import ColumnElement, Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models import CandidateProfile, Grade, User
+from app.models import CandidateCategory, CandidateProfile, Grade, User
 
 
 class CandidateRepository:
@@ -33,6 +33,20 @@ class CandidateRepository:
             self._profiles().where(CandidateProfile.user_id == user_id)
         )
         return result.first()
+
+    async def category(
+        self, candidate_id: uuid.UUID, specialization: str
+    ) -> CandidateCategory | None:
+        """The grade confirmed by a test in this specialization, if any. No autoflush: the
+        profile being edited is flushed with the request, not halfway through the edit."""
+        with self._session.no_autoflush:
+            result = await self._session.scalars(
+                select(CandidateCategory).where(
+                    CandidateCategory.candidate_id == candidate_id,
+                    CandidateCategory.specialization == specialization,
+                )
+            )
+            return result.first()
 
     async def get_by_fsp_member(self, member_id: str) -> CandidateProfile | None:
         result = await self._session.scalars(

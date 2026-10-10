@@ -19,6 +19,7 @@ import { plural, resolveTerm, termOptions, toggled } from '@/shared/lib'
 import {
   CheckRow,
   CountChip,
+  FILTER_TERMS_MAX,
   FilterDeadEnd,
   FilterDisclosure,
   FilterGroup,
@@ -26,6 +27,7 @@ import {
   FilterSubLabel,
   ModeSelect,
   MoneyField,
+  savedCountNote,
   SourceMark,
   TagCombobox,
   UndoToast,
@@ -95,7 +97,8 @@ export function VacancyFilters() {
     const other = list === 'stack' ? 'nice' : 'stack'
     const fresh = values.filter((value) => !filters[list].includes(value))
     change({
-      [list]: [...filters[list], ...fresh],
+      // The API takes at most FILTER_TERMS_MAX technologies a list; more would be a 422.
+      [list]: [...filters[list], ...fresh].slice(0, FILTER_TERMS_MAX),
       [other]: filters[other].filter((value) => !values.includes(value)),
     })
   }
@@ -183,7 +186,7 @@ export function VacancyFilters() {
       note:
         item.newCount > 0
           ? `+${item.newCount} новых`
-          : `${item.count} ${plural(item.count, VACANCIES)}`,
+          : savedCountNote(item.id === savedId, item.count, counts?.count, view, VACANCIES),
       fresh: item.newCount > 0,
       section: 'Сохранённые поиски',
     })),

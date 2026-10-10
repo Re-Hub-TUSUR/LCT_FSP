@@ -26,6 +26,11 @@ class KeycloakFspIdProvider:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
         issuer = settings.fsp_id_issuer.rstrip("/")
+        # The unsigned check above rests on TLS: a plain-HTTP token endpoint would let anyone
+        # on the way hand us any identity.
+        if settings.is_production and not issuer.startswith("https://"):
+            msg = "FSP_ID_ISSUER must be an https:// URL in production"
+            raise ValueError(msg)
         self._token_url = f"{issuer}/protocol/openid-connect/token"
 
     def authorize_url(

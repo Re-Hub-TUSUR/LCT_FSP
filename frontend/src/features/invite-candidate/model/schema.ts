@@ -1,9 +1,11 @@
 import { z } from 'zod'
+import { MAX_SALARY, MAX_SALARY_ERROR } from '@/shared/config'
 
 const salary = z.coerce
   .number<string>({ error: 'Укажите сумму' })
   .int('Целое число')
   .positive('Сумма должна быть больше нуля')
+  .max(MAX_SALARY, MAX_SALARY_ERROR)
 
 /** Salary range is mandatory in every invitation (ТЗ 2.2, items 1–2). */
 export const inviteSchema = z

@@ -93,6 +93,8 @@ const MOBILE_WIDTH = 720
 /** Share of the gate one frame takes; the stylesheet sizes the track to match. */
 const FRAME_SHARE = { desktop: 0.75, mobile: 0.86 }
 const DRAG_START = 6
+/** Share of the threshold after which a drag starts to preview its decision on the frame. */
+const PREVIEW_FROM = 0.8
 const DEVELOP_MS = 720
 const SPRING = 300
 
@@ -259,7 +261,9 @@ export class ReelEngine {
       if (progress > 0.55 && this.drag) this.emit(26 * progress * dt, visual.front, visual.origin)
     } else {
       this.ensureMark()
-      visual.mark = 0.26 * eased
+      // The fire only shows past ~80% of the threshold (its front starts behind the edge); the
+      // pencil waits as long, so both sides answer the drag alike.
+      visual.mark = 0.26 * smooth(clamp((progress - PREVIEW_FROM) / (1 - PREVIEW_FROM)))
       visual.likeK = progress
     }
   }

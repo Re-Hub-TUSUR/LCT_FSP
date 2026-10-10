@@ -14,10 +14,10 @@ from app.core.security import verify_password
 from app.dependencies.services import get_yandex_directory
 from app.integrations.yandex.client import HttpYandexDirectory, YandexAccount
 from app.models import User
-from tests.conftest import API, PASSWORD, bearer, register_and_login
+from tests.conftest import API, PASSWORD, bearer, register_and_login, tiny_image
 
 REDIRECT = "http://localhost:8080/auth/yandex/callback"
-JPEG = b"\xff\xd8\xff" + b"\x00" * 8
+JPEG = tiny_image("JPEG")
 RESUME = {
     "displayName": "Анна Смирнова",
     "headline": "Backend-разработчик",

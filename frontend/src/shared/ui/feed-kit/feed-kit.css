@@ -164,8 +164,30 @@
   gap: 10px;
 }
 
+/* Drawn like the other selects of the feed: square, dark, with the same arrow. */
 .pager select {
-  background: var(--bg-deep);
+  height: 36px;
+  padding: 0 32px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--bg-deep)
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0h10L5 6z' fill='%239b9c9e'/></svg>")
+    no-repeat right 12px center;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ink);
+  appearance: none;
+  cursor: pointer;
+}
+
+.pager select:focus-visible {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.pager select option {
+  background: var(--bg);
+  color: var(--ink);
 }
 
 /* ── Notice & skeleton ─────────────────────────────── */

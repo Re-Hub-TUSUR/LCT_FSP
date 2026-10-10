@@ -140,7 +140,9 @@ class AuthService:
         user = await self._users.get_by_id(stored.user_id)
         if user is None or not user.is_active:
             raise AuthenticationError("Сессия недействительна")
-        stored.revoked_at = now
+        # Two requests with one cookie: only the one that revokes it gets a new session.
+        if not await self._refresh_tokens.revoke(stored.id, now):
+            raise AuthenticationError("Сессия недействительна")
         return await self._open_session(user)
 
     async def logout(self, raw_token: str | None) -> None:

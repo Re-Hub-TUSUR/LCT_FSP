@@ -13,6 +13,7 @@ from typing import Any, Final, Protocol
 
 from app.core.config import Settings
 from app.core.errors import ServiceUnavailableError
+from app.core.http_body import read_json
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +114,7 @@ def _post(url: str, api_key: str, payload: dict[str, Any]) -> dict[str, Any]:
         method="POST",
     )
     with urllib.request.urlopen(request, timeout=_HTTP_TIMEOUT) as response:  # noqa: S310
-        parsed = json.loads(response.read().decode("utf-8"))
+        parsed = read_json(response)
     if not isinstance(parsed, dict):
         raise json.JSONDecodeError("expected an object", "", 0)
     return parsed

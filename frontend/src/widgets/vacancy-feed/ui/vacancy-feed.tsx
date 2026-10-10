@@ -132,7 +132,13 @@ export function VacancyFeed() {
           profileStack={data?.basis?.stack ?? []}
           onClose={closePanel}
           actions={
-            <ReactionButtons target="vacancy" id={open.vacancy.id} initial={open.reaction} />
+            <ReactionButtons
+              target="vacancy"
+              id={open.vacancy.id}
+              initial={
+                (data?.items.find((item) => item.vacancy.id === open.vacancy.id) ?? open).reaction
+              }
+            />
           }
         />
       )}

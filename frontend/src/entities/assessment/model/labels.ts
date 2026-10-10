@@ -1,4 +1,5 @@
 import type {
+  AssessmentAttemptDto,
   AssessmentAttemptStatus,
   AssessmentStatus,
   AssignmentStatus,
@@ -21,6 +22,18 @@ export const ATTEMPT_STATUS_LABELS: Record<AssessmentAttemptStatus, string> = {
   awaiting_review: 'Ждёт проверки',
   grading: 'Проверяется',
   interview: 'Собеседование с ИИ',
+}
+
+const FAILED_BY_LABELS: Record<NonNullable<AssessmentAttemptDto['failedBy']>, string> = {
+  score: 'Не пройден',
+  quiz: 'Не пройден: мало верных ответов на вопросы',
+  interview: 'Тест пройден, ИИ-собеседование — нет',
+}
+
+/** «Не пройден» with 100 points needs the reason: the quiz minimum or the AI interview. */
+export function attemptResultLabel(attempt: AssessmentAttemptDto): string {
+  if (attempt.status === 'failed' && attempt.failedBy) return FAILED_BY_LABELS[attempt.failedBy]
+  return ATTEMPT_STATUS_LABELS[attempt.status]
 }
 
 export const ASSIGNMENT_STATUS_LABELS: Record<AssignmentStatus, string> = {

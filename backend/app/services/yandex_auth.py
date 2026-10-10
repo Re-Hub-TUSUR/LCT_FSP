@@ -1,9 +1,12 @@
 """Sign-in and sign-up through Yandex ID.
 
 `state` is a short-lived JWT: role, tab, consent and the redirect. The browser cannot
-change them on the way back. An empty client id closes the routes.
+change them on the way back. Its nonce also goes into a cookie of the browser that started the
+sign-in: a callback from another browser (a link someone sent) is refused. An empty client id
+closes the routes.
 """
 
+import hmac
 import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Any, Final, Literal
@@ -61,13 +64,17 @@ class YandexAuthService:
         mode: ModeName,
         consent: bool,
         redirect_uri: str,
-    ) -> str:
+    ) -> tuple[str, str]:
+        """The Yandex page to open and the nonce the browser keeps in a cookie."""
         self._require_configured()
         if mode == "sign-up" and not consent:
             raise AppError("Нужно согласие на обработку персональных данных")
         if not redirect_allowed(self._settings, redirect_uri):
             raise AppError("Адрес возврата не зарегистрирован для Яндекс ID")
-        state = self._state(role=role, mode=mode, consent=consent, redirect_uri=redirect_uri)
+        nonce = secrets.token_urlsafe(16)
+        state = self._state(
+            role=role, mode=mode, consent=consent, redirect_uri=redirect_uri, nonce=nonce
+        )
         query = urlencode(
             {
                 "response_type": "code",
@@ -77,12 +84,23 @@ class YandexAuthService:
                 "scope": SCOPE,
             }
         )
-        return f"{AUTHORIZE_URL}?{query}"
+        return f"{AUTHORIZE_URL}?{query}", nonce
 
-    async def complete(self, *, code: str, state: str) -> tuple[IssuedSession, bool]:
+    async def complete(
+        self, *, code: str, state: str, browser_nonce: str | None
+    ) -> tuple[IssuedSession, bool]:
         """Returns the session and whether this call created the account."""
         self._require_configured()
         claims = self._read_state(state)
+        nonce = claims.get("nonce")
+        if (
+            not browser_nonce
+            or not isinstance(nonce, str)
+            or not hmac.compare_digest(nonce, browser_nonce)
+        ):
+            raise AuthenticationError(
+                "Вход через Яндекс начат в другом браузере. Начните заново здесь."
+            )
         account = await self._directory.fetch(code=code, redirect_uri=claims["ru"])
         user, created = await self._account(account, claims)
         return await self._auth.open_session(user), created
@@ -105,6 +123,10 @@ class YandexAuthService:
                 raise PermissionDeniedError("Регистрация на эту почту закрыта")
             if existing.yandex_id and existing.yandex_id != account.account_id:
                 raise ConflictError("Аккаунт уже связан с другим Яндекс ID")
+            if not existing.is_email_verified:
+                # Anyone could have registered this address with a password of their own: the
+                # owner proves the address now, so that password must not open the account.
+                existing.password_hash = hash_password(secrets.token_urlsafe(32))
             existing.yandex_id = account.account_id
             existing.is_email_verified = True
             _fill_names(existing, account)
@@ -147,7 +169,9 @@ class YandexAuthService:
     def _secret(self) -> str:
         return self._settings.jwt_secret.get_secret_value()
 
-    def _state(self, *, role: RoleName, mode: ModeName, consent: bool, redirect_uri: str) -> str:
+    def _state(
+        self, *, role: RoleName, mode: ModeName, consent: bool, redirect_uri: str, nonce: str
+    ) -> str:
         now = datetime.now(UTC)
         payload = {
             "iss": self._settings.jwt_issuer,
@@ -156,7 +180,7 @@ class YandexAuthService:
             "mode": mode,
             "consent": consent,
             "ru": redirect_uri,
-            "nonce": secrets.token_urlsafe(16),
+            "nonce": nonce,
             "iat": now,
             "exp": now + STATE_TTL,
         }

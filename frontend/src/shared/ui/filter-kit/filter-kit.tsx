@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import type { KeyboardEvent, ReactNode } from 'react'
-import { formatNumber } from '@/shared/lib'
+import { formatNumber, plural } from '@/shared/lib'
 import { Chip } from '../feed-kit/feed-kit'
 import './filter-kit.css'
 
@@ -229,6 +229,26 @@ type TagComboboxProps = {
   /** Dashed tags: «Будет плюсом». */
   soft?: boolean
   emptyText: string
+  /** At most this many tags: the API rejects longer lists. */
+  limit?: number
+}
+
+/** The API takes at most this many values of one filter (`MAX_TERMS` on the backend). */
+export const FILTER_TERMS_MAX = 30
+
+/**
+ * «29 вакансий» next to a saved search. The saved count is for the whole list; in a list of own
+ * decisions («Отобрано») the open search shows what is found there, and the others show nothing.
+ */
+export function savedCountNote(
+  current: boolean,
+  saved: number,
+  live: number | undefined,
+  view: string,
+  forms: readonly [string, string, string],
+): string | undefined {
+  const count = view === 'all' ? saved : current ? live : undefined
+  return count === undefined ? undefined : `${count} ${plural(count, forms)}`
 }
 
 /** Several values picked from suggestions with counts; tags can be removed or moved. */
@@ -244,9 +264,12 @@ export function TagCombobox({
   move,
   soft,
   emptyText,
+  limit = FILTER_TERMS_MAX,
 }: TagComboboxProps) {
   const [query, setQuery] = useState('')
-  const [open, setOpen] = useState(false)
+  const [shown, setOpen] = useState(false)
+  const full = values.length >= limit
+  const open = shown && !full
   const [active, setActive] = useState(0)
   const input = useRef<HTMLInputElement>(null)
   const listId = useId()
@@ -341,7 +364,8 @@ export function TagCombobox({
           aria-controls={listId}
           aria-autocomplete="list"
           aria-activedescendant={open && items[current] ? `${listId}-${current}` : undefined}
-          placeholder={values.length ? 'Добавить' : placeholder}
+          placeholder={full ? `Не больше ${limit}` : values.length ? 'Добавить' : placeholder}
+          readOnly={full}
           value={query}
           onChange={(e) => type(e.target.value)}
           onFocus={() => setOpen(true)}

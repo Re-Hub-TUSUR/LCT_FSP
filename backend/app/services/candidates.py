@@ -5,7 +5,7 @@ import uuid
 from datetime import UTC, date, datetime
 from urllib.parse import urlsplit
 
-from app.core.errors import AppError, NotFoundError
+from app.core.errors import AppError, ConflictError, NotFoundError
 from app.models import AssessmentStatus, CandidateProfile, User, UserRole
 from app.models.enums import JobStatus
 from app.repositories.candidate import CandidateRepository
@@ -67,6 +67,8 @@ class CandidateProfileService:
             own or viewer.role == UserRole.ADMIN or (employer and profile.is_visible_to_employers)
         ):
             raise NotFoundError("Кандидат не найден")
+        if employer and await self._companies.get_by_owner(viewer.id) is None:
+            raise ConflictError("Сначала заполните профиль компании")
 
         contacts = None
         if own or (
@@ -111,7 +113,8 @@ class CandidateProfileService:
                 user_id=user.id,
                 display_name=data.display_name.strip() if data.display_name else "",
                 assessment_status=AssessmentStatus.NOT_TAKEN,
-                is_visible_to_employers=True,
+                # Shown once the candidate agrees to it (152-ФЗ): `_apply_resume` decides.
+                is_visible_to_employers=False,
                 job_status=JobStatus.OPEN,
                 stack=[],
                 soft_skills=[],
@@ -126,7 +129,9 @@ class CandidateProfileService:
             _apply_resume(profile, data)
             await self._candidates.add(profile)
         else:
+            previous = profile.specialization
             _apply_resume(profile, data)
+            await self._follow_specialization(profile, previous)
         await self._take_portrait(user, profile)
         return own_candidate_read(profile, email=user.email)
 
@@ -179,6 +184,7 @@ class CandidateProfileService:
         chosen = next((item for item in extras if str(item.get("id")) == str(resume_id)), None)
         if chosen is None:
             raise NotFoundError("Резюме не найдено")
+        old_specialization = profile.specialization
         previous: dict[str, object] = {
             "id": str(uuid.uuid4()),
             "headline": profile.headline,
@@ -197,7 +203,30 @@ class CandidateProfileService:
         profile.additional_resumes = [
             previous if str(item.get("id")) == str(resume_id) else item for item in extras
         ]
+        await self._follow_specialization(profile, old_specialization)
         return own_candidate_read(profile, email=user.email)
+
+    async def _follow_specialization(self, profile: CandidateProfile, previous: str | None) -> None:
+        """The grade on the profile belongs to its specialization. A new one shows the grade a
+        test confirmed in it, or none: a Senior in Backend is not a Senior in DevOps."""
+        if profile.specialization == previous:
+            return
+        category = (
+            await self._candidates.category(profile.id, profile.specialization)
+            if profile.specialization
+            else None
+        )
+        if category is not None:
+            profile.grade = category.grade
+            profile.assessment_score = category.score
+            profile.assessment_beta = category.is_beta
+            profile.grade_changed_at = category.confirmed_at
+            profile.assessment_status = AssessmentStatus.PASSED
+        else:
+            profile.grade = None
+            profile.assessment_score = None
+            profile.assessment_beta = False
+            profile.assessment_status = AssessmentStatus.NOT_TAKEN
 
     async def set_photo(self, user: User, data: bytes) -> OwnCandidateRead:
         profile = await self._require(user)
@@ -239,9 +268,17 @@ class CandidateProfileService:
 
 
 def set_job_status(profile: CandidateProfile, status: JobStatus) -> None:
-    """`is_visible_to_employers` follows the status: search still filters by that column."""
     profile.job_status = status
-    profile.is_visible_to_employers = status != JobStatus.NOT_LOOKING
+    refresh_visibility(profile)
+
+
+def refresh_visibility(profile: CandidateProfile) -> None:
+    """`is_visible_to_employers`, the column search filters by: the candidate agreed to be shown
+    and is not «не ищу». Withdrawing the consent hides the profile at once."""
+    # Unset on a profile not flushed yet: the column default (False) is applied on insert.
+    profile.is_visible_to_employers = bool(profile.profile_display_consent) and (
+        profile.job_status != JobStatus.NOT_LOOKING
+    )
 
 
 def _require_resume(data: CandidateProfileUpdate) -> None:
@@ -300,6 +337,7 @@ def _apply_person(profile: CandidateProfile, data: CandidateProfileUpdate) -> No
         profile.github_url = _github(data.github_url)
     if "profile_display_consent" in fields and data.profile_display_consent is not None:
         profile.profile_display_consent = data.profile_display_consent
+    refresh_visibility(profile)
     if "fsp_sync" in fields:
         profile.fsp_sync = data.fsp_sync
     if "education" in fields:

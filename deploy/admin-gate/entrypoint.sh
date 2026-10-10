@@ -44,7 +44,8 @@ else
       echo "admin-gate: user name must be A-Za-z0-9._-" >&2
       exit 1
     }
-    hash=$(printf '%s' "$pass" | openssl passwd -apr1 -stdin)
+    # SHA-512 crypt instead of the MD5-based apr1: nginx hands it to musl crypt(), which knows it.
+    hash=$(printf '%s' "$pass" | openssl passwd -6 -stdin)
     printf '%s:%s\n' "$user" "$hash" >> /etc/nginx/admin.htpasswd
   done
   IFS=$old_ifs

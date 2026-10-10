@@ -86,14 +86,18 @@ async def download_attachment(
     attachment, data = await service.load_attachment_bytes(user, attachment_id)
     suffix = PurePosixPath(attachment.filename).suffix
     fallback = f"file{suffix}" if suffix[1:].isascii() and suffix[1:].isalnum() else "file"
+    # Photos are shown in the chat; documents are only ever saved, never rendered here.
+    disposition = "inline" if attachment.media_type.startswith("image/") else "attachment"
     return Response(
         content=data,
         media_type=attachment.media_type,
         headers={
             # An ASCII fallback for old clients, the original name for the rest (RFC 6266).
             "Content-Disposition": (
-                f"inline; filename=\"{fallback}\"; filename*=UTF-8''{quote(attachment.filename)}"
+                f'{disposition}; filename="{fallback}"; '
+                f"filename*=UTF-8''{quote(attachment.filename)}"
             ),
+            "X-Content-Type-Options": "nosniff",
         },
     )
 

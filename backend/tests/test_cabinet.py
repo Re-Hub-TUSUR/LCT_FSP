@@ -2,7 +2,7 @@ from datetime import date
 
 from httpx import AsyncClient
 
-from tests.conftest import API, bearer, make_inn, register_and_login
+from tests.conftest import API, bearer, make_inn, register_and_login, tiny_image
 
 RESUME = {
     "displayName": "Иван Иванов",
@@ -18,6 +18,7 @@ RESUME = {
     "phone": "+7 900 000-00-00",
     "telegram": "@ivan",
     "salaryExpectation": 220000,
+    "profileDisplayConsent": True,
 }
 
 COMPANY = {
@@ -35,6 +36,16 @@ COMPANY = {
     "kpp": "773601001",
     "ogrn": "1027700132195",
 }
+
+
+async def employer_with_company(client: AsyncClient, email: str) -> str:
+    """The candidate bank opens to an employer with a company profile only."""
+    token = await register_and_login(client, email, role="employer")
+    saved = await client.put(
+        f"{API}/companies/me", headers=bearer(token), json={**COMPANY, "inn": make_inn(email)}
+    )
+    assert saved.status_code == 200, saved.text
+    return token
 
 
 async def test_candidate_resume_is_private_until_an_invitation_is_accepted(
@@ -63,7 +74,11 @@ async def test_candidate_resume_is_private_until_an_invitation_is_accepted(
     assert body["contacts"]["telegram"] == "ivan"
     assert body["fspLinked"] is False
 
-    employer = await register_and_login(client, "hr-view@fsp.ru", role="employer")
+    stranger = await register_and_login(client, "no-company@fsp.ru", role="employer")
+    closed = await client.get(f"{API}/candidates/{body['id']}", headers=bearer(stranger))
+    assert closed.status_code == 409
+
+    employer = await employer_with_company(client, "hr-view@fsp.ru")
     seen = await client.get(f"{API}/candidates/{body['id']}", headers=bearer(employer))
     assert seen.status_code == 200
     assert seen.json()["contacts"] is None
@@ -113,7 +128,7 @@ async def test_birth_date_marks_minors_and_stays_private(client: AsyncClient) ->
     assert saved.json()["isMinor"] is True
     assert saved.json()["birthDate"] == f"{today.year - 16}-01-01"
 
-    employer = await register_and_login(client, "hr-teen@fsp.ru", role="employer")
+    employer = await employer_with_company(client, "hr-teen@fsp.ru")
     seen = await client.get(f"{API}/candidates/{saved.json()['id']}", headers=bearer(employer))
     assert seen.json()["isMinor"] is True
     assert "birthDate" not in seen.json()
@@ -224,7 +239,7 @@ async def test_company_logo_and_owner_name(client: AsyncClient) -> None:
         files={"file": ("logo.svg", b"<svg/>", "image/svg+xml")},
     )
     assert rejected.status_code == 400
-    png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
+    png = tiny_image()
     uploaded = await client.post(
         f"{API}/companies/me/logo",
         headers=bearer(employer),
@@ -280,7 +295,7 @@ async def test_photo_rejects_a_file_that_is_not_an_image(client: AsyncClient) ->
     )
     assert rejected.status_code == 400
 
-    png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
+    png = tiny_image()
     accepted = await client.post(
         f"{API}/candidates/me/photo",
         headers=bearer(token),
