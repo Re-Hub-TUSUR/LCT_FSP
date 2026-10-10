@@ -7,6 +7,7 @@ import type { CandidateMatchDto, CandidateSort } from '@/entities/candidate'
 import type { ListView } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
 import { CandidateFilters, useCandidateFilters } from '@/features/filter-candidates'
+import { InviteCandidateLink } from '@/features/invite-candidate'
 import { plural } from '@/shared/lib'
 import { EmptyState, FeedSkeleton, Pagination, QueryState } from '@/shared/ui'
 import { CandidatePanel } from './candidate-panel'
@@ -200,16 +201,21 @@ export function CandidateFeed() {
           match={open}
           onClose={closePanel}
           actions={
-            <ReactionButtons
-              target="candidate"
-              id={open.candidate.id}
-              initial={
-                // The refreshed list knows a decision made in the row after the sheet opened.
-                (query.data?.items.find((item) => item.candidate.id === open.candidate.id) ?? open)
-                  .reaction
-              }
-              vacancyId={vacancyId ?? undefined}
-            />
+            <>
+              <ReactionButtons
+                target="candidate"
+                id={open.candidate.id}
+                initial={
+                  // The refreshed list knows a decision made in the row after the sheet opened.
+                  (
+                    query.data?.items.find((item) => item.candidate.id === open.candidate.id) ??
+                    open
+                  ).reaction
+                }
+                vacancyId={vacancyId ?? undefined}
+              />
+              <InviteCandidateLink candidateId={open.candidate.id} />
+            </>
           }
         />
       )}

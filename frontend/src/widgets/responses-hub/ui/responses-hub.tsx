@@ -10,6 +10,7 @@ import {
 import { CandidateMatchCard, candidateQueries } from '@/entities/candidate'
 import { SALARY_NOTE, VacancyMatchCard, vacancyQueries } from '@/entities/vacancy'
 import { ReactionButtons } from '@/features/feed-reaction'
+import { InviteCandidateLink } from '@/features/invite-candidate'
 import { useRespondToLike } from '@/features/respond-to-like'
 import { getErrorMessage } from '@/shared/api'
 import { formatDateTime, formatRubRange } from '@/shared/lib'
@@ -183,11 +184,16 @@ export function ResponsesHub({ messagesPanel }: Props) {
                     <CandidateMatchCard
                       match={match}
                       actions={
-                        <ReactionButtons
-                          target="candidate"
-                          id={match.candidate.id}
-                          initial={match.reaction}
-                        />
+                        <>
+                          <ReactionButtons
+                            target="candidate"
+                            id={match.candidate.id}
+                            initial={match.reaction}
+                          />
+                          {tab === 'liked' && (
+                            <InviteCandidateLink candidateId={match.candidate.id} />
+                          )}
+                        </>
                       }
                     />
                   </li>

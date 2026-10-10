@@ -1,6 +1,7 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { OwnCandidateDto } from '@/entities/candidate'
 import { sessionStore } from '@/entities/session'
 import { mockFetch, renderApp } from './test-utils'
 
@@ -22,6 +23,45 @@ function signIn(role: 'candidate' | 'employer', name?: { firstName: string; last
 
 const NO_COMPANY = {
   '/api/v1/companies/me': { body: null },
+}
+
+const SAVED_RESUME: OwnCandidateDto = {
+  id: 'me',
+  displayName: 'Анна Петрова',
+  headline: 'Backend-разработчик',
+  about: null,
+  category: null,
+  gradeVerified: false,
+  assessmentScore: null,
+  assessmentStatus: 'not_taken',
+  stack: ['Python', 'PostgreSQL', 'Docker'],
+  softSkills: [],
+  experienceYears: 3,
+  englishLevel: null,
+  city: 'Казань',
+  relocationReady: false,
+  workFormats: ['remote'],
+  salaryExpectation: null,
+  fspAchievements: [],
+  fspTitles: [],
+  fspLinked: false,
+  resumes: [],
+  hasPhoto: false,
+  contacts: { email: 'dev@fsp.ru', phone: null, telegram: '@anna' },
+  jobStatus: 'open',
+  employmentTypes: ['full'],
+  experienceEntries: [],
+  noExperience: false,
+  education: [],
+  githubUrl: null,
+  isMinor: false,
+  lastActiveAt: null,
+  searching: true,
+  fspMemberId: null,
+  specialization: 'backend',
+  birthDate: null,
+  profileDisplayConsent: true,
+  fspSync: 'later',
 }
 
 describe('personal cabinet', () => {
@@ -62,6 +102,56 @@ describe('personal cabinet', () => {
     expect(screen.getByLabelText('Имя и фамилия')).toBeInTheDocument()
     expect(screen.getByLabelText('Нет опыта')).toBeInTheDocument()
     expect(screen.getByText('на руки, в месяц')).toBeInTheDocument()
+  })
+
+  it('opens the profile once the first resume is saved', async () => {
+    signIn('candidate')
+    // `/candidates/me` answers null until the first save, the profile after it.
+    let profile: OwnCandidateDto | null = null
+    const rest = mockFetch({
+      '/api/v1/categories/dictionary': {
+        body: { specializations: [{ code: 'backend', label: 'Backend-разработка' }], grades: [] },
+      },
+    })
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input), 'http://localhost')
+      if (url.pathname !== '/api/v1/candidates/me') return rest(input)
+      if (init?.method === 'PATCH') profile = SAVED_RESUME
+      return new Response(JSON.stringify(profile), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    })
+    renderApp('/profile/resume')
+    const user = userEvent.setup()
+
+    const manual = await screen.findByRole('button', { name: 'Заполнить вручную' }, SLOW)
+    // While the resume is missing, the sections of the cabinet are closed and not shown.
+    expect(screen.queryByRole('link', { name: 'Приглашения' })).not.toBeInTheDocument()
+    await user.click(screen.getByLabelText('Позже'))
+    await user.click(manual)
+
+    await user.type(screen.getByLabelText('Имя и фамилия'), 'Анна Петрова')
+    await user.type(screen.getByLabelText('Должность'), 'Backend-разработчик')
+    await user.selectOptions(await screen.findByLabelText('Специализация'), 'backend')
+    await user.type(screen.getByLabelText('Город'), 'Казань')
+    await user.type(screen.getByLabelText('Стаж, лет'), '3')
+    await user.click(screen.getByLabelText('Удалённо'))
+    await user.click(screen.getByLabelText('Полная'))
+    for (const skill of ['Python', 'PostgreSQL', 'Docker']) {
+      await user.click(screen.getByRole('button', { name: skill }))
+    }
+    await user.type(screen.getByLabelText('Telegram'), '@anna')
+    await user.click(screen.getByRole('button', { name: 'Сохранить резюме' }))
+
+    // The form gives way to the profile as the employer sees it, with the cabinet around it.
+    expect(await screen.findByText(/Так вас видит работодатель/, {}, SLOW)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Приглашения' })).toBeInTheDocument()
+    expect(screen.queryByText(/создать ещё одно резюме/)).not.toBeInTheDocument()
+    // The next step is offered in a window over the profile.
+    const next = screen.getByRole('dialog', { name: 'Резюме сохранено' })
+    expect(next).toHaveTextContent('Следующий шаг — тест')
+    await user.click(screen.getByRole('button', { name: 'Позже' }))
+    expect(screen.queryByRole('dialog', { name: 'Резюме сохранено' })).not.toBeInTheDocument()
   })
 
   it('asks an employer about themselves before the company', async () => {

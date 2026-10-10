@@ -22,15 +22,7 @@ import {
 import type { EmploymentType, WorkFormat } from '@/entities/vacancy'
 import { getErrorMessage, http } from '@/shared/api'
 import { ROUTES, STACK_SKILLS } from '@/shared/config'
-import {
-  Button,
-  ButtonLink,
-  Modal,
-  SelectField,
-  SkillField,
-  TextArea,
-  TextField,
-} from '@/shared/ui'
+import { Button, SelectField, SkillField, TextArea, TextField } from '@/shared/ui'
 import { draftPhotoFile, photoFileError, resumeFileError, resumeUploadError } from '../model/files'
 import {
   applyResumeDraft,
@@ -49,6 +41,7 @@ import { ExperienceField } from './experience-field'
 import { PhotoField } from './photo-field'
 import { consentsGiven, EMPTY_CONSENTS, ResumeConsents } from './resume-consents'
 import type { ConsentValues } from './resume-consents'
+import { rememberFirstResume } from './resume-next-step'
 import './resume-form.css'
 
 const MAX_RESUMES = 3
@@ -88,8 +81,6 @@ export function ResumeForm({ profile }: Props) {
   const [saved, setSaved] = useState(false)
   const [createdHere] = useState(() => profile === null)
   const [askAnother, setAskAnother] = useState(false)
-  // A new candidate said one resume is enough: the next step is the test, said in a window.
-  const [nextStep, setNextStep] = useState(false)
   const [extraOpen, setExtraOpen] = useState(false)
   const [extraValues, setExtraValues] = useState<ResumeValues>(EMPTY_RESUME)
   const [extraErrors, setExtraErrors] = useState<ResumeErrors>({})
@@ -130,6 +121,7 @@ export function ResumeForm({ profile }: Props) {
       // A file that could not be read no longer matters once the resume is saved by hand.
       setFileError('')
       setAskAnother(true)
+      if (createdHere) rememberFirstResume()
       if (pendingPhoto) uploadPhoto.mutate(pendingPhoto)
       if (createdHere && consents.fspSync === 'yes' && !next.fspMemberId) {
         setNotice('Резюме сохранено. Привяжите ФСП ID в настройках — результаты придут из реестра.')
@@ -608,7 +600,7 @@ export function ResumeForm({ profile }: Props) {
           {saved && (
             <p className="form-status" role="status">
               Резюме сохранено. Оно приоритетное: вакансии подбираются по нему в первую очередь.
-              {createdHere && !askAnother && !extraOpen && !nextStep && (
+              {createdHere && !askAnother && !extraOpen && (
                 <>
                   {' '}
                   <Link to={ROUTES.testing}>Дальше — пройти тест</Link>
@@ -652,38 +644,12 @@ export function ResumeForm({ profile }: Props) {
                   type="button"
                   variant="ghost"
                   size="inline"
-                  onClick={() => {
-                    setAskAnother(false)
-                    if (createdHere) setNextStep(true)
-                  }}
+                  onClick={() => setAskAnother(false)}
                 >
                   Нет, достаточно
                 </Button>
               </div>
             </div>
-          )}
-
-          {nextStep && (
-            <Modal title="Резюме сохранено" onClose={() => setNextStep(false)}>
-              <p className="resume-next__text">
-                Оно приоритетное: вакансии подбираются по нему в первую очередь.
-              </p>
-              <p className="resume-next__text">
-                Следующий шаг — тест. Он подтверждает грейд, и после него работодатели находят вас в
-                банке кандидатов.
-              </p>
-              <div className="resume-start__actions">
-                <ButtonLink to={ROUTES.testing}>Пройти тест</ButtonLink>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="inline"
-                  onClick={() => setNextStep(false)}
-                >
-                  Позже
-                </Button>
-              </div>
-            </Modal>
           )}
 
           <div className="form-actions">
