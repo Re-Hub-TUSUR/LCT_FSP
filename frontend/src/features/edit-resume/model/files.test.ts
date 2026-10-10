@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { photoFileError, resumeFileError } from './files'
+import { draftPhotoFile, photoFileError, resumeFileError } from './files'
 
 function file(name: string, bytes: number[]) {
   return new File([new Uint8Array(bytes)], name)
@@ -18,6 +18,13 @@ describe('resume files', () => {
     expect(await resumeFileError(file('sheet.docx', [0x50, 0x4b, 0x03, 0x04, 0x00]))).toMatch(
       /не документ DOCX/,
     )
+  })
+
+  it('turns the portrait of a resume draft into a photo the form accepts', async () => {
+    const photo = draftPhotoFile(btoa(String.fromCharCode(0xff, 0xd8, 0xff, 0xe0)))
+    expect(photo?.type).toBe('image/jpeg')
+    expect(photo && (await photoFileError(photo))).toBeNull()
+    expect(draftPhotoFile('not base64 %')).toBeNull()
   })
 
   it('accepts a real image header and refuses svg', async () => {

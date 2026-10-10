@@ -2,6 +2,7 @@
 stored: the candidate checks the fields and saves them with the usual form."""
 
 import asyncio
+import base64
 from collections.abc import Collection
 
 from app.core.errors import AppError
@@ -9,8 +10,9 @@ from app.models.enums import WorkFormat
 from app.schemas.candidate import ResumeDraft
 from app.services.candidates import MAX_SKILL_LENGTH
 from app.services.categories import SPECIALIZATIONS
+from app.services.resume_photo import resume_photo
 from app.services.resume_reader import ResumeReader
-from app.services.resume_text import read_resume
+from app.services.resume_text import ResumeText, read_resume
 from app.services.uploads import RESUME_LIMIT
 
 MAX_EXPERIENCE_YEARS = 50
@@ -24,7 +26,7 @@ class ResumeImportService:
         if len(data) > RESUME_LIMIT:
             raise AppError("Файл больше 5 МБ")
         # Parsing a PDF is CPU work: keep it off the event loop.
-        document = await asyncio.to_thread(read_resume, data)
+        document, photo = await asyncio.to_thread(_read, data)
         fields = await self._reader.read(document.text)
         return ResumeDraft(
             display_name=_text(fields.get("display_name"), limit=200),
@@ -40,7 +42,13 @@ class ResumeImportService:
             # Contacts never reach the model: they are found in the file itself.
             phone=document.phone,
             telegram=document.telegram,
+            photo=base64.b64encode(photo).decode("ascii") if photo else None,
         )
+
+
+def _read(data: bytes) -> tuple[ResumeText, bytes | None]:
+    # The text first: a file that is not a resume is refused before its pictures are opened.
+    return read_resume(data), resume_photo(data)
 
 
 def _text(value: object, *, limit: int) -> str | None:

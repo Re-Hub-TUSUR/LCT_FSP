@@ -12,7 +12,6 @@ import { Button, ButtonLink, DataRows, ErrorState, Loader, Page, Panel } from '@
 import { OwnerForm } from '@/features/edit-account'
 import { JobStatusForm } from '@/features/edit-candidate-settings'
 import { FspLinkPanel } from '@/features/link-fsp-id'
-import { isNotFound } from '../lib/is-not-found'
 import { LockIcon } from './cabinet-icons'
 
 function AccountPanel({ user }: { user: UserDto }) {
@@ -101,7 +100,7 @@ function CandidateSettingsPage({ user }: { user: UserDto }) {
 
   let body
   if (profile.isPending) body = <Loader />
-  else if (profile.isError && !isNotFound(profile.error)) {
+  else if (profile.isError) {
     body = (
       <ErrorState message={getErrorMessage(profile.error)} onRetry={() => void profile.refetch()} />
     )

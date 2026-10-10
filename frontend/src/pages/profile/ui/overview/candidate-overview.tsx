@@ -8,7 +8,6 @@ import { formatRubRange } from '@/shared/lib'
 import { ButtonLink, ErrorState, Loader, Page, Panel } from '@/shared/ui'
 import { isNotReady, NOT_READY } from '@/widgets/invitations-inbox'
 import { isWaiting } from '../../lib/cabinet-data'
-import { isNotFound } from '../../lib/is-not-found'
 import { candidateTodos } from '../../lib/todos'
 import { TodoList } from './todo-list'
 import { WaitingList } from './waiting-list'
@@ -35,7 +34,7 @@ export function CandidateOverview() {
       </Page>
     )
   }
-  if (profile.isError && !isNotFound(profile.error)) {
+  if (profile.isError) {
     return (
       <Page className="page--inset" title="Обзор">
         <ErrorState

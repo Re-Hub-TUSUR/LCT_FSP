@@ -5,6 +5,7 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, Query, Response, UploadFile, status
 
+from app.core.errors import NotFoundError
 from app.dependencies.auth import CandidateUser, CurrentUser, EmployerUser
 from app.dependencies.common import PaginationDep
 from app.dependencies.filters import CandidateSearchParamsDep
@@ -149,10 +150,14 @@ async def candidate_reaction_counts(
     return await search.counts(user)
 
 
-@router.get("/me", summary="Own candidate profile")
+@router.get(
+    "/me",
+    summary="Own candidate profile",
+    description="`null` until the first resume is saved.",
+)
 async def read_my_profile(
     user: CandidateUser, profiles: CandidateProfileServiceDep
-) -> OwnCandidateRead:
+) -> OwnCandidateRead | None:
     return await profiles.read_own(user)
 
 
@@ -218,6 +223,8 @@ async def delete_photo(
 @router.get("/me/photo", summary="Own profile photo")
 async def read_my_photo(user: CandidateUser, profiles: CandidateProfileServiceDep) -> Response:
     profile = await profiles.read_own(user)
+    if profile is None:
+        raise NotFoundError("Фото не загружено")
     body, media = await profiles.open_photo(profile.id, user)
     return _photo_response(body, media)
 

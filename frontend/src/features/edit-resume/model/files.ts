@@ -34,6 +34,16 @@ export async function resumeFileError(file: File): Promise<string | null> {
   return null
 }
 
+/** The portrait the server found in the resume file (base64 JPEG) as a file for the photo upload. */
+export function draftPhotoFile(base64: string): File | null {
+  try {
+    const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0))
+    return new File([bytes], 'resume-photo.jpg', { type: 'image/jpeg' })
+  } catch {
+    return null
+  }
+}
+
 /** Profile photo: JPEG, PNG or WebP, and the header must match. SVG and HTML are refused. */
 export async function photoFileError(file: File): Promise<string | null> {
   const ext = extension(file.name)

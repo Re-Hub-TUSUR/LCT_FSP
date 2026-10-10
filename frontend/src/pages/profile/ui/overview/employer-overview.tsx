@@ -9,7 +9,6 @@ import { ROUTES } from '@/shared/config'
 import { ButtonLink, ErrorState, Loader, Page, Panel, StatusTag } from '@/shared/ui'
 import { isNotReady, NOT_READY } from '@/widgets/invitations-inbox'
 import { isWaiting } from '../../lib/cabinet-data'
-import { isNotFound } from '../../lib/is-not-found'
 import { employerTodos } from '../../lib/todos'
 import { TodoList } from './todo-list'
 import { WaitingList } from './waiting-list'
@@ -45,7 +44,7 @@ export function EmployerOverview() {
       </Page>
     )
   }
-  if (company.isError && !isNotFound(company.error)) {
+  if (company.isError) {
     return (
       <Page className="page--inset" title="Обзор">
         <ErrorState

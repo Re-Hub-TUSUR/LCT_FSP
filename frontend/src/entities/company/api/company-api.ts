@@ -49,11 +49,11 @@ export const companyQueries = {
       queryFn: ({ signal }) => http.get<CompanyDto>(`/companies/${id}`, { signal }),
       enabled: Boolean(id),
     }),
-  /** Company profile of the signed-in employer. */
+  /** Company profile of the signed-in employer; `null` until it is filled in. */
   mine: () =>
     queryOptions({
       queryKey: companyKeys.mine(),
-      queryFn: ({ signal }) => http.get<CompanyDto>('/companies/me', { signal }),
+      queryFn: ({ signal }) => http.get<CompanyDto | null>('/companies/me', { signal }),
       staleTime: 30_000,
     }),
 }

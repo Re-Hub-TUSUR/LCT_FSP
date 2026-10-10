@@ -1,5 +1,6 @@
 import re
 import uuid
+from typing import Literal
 
 from pydantic import EmailStr, Field, HttpUrl, field_validator
 
@@ -8,6 +9,9 @@ from app.services.inn import is_valid_inn
 
 _DIGITS = re.compile(r"\d+")
 
+# Headcount buckets of the company form; nothing else is stored.
+CompanySize = Literal["1-10", "11-50", "51-200", "201-500", "500+"]
+
 
 class CompanyRead(ApiModel):
     id: uuid.UUID
@@ -15,7 +19,7 @@ class CompanyRead(ApiModel):
     industry: str | None
     description: str | None
     city: str | None
-    # Headcount bucket, e.g. "201–500".
+    # Headcount bucket, one of `CompanySize`.
     size: str | None
     website: str | None
     contact_email: str | None
@@ -47,13 +51,19 @@ class CompanyUpsert(ApiModel):
     industry: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=100, max_length=3000)
     city: str = Field(min_length=1, max_length=100)
-    size: str | None = Field(default=None, max_length=16)
+    size: CompanySize | None = None
     website: HttpUrl
     contact_email: EmailStr
     inn: str = Field(min_length=10, max_length=14)
     ogrn: str | None = Field(default=None, max_length=17)
     kpp: str | None = Field(default=None, max_length=11)
     legal_address: str | None = Field(default=None, max_length=500)
+
+    @field_validator("size", mode="before")
+    @classmethod
+    def _size(cls, value: object) -> object:
+        # The form sends an empty string for «Не указан».
+        return value or None
 
     @field_validator("inn")
     @classmethod

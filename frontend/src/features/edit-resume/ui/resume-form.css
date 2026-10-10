@@ -116,6 +116,7 @@
   gap: 4px;
 }
 
+/* The whole plate is the button: a click must not select its text. */
 .check {
   display: inline-flex;
   align-items: center;
@@ -125,6 +126,11 @@
   border: 1px solid var(--line);
   font-size: 13px;
   cursor: pointer;
+  user-select: none;
+}
+
+.check:hover {
+  border-color: var(--muted);
 }
 
 .check:has(input:checked) {
@@ -228,6 +234,15 @@
   font-size: 13.5px;
   line-height: 1.5;
   cursor: pointer;
+  user-select: none;
+}
+
+.consents__item:hover {
+  border-color: var(--muted);
+}
+
+.consents__item:has(input:checked) {
+  border-color: var(--blue);
 }
 
 .consents__item input {
@@ -262,9 +277,13 @@
   font-size: 12.5px;
 }
 
-.resume-form__relocation {
-  align-self: end;
-  justify-self: start;
+/* The legend stands in for a field label, so the checkbox lines up with the inputs of its row. */
+.resume-form__relocation .check-group__legend {
+  margin-bottom: 8px;
+}
+
+.resume-form__relocation .check {
+  min-height: 44px;
 }
 
 .experience {
@@ -348,6 +367,7 @@
   font-size: 14px;
   line-height: 1.55;
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .resume-panels__text--dim {

@@ -42,7 +42,8 @@ async def test_candidate_resume_is_private_until_an_invitation_is_accepted(
 ) -> None:
     token = await register_and_login(client, "ivan@fsp.ru")
     missing = await client.get(f"{API}/candidates/me", headers=bearer(token))
-    assert missing.status_code == 404
+    assert missing.status_code == 200
+    assert missing.json() is None
 
     incomplete = await client.patch(
         f"{API}/candidates/me", headers=bearer(token), json={"displayName": "Иван"}
@@ -152,7 +153,8 @@ async def test_experience_periods_set_the_years(client: AsyncClient) -> None:
 async def test_employer_company_profile_and_role_split(client: AsyncClient) -> None:
     employer = await register_and_login(client, "hr@fsp.ru", role="employer")
     missing = await client.get(f"{API}/companies/me", headers=bearer(employer))
-    assert missing.status_code == 404
+    assert missing.status_code == 200
+    assert missing.json() is None
 
     short = await client.put(
         f"{API}/companies/me",
@@ -160,6 +162,10 @@ async def test_employer_company_profile_and_role_split(client: AsyncClient) -> N
         json={**COMPANY, "description": "слишком коротко"},
     )
     assert short.status_code == 422
+    odd_size = await client.put(
+        f"{API}/companies/me", headers=bearer(employer), json={**COMPANY, "size": "38173178318637"}
+    )
+    assert odd_size.status_code == 422
 
     saved = await client.put(f"{API}/companies/me", headers=bearer(employer), json=COMPANY)
     assert saved.status_code == 200, saved.text

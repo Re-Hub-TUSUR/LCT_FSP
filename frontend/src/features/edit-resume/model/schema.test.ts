@@ -117,6 +117,7 @@ describe('applyResumeDraft', () => {
       salaryExpectation: 250000,
       phone: null,
       telegram: null,
+      photo: null,
     })
     expect(next).toEqual({
       ...valid,

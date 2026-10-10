@@ -102,24 +102,22 @@ class VacancyService:
             raise NotFoundError("Компания не найдена")
         return company_read(company)
 
-    async def read_mine(self, user: User) -> CompanyRead:
+    async def read_mine(self, user: User) -> CompanyRead | None:
+        """None until the employer fills the company profile in: that is not an error."""
         company = await self._companies.get_by_owner(user.id)
-        if company is None:
-            raise NotFoundError("Профиль компании ещё не заполнен")
-        return company_read(company)
+        return company_read(company) if company else None
 
     async def upsert_mine(self, user: User, data: CompanyUpsert) -> CompanyRead:
         company = await self._companies.get_by_owner(user.id)
         if await self._companies.inn_taken(data.inn, except_id=company.id if company else None):
             raise ConflictError("Компания с таким ИНН уже зарегистрирована")
-        size = data.size.strip() if data.size else None
         address = data.legal_address.strip() if data.legal_address else None
         fields = {
             "name": data.name.strip(),
             "industry": data.industry.strip(),
             "description": data.description.strip(),
             "city": data.city.strip(),
-            "size": size or None,
+            "size": data.size,
             "website": str(data.website),
             "contact_email": str(data.contact_email),
             "inn": data.inn,

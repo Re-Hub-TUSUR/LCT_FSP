@@ -98,8 +98,10 @@ class CandidateProfileService:
         )
         return data, f"Резюме — {candidate.display_name}.pdf"
 
-    async def read_own(self, user: User) -> OwnCandidateRead:
-        return own_candidate_read(await self._require(user), email=user.email)
+    async def read_own(self, user: User) -> OwnCandidateRead | None:
+        """None until the first resume is saved: that is not an error."""
+        profile = await self._candidates.get_by_user(user.id)
+        return own_candidate_read(profile, email=user.email) if profile else None
 
     async def save_resume(self, user: User, data: CandidateProfileUpdate) -> OwnCandidateRead:
         profile = await self._candidates.get_by_user(user.id)

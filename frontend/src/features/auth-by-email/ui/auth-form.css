@@ -87,6 +87,7 @@
   line-height: 1.55;
   color: var(--ink-2);
   cursor: pointer;
+  user-select: none;
 }
 
 .auth-form__consent a {

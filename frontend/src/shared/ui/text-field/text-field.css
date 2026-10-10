@@ -64,6 +64,11 @@
   color: var(--red-text);
 }
 
+/* A hint under a field starts below that error line, whichever form it is in. */
+.field + .form-hint {
+  margin-top: 22px;
+}
+
 /* `appearance: none` drops the native arrow, so the select draws its own */
 .field__input--select {
   padding-right: 34px;

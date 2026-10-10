@@ -8,7 +8,6 @@ import { ROUTES, paths } from '@/shared/config'
 import { ErrorState, Loader, Page, Panel } from '@/shared/ui'
 import { CompanyVerification } from '@/features/company-verification'
 import { CompanyPanels } from '@/features/edit-company'
-import { isNotFound } from '../lib/is-not-found'
 import { EmployerSetup } from './employer-setup'
 import { RoleNote } from './role-note'
 
@@ -29,7 +28,7 @@ export function CompanyProfilePage() {
       </Page>
     )
   }
-  if (company.isError && !isNotFound(company.error)) {
+  if (company.isError) {
     return (
       <Page className="page--inset" title="Профиль компании">
         <ErrorState

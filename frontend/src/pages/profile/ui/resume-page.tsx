@@ -7,7 +7,6 @@ import { getErrorMessage } from '@/shared/api'
 import { ErrorState, Loader, Page } from '@/shared/ui'
 import { DownloadResumeButton } from '@/features/download-resume'
 import { ResumeForm, ResumePanels } from '@/features/edit-resume'
-import { isNotFound } from '../lib/is-not-found'
 import { RoleNote } from './role-note'
 
 /** The mode is fixed on the first render: right after creation the form keeps its next steps. */
@@ -31,7 +30,7 @@ export function ResumePage() {
       </Page>
     )
   }
-  if (profile.isError && !isNotFound(profile.error)) {
+  if (profile.isError) {
     return (
       <Page className="page--inset" title="Профиль и резюме">
         <ErrorState

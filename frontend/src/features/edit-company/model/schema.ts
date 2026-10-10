@@ -65,9 +65,11 @@ function checkDigit(digits: number[], weights: number[]): number {
   return (weights.reduce((sum, weight, index) => sum + weight * (digits[index] ?? 0), 0) % 11) % 10
 }
 
+const hasInnLength = (value: string) => /^\d{10}(\d{2})?$/.test(value)
+
 /** 10 digits for an organisation, 12 for a sole trader; the check digits must match. */
 export function isValidInn(value: string): boolean {
-  if (!/^\d{10}(\d{2})?$/.test(value)) return false
+  if (!hasInnLength(value)) return false
   const digits = [...value].map(Number)
   if (digits.length === 10) return checkDigit(digits, TEN) === digits[9]
   return checkDigit(digits, ELEVEN) === digits[10] && checkDigit(digits, TWELVE) === digits[11]
@@ -85,7 +87,8 @@ export function validateLegal(values: LegalValues): LegalErrors {
   const errors: LegalErrors = {}
   const inn = digitsOnly(values.inn)
   if (!inn) errors.inn = 'Укажите ИНН'
-  else if (!isValidInn(inn)) errors.inn = 'Проверьте ИНН: 10 или 12 цифр'
+  else if (!hasInnLength(inn)) errors.inn = 'ИНН: 10 или 12 цифр'
+  else if (!isValidInn(inn)) errors.inn = 'Проверьте ИНН: не сходится контрольная цифра'
   const ogrn = digitsOnly(values.ogrn)
   if (ogrn && !/^(\d{13}|\d{15})$/.test(ogrn)) errors.ogrn = 'ОГРН: 13 цифр, ОГРНИП: 15'
   const kpp = digitsOnly(values.kpp)

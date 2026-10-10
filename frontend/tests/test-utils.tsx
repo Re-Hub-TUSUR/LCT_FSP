@@ -43,13 +43,13 @@ export function mockFetch(handlers: Record<string, { status?: number; body?: unk
       ? handlers[url.pathname]
       : filledCabinet[url.pathname]
     const status = match?.status ?? (match ? 200 : 404)
-    return new Response(
-      JSON.stringify(match?.body ?? { error: { code: 'not_found', message: 'Not found' } }),
-      {
-        status,
-        headers: { 'Content-Type': 'application/json' },
-      },
-    )
+    // An explicit `body: null` is an answer too: a profile that is not filled in yet.
+    const body =
+      match && 'body' in match ? match.body : { error: { code: 'not_found', message: 'Not found' } }
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 }
 

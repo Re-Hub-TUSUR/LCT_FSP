@@ -123,15 +123,18 @@ export function PanelFields({ panel, values, errors, update }: Props) {
           />
           <p className="form-hint resume-form__note">{SALARY_NOTE}</p>
         </div>
-        <label className="check resume-form__relocation">
-          <input
-            id="resume-relocation"
-            type="checkbox"
-            checked={values.relocationReady}
-            onChange={(event) => update('relocationReady', event.target.checked)}
-          />
-          Готов к переезду
-        </label>
+        <fieldset className="check-group resume-form__relocation">
+          <legend className="check-group__legend">Переезд</legend>
+          <label className="check">
+            <input
+              id="resume-relocation"
+              type="checkbox"
+              checked={values.relocationReady}
+              onChange={(event) => update('relocationReady', event.target.checked)}
+            />
+            Готов к переезду
+          </label>
+        </fieldset>
         <fieldset className="check-group resume-form__wide">
           <legend className="check-group__legend">Формат работы</legend>
           <div className="check-group__options">

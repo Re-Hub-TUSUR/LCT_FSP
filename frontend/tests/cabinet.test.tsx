@@ -21,10 +21,7 @@ function signIn(role: 'candidate' | 'employer', name?: { firstName: string; last
 }
 
 const NO_COMPANY = {
-  '/api/v1/companies/me': {
-    status: 404,
-    body: { error: { code: 'not_found', message: 'Профиль компании ещё не заполнен' } },
-  },
+  '/api/v1/companies/me': { body: null },
 }
 
 describe('personal cabinet', () => {
@@ -38,10 +35,7 @@ describe('personal cabinet', () => {
     vi.stubGlobal(
       'fetch',
       mockFetch({
-        '/api/v1/candidates/me': {
-          status: 404,
-          body: { error: { code: 'not_found', message: 'Сначала сохраните резюме' } },
-        },
+        '/api/v1/candidates/me': { body: null },
       }),
     )
     const { router } = renderApp('/feed/swipe')

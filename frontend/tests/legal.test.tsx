@@ -40,10 +40,7 @@ describe('legal documents', () => {
     vi.stubGlobal(
       'fetch',
       mockFetch({
-        '/api/v1/candidates/me': {
-          status: 404,
-          body: { error: { code: 'not_found', message: 'Not found' } },
-        },
+        '/api/v1/candidates/me': { body: null },
       }),
     )
 

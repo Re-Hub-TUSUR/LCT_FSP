@@ -23,7 +23,7 @@ import type { EmploymentType, WorkFormat } from '@/entities/vacancy'
 import { getErrorMessage, http } from '@/shared/api'
 import { ROUTES, STACK_SKILLS } from '@/shared/config'
 import { Button, SelectField, SkillField, TextArea, TextField } from '@/shared/ui'
-import { photoFileError, resumeFileError } from '../model/files'
+import { draftPhotoFile, photoFileError, resumeFileError } from '../model/files'
 import {
   applyResumeDraft,
   EMPTY_RESUME,
@@ -131,6 +131,16 @@ export function ResumeForm({ profile }: Props) {
     mutationFn: candidateApi.uploadResume,
     onSuccess: (draft) => {
       setValues((prev) => applyResumeDraft(prev, draft))
+      // The portrait from the file is uploaded with the save, unless a photo is already chosen.
+      const photo =
+        draft.photo && !pendingPhoto && !profile?.hasPhoto ? draftPhotoFile(draft.photo) : null
+      if (photo) {
+        setPreviewUrl((current) => {
+          if (current) URL.revokeObjectURL(current)
+          return URL.createObjectURL(photo)
+        })
+        setPendingPhoto(photo)
+      }
       setErrors({})
       setManual(true)
       setFileError('')
@@ -429,15 +439,18 @@ export function ResumeForm({ profile }: Props) {
               />
               <p className="form-hint resume-form__note">{SALARY_NOTE}</p>
             </div>
-            <label className="check resume-form__relocation">
-              <input
-                id="resume-relocation"
-                type="checkbox"
-                checked={values.relocationReady}
-                onChange={(event) => update('relocationReady', event.target.checked)}
-              />
-              Готов к переезду
-            </label>
+            <fieldset className="check-group resume-form__relocation">
+              <legend className="check-group__legend">Переезд</legend>
+              <label className="check">
+                <input
+                  id="resume-relocation"
+                  type="checkbox"
+                  checked={values.relocationReady}
+                  onChange={(event) => update('relocationReady', event.target.checked)}
+                />
+                Готов к переезду
+              </label>
+            </fieldset>
             <fieldset className="check-group resume-form__wide">
               <legend className="check-group__legend">Формат работы</legend>
               <div className="check-group__options">

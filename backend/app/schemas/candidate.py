@@ -343,6 +343,8 @@ class ResumeDraft(ApiModel):
     salary_expectation: int | None
     phone: str | None
     telegram: str | None
+    # Portrait found in the file, base64 JPEG. The form uploads it together with the resume.
+    photo: str | None = None
 
 
 class CandidateSearchUpdate(ApiModel):

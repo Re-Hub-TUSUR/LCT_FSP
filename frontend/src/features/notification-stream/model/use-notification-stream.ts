@@ -8,8 +8,7 @@ import { invitationKeys } from '@/entities/invitation'
 import { responseKeys } from '@/entities/response'
 import { useSession } from '@/entities/session'
 import { vacancyKeys } from '@/entities/vacancy'
-import { accessHeaders } from '@/shared/api'
-import { env } from '@/shared/config'
+import { subscribeToNotifications } from './notification-source'
 
 export type CompanyLikedEvent = {
   type: 'company_liked'
@@ -91,70 +90,37 @@ export function useNotificationStream(handlers: Handlers) {
   useEffect(() => {
     if (!accessToken) return
 
-    const url = `${env.apiUrl}/notifications/stream`
-    const controller = new AbortController()
-    void (async () => {
-      try {
-        const response = await fetch(url, {
-          headers: {
-            Accept: 'text/event-stream',
-            ...accessHeaders(accessToken),
-            'X-Kadry-Request': '1',
-          },
-          credentials: 'include',
-          signal: controller.signal,
-        })
-        if (!response.ok || !response.body) return
-        const reader = response.body.getReader()
-        const decoder = new TextDecoder()
-        let buffer = ''
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          buffer += decoder.decode(value, { stream: true })
-          const chunks = buffer.split('\n\n')
-          buffer = chunks.pop() ?? ''
-          for (const chunk of chunks) {
-            const line = chunk.split('\n').find((row) => row.startsWith('data: '))
-            if (!line) continue
-            const payload = JSON.parse(line.slice(6)) as NotificationEvent
-            if (payload.type === 'company_liked') {
-              handlersRef.current.onCompanyLiked?.(payload)
-              void queryClient.invalidateQueries({ queryKey: responseKeys.inbound() })
-            }
-            if (payload.type === 'message') {
-              handlersRef.current.onMessage?.(payload)
-              void queryClient.invalidateQueries({ queryKey: conversationKeys.all })
-            }
-            if (payload.type === 'company_verification') {
-              handlersRef.current.onCompanyVerification?.(payload)
-              // The extract status and `itAccredited` of the company profile.
-              void queryClient.invalidateQueries({ queryKey: companyKeys.all })
-            }
-            if (payload.type === 'meeting_pending') {
-              handlersRef.current.onMeetingPending?.(payload)
-              void queryClient.invalidateQueries({ queryKey: calendarEventKeys.all })
-            }
-            if (payload.type === 'invitation') handlersRef.current.onInvitation?.(payload)
-            if (payload.type === 'invitation' || payload.type === 'invitation_answered') {
-              // The lists of both sides, and the contacts an acceptance opens.
-              void queryClient.invalidateQueries({ queryKey: invitationKeys.all })
-              void queryClient.invalidateQueries({ queryKey: candidateKeys.all })
-            }
-            if (payload.type === 'saved_search_new') {
-              handlersRef.current.onSavedSearchNew?.(payload)
-              // «+N новых» next to the search, and the open lists with the new results.
-              void queryClient.invalidateQueries({
-                queryKey: payload.kind === 'candidates' ? candidateKeys.all : vacancyKeys.all,
-              })
-            }
-          }
-        }
-      } catch {
-        /* reconnect on next mount / token change */
+    return subscribeToNotifications(accessToken, (payload) => {
+      if (payload.type === 'company_liked') {
+        handlersRef.current.onCompanyLiked?.(payload)
+        void queryClient.invalidateQueries({ queryKey: responseKeys.inbound() })
       }
-    })()
-
-    return () => controller.abort()
+      if (payload.type === 'message') {
+        handlersRef.current.onMessage?.(payload)
+        void queryClient.invalidateQueries({ queryKey: conversationKeys.all })
+      }
+      if (payload.type === 'company_verification') {
+        handlersRef.current.onCompanyVerification?.(payload)
+        // The extract status and `itAccredited` of the company profile.
+        void queryClient.invalidateQueries({ queryKey: companyKeys.all })
+      }
+      if (payload.type === 'meeting_pending') {
+        handlersRef.current.onMeetingPending?.(payload)
+        void queryClient.invalidateQueries({ queryKey: calendarEventKeys.all })
+      }
+      if (payload.type === 'invitation') handlersRef.current.onInvitation?.(payload)
+      if (payload.type === 'invitation' || payload.type === 'invitation_answered') {
+        // The lists of both sides, and the contacts an acceptance opens.
+        void queryClient.invalidateQueries({ queryKey: invitationKeys.all })
+        void queryClient.invalidateQueries({ queryKey: candidateKeys.all })
+      }
+      if (payload.type === 'saved_search_new') {
+        handlersRef.current.onSavedSearchNew?.(payload)
+        // «+N новых» next to the search, and the open lists with the new results.
+        void queryClient.invalidateQueries({
+          queryKey: payload.kind === 'candidates' ? candidateKeys.all : vacancyKeys.all,
+        })
+      }
+    })
   }, [accessToken, queryClient])
 }

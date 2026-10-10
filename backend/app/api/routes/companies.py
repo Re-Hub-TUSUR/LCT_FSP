@@ -13,8 +13,12 @@ router = APIRouter(prefix="/companies", tags=["companies"])
 router.include_router(bank_router(EmployerUser), prefix="/me")
 
 
-@router.get("/me", summary="Company profile of the signed-in employer")
-async def read_my_company(user: EmployerUser, vacancies: VacancyServiceDep) -> CompanyRead:
+@router.get(
+    "/me",
+    summary="Company profile of the signed-in employer",
+    description="`null` until the profile is filled in.",
+)
+async def read_my_company(user: EmployerUser, vacancies: VacancyServiceDep) -> CompanyRead | None:
     return await vacancies.read_mine(user)
 
 

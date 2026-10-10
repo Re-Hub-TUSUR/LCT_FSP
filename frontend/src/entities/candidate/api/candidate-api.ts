@@ -188,6 +188,8 @@ export type ResumeDraftDto = {
   salaryExpectation: number | null
   phone: string | null
   telegram: string | null
+  /** Portrait found in the file: base64 JPEG. */
+  photo: string | null
 }
 
 /** One card of the recruiter's feed with the explanation of its position. */
@@ -411,7 +413,8 @@ export const candidateQueries = {
   mine: () =>
     queryOptions({
       queryKey: candidateKeys.mine(),
-      queryFn: ({ signal }) => http.get<OwnCandidateDto>('/candidates/me', { signal }),
+      // `null` until the first resume is saved.
+      queryFn: ({ signal }) => http.get<OwnCandidateDto | null>('/candidates/me', { signal }),
       staleTime: 30_000,
     }),
 }

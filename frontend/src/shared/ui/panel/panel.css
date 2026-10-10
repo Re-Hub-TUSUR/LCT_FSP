@@ -70,7 +70,8 @@
 
 .data-rows__row {
   display: grid;
-  grid-template-columns: minmax(120px, 200px) minmax(0, 1fr);
+  /* In a narrow side panel the label gives way, or the value has no room left. */
+  grid-template-columns: minmax(96px, min(200px, 38%)) minmax(0, 1fr);
   gap: 6px 20px;
   padding: 10px 0;
   border-top: 1px solid var(--line);
@@ -82,6 +83,8 @@
 }
 
 .data-rows__label {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.12em;

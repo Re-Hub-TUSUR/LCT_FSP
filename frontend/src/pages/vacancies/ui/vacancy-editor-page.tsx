@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { companyQueries } from '@/entities/company'
 import { vacancyQueries } from '@/entities/vacancy'
 import { VacancyForm } from '@/features/edit-vacancy'
-import { ApiError, getErrorMessage } from '@/shared/api'
+import { getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
 import { EmptyState, ErrorState, Loader, Page } from '@/shared/ui'
 
@@ -20,19 +20,19 @@ export function VacancyEditorPage() {
   const body = () => {
     if (company.isPending || (vacancyId && vacancy.isPending)) return <Loader />
     if (company.isError) {
-      if (company.error instanceof ApiError && company.error.status === 404) {
-        return (
-          <EmptyState title="Сначала заполните профиль компании">
-            Вакансия публикуется от имени компании.{' '}
-            <Link to={ROUTES.profileCompany}>Перейти к профилю компании</Link>
-          </EmptyState>
-        )
-      }
       return (
         <ErrorState
           message={getErrorMessage(company.error)}
           onRetry={() => void company.refetch()}
         />
+      )
+    }
+    if (!company.data) {
+      return (
+        <EmptyState title="Сначала заполните профиль компании">
+          Вакансия публикуется от имени компании.{' '}
+          <Link to={ROUTES.profileCompany}>Перейти к профилю компании</Link>
+        </EmptyState>
       )
     }
     if (vacancy.isError) {
