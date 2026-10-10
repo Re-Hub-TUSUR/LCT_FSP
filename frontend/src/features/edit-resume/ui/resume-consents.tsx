@@ -1,25 +1,17 @@
 import { FSP_SYNC_LABELS } from '@/entities/candidate'
 import type { FspSync } from '@/entities/candidate'
-import { ROUTES } from '@/shared/config'
 
+/** The consents were given at registration; the start of a resume asks only about the FSP. */
 export type ConsentValues = {
-  personalData: boolean
-  profileDisplay: boolean
   fspSync: FspSync | null
 }
 
-export const EMPTY_CONSENTS: ConsentValues = {
-  personalData: false,
-  profileDisplay: false,
-  fspSync: null,
-}
+export const EMPTY_CONSENTS: ConsentValues = { fspSync: null }
 
-export const consentsGiven = (values: ConsentValues) =>
-  values.personalData && values.profileDisplay && values.fspSync !== null
+export const consentsGiven = (values: ConsentValues) => values.fspSync !== null
 
 const FSP_OPTIONS: FspSync[] = ['yes', 'later', 'never']
 
-/** Start of a new resume: both consents and the FSP question come before any data. */
 export function ResumeConsents({
   values,
   onChange,
@@ -27,37 +19,8 @@ export function ResumeConsents({
   values: ConsentValues
   onChange: (next: ConsentValues) => void
 }) {
-  const set = <K extends keyof ConsentValues>(key: K, value: ConsentValues[K]) =>
-    onChange({ ...values, [key]: value })
-
   return (
     <div className="consents">
-      <label className="consents__item">
-        <input
-          type="checkbox"
-          checked={values.personalData}
-          onChange={(event) => set('personalData', event.target.checked)}
-        />
-        <span>
-          Согласен на{' '}
-          <a href={ROUTES.consent} target="_blank" rel="noopener noreferrer">
-            обработку персональных данных по 152-ФЗ
-          </a>
-          : платформа хранит резюме и показывает его в подборке.
-        </span>
-      </label>
-      <label className="consents__item">
-        <input
-          type="checkbox"
-          checked={values.profileDisplay}
-          onChange={(event) => set('profileDisplay', event.target.checked)}
-        />
-        <span>
-          Согласен, что работодатели увидят профиль без контактов. Телефон и Telegram откроются
-          только после принятого приглашения или отклика.
-        </span>
-      </label>
-
       <fieldset className="check-group">
         <legend className="check-group__legend">Синхронизировать с ФСП?</legend>
         <div className="check-group__options">
@@ -67,7 +30,7 @@ export function ResumeConsents({
                 type="radio"
                 name="fsp-sync"
                 checked={values.fspSync === option}
-                onChange={() => set('fspSync', option)}
+                onChange={() => onChange({ fspSync: option })}
               />
               {FSP_SYNC_LABELS[option]}
             </label>
@@ -81,6 +44,10 @@ export function ResumeConsents({
           участника, а результаты придут из реестра Федерации. Вводить ID вручную не нужно.
         </p>
       )}
+      <p className="form-hint">
+        Работодатели увидят профиль без контактов: телефон и Telegram откроются только после
+        принятого приглашения или отклика. Скрыть профиль можно статусом поиска «Не ищу».
+      </p>
     </div>
   )
 }

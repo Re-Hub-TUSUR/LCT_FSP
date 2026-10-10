@@ -110,5 +110,10 @@ async def test_vacancy_form_rules(client: AsyncClient) -> None:
     assert await status_of({"description": "Коротко"}) == 422
     assert await status_of({"salary": {"from": 300_000, "to": 200_000}}) == 422
     assert await status_of({"stackRequired": [" "]}) == 422
+    # A test left in production: no word in the title, a keyboard mash, a salary of 1–2 ₽.
+    assert await status_of({"title": "8II8MI ,"}) == 422
+    mash = "m7 8irtrmi87itm8mi,7tm87tm8mi7mti87tmi78tmi78irjgheauo4hrtuierhafu;khrweau" * 3
+    assert await status_of({"description": mash}) == 422
+    assert await status_of({"salary": {"from": 1, "to": 2}}) == 422
     assert await status_of({"specialization": "astrology"}) == 400
     assert await status_of({"workFormat": "remote", "city": None}) == 201

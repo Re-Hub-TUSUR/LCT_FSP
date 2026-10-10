@@ -232,7 +232,9 @@ describe('feeds', () => {
       await screen.findByText('Вы посмотрели все подходящие вакансии', {}, SLOW),
     ).toBeInTheDocument()
     expect(
-      screen.getByText('Отобранные — в ленте, раздел «Отобрано». Новые появятся здесь сами.'),
+      screen.getByText(
+        'Ваши отклики — в ленте, раздел «Отклики». Новые вакансии появятся здесь сами.',
+      ),
     ).toBeInTheDocument()
     expect(document.querySelector('.reel__placeholder')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Интересно' })).not.toBeInTheDocument()
@@ -352,7 +354,7 @@ describe('feeds', () => {
     await user.click(screen.getByRole('button', { name: 'Вырезано' }))
     expect(await screen.findByText('Ничего не вырезано')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Отобрано' }))
+    await user.click(screen.getByRole('button', { name: 'Отклики' }))
     await screen.findByText('Python-разработчик')
     expect(views).toEqual(['all', 'matched', 'skipped', 'liked'])
   })

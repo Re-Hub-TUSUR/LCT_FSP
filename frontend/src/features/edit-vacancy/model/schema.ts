@@ -11,6 +11,16 @@ import type {
 } from '@/entities/vacancy'
 import { MAX_SALARY, MAX_SALARY_ERROR } from '@/shared/config'
 
+/** Words of two letters or more, as the API counts them (`MIN_DESCRIPTION_WORDS`). */
+const DESCRIPTION_WORDS = 12
+const wordCount = (text: string) =>
+  text
+    .split(/\s+/)
+    .filter((token) => token.length <= 30 && (token.match(/\p{L}/gu) ?? []).length >= 2).length
+
+/** The API refuses a vacancy for 1–2 ₽ (`MIN_VACANCY_SALARY`). */
+const MIN_SALARY = 1_000
+
 export type VacancyValues = {
   title: string
   specialization: string
@@ -96,6 +106,10 @@ export function validateVacancy(values: VacancyValues): VacancyErrors {
   const title = values.title.trim()
   if (title.length < TITLE_MIN) errors.title = 'Укажите название вакансии'
   else if (title.length > TITLE_MAX) errors.title = `Не больше ${TITLE_MAX} символов`
+  // «8II8MI ,» has letters, but no word: a title needs three letters in a row somewhere.
+  else if (!/\p{L}{3}/u.test(title)) {
+    errors.title = 'Название — словами, например «Backend-разработчик»'
+  }
   if (!values.specialization) errors.specialization = 'Выберите специализацию'
   if (values.grades.length === 0) errors.grades = 'Выберите грейд: один или два соседних'
   const description = values.description.trim()
@@ -103,6 +117,9 @@ export function validateVacancy(values: VacancyValues): VacancyErrors {
     errors.description = `Опишите вакансию: ещё ${DESCRIPTION_MIN - description.length} символов`
   } else if (description.length > DESCRIPTION_MAX) {
     errors.description = `Не больше ${DESCRIPTION_MAX} символов`
+  }
+  if (!errors.description && wordCount(description) < DESCRIPTION_WORDS) {
+    errors.description = 'Опишите вакансию словами: задачи, команда, условия'
   }
   if (values.stackRequired.length === 0) {
     errors.stackRequired = 'Добавьте хотя бы одну обязательную технологию'
@@ -112,6 +129,7 @@ export function validateVacancy(values: VacancyValues): VacancyErrors {
   const from = rubles(values.salaryFrom)
   const to = rubles(values.salaryTo)
   if (!from) errors.salaryFrom = 'Укажите нижнюю границу вилки'
+  else if (from < MIN_SALARY) errors.salaryFrom = `Не меньше ${MIN_SALARY} ₽ в месяц`
   else if (from > MAX_SALARY) errors.salaryFrom = MAX_SALARY_ERROR
   if (!to) errors.salaryTo = 'Укажите верхнюю границу вилки'
   else if (to > MAX_SALARY) errors.salaryTo = MAX_SALARY_ERROR

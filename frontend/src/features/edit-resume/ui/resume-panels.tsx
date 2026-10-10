@@ -23,7 +23,7 @@ import { ROUTES } from '@/shared/config'
 import { formatDate, formatRubRange } from '@/shared/lib'
 import { Button, ChipList, DataRows, Panel } from '@/shared/ui'
 import type { DataRow } from '@/shared/ui'
-import { photoFileError, resumeFileError } from '../model/files'
+import { photoFileError, resumeFileError, resumeUploadError } from '../model/files'
 import {
   changedPanels,
   PANEL_FIELDS,
@@ -116,7 +116,7 @@ export function ResumePanels({ profile }: Props) {
       setEditing(panels)
       setFromFile(true)
     },
-    onError: (error) => setFileError(getErrorMessage(error)),
+    onError: (error) => setFileError(resumeUploadError(error)),
   })
 
   const uploadPhoto = useMutation({

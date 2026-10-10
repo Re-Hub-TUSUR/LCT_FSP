@@ -6,7 +6,9 @@ const valid: VacancyValues = {
   title: 'Backend-разработчик',
   specialization: 'backend',
   grades: ['middle'],
-  description: 'О'.repeat(150),
+  description:
+    'Команда платежей ищет разработчика. Задачи: проектировать сервисы на Python, писать ' +
+    'тесты и разбирать инциденты вместе с дежурными. Условия: гибрид, ДМС и обучение.',
   stackRequired: ['Python', 'PostgreSQL'],
   stackNice: ['Kafka', 'python'],
   salaryFrom: '200 000',
@@ -38,6 +40,13 @@ describe('validateVacancy', () => {
     expect(validateVacancy({ ...valid, description: 'коротко' }).description).toMatch(/ещё 143/)
     expect(validateVacancy({ ...valid, stackRequired: [] }).stackRequired).toBeDefined()
     expect(validateVacancy({ ...valid, grades: [] }).grades).toBeDefined()
+  })
+
+  it('turns away a test left in production', () => {
+    const mash = 'm7 8irtrmi87itm8mi,7tm87tm8mi7mti87tmi78tmi78irjgheauo4hrtuierhafu'.repeat(3)
+    expect(validateVacancy({ ...valid, title: '8II8MI ,' }).title).toMatch(/словами/)
+    expect(validateVacancy({ ...valid, description: mash }).description).toMatch(/словами/)
+    expect(validateVacancy({ ...valid, salaryFrom: '1', salaryTo: '2' }).salaryFrom).toMatch(/1000/)
   })
 })
 

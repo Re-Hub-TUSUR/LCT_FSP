@@ -7,7 +7,7 @@ import {
   parseListView,
   vacancyQueries,
 } from '@/entities/vacancy'
-import type { ListView } from '@/entities/vacancy'
+import type { DecisionView, ListView } from '@/entities/vacancy'
 import { ROUTES } from '@/shared/config'
 import { Tabs } from '@/shared/ui'
 import type { TabItem } from '@/shared/ui'
@@ -17,6 +17,10 @@ type Props = {
   /** A candidate decides on vacancies, an employer on candidates. */
   role: 'candidate' | 'employer'
 }
+
+/** A candidate's like is a response to the vacancy: «Отклики», not «Отобрано». */
+const labelOf = (view: DecisionView, role: Props['role']) =>
+  role === 'candidate' && view === 'liked' ? 'Отклики' : DECISION_VIEW_LABELS[view]
 
 function useDecisionCounts(role: Props['role']) {
   const vacancies = useQuery({ ...vacancyQueries.reactionCounts(), enabled: role === 'candidate' })
@@ -42,7 +46,7 @@ export function DecisionCounters({ role }: Props) {
           className={`decisions__link decisions__link--${view}`}
           to={`${ROUTES.feed}?view=${view}`}
         >
-          {DECISION_VIEW_LABELS[view]}
+          {labelOf(view, role)}
           {counts && <span className="decisions__count">{counts[view]}</span>}
         </Link>
       ))}
@@ -62,7 +66,7 @@ export function FeedViewTabs({ role }: Props) {
     { value: 'all', label: 'Все' },
     ...DECISION_VIEWS.map((item) => ({
       value: item,
-      label: DECISION_VIEW_LABELS[item],
+      label: labelOf(item, role),
       count: counts?.[item],
       tone: TONES[item],
     })),

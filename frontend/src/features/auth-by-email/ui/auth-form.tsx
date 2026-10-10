@@ -5,7 +5,7 @@ import { sessionApi } from '@/entities/session'
 import { getErrorMessage } from '@/shared/api'
 import { isAdminHost, ROUTES } from '@/shared/config'
 import { Button, TextField } from '@/shared/ui'
-import { TERMS_REQUIRED, validateAuthForm } from '../model/schema'
+import { DATA_CONSENT_REQUIRED, TERMS_REQUIRED, validateAuthForm } from '../model/schema'
 import type { AuthFieldErrors, AuthFormValues, AuthMode } from '../model/schema'
 import { useAuthSubmit, type AuthEntry } from '../model/use-auth-submit'
 import { EmailVerification } from './email-verification'
@@ -33,7 +33,9 @@ export function AuthForm({
     email: initialEmail,
     password: '',
     personalDataConsent: false,
+    dataConsent: false,
   })
+  const candidate = role === 'candidate'
   const [errors, setErrors] = useState<AuthFieldErrors>({})
   const [yandexError, setYandexError] = useState('')
   const [yandexBusy, setYandexBusy] = useState(false)
@@ -68,10 +70,11 @@ export function AuthForm({
   }
 
   const onYandex = async () => {
-    if (mode === 'sign-up' && !values.personalDataConsent) {
+    if (mode === 'sign-up' && (!values.personalDataConsent || (candidate && !values.dataConsent))) {
       setErrors((prev) => ({
         ...prev,
-        personalDataConsent: TERMS_REQUIRED,
+        personalDataConsent: values.personalDataConsent ? undefined : TERMS_REQUIRED,
+        dataConsent: candidate && !values.dataConsent ? DATA_CONSENT_REQUIRED : undefined,
       }))
       return
     }
@@ -93,7 +96,7 @@ export function AuthForm({
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const nextErrors = validateAuthForm(mode, values)
+    const nextErrors = validateAuthForm(mode, values, candidate)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length === 0) submit.mutate({ mode, values })
   }
@@ -165,6 +168,30 @@ export function AuthForm({
               {errors.personalDataConsent && (
                 <strong className="auth-form__consent-error" role="alert">
                   {errors.personalDataConsent}
+                </strong>
+              )}
+            </span>
+          </label>
+        )}
+
+        {mode === 'sign-up' && candidate && (
+          // A separate box: the consent is its own document, not a part of the terms.
+          <label className="auth-form__consent">
+            <input
+              type="checkbox"
+              checked={values.dataConsent}
+              aria-invalid={errors.dataConsent ? true : undefined}
+              onChange={(e) => update('dataConsent', e.target.checked)}
+            />
+            <span>
+              Даю{' '}
+              <a href={ROUTES.consent} target="_blank" rel="noopener noreferrer">
+                Согласие на обработку персональных данных
+              </a>
+              : платформа хранит резюме и показывает его работодателям без контактов.
+              {errors.dataConsent && (
+                <strong className="auth-form__consent-error" role="alert">
+                  {errors.dataConsent}
                 </strong>
               )}
             </span>

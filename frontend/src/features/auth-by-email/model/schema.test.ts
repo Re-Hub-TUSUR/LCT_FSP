@@ -8,6 +8,7 @@ describe('validateAuthForm', () => {
         email: 'a@b.ru',
         password: 'short',
         personalDataConsent: false,
+        dataConsent: false,
       }),
     ).toEqual({
       password: 'Минимум 8 символов',
@@ -16,19 +17,38 @@ describe('validateAuthForm', () => {
     })
   })
 
+  it('asks a candidate for the separate consent to process personal data', () => {
+    const values = {
+      email: 'a@b.ru',
+      password: 'long-enough',
+      personalDataConsent: true,
+      dataConsent: false,
+    }
+    expect(validateAuthForm('sign-up', values, true)).toEqual({
+      dataConsent: 'Нужно согласие на обработку персональных данных',
+    })
+    expect(validateAuthForm('sign-up', { ...values, dataConsent: true }, true)).toEqual({})
+  })
+
   it('accepts valid sign-in input and trims email', () => {
     expect(
       validateAuthForm('sign-in', {
         email: '  a@b.ru ',
         password: 'x',
         personalDataConsent: false,
+        dataConsent: false,
       }),
     ).toEqual({})
   })
 
   it('reports an invalid email', () => {
     expect(
-      validateAuthForm('sign-in', { email: 'nope', password: 'x', personalDataConsent: false }),
+      validateAuthForm('sign-in', {
+        email: 'nope',
+        password: 'x',
+        personalDataConsent: false,
+        dataConsent: false,
+      }),
     ).toEqual({ email: 'Проверьте адрес почты' })
   })
 })

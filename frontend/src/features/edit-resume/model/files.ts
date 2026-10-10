@@ -1,3 +1,5 @@
+import { ApiError, getErrorMessage } from '@/shared/api'
+
 export const RESUME_LIMIT = 5 * 1024 * 1024
 export const PHOTO_LIMIT = 2 * 1024 * 1024
 
@@ -11,6 +13,25 @@ function extension(name: string): string {
 
 async function head(file: File, size: number): Promise<Uint8Array> {
   return new Uint8Array(await file.slice(0, size).arrayBuffer())
+}
+
+/**
+ * Why reading the resume failed, in words a candidate can act on. The file goes through two
+ * proxies and the model: «Сервер недоступен» says nothing about which of them gave up.
+ */
+export function resumeUploadError(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 0) {
+      return 'Файл не дошёл до сервера: соединение оборвалось. Попробуйте ещё раз или заполните поля вручную.'
+    }
+    if (error.status === 413) {
+      return 'Файл слишком большой для загрузки. Сожмите PDF или заполните поля вручную.'
+    }
+    if (error.status === 502 || error.status === 504) {
+      return 'Нейросеть не успела прочитать резюме. Попробуйте ещё раз или заполните поля вручную.'
+    }
+  }
+  return getErrorMessage(error)
 }
 
 /** Resume attachment: only PDF and DOCX, and the bytes must match the extension. */

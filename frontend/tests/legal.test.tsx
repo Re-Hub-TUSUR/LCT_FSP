@@ -73,7 +73,11 @@ describe('legal documents', () => {
       { name: /Создавая аккаунт, вы принимаете/ },
       { timeout: 5000 },
     )
-    expect(screen.getAllByRole('checkbox')).toHaveLength(1)
+    // A candidate also gives the consent, in a box of its own (152-ФЗ, ч. 1 ст. 9).
+    expect(screen.getAllByRole('checkbox')).toHaveLength(2)
+    expect(
+      screen.getByRole('link', { name: 'Согласие на обработку персональных данных' }),
+    ).toHaveAttribute('href', '/consent')
     expect(screen.getByRole('link', { name: 'Политику конфиденциальности' })).toHaveAttribute(
       'href',
       '/privacy',
@@ -96,5 +100,9 @@ describe('legal documents', () => {
       'Нужно принять Политику конфиденциальности и Пользовательское соглашение',
     )
     expect(error).toHaveAttribute('role', 'alert')
+    expect(screen.getByText('Нужно согласие на обработку персональных данных')).toHaveAttribute(
+      'role',
+      'alert',
+    )
   })
 })

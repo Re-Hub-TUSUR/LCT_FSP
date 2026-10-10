@@ -7,6 +7,11 @@
   gap: 28px;
 }
 
+/* The start block is swapped for the form: no scroll anchoring inside, the page goes to the top. */
+.resume-form {
+  overflow-anchor: none;
+}
+
 .resume-start {
   align-items: center;
   text-align: center;
@@ -216,53 +221,26 @@
   cursor: not-allowed;
 }
 
+/* Only the FSP question is left here: centred like the rest of the start block. */
 .consents {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 16px;
   width: 100%;
-  text-align: left;
 }
 
-.consents__item {
-  display: grid;
-  grid-template-columns: 18px 1fr;
-  gap: 14px;
-  align-items: start;
-  padding: 14px 16px;
-  border: 1px solid var(--line);
-  font-size: 13.5px;
-  line-height: 1.5;
-  cursor: pointer;
-  user-select: none;
+.consents .check-group__legend {
+  width: 100%;
+  text-align: center;
 }
 
-.consents__item:hover {
-  border-color: var(--muted);
+.consents .check-group__options {
+  justify-content: center;
 }
 
-.consents__item:has(input:checked) {
-  border-color: var(--blue);
-}
-
-.consents__item input {
-  margin: 2px 0 0;
-}
-
-.consents__item a {
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
-}
-
-.consents__item a:hover {
-  color: var(--muted);
-}
-
-.consents__item:focus-within {
-  outline: var(--focus-ring);
-  outline-offset: 3px;
+.consents .form-hint {
+  margin: 0;
 }
 
 .consents__fsp {
@@ -376,4 +354,11 @@
 
 .resume-lock {
   vertical-align: -2px;
+}
+
+.resume-next__text {
+  margin: 0 0 14px;
+  max-width: 52ch;
+  font-size: 14px;
+  line-height: 1.55;
 }

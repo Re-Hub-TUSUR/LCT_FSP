@@ -181,6 +181,36 @@ def _skills(values: list[str], *, taken: list[str] | None = None) -> list[str]:
     return result
 
 
+# A vacancy is read by people: «8II8MI ,» for 1–2 ₽ with a keyboard mash for a description is
+# a test left in production, not an offer.
+MIN_VACANCY_SALARY = 1_000
+MIN_TITLE_LETTERS = 3
+MIN_DESCRIPTION_WORDS = 12
+# A word has two letters at least; a 30+ character run is a mash, not a word.
+WORD_LETTERS = 2
+WORD_LENGTH = 30
+
+
+def _letters(text: str) -> int:
+    return sum(char.isalpha() for char in text)
+
+
+def _has_word(text: str) -> bool:
+    run = 0
+    for char in text:
+        run = run + 1 if char.isalpha() else 0
+        if run >= MIN_TITLE_LETTERS:
+            return True
+    return False
+
+
+def _words(text: str) -> int:
+    """Words of two letters or more: «m7 8irtrmi87itm8mi,7tm87…» is one or two, not twenty."""
+    return sum(
+        1 for token in text.split() if _letters(token) >= WORD_LETTERS and len(token) <= WORD_LENGTH
+    )
+
+
 class VacancyCreate(ApiModel):
     """The recruiter's vacancy form (ТЗ). Salary is RUB per month, net («на руки»)."""
 
@@ -206,6 +236,16 @@ class VacancyCreate(ApiModel):
 
     @model_validator(mode="after")
     def _rules(self) -> Self:
+        # «8II8MI ,» has letters, but no word: a title needs three letters in a row somewhere.
+        if not _has_word(self.title):
+            msg = "Название вакансии — словами, например «Backend-разработчик»"
+            raise ValueError(msg)
+        if _words(self.description) < MIN_DESCRIPTION_WORDS:
+            msg = "Опишите вакансию словами: задачи, команда, условия"
+            raise ValueError(msg)
+        if self.salary.from_ < MIN_VACANCY_SALARY:
+            msg = f"Зарплата — от {MIN_VACANCY_SALARY} ₽ в месяц"
+            raise ValueError(msg)
         self.stack_required = _skills(self.stack_required)
         self.stack_nice = _skills(self.stack_nice, taken=self.stack_required)
         if not self.stack_required:

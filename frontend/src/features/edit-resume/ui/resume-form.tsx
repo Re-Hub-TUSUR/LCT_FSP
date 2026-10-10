@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router'
 import {
@@ -22,8 +22,16 @@ import {
 import type { EmploymentType, WorkFormat } from '@/entities/vacancy'
 import { getErrorMessage, http } from '@/shared/api'
 import { ROUTES, STACK_SKILLS } from '@/shared/config'
-import { Button, SelectField, SkillField, TextArea, TextField } from '@/shared/ui'
-import { draftPhotoFile, photoFileError, resumeFileError } from '../model/files'
+import {
+  Button,
+  ButtonLink,
+  Modal,
+  SelectField,
+  SkillField,
+  TextArea,
+  TextField,
+} from '@/shared/ui'
+import { draftPhotoFile, photoFileError, resumeFileError, resumeUploadError } from '../model/files'
 import {
   applyResumeDraft,
   EMPTY_RESUME,
@@ -80,6 +88,8 @@ export function ResumeForm({ profile }: Props) {
   const [saved, setSaved] = useState(false)
   const [createdHere] = useState(() => profile === null)
   const [askAnother, setAskAnother] = useState(false)
+  // A new candidate said one resume is enough: the next step is the test, said in a window.
+  const [nextStep, setNextStep] = useState(false)
   const [extraOpen, setExtraOpen] = useState(false)
   const [extraValues, setExtraValues] = useState<ResumeValues>(EMPTY_RESUME)
   const [extraErrors, setExtraErrors] = useState<ResumeErrors>({})
@@ -117,6 +127,8 @@ export function ResumeForm({ profile }: Props) {
       remember(next)
       setSaved(true)
       setFormError('')
+      // A file that could not be read no longer matters once the resume is saved by hand.
+      setFileError('')
       setAskAnother(true)
       if (pendingPhoto) uploadPhoto.mutate(pendingPhoto)
       if (createdHere && consents.fspSync === 'yes' && !next.fspMemberId) {
@@ -150,7 +162,7 @@ export function ResumeForm({ profile }: Props) {
     },
     onError: (error) => {
       setManual(true)
-      setFileError(getErrorMessage(error))
+      setFileError(resumeUploadError(error))
     },
   })
 
@@ -241,7 +253,8 @@ export function ResumeForm({ profile }: Props) {
         values,
         profile
           ? undefined
-          : { profileDisplayConsent: consents.profileDisplay, fspSync: consents.fspSync },
+          : // The display consent is part of the consent given at registration.
+            { profileDisplayConsent: true, fspSync: consents.fspSync },
       ),
     )
   }
@@ -259,6 +272,16 @@ export function ResumeForm({ profile }: Props) {
   }
 
   const showForm = manual || profile !== null
+  /**
+   * The short start block turns into the long form. The browser keeps whatever was on screen in
+   * place (scroll anchoring) and the page jumps; the form, its notice and its errors start at the
+   * top instead, before the first paint of the form.
+   */
+  const formShown = useRef(showForm)
+  useLayoutEffect(() => {
+    if (showForm && !formShown.current) window.scrollTo({ top: 0 })
+    formShown.current = showForm
+  }, [showForm])
   const resumes = profile?.resumes ?? []
   const canAdd = resumes.length < MAX_RESUMES
   const labelOf = (code: string | null) =>
@@ -297,7 +320,7 @@ export function ResumeForm({ profile }: Props) {
             </Button>
           </div>
           {!consentsGiven(consents) && (
-            <p className="form-hint">Отметьте оба согласия и ответьте про ФСП, чтобы продолжить.</p>
+            <p className="form-hint">Ответьте про ФСП, чтобы продолжить.</p>
           )}
           <p className="form-hint">
             PDF или DOCX, не больше 5 МБ. Файл не сохраняется: текст без контактов читает нейросеть,
@@ -585,7 +608,7 @@ export function ResumeForm({ profile }: Props) {
           {saved && (
             <p className="form-status" role="status">
               Резюме сохранено. Оно приоритетное: вакансии подбираются по нему в первую очередь.
-              {createdHere && !askAnother && !extraOpen && (
+              {createdHere && !askAnother && !extraOpen && !nextStep && (
                 <>
                   {' '}
                   <Link to={ROUTES.testing}>Дальше — пройти тест</Link>
@@ -629,12 +652,38 @@ export function ResumeForm({ profile }: Props) {
                   type="button"
                   variant="ghost"
                   size="inline"
-                  onClick={() => setAskAnother(false)}
+                  onClick={() => {
+                    setAskAnother(false)
+                    if (createdHere) setNextStep(true)
+                  }}
                 >
                   Нет, достаточно
                 </Button>
               </div>
             </div>
+          )}
+
+          {nextStep && (
+            <Modal title="Резюме сохранено" onClose={() => setNextStep(false)}>
+              <p className="resume-next__text">
+                Оно приоритетное: вакансии подбираются по нему в первую очередь.
+              </p>
+              <p className="resume-next__text">
+                Следующий шаг — тест. Он подтверждает грейд, и после него работодатели находят вас в
+                банке кандидатов.
+              </p>
+              <div className="resume-start__actions">
+                <ButtonLink to={ROUTES.testing}>Пройти тест</ButtonLink>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="inline"
+                  onClick={() => setNextStep(false)}
+                >
+                  Позже
+                </Button>
+              </div>
+            </Modal>
           )}
 
           <div className="form-actions">

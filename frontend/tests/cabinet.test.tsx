@@ -50,8 +50,8 @@ describe('personal cabinet', () => {
 
     const manual = screen.getByRole('button', { name: 'Заполнить вручную' })
     expect(manual).toBeDisabled()
-    await user.click(screen.getByLabelText(/обработку персональных данных/))
-    await user.click(screen.getByLabelText(/работодатели увидят профиль/))
+    // The consents were given at registration: only the FSP question is left here.
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
     await user.click(screen.getByLabelText('Да'))
     expect(screen.getByText(/привяжите ФСП ID в настройках/)).toBeInTheDocument()
     expect(screen.queryByLabelText(/ID участника/)).not.toBeInTheDocument()

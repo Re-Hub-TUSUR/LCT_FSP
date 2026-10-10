@@ -48,6 +48,7 @@ export function ReactionButtons({ target, id, initial, vacancyId, likeLabel = '�
   }
   const mutation = useReaction()
   const likeVacancy = useLikeVacancy()
+  const applicant = target === 'vacancy'
 
   const save = (next: Reaction | null, forVacancy = vacancyId) => {
     setReaction(next)
@@ -72,16 +73,26 @@ export function ReactionButtons({ target, id, initial, vacancyId, likeLabel = '�
         className={`reaction-buttons__btn reaction-buttons__btn--like${reaction === 'like' ? ' is-on' : ''}`}
         onClick={() => toggle('like')}
       >
-        {reaction === 'like' ? '★ Отобрано' : `☆ ${likeLabel}`}
+        {applicant
+          ? reaction === 'like'
+            ? '✓ Вы откликнулись'
+            : 'Откликнуться'
+          : reaction === 'like'
+            ? '★ Отобрано'
+            : `☆ ${likeLabel}`}
       </button>
-      <button
-        type="button"
-        aria-pressed={reaction === 'skip'}
-        className={`reaction-buttons__btn${reaction === 'skip' ? ' is-on' : ''}`}
-        onClick={() => toggle('skip')}
-      >
-        {reaction === 'skip' ? 'Вырезано · вернуть' : 'Не интересно'}
-      </button>
+      {/* A candidate answers a vacancy with one button; a skipped one (from the swipes) can be
+          brought back. */}
+      {(!applicant || reaction === 'skip') && (
+        <button
+          type="button"
+          aria-pressed={reaction === 'skip'}
+          className={`reaction-buttons__btn${reaction === 'skip' ? ' is-on' : ''}`}
+          onClick={() => toggle('skip')}
+        >
+          {reaction === 'skip' ? 'Вырезано · вернуть' : 'Не интересно'}
+        </button>
+      )}
     </div>
   )
 }
