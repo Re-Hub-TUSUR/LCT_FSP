@@ -15,10 +15,13 @@ export function CabinetLayout() {
   const candidate = role === 'candidate' ? profile.data : undefined
   const own = role === 'employer' ? company.data : undefined
 
+  // `/me` answers null until the resume or the company is saved: an empty answer is still the
+  // setup, without the sections. Leaving the setup layout also mounts the page anew, which is
+  // what takes a freshly saved resume from the form to the profile view.
   const ready =
     role === 'admin' ||
-    (role === 'candidate' && profile.isSuccess) ||
-    (role === 'employer' && company.isSuccess)
+    (role === 'candidate' && Boolean(profile.data)) ||
+    (role === 'employer' && Boolean(company.data))
 
   const items = invitations.data?.items
   const fresh =

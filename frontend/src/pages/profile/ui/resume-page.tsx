@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
 import { candidateQueries } from '@/entities/candidate'
 import type { OwnCandidateDto } from '@/entities/candidate'
 import { useSession } from '@/entities/session'
@@ -9,10 +8,12 @@ import { DownloadResumeButton } from '@/features/download-resume'
 import { ResumeForm, ResumePanels } from '@/features/edit-resume'
 import { RoleNote } from './role-note'
 
-/** The mode is fixed on the first render: right after creation the form keeps its next steps. */
+/**
+ * The form until the first save, then the profile as the employer sees it. Kept on screen after
+ * the save, the form offered one more resume on every «Сохранить» and never let the user out.
+ */
 function ResumeEditor({ profile }: { profile: OwnCandidateDto | null }) {
-  const [creating] = useState(profile === null)
-  if (creating || !profile) return <ResumeForm profile={profile} />
+  if (!profile) return <ResumeForm profile={null} />
   return <ResumePanels profile={profile} />
 }
 
