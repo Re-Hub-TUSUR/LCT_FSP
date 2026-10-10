@@ -3,6 +3,10 @@ import { emailSchema } from '@/shared/lib'
 
 export const PASSWORD_MIN_LENGTH = 8
 
+/** Shown when the sign-up checkbox is left empty, by the form and by «Войти через Яндекс». */
+export const TERMS_REQUIRED =
+  'Нужно принять Политику конфиденциальности и Пользовательское соглашение'
+
 export const signInSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, 'Введите пароль'),
@@ -11,7 +15,7 @@ export const signInSchema = z.object({
 export const signUpSchema = z.object({
   email: emailSchema,
   password: z.string().min(PASSWORD_MIN_LENGTH, `Минимум ${PASSWORD_MIN_LENGTH} символов`),
-  personalDataConsent: z.literal(true, 'Нужно согласие на обработку персональных данных'),
+  personalDataConsent: z.literal(true, TERMS_REQUIRED),
 })
 
 export type AuthMode = 'sign-in' | 'sign-up'

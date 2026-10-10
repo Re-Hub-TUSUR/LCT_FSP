@@ -28,6 +28,10 @@ export const ROUTES = {
   testing: '/testing',
   testBuilder: '/testing/builder',
   admin: '/admin',
+  /** Legal documents: public, outside the cabinet gate. */
+  privacy: '/privacy',
+  terms: '/terms',
+  consent: '/consent',
 } as const
 
 export type MatchingProfileKind = 'candidate' | 'company'

@@ -5,7 +5,7 @@ import { sessionApi } from '@/entities/session'
 import { getErrorMessage } from '@/shared/api'
 import { isAdminHost, ROUTES } from '@/shared/config'
 import { Button, TextField } from '@/shared/ui'
-import { validateAuthForm } from '../model/schema'
+import { TERMS_REQUIRED, validateAuthForm } from '../model/schema'
 import type { AuthFieldErrors, AuthFormValues, AuthMode } from '../model/schema'
 import { useAuthSubmit, type AuthEntry } from '../model/use-auth-submit'
 import { EmailVerification } from './email-verification'
@@ -71,7 +71,7 @@ export function AuthForm({
     if (mode === 'sign-up' && !values.personalDataConsent) {
       setErrors((prev) => ({
         ...prev,
-        personalDataConsent: 'Нужно согласие на обработку персональных данных',
+        personalDataConsent: TERMS_REQUIRED,
       }))
       return
     }
@@ -148,7 +148,15 @@ export function AuthForm({
               onChange={(e) => update('personalDataConsent', e.target.checked)}
             />
             <span>
-              Даю согласие на обработку персональных данных в соответствии с 152-ФЗ
+              Создавая аккаунт, вы принимаете{' '}
+              <a href={ROUTES.privacy} target="_blank" rel="noopener noreferrer">
+                Политику конфиденциальности
+              </a>{' '}
+              и{' '}
+              <a href={ROUTES.terms} target="_blank" rel="noopener noreferrer">
+                Пользовательское соглашение
+              </a>
+              .
               {errors.personalDataConsent && (
                 <strong className="auth-form__consent-error" role="alert">
                   {errors.personalDataConsent}

@@ -1,5 +1,6 @@
 import { FSP_SYNC_LABELS } from '@/entities/candidate'
 import type { FspSync } from '@/entities/candidate'
+import { ROUTES } from '@/shared/config'
 
 export type ConsentValues = {
   personalData: boolean
@@ -38,8 +39,11 @@ export function ResumeConsents({
           onChange={(event) => set('personalData', event.target.checked)}
         />
         <span>
-          Согласен на обработку персональных данных по 152-ФЗ: платформа хранит резюме и показывает
-          его в подборке.
+          Согласен на{' '}
+          <a href={ROUTES.consent} target="_blank" rel="noopener noreferrer">
+            обработку персональных данных по 152-ФЗ
+          </a>
+          : платформа хранит резюме и показывает его в подборке.
         </span>
       </label>
       <label className="consents__item">

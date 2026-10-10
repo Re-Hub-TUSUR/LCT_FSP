@@ -234,6 +234,17 @@
   margin: 2px 0 0;
 }
 
+.consents__item a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.consents__item a:hover {
+  color: var(--muted);
+}
+
 .consents__item:focus-within {
   outline: var(--focus-ring);
   outline-offset: 3px;

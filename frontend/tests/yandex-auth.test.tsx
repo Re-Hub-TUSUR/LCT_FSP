@@ -40,13 +40,15 @@ test('the Yandex button stays hidden when the app is not configured', async () =
   expect(screen.queryByRole('button', { name: 'Войти через Яндекс' })).not.toBeInTheDocument()
 })
 
-test('sign-up does not leave for Yandex until consent is ticked', async () => {
+test('sign-up does not leave for Yandex until the terms are accepted', async () => {
   vi.mocked(sessionApi.yandexStatus).mockResolvedValue({ enabled: true })
   const user = userEvent.setup()
   renderForm('sign-up')
   await user.click(await screen.findByRole('button', { name: 'Войти через Яндекс' }))
   expect(sessionApi.yandexStart).not.toHaveBeenCalled()
-  expect(screen.getByText('Нужно согласие на обработку персональных данных')).toBeInTheDocument()
+  expect(
+    screen.getByText('Нужно принять Политику конфиденциальности и Пользовательское соглашение'),
+  ).toBeInTheDocument()
 })
 
 test('an empty resume takes the name from the account', () => {

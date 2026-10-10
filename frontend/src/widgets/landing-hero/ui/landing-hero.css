@@ -39,7 +39,7 @@ html:has(.landing) {
   min-height: 640px;
   overflow: hidden;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
   grid-template-columns: minmax(0, 1fr);
   isolation: isolate;
   scroll-snap-align: start;
@@ -86,49 +86,6 @@ html:has(.landing) {
   padding-right: max(var(--nav-gutter), env(safe-area-inset-right));
 }
 
-/* ── Legal ─────────────────────────────────────────── */
-
-.legal {
-  position: relative;
-  z-index: 1;
-  border-top: 1px solid var(--line);
-  background: rgba(27, 28, 33, 0.86);
-  padding: clamp(16px, 1.5vw, 26px) var(--nav-gutter);
-  padding-bottom: max(clamp(16px, 1.5vw, 26px), env(safe-area-inset-bottom));
-  text-align: center;
-}
-
-.legal p {
-  margin: 0;
-  font-size: clamp(12px, 0.78vw, 14px);
-  line-height: 1.6;
-  color: var(--muted);
-}
-
-.legal a {
-  position: relative;
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
-  transition: color 0.25s ease;
-}
-
-.legal a::after {
-  content: '';
-  position: absolute;
-  inset: -12px 0;
-}
-
-.legal a:hover {
-  color: var(--muted);
-}
-
-.legal a:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 3px;
-}
-
 /* ── Responsive ────────────────────────────────────── */
 
 @media (max-width: 899px) {
@@ -144,14 +101,6 @@ html:has(.landing) {
       rgba(27, 28, 33, 0.92) 100%
     );
   }
-
-  .legal p {
-    line-height: 1.9;
-  }
-
-  .legal a::after {
-    inset: -6px 0;
-  }
 }
 
 @media (max-height: 640px) {
@@ -163,15 +112,6 @@ html:has(.landing) {
     overflow: visible;
     padding-top: 12px;
     padding-bottom: 12px;
-  }
-
-  .legal {
-    padding-top: 10px;
-    padding-bottom: 10px;
-  }
-
-  .legal p {
-    font-size: 11px;
   }
 }
 

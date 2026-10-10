@@ -8,7 +8,7 @@ export type SignInPayload = {
 
 export type SignUpPayload = SignInPayload & {
   role: Exclude<UserRole, 'admin'>
-  /** Consent to personal data processing (152-ФЗ) is mandatory for registration. */
+  /** The checkbox «accept the privacy policy and the terms» is mandatory for registration. */
   personalDataConsent: true
 }
 

@@ -39,6 +39,20 @@ export const routes: RouteObject[] = [
         path: ROUTES.landing,
         lazy: lazyPage(() => import('@/pages/landing').then((m) => m.LandingPage)),
       },
+      // Legal texts stay outside MainLayout: its cabinet gate would send a candidate without a
+      // resume away from them, and the consent link sits on the resume form itself.
+      {
+        path: ROUTES.privacy,
+        lazy: lazyPage(() => import('@/pages/legal').then((m) => m.PrivacyPage)),
+      },
+      {
+        path: ROUTES.terms,
+        lazy: lazyPage(() => import('@/pages/legal').then((m) => m.TermsPage)),
+      },
+      {
+        path: ROUTES.consent,
+        lazy: lazyPage(() => import('@/pages/legal').then((m) => m.ConsentPage)),
+      },
       {
         element: <MainLayout />,
         children: [
