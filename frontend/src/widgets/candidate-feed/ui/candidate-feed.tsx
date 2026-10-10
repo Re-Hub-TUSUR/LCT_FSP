@@ -214,7 +214,10 @@ export function CandidateFeed() {
                 }
                 vacancyId={vacancyId ?? undefined}
               />
-              <InviteCandidateLink candidateId={open.candidate.id} />
+              <InviteCandidateLink
+                candidateId={open.candidate.id}
+                vacancyId={vacancyId ?? undefined}
+              />
             </>
           }
         />

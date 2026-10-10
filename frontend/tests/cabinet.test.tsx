@@ -185,4 +185,42 @@ describe('personal cabinet', () => {
     expect(await screen.findByLabelText('Название для кандидатов', {}, SLOW)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Сохранить и продолжить' })).toBeInTheDocument()
   })
+
+  it('keeps the setup on the logo step once the company is saved', async () => {
+    signIn('employer', { firstName: 'Анна', lastName: 'Петрова' })
+    // `/companies/me` answers null until the save, the company after it.
+    let company: unknown = null
+    const rest = mockFetch({})
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input), 'http://localhost')
+      if (url.pathname !== '/api/v1/companies/me') return rest(input)
+      if (init?.method && init.method !== 'GET') {
+        company = { id: 'co', ...(JSON.parse(String(init.body)) as object) }
+      }
+      return new Response(JSON.stringify(company), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    })
+    const { router } = renderApp('/profile/company')
+    const user = userEvent.setup()
+
+    await user.type(await screen.findByLabelText('ИНН', {}, SLOW), '7707083893')
+    await user.click(screen.getByRole('button', { name: 'Далее' }))
+    await user.type(await screen.findByLabelText('Название для кандидатов', {}, SLOW), 'Технологии')
+    await user.type(screen.getByLabelText('Направление деятельности'), 'Финтех')
+    await user.type(screen.getByLabelText('Город'), 'Казань')
+    await user.type(screen.getByLabelText('Сайт'), 'company.ru')
+    await user.type(screen.getByLabelText('Контакт для кандидатов'), 'hr@company.ru')
+    await user.click(screen.getByLabelText('Описание'))
+    await user.paste('Мы делаем платёжные сервисы. '.repeat(5))
+    await user.click(screen.getByRole('button', { name: 'Сохранить и продолжить' }))
+
+    // The saved company opens the sections only after the last step of the setup.
+    const done = await screen.findByRole('button', { name: 'Перейти в кабинет' }, SLOW)
+    expect(screen.getByRole('heading', { name: 'Настройка компании' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Приглашения' })).not.toBeInTheDocument()
+    await user.click(done)
+    await waitFor(() => expect(router.state.location.pathname).toBe('/profile'), SLOW)
+    expect(await screen.findByRole('link', { name: 'Приглашения' }, SLOW)).toBeInTheDocument()
+  })
 })

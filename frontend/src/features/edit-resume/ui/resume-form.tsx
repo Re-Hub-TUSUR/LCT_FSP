@@ -121,11 +121,8 @@ export function ResumeForm({ profile }: Props) {
       // A file that could not be read no longer matters once the resume is saved by hand.
       setFileError('')
       setAskAnother(true)
-      if (createdHere) rememberFirstResume()
+      if (createdHere) rememberFirstResume(consents.fspSync === 'yes' && !next.fspMemberId)
       if (pendingPhoto) uploadPhoto.mutate(pendingPhoto)
-      if (createdHere && consents.fspSync === 'yes' && !next.fspMemberId) {
-        setNotice('Резюме сохранено. Привяжите ФСП ID в настройках — результаты придут из реестра.')
-      }
     },
     onError: (error) => setFormError(getErrorMessage(error)),
   })

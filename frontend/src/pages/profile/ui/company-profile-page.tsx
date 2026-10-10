@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { CompanyCard, companyQueries } from '@/entities/company'
 import { useSession } from '@/entities/session'
@@ -8,6 +8,7 @@ import { ROUTES, paths } from '@/shared/config'
 import { ErrorState, Loader, Page, Panel } from '@/shared/ui'
 import { CompanyVerification } from '@/features/company-verification'
 import { CompanyPanels } from '@/features/edit-company'
+import { useCabinetOutlet } from '../lib/cabinet-data'
 import { EmployerSetup } from './employer-setup'
 import { RoleNote } from './role-note'
 
@@ -16,7 +17,9 @@ export function CompanyProfilePage() {
   const navigate = useNavigate()
   const company = useQuery({ ...companyQueries.mine(), enabled: user?.role === 'employer' })
   // The wizard stays on screen after the company is saved: logo and accreditation come next.
-  const [settingUp, setSettingUp] = useState(false)
+  const { settingUp, setSettingUp } = useCabinetOutlet()
+  // Left halfway for another section, the wizard is over: the company is already saved.
+  useEffect(() => () => setSettingUp(false), [setSettingUp])
 
   if (user?.role !== 'employer') {
     return <RoleNote title="Компания" text="Профиль компании заполняет работодатель." />

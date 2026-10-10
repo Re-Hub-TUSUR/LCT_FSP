@@ -234,6 +234,11 @@ body:has(.page--swipe) main {
 }
 
 /* Block title over a blue rule */
+/* A section a link leads to: its title stops under the fixed header, not behind it. */
+.page-anchor {
+  scroll-margin-top: calc(var(--nav-offset) + 12px);
+}
+
 .page-section__title {
   margin: 0;
   padding-bottom: 10px;

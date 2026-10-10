@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useParams } from 'react-router'
+import { useEffect } from 'react'
+import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { CandidateCard, candidateQueries } from '@/entities/candidate'
 import { CompanyCard, companyQueries } from '@/entities/company'
 import { useSession } from '@/entities/session'
-import { InviteCandidateForm } from '@/features/invite-candidate'
+import { INVITE_ANCHOR, InviteCandidateForm } from '@/features/invite-candidate'
 import { SendAssignmentForm } from '@/features/send-test-assignment'
 import { ROUTES } from '@/shared/config'
 import { EmptyState, Page, QueryState, Section } from '@/shared/ui'
@@ -11,6 +12,13 @@ import { EmptyState, Page, QueryState, Section } from '@/shared/ui'
 function CandidateProfile({ id }: { id: string }) {
   const { user } = useSession()
   const candidate = useQuery(candidateQueries.detail(id))
+  const [params] = useSearchParams()
+  const { hash } = useLocation()
+  // «Пригласить» in the bank leads to the form, which is below the card and loads with it.
+  const toInvite = hash === `#${INVITE_ANCHOR}` && candidate.isSuccess && user?.role === 'employer'
+  useEffect(() => {
+    if (toInvite) document.getElementById(INVITE_ANCHOR)?.scrollIntoView()
+  }, [toInvite])
 
   return (
     <QueryState query={candidate}>
@@ -30,9 +38,14 @@ function CandidateProfile({ id }: { id: string }) {
               <Section title="Тестовое задание">
                 <SendAssignmentForm candidateId={data.id} matched={data.matched === true} />
               </Section>
-              <Section title="Пригласить кандидата">
-                <InviteCandidateForm candidateId={data.id} />
-              </Section>
+              <div id={INVITE_ANCHOR} className="page-anchor">
+                <Section title="Пригласить кандидата">
+                  <InviteCandidateForm
+                    candidateId={data.id}
+                    vacancyId={params.get('vacancyId') ?? undefined}
+                  />
+                </Section>
+              </div>
             </>
           )}
         </>

@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { NavLink, Outlet, useMatch } from 'react-router'
 import { ROUTES } from '@/shared/config'
 import { HackerRain } from '@/shared/ui'
 import { isWaiting, useCabinetData, useCategoryLabel } from '../lib/cabinet-data'
+import type { CabinetOutlet } from '../lib/cabinet-data'
 import { CandidateHero, EmployerHero } from './cabinet-hero'
 import './cabinet.css'
 
@@ -15,13 +17,16 @@ export function CabinetLayout() {
   const candidate = role === 'candidate' ? profile.data : undefined
   const own = role === 'employer' ? company.data : undefined
 
+  const [settingUp, setSettingUp] = useState(false)
+  const outlet: CabinetOutlet = { settingUp, setSettingUp }
+
   // `/me` answers null until the resume or the company is saved: an empty answer is still the
-  // setup, without the sections. Leaving the setup layout also mounts the page anew, which is
-  // what takes a freshly saved resume from the form to the profile view.
+  // setup, without the sections. Leaving the setup layout also mounts the page anew, so the
+  // employer's wizard keeps the setup until its last step is done.
   const ready =
     role === 'admin' ||
     (role === 'candidate' && Boolean(profile.data)) ||
-    (role === 'employer' && Boolean(company.data))
+    (role === 'employer' && Boolean(company.data) && !settingUp)
 
   const items = invitations.data?.items
   const fresh =
@@ -53,7 +58,7 @@ export function CabinetLayout() {
       <div className="cabinet cabinet--setup">
         <HackerRain />
         <div className="cabinet__main">
-          <Outlet />
+          <Outlet context={outlet} />
         </div>
       </div>
     )
@@ -83,7 +88,7 @@ export function CabinetLayout() {
       </nav>
 
       <div className="cabinet__main">
-        <Outlet />
+        <Outlet context={outlet} />
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useOutletContext } from 'react-router'
 import { assessmentQueries } from '@/entities/assessment'
 import { candidateQueries } from '@/entities/candidate'
 import { GRADE_LABELS, categoryQueries } from '@/entities/category'
@@ -40,6 +41,16 @@ export function useCategoryLabel(): string | null {
 /** Waiting for the candidate: new and viewed invitations, newest first. */
 export function isWaiting(invitation: InvitationDto) {
   return invitation.status === 'sent' || invitation.status === 'viewed'
+}
+
+/**
+ * The employer's setup wizard has steps after the company is saved. The flag lives in the layout:
+ * the page under it mounts anew when the sections open, and would forget the step it was on.
+ */
+export type CabinetOutlet = { settingUp: boolean; setSettingUp: (value: boolean) => void }
+
+export function useCabinetOutlet() {
+  return useOutletContext<CabinetOutlet>()
 }
 
 export function useCabinetData() {
