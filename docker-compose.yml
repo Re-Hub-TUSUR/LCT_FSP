@@ -70,6 +70,10 @@ services:
       FSP_ID_CLIENT_SECRET: ${FSP_ID_CLIENT_SECRET:-}
       FSP_ID_REDIRECT_URI: ${FSP_ID_REDIRECT_URI:-http://localhost:8080/profile/fsp/callback}
       FSP_REGISTRY_URL: ${FSP_REGISTRY_URL:-}
+      # Yandex ID. Empty client id hides «Войти через Яндекс» and the routes answer 404.
+      YANDEX_CLIENT_ID: ${YANDEX_CLIENT_ID:-}
+      YANDEX_CLIENT_SECRET: ${YANDEX_CLIENT_SECRET:-}
+      YANDEX_REDIRECT_URI: ${YANDEX_REDIRECT_URI:-http://localhost:8080/auth/yandex/callback}
       # Account the admin subdomain opens after the browser password. Create it with create_admin.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}

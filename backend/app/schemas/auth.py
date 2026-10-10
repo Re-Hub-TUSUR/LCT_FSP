@@ -36,3 +36,29 @@ class TokenResponse(ApiModel):
     token_type: Literal["bearer"] = "bearer"  # noqa: S105 - OAuth2 scheme name, not a secret
     expires_in: int
     user: UserRead
+
+
+class YandexStatusResponse(ApiModel):
+    enabled: Literal[True] = True
+
+
+class YandexStartRequest(ApiModel):
+    role: Literal["candidate", "employer"]
+    mode: Literal["sign-in", "sign-up"]
+    personal_data_consent: bool = False
+    redirect_uri: str = Field(min_length=1, max_length=500)
+
+
+class YandexStartResponse(ApiModel):
+    authorize_url: str
+
+
+class YandexCallbackRequest(ApiModel):
+    code: str = Field(min_length=1, max_length=2048)
+    state: str = Field(min_length=1, max_length=4096)
+
+
+class YandexCallbackResponse(TokenResponse):
+    """`created` is true only when this call registered the account."""
+
+    created: bool

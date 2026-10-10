@@ -1,6 +1,9 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { sessionApi } from '@/entities/session'
 import { getErrorMessage } from '@/shared/api'
+import { isAdminHost, ROUTES } from '@/shared/config'
 import { Button, TextField } from '@/shared/ui'
 import { validateAuthForm } from '../model/schema'
 import type { AuthFieldErrors, AuthFormValues, AuthMode } from '../model/schema'
@@ -32,7 +35,23 @@ export function AuthForm({
     personalDataConsent: false,
   })
   const [errors, setErrors] = useState<AuthFieldErrors>({})
+  const [yandexError, setYandexError] = useState('')
+  const [yandexBusy, setYandexBusy] = useState(false)
   const passwordRef = useRef<HTMLInputElement>(null)
+  const yandex = useQuery({
+    queryKey: ['auth', 'yandex'],
+    queryFn: async () => {
+      try {
+        await sessionApi.yandexStatus()
+        return true
+      } catch {
+        return false
+      }
+    },
+    enabled: !isAdminHost(),
+    retry: false,
+    staleTime: Infinity,
+  })
 
   // The email already came from the landing form: continue from the next empty field.
   useEffect(() => {
@@ -46,6 +65,30 @@ export function AuthForm({
   const update = <K extends keyof AuthFormValues>(key: K, value: AuthFormValues[K]) => {
     setValues((prev) => ({ ...prev, [key]: value }))
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }))
+  }
+
+  const onYandex = async () => {
+    if (mode === 'sign-up' && !values.personalDataConsent) {
+      setErrors((prev) => ({
+        ...prev,
+        personalDataConsent: 'Нужно согласие на обработку персональных данных',
+      }))
+      return
+    }
+    setYandexError('')
+    setYandexBusy(true)
+    try {
+      const started = await sessionApi.yandexStart({
+        role,
+        mode,
+        personalDataConsent: mode === 'sign-up',
+        redirectUri: `${window.location.origin}${ROUTES.yandexCallback}`,
+      })
+      window.location.assign(started.authorizeUrl)
+    } catch (error) {
+      setYandexError(getErrorMessage(error))
+      setYandexBusy(false)
+    }
   }
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -124,6 +167,24 @@ export function AuthForm({
         <Button type="submit" disabled={submit.isPending}>
           {submit.isPending ? 'Отправка…' : MODE_LABELS[mode]}
         </Button>
+
+        {yandex.data && !isAdminHost() && (
+          <>
+            {yandexError && (
+              <p className="auth-form__error" role="alert">
+                {yandexError}
+              </p>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={yandexBusy}
+              onClick={() => void onYandex()}
+            >
+              {yandexBusy ? 'Переходим в Яндекс…' : 'Войти через Яндекс'}
+            </Button>
+          </>
+        )}
       </form>
 
       {verification && (

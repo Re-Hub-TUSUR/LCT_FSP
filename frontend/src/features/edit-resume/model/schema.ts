@@ -365,8 +365,10 @@ export function applyResumeDraft(values: ResumeValues, draft: ResumeDraftDto): R
   }
 }
 
-export function resumeValuesFrom(profile: OwnCandidateDto | null): ResumeValues {
-  if (!profile) return EMPTY_RESUME
+export function resumeValuesFrom(profile: OwnCandidateDto | null, fallbackName = ''): ResumeValues {
+  if (!profile) {
+    return fallbackName ? { ...EMPTY_RESUME, displayName: fallbackName } : EMPTY_RESUME
+  }
   return {
     displayName: profile.displayName,
     headline: profile.headline ?? '',

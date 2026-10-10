@@ -120,6 +120,12 @@ class AuthService:
             raise AuthenticationError("Учётная запись заблокирована")
         return await self._open_session(user)
 
+    async def open_session(self, user: User) -> IssuedSession:
+        """Session for a person Yandex ID already proved. The caller checked the account."""
+        if not user.is_active:
+            raise AuthenticationError("Учётная запись заблокирована")
+        return await self._open_session(user)
+
     async def refresh(self, raw_token: str) -> IssuedSession:
         claims = decode_refresh_token(raw_token, self._settings)
         stored = await self._refresh_tokens.get(claims.token_id)

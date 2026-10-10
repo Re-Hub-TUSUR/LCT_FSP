@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router'
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/entities/candidate'
 import type { JobStatus, OwnCandidateDto, ResumeDto } from '@/entities/candidate'
 import { categoryQueries } from '@/entities/category'
+import { useSession } from '@/entities/session'
 import {
   EMPLOYMENT_LABELS,
   EMPLOYMENT_TYPES,
@@ -19,7 +20,7 @@ import {
   WORK_FORMATS,
 } from '@/entities/vacancy'
 import type { EmploymentType, WorkFormat } from '@/entities/vacancy'
-import { getErrorMessage } from '@/shared/api'
+import { getErrorMessage, http } from '@/shared/api'
 import { ROUTES, STACK_SKILLS } from '@/shared/config'
 import { Button, SelectField, SkillField, TextArea, TextField } from '@/shared/ui'
 import { photoFileError, resumeFileError } from '../model/files'
@@ -65,9 +66,13 @@ type Props = {
 
 export function ResumeForm({ profile }: Props) {
   const queryClient = useQueryClient()
+  const { user } = useSession()
   const dictionary = useQuery(categoryQueries.dictionary())
+  const hintedName = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
   const [manual, setManual] = useState(profile !== null)
-  const [values, setValues] = useState<ResumeValues>(() => resumeValuesFrom(profile))
+  const [values, setValues] = useState<ResumeValues>(() =>
+    resumeValuesFrom(profile, profile ? '' : hintedName),
+  )
   const [errors, setErrors] = useState<ResumeErrors>({})
   const [fileError, setFileError] = useState('')
   const [formError, setFormError] = useState('')
@@ -80,8 +85,27 @@ export function ResumeForm({ profile }: Props) {
   const [extraErrors, setExtraErrors] = useState<ResumeErrors>({})
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [yandexPreview, setYandexPreview] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState('')
   const [consents, setConsents] = useState<ConsentValues>(EMPTY_CONSENTS)
+
+  useEffect(() => {
+    if (profile) return
+    let alive = true
+    let objectUrl = ''
+    void http
+      .blob('/users/me/pending-photo')
+      .then((blob) => {
+        if (!alive) return
+        objectUrl = URL.createObjectURL(blob)
+        setYandexPreview(objectUrl)
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [profile])
 
   const remember = (next: OwnCandidateDto) => {
     queryClient.setQueryData(candidateKeys.mine(), next)
@@ -304,7 +328,7 @@ export function ResumeForm({ profile }: Props) {
           <PhotoField
             candidateId={profile?.id ?? null}
             hasPhoto={profile?.hasPhoto === true}
-            previewUrl={previewUrl}
+            previewUrl={previewUrl ?? yandexPreview}
             error={photoError}
             busy={uploadPhoto.isPending}
             onPick={(file) => void onPhoto(file)}

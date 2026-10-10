@@ -38,4 +38,6 @@ uv run uvicorn app.main:app --reload
 
 Администратор создаётся отдельно: `ADMIN_EMAIL` и `ADMIN_PASSWORD` (от 12 символов) и `uv run python -m app.admin.create_admin`.
 
+«Войти через Яндекс» появляется, когда в `.env` заданы `YANDEX_CLIENT_ID` и `YANDEX_CLIENT_SECRET`. Как завести приложение: [регистрация клиента](https://yandex.ru/dev/id/doc/ru/register-client). Адрес возврата для этого стенда — `http://localhost:8080/auth/yandex/callback`.
+
 Проверки перед сдачей: во frontend `lint`, `format:check`, `typecheck`, `test`, `build`; в backend `ruff`, `mypy`, `pytest`.

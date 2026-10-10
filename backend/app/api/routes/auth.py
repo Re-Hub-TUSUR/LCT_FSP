@@ -10,13 +10,18 @@ from app.api.auth_cookies import (
 )
 from app.core.errors import AuthenticationError, NotFoundError
 from app.dependencies.common import SettingsDep
-from app.dependencies.services import AuthServiceDep
+from app.dependencies.services import AuthServiceDep, YandexAuthServiceDep
 from app.schemas.auth import (
     LoginRequest,
     RegisterRequest,
     ResendVerificationRequest,
     TokenResponse,
     VerifyEmailRequest,
+    YandexCallbackRequest,
+    YandexCallbackResponse,
+    YandexStartRequest,
+    YandexStartResponse,
+    YandexStatusResponse,
 )
 from app.schemas.common import ErrorResponse
 from app.schemas.user import UserRead
@@ -98,6 +103,44 @@ async def refresh(
     issued = await auth.refresh(raw)
     set_refresh_cookie(response, issued.refresh_token, issued.refresh_ttl, settings)
     return issued.response
+
+
+@router.get("/yandex", summary="Whether the Yandex ID button is available")
+async def yandex_status(yandex: YandexAuthServiceDep) -> YandexStatusResponse:
+    if not yandex.enabled():
+        raise NotFoundError()
+    return YandexStatusResponse()
+
+
+@router.post("/yandex/start", summary="Begin Yandex ID sign-in or sign-up")
+async def yandex_start(
+    data: YandexStartRequest, yandex: YandexAuthServiceDep
+) -> YandexStartResponse:
+    url = await yandex.start(
+        role=data.role,
+        mode=data.mode,
+        consent=data.personal_data_consent,
+        redirect_uri=data.redirect_uri,
+    )
+    return YandexStartResponse(authorize_url=url)
+
+
+@router.post("/yandex/callback", summary="Exchange the Yandex code for a session")
+async def yandex_callback(
+    data: YandexCallbackRequest,
+    yandex: YandexAuthServiceDep,
+    settings: SettingsDep,
+    response: Response,
+) -> YandexCallbackResponse:
+    issued, created = await yandex.complete(code=data.code, state=data.state)
+    set_refresh_cookie(response, issued.refresh_token, issued.refresh_ttl, settings)
+    token = issued.response
+    return YandexCallbackResponse(
+        access_token=token.access_token,
+        expires_in=token.expires_in,
+        user=token.user,
+        created=created,
+    )
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, summary="Revoke the refresh cookie")

@@ -3,6 +3,8 @@ export const ROUTES = {
   auth: '/auth',
   employerAuth: '/auth/employer',
   candidateAuth: '/auth/candidate',
+  /** Registered as the redirect URI of the Yandex ID app. */
+  yandexCallback: '/auth/yandex/callback',
   profile: '/profile',
   profileInvitations: '/profile/invitations',
   profileResume: '/profile/resume',

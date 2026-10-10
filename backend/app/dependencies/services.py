@@ -7,6 +7,7 @@ from app.integrations.fsp import fsp_id_provider, fsp_registry
 from app.integrations.fsp.provider import FspIdProvider
 from app.integrations.fsp.registry import FspRegistryClient
 from app.integrations.fsp.sync import FspSyncService
+from app.integrations.yandex.client import HttpYandexDirectory, YandexDirectory
 from app.repositories.assessment import AssessmentRepository
 from app.repositories.candidate import CandidateRepository
 from app.repositories.company import CompanyRepository
@@ -45,6 +46,7 @@ from app.services.saved_searches import SavedSearchService
 from app.services.test_assignments import TestAssignmentService
 from app.services.vacancies import VacancyService
 from app.services.vacancy_feed import VacancyFeedService
+from app.services.yandex_auth import YandexAuthService
 
 
 def get_user_repository(session: SessionDep) -> UserRepository:
@@ -67,6 +69,26 @@ def get_auth_service(
 
 
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
+
+
+def get_yandex_directory(settings: SettingsDep) -> YandexDirectory:
+    return HttpYandexDirectory(settings)
+
+
+YandexDirectoryDep = Annotated[YandexDirectory, Depends(get_yandex_directory)]
+
+
+def get_yandex_auth_service(
+    session: SessionDep,
+    users: UserRepositoryDep,
+    auth: AuthServiceDep,
+    settings: SettingsDep,
+    directory: YandexDirectoryDep,
+) -> YandexAuthService:
+    return YandexAuthService(session, users, auth, settings, directory)
+
+
+YandexAuthServiceDep = Annotated[YandexAuthService, Depends(get_yandex_auth_service)]
 
 
 def get_vacancy_service(session: SessionDep) -> VacancyService:
@@ -117,6 +139,7 @@ def get_candidate_profile_service(session: SessionDep) -> CandidateProfileServic
         InvitationRepository(session),
         ReactionRepository(session),
         CompanyRepository(session),
+        UserRepository(session),
     )
 
 

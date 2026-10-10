@@ -38,4 +38,6 @@ Running `python -m app.seed` again replaces the demo rows. Demo emails: `candida
 
 An administrator is created separately: `ADMIN_EMAIL` and `ADMIN_PASSWORD` (at least 12 characters) and `uv run python -m app.admin.create_admin`.
 
+«Войти через Яндекс» appears when `.env` has `YANDEX_CLIENT_ID` and `YANDEX_CLIENT_SECRET`. How to create the app: [client registration](https://yandex.ru/dev/id/doc/ru/register-client). The return address for this stand is `http://localhost:8080/auth/yandex/callback`.
+
 Checks before handing work over: on the frontend `lint`, `format:check`, `typecheck`, `test`, `build`; on the backend `ruff`, `mypy`, `pytest`.

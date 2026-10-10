@@ -12,6 +12,7 @@ from app.repositories.candidate import CandidateRepository
 from app.repositories.company import CompanyRepository
 from app.repositories.invitation import InvitationRepository
 from app.repositories.reaction import ReactionRepository
+from app.repositories.user import UserRepository
 from app.schemas.candidate import (
     CandidateContacts,
     CandidateProfileUpdate,
@@ -43,11 +44,13 @@ class CandidateProfileService:
         invitations: InvitationRepository,
         reactions: ReactionRepository,
         companies: CompanyRepository,
+        users: UserRepository,
     ) -> None:
         self._candidates = candidates
         self._invitations = invitations
         self._reactions = reactions
         self._companies = companies
+        self._users = users
 
     async def read(self, candidate_id: uuid.UUID, viewer: User) -> CandidateRead:
         """Candidates see only themselves; employers see visible profiles.
@@ -122,7 +125,19 @@ class CandidateProfileService:
             await self._candidates.add(profile)
         else:
             _apply_resume(profile, data)
+        await self._take_portrait(user, profile)
         return own_candidate_read(profile, email=user.email)
+
+    async def _take_portrait(self, user: User, profile: CandidateProfile) -> None:
+        """The Yandex portrait waits on the account until the first resume save."""
+        if not user.pending_photo_type:
+            return
+        pending = await self._users.pending_photo(user.id)
+        if pending is None:
+            return
+        if profile.photo_type is None:
+            profile.photo, profile.photo_type = pending
+        self._users.clear_pending_photo(user)
 
     async def set_searching(self, user: User, status: JobStatus) -> OwnCandidateRead:
         profile = await self._require(user)

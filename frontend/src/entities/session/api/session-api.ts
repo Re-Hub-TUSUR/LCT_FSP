@@ -19,6 +19,13 @@ export type TokenResponseDto = {
   user: UserDto
 }
 
+export type YandexStartPayload = {
+  role: Exclude<UserRole, 'admin'>
+  mode: 'sign-in' | 'sign-up'
+  personalDataConsent: boolean
+  redirectUri: string
+}
+
 export const sessionApi = {
   signIn: (payload: SignInPayload) => http.post<TokenResponseDto>('/auth/login', payload),
   signUp: (payload: SignUpPayload) => http.post<UserDto>('/auth/register', payload),
@@ -31,5 +38,13 @@ export const sessionApi = {
   /** The admin subdomain already checked the browser password. */
   adminGate: () =>
     http.post<TokenResponseDto>('/auth/admin-gate', undefined, { skipAuthRefresh: true }),
+  /** 404 when the Yandex app is not configured: the button stays hidden. */
+  yandexStatus: () => http.get<{ enabled: true }>('/auth/yandex'),
+  yandexStart: (payload: YandexStartPayload) =>
+    http.post<{ authorizeUrl: string }>('/auth/yandex/start', payload),
+  yandexCallback: (payload: { code: string; state: string }) =>
+    http.post<TokenResponseDto & { created: boolean }>('/auth/yandex/callback', payload, {
+      skipAuthRefresh: true,
+    }),
   logout: () => http.post<void>('/auth/logout', undefined, { skipAuthRefresh: true }),
 }

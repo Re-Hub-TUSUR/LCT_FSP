@@ -17,6 +17,7 @@ An empty list names the next step. The rule is FR-О-11.
 | П-О-05 | Chats | «Отправить» | The chat opens after acceptance or mutual interest |
 | П-О-06 | Calendar | «Подтвердить» or «Назначить встречу» | «Встреч пока нет» |
 | П-О-07 | Error | «На главную» | Someone else's object is unavailable |
+| П-О-08 | Return from Yandex | The session opens on its own | «Сначала зарегистрируйтесь» |
 
 Candidate menu: vacancy feed and swipes, mutual interest, testing, calendar, cabinet.
 

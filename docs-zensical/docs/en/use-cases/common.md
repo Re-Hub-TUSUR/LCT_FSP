@@ -35,3 +35,7 @@ icon: lucide/users
 ## UC-О-08 Someone else's object
 
 **As** a person of the wrong role, **I want** to be refused, **so that** I do not open someone else's invitation or resume. FR-О-03.
+
+## UC-О-09 Sign-in through Yandex
+
+**As** a specialist or an employer, **I want** to press «Войти через Яндекс», **so that** a session opens without the code from the letter. On «Регистрация» the first and last name are already in the form, and the portrait is in «Фото». On «Вход» a new person is not created: «Сначала зарегистрируйтесь». FR-О-12. П-О-08.

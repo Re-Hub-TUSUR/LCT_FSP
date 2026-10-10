@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, LargeBinary, String
+from sqlalchemy.orm import Mapped, deferred, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 from app.db.types import str_enum
@@ -21,5 +21,10 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     first_name: Mapped[str | None] = mapped_column(String(100))
     last_name: Mapped[str | None] = mapped_column(String(100))
     phone: Mapped[str | None] = mapped_column(String(32))
+    # Set when the person signs in with Yandex ID. Empty for email-only accounts.
+    yandex_id: Mapped[str | None] = mapped_column(String(64), unique=True)
+    # Portrait bytes until the first resume save copies them onto the profile.
+    pending_photo: Mapped[bytes | None] = deferred(mapped_column(LargeBinary))
+    pending_photo_type: Mapped[str | None] = mapped_column(String(32))
     # Set on sign-in and token refresh, at most hourly: recruiters filter by recent activity.
     last_active_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)

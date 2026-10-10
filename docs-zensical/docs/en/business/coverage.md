@@ -17,5 +17,6 @@ What the product does relative to the original brief. Behavior is specified in t
 | Company take-home | FR-Р-10, FR-К-29 | An assignment for the candidate, the platform grade stays |
 | ATS | FR-Р-11 | A poll, our filters, write-back, the bank does not change |
 | Admin | FR-А-02, FR-А-03, FR-А-05, FR-А-06, FR-А-07, FR-А-08 | Task bank, a snapshot, ban list, dictionaries, journal |
+| Sign-in through Yandex ID | FR-О-12 | «Войти через Яндекс», the email is confirmed, the name and portrait are in the form |
 
-The product does not include a survey before the test, proctoring, a voice interview, 11 grades, a need with shortlist versions, a classic application, recurring tasks, 2FA, Yandex ID, or government-services sign-in.
+The product does not include a survey before the test, proctoring, a voice interview, 11 grades, a need with shortlist versions, a classic application, recurring tasks, 2FA, or government-services sign-in.

@@ -90,6 +90,12 @@ class Settings(BaseSettings):
     fsp_id_redirect_uri: str = "http://localhost:5173/profile/fsp/callback"
     fsp_registry_url: str = ""
 
+    # Yandex ID, authorization-code flow. Empty client id hides the button and closes the routes.
+    # How to register the app: https://yandex.ru/dev/id/doc/ru/register-client
+    yandex_client_id: str = ""
+    yandex_client_secret: SecretStr = SecretStr("")
+    yandex_redirect_uri: str = "http://localhost:8080/auth/yandex/callback"
+
     # ATS connector, `app.integrations.ats`. `mock` is the in-process demo. `fixture` reads a
     # JSON file with different field names. A live vendor is another value and another adapter.
     # Polling interval in seconds; 0 leaves the background loop off (the employer can still poll).

@@ -55,6 +55,10 @@ export const routes: RouteObject[] = [
             lazy: lazyPage(() => import('@/pages/auth').then((m) => m.CandidateAuthPage)),
           },
           {
+            path: ROUTES.yandexCallback,
+            lazy: lazyPage(() => import('@/pages/auth').then((m) => m.YandexCallbackPage)),
+          },
+          {
             path: ROUTES.vacancies,
             lazy: lazyPage(() => import('@/pages/vacancies').then((m) => m.VacanciesPage)),
           },
