@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Tag } from '@/shared/ui'
 import type { CandidateDto } from '../api/candidate-api'
+import { contactsLine } from '../model/contacts'
 import { fspAchievementLine, fspTitleLine } from '../model/fsp'
 import { CandidateResumes } from './candidate-resumes'
 import './candidate-card.css'
@@ -58,7 +59,9 @@ export function CandidateCard({ candidate, actions }: Props) {
       </section>
 
       {contacts ? (
-        <p className="candidate-card__meta">Контакты: {contacts.email}</p>
+        <p className="candidate-card__meta">
+          Контакты: <span className="candidate-card__contacts">{contactsLine(contacts)}</span>
+        </p>
       ) : (
         <p className="candidate-card__meta">Контакты откроются после принятия приглашения</p>
       )}

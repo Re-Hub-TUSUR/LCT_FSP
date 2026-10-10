@@ -3,6 +3,9 @@ import type { ReactNode } from 'react'
 import { Ornament } from '../ornament/ornament'
 import './sheet.css'
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 type Props = {
   /** Short name in the bar: «Кандидат», «Вакансия». */
   label: string
@@ -22,6 +25,7 @@ type Props = {
 export function Sheet({ label, labelledBy, onClose, children, footer, size = 'default' }: Props) {
   const labelId = useId()
   const closeRef = useRef<HTMLButtonElement>(null)
+  const sheetRef = useRef<HTMLElement>(null)
   const [leaving, setLeaving] = useState(false)
 
   const requestClose = useCallback(() => {
@@ -48,6 +52,34 @@ export function Sheet({ label, labelledBy, onClose, children, footer, size = 'de
     return () => document.removeEventListener('keydown', onKey)
   }, [requestClose])
 
+  // The page under the scrim is out of reach for the pointer; Tab stays in the sheet as well.
+  useEffect(() => {
+    const onTab = (event: KeyboardEvent) => {
+      const sheet = sheetRef.current
+      if (event.key !== 'Tab' || !sheet || document.querySelector('dialog[open]')) return
+      // Only what is on screen: a hidden file input would take the focus nowhere.
+      const items = [...sheet.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+        (item) => item.getClientRects().length > 0,
+      )
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (!first || !last) return
+      const active = document.activeElement
+      if (!sheet.contains(active)) {
+        event.preventDefault()
+        first.focus()
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', onTab)
+    return () => document.removeEventListener('keydown', onTab)
+  }, [])
+
   // The animation end is the normal way out; the timer covers browsers that skip it.
   useEffect(() => {
     if (!leaving) return
@@ -61,6 +93,7 @@ export function Sheet({ label, labelledBy, onClose, children, footer, size = 'de
     <>
       <div className={`sheet__scrim${state}`} aria-hidden="true" onClick={requestClose} />
       <aside
+        ref={sheetRef}
         className={`sheet${size === 'wide' ? ' sheet--wide' : ''}${state}`}
         role="dialog"
         aria-modal="true"

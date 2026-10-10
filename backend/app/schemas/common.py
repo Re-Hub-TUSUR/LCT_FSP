@@ -63,6 +63,14 @@ class SalaryRange(ApiModel):
         return self
 
 
+class SalaryRead(ApiModel):
+    """A stored salary range, shown as it is. The limits of `SalaryRange` are for what comes in:
+    a row saved before a limit appeared must not take the whole list down with it."""
+
+    from_: int = Field(alias="from")
+    to: int
+
+
 ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
     401: {"model": ErrorResponse, "description": "Не авторизован"},
     403: {"model": ErrorResponse, "description": "Недостаточно прав"},

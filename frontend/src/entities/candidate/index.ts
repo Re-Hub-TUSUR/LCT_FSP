@@ -1,5 +1,6 @@
 export { candidateApi, candidateKeys, candidateQueries } from './api/candidate-api'
 export { dropPhotoUrl } from './lib/photo-cache'
+export { contactsLine } from './model/contacts'
 export type {
   CandidateContactsDto,
   CandidateDto,

@@ -2,6 +2,7 @@ import { useId, type ReactNode } from 'react'
 import { AssessmentStatusBadge } from '@/entities/assessment'
 import {
   CandidateResumes,
+  contactsLine,
   fspAchievementLine,
   fspTitleLine,
   useCandidatePhoto,
@@ -148,11 +149,7 @@ export function CandidatePanel({ match, onClose, actions }: Props) {
       </SheetSection>
 
       {candidate.contacts ? (
-        <p className="sheet-note">
-          Контакты: {candidate.contacts.email}
-          {candidate.contacts.phone ? ` · ${candidate.contacts.phone}` : ''}
-          {candidate.contacts.telegram ? ` · ${candidate.contacts.telegram}` : ''}
-        </p>
+        <p className="sheet-note">Контакты: {contactsLine(candidate.contacts)}</p>
       ) : (
         <p className="sheet-note">Контакты откроются после принятия приглашения</p>
       )}

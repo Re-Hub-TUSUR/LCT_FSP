@@ -166,7 +166,8 @@
   overflow-wrap: anywhere;
 }
 
-.meeting-details dd::first-letter {
+/* «воскресенье, 11 октября» opens the line; a link or an address is shown as typed. */
+.meeting-details__when::first-letter {
   text-transform: uppercase;
 }
 

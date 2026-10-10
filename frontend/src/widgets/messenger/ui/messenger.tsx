@@ -47,6 +47,8 @@ function formatSize(bytes: number) {
 /** The candidate answers a meeting, so the same status reads differently on each side. */
 /** The API takes chat files up to 10 MB (`CHAT_ATTACHMENT_LIMIT`). */
 const ATTACHMENT_LIMIT = 10 * 1024 * 1024
+/** The API refuses a longer message; the field stops there instead of an error after «Enter». */
+const MESSAGE_MAX = 4000
 /** What the API accepts: photos, PDF and Word. A .pptx is a ZIP too, but it is refused. */
 const ATTACHMENT_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,.pdf,.doc,.docx'
 
@@ -396,6 +398,7 @@ export function Messenger({ selectedId, onSelect }: Props) {
                 className="chat__input"
                 aria-label="Сообщение"
                 placeholder="Сообщение"
+                maxLength={MESSAGE_MAX}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {

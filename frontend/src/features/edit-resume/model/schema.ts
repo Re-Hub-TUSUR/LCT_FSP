@@ -111,6 +111,22 @@ export const MIN_AGE = 14
 const ADULT_AGE = 18
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/
 const GITHUB = /^(https?:\/\/)?(www\.)?github\.com\/[\w.-]+\/?$/i
+const PHONE = /^\+?[\d\s()-]+$/
+const TELEGRAM = /^[A-Za-z][A-Za-z0-9_]{3,31}$/
+
+/** The username itself: people paste «@name» and «t.me/name» alike. */
+export function telegramName(value: string): string {
+  return value.trim().replace(/^(?:(?:https?:\/\/)?t\.me\/|@+)/i, '')
+}
+
+function phoneError(value: string): string | undefined {
+  const phone = value.trim()
+  if (!phone) return undefined
+  const digits = phone.replace(/\D/g, '').length
+  return PHONE.test(phone) && digits >= 10 && digits <= 15
+    ? undefined
+    : 'Проверьте номер: +7 900 000-00-00'
+}
 
 const FORMATS = new Set<string>(WORK_FORMATS)
 
@@ -249,11 +265,13 @@ export function validateResume(values: ResumeValues): ResumeErrors {
     errors.githubUrl = 'Ссылка на профиль: github.com/логин'
   }
   if (values.about.trim().length > 2000) errors.about = 'Не больше 2000 символов'
-  if (values.phone.trim().length > 32) errors.phone = 'Слишком длинный номер'
-  if (values.telegram.trim().length > 64) errors.telegram = 'Слишком длинный ник'
-  if (!values.phone.trim() && !values.telegram.trim().replace(/^@+/, '')) {
-    errors.phone = 'Укажите телефон или Telegram'
+  const phone = phoneError(values.phone)
+  if (phone) errors.phone = phone
+  const telegram = telegramName(values.telegram)
+  if (telegram && !TELEGRAM.test(telegram)) {
+    errors.telegram = 'Ник в Telegram: латиница, цифры и _, от 4 символов'
   }
+  if (!values.phone.trim() && !telegram) errors.phone = 'Укажите телефон или Telegram'
   if (values.salary.trim()) {
     const salary = wholeNumber(values.salary)
     if (salary === null || salary <= 0) errors.salary = 'Сумма — целое число больше нуля'
@@ -312,7 +330,7 @@ export function toResumePayload(
     softSkills: values.softSkills,
     about: values.about.trim() || null,
     phone: values.phone.trim() || null,
-    telegram: values.telegram.trim().replace(/^@+/, '') || null,
+    telegram: telegramName(values.telegram) || null,
     salaryExpectation: salary,
     birthDate: values.birthDate || null,
     relocationReady: values.relocationReady,

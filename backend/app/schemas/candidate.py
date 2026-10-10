@@ -1,8 +1,9 @@
+import re
 import uuid
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from app.models.enums import (
     AssessmentStatus,
@@ -25,6 +26,11 @@ from app.schemas.common import MAX_SALARY, ApiModel, Page
 from app.schemas.facets import OptionCount
 
 _MONTH = r"^\d{4}-(0[1-9]|1[0-2])$"
+# E.164 allows 15 digits; a Russian number without the country code has 10.
+PHONE_MIN_DIGITS, PHONE_MAX_DIGITS = 10, 15
+PHONE = re.compile(r"\+?[\d\s()\-]+")
+TELEGRAM_PREFIX = re.compile(r"^(?:(?:https?://)?t\.me/|@+)", re.IGNORECASE)
+TELEGRAM = re.compile(r"[A-Za-z][A-Za-z0-9_]{3,31}")
 
 
 class ExperienceEntry(ApiModel):
@@ -326,6 +332,31 @@ class CandidateProfileUpdate(ApiModel):
     github_url: str | None = Field(default=None, max_length=300)
     profile_display_consent: bool | None = None
     fsp_sync: FspSync | None = None
+
+    @field_validator("phone")
+    @classmethod
+    def _phone(cls, value: str | None) -> str | None:
+        """The employer calls this number: 10–15 digits, with the usual separators."""
+        if value is None or not value.strip():
+            return None
+        value = value.strip()
+        digits = sum(char.isdigit() for char in value)
+        if not PHONE.fullmatch(value) or not PHONE_MIN_DIGITS <= digits <= PHONE_MAX_DIGITS:
+            msg = "Проверьте номер: +7 900 000-00-00"
+            raise ValueError(msg)
+        return value
+
+    @field_validator("telegram")
+    @classmethod
+    def _telegram(cls, value: str | None) -> str | None:
+        """A Telegram username, without the @ or the t.me link around it."""
+        if value is None or not value.strip():
+            return None
+        name = TELEGRAM_PREFIX.sub("", value.strip())
+        if not TELEGRAM.fullmatch(name):
+            msg = "Ник в Telegram: латиница, цифры и _, от 4 символов"
+            raise ValueError(msg)
+        return name
 
 
 class ResumeDraft(ApiModel):

@@ -38,6 +38,13 @@
   color: var(--muted);
 }
 
+/* An email and a Telegram name are copied and typed: shown as they are, not in capitals. */
+.candidate-card__contacts {
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text);
+}
+
 .candidate-card__stack {
   display: flex;
   flex-wrap: wrap;

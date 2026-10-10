@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import Field
 
 from app.models.enums import InvitationStatus
-from app.schemas.common import ApiModel, SalaryRange
+from app.schemas.common import ApiModel, SalaryRange, SalaryRead
 from app.schemas.vacancy import CompanyRef
 
 
@@ -22,7 +22,7 @@ class InvitationRead(ApiModel):
     company: CompanyRef
     vacancy_id: uuid.UUID | None
     message: str
-    salary: SalaryRange
+    salary: SalaryRead
     contact_method: str
     status: InvitationStatus
     created_at: datetime

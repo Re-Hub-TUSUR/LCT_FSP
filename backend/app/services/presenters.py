@@ -17,7 +17,7 @@ from app.schemas.candidate import (
     ResumeRead,
 )
 from app.schemas.category import Category
-from app.schemas.common import ApiModel, SalaryRange
+from app.schemas.common import ApiModel, SalaryRead
 from app.schemas.company import CompanyRead
 from app.schemas.vacancy import CompanyBrief, VacancyRead
 from app.services.age import ADULT_AGE, age_on
@@ -60,7 +60,7 @@ def vacancy_read(vacancy: Vacancy, company: Company) -> VacancyRead:
         company=company_brief(company),
         category=category,
         stack=list(vacancy.stack),
-        salary=SalaryRange.model_validate({"from": vacancy.salary_from, "to": vacancy.salary_to}),
+        salary=SalaryRead.model_validate({"from": vacancy.salary_from, "to": vacancy.salary_to}),
         work_format=vacancy.work_format,
         city=vacancy.city,
         description=vacancy.description,

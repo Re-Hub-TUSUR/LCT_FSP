@@ -257,13 +257,8 @@ class ChatService:
     async def _ensure_conversation(
         self, company_id: uuid.UUID, candidate_id: uuid.UUID
     ) -> Conversation:
-        existing = await self._conversations.get_pair(
+        return await self._conversations.get_or_create(
             company_id=company_id, candidate_id=candidate_id
-        )
-        if existing is not None:
-            return existing
-        return await self._conversations.add(
-            Conversation(company_id=company_id, candidate_id=candidate_id)
         )
 
     async def _require_access(self, user: User, conversation_id: uuid.UUID) -> Conversation:

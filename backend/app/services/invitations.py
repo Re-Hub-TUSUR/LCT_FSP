@@ -13,7 +13,7 @@ from app.repositories.candidate import CandidateRepository
 from app.repositories.company import CompanyRepository
 from app.repositories.invitation import OPEN_STATUSES, InvitationRepository, InvitationRow
 from app.repositories.vacancy import VacancyRepository
-from app.schemas.common import Page, SalaryRange
+from app.schemas.common import Page, SalaryRead
 from app.schemas.invitation import InvitationCreate, InvitationRead
 from app.schemas.vacancy import CompanyRef
 from app.services.notifications import NotificationHub
@@ -130,7 +130,7 @@ def _read(invitation: Invitation, company: Company) -> InvitationRead:
         company=CompanyRef(id=company.id, name=company.name),
         vacancy_id=invitation.vacancy_id,
         message=invitation.message,
-        salary=SalaryRange.model_validate(
+        salary=SalaryRead.model_validate(
             {"from": invitation.salary_from, "to": invitation.salary_to}
         ),
         contact_method=invitation.contact_method,

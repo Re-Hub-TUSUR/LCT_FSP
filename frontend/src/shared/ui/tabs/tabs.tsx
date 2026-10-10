@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import './tabs.css'
 
@@ -22,12 +23,26 @@ type TabsProps<T extends string> = {
 
 /** Underlined tabs with counters. Buttons with `aria-pressed`: they switch a view, not panels. */
 export function Tabs<T extends string>({ items, value, onChange, label, className }: TabsProps<T>) {
+  const ref = useRef<HTMLElement>(null)
+
+  // On a phone the row scrolls sideways: the open tab must not stay behind its edge.
+  useEffect(() => {
+    const row = ref.current
+    const tab = row?.querySelector<HTMLElement>(`[data-tab="${value}"]`)
+    if (!row || !tab) return
+    const box = row.getBoundingClientRect()
+    const own = tab.getBoundingClientRect()
+    if (own.left < box.left) row.scrollLeft += own.left - box.left
+    else if (own.right > box.right) row.scrollLeft += own.right - box.right
+  }, [value])
+
   return (
-    <nav className={className ? `tabs ${className}` : 'tabs'} aria-label={label}>
+    <nav ref={ref} className={className ? `tabs ${className}` : 'tabs'} aria-label={label}>
       {items.map((item) => (
         <button
           key={item.value}
           type="button"
+          data-tab={item.value}
           className={item.value === value ? 'tabs__tab is-active' : 'tabs__tab'}
           aria-pressed={item.value === value}
           onClick={() => onChange(item.value)}

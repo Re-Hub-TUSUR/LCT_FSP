@@ -19,7 +19,10 @@ async def get_db_session() -> AsyncIterator[AsyncSession]:
         yield session
 
 
-SessionDep = Annotated[AsyncSession, Depends(get_db_session)]
+# `scope="function"`: the unit of work is committed before the answer is sent, not after it.
+# Otherwise the next request of the client (a list reloaded right after a save) can outrun the
+# commit and read the old state, and a failed commit would follow an answer that said "saved".
+SessionDep = Annotated[AsyncSession, Depends(get_db_session, scope="function")]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 

@@ -48,6 +48,19 @@ describe('validateResume', () => {
     expect(toResumePayload(valid).salaryExpectation).toBeNull()
   })
 
+  it('takes only contacts an employer can use', () => {
+    expect(validateResume({ ...valid, phone: '12' }).phone).toBe(
+      'Проверьте номер: +7 900 000-00-00',
+    )
+    expect(validateResume({ ...valid, phone: 'позвоните мне' }).phone).toBeDefined()
+    expect(validateResume({ ...valid, phone: '+7 (900) 123-45-67' }).phone).toBeUndefined()
+    expect(validateResume({ ...valid, telegram: '!!' }).telegram).toBeDefined()
+    // A pasted link is the same username.
+    const linked = { ...valid, telegram: 'https://t.me/ivan_dev' }
+    expect(validateResume(linked)).toEqual({})
+    expect(toResumePayload(linked).telegram).toBe('ivan_dev')
+  })
+
   it('needs years, a place of work or «Нет опыта»', () => {
     expect(validateResume({ ...valid, experienceYears: '' }).experienceYears).toBeDefined()
     expect(validateResume({ ...valid, experienceYears: '', noExperience: true })).toEqual({})

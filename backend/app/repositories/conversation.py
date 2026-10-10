@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Conversation, Message, MessageAttachment
@@ -24,9 +25,24 @@ class ConversationRepository:
             )
         )
 
-    async def add(self, conversation: Conversation) -> Conversation:
-        self._session.add(conversation)
-        await self._session.flush()
+    async def get_or_create(
+        self, *, company_id: uuid.UUID, candidate_id: uuid.UUID
+    ) -> Conversation:
+        """Both sides open the chat list right after the match: the pair is unique, so the one
+        that comes second takes the row of the first instead of failing on the constraint."""
+        existing = await self.get_pair(company_id=company_id, candidate_id=candidate_id)
+        if existing is not None:
+            return existing
+        conversation = Conversation(company_id=company_id, candidate_id=candidate_id)
+        try:
+            async with self._session.begin_nested():
+                self._session.add(conversation)
+                await self._session.flush()
+        except IntegrityError:
+            created = await self.get_pair(company_id=company_id, candidate_id=candidate_id)
+            if created is None:
+                raise
+            return created
         await self._session.refresh(conversation)
         return conversation
 

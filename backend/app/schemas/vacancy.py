@@ -14,7 +14,7 @@ from app.models.enums import (
     WorkFormat,
 )
 from app.schemas.category import Category
-from app.schemas.common import ApiModel, Page, SalaryRange
+from app.schemas.common import ApiModel, Page, SalaryRange, SalaryRead
 from app.schemas.facets import OptionCount
 
 
@@ -40,7 +40,7 @@ class VacancyRead(ApiModel):
     company: CompanyBrief
     category: Category
     stack: list[str]
-    salary: SalaryRange
+    salary: SalaryRead
     work_format: WorkFormat
     # Office location; null for remote positions.
     city: str | None

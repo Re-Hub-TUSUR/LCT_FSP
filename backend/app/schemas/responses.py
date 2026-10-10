@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from app.schemas.common import ApiModel, SalaryRange
+from app.schemas.common import ApiModel, SalaryRead
 
 
 class CandidateInboundRead(ApiModel):
@@ -11,7 +11,7 @@ class CandidateInboundRead(ApiModel):
     # The vacancy the recruiter picked the candidate for; null for a like that names none.
     vacancy_id: uuid.UUID | None
     vacancy_title: str | None = None
-    salary: SalaryRange | None = None
+    salary: SalaryRead | None = None
     reacted_at: datetime
 
 

@@ -57,7 +57,7 @@ export function MeetingDetailsDialog({ event, role, onEdit, onClose }: Props) {
       <dl className="meeting-details">
         <div>
           <dt>Когда</dt>
-          <dd>
+          <dd className="meeting-details__when">
             {dayFormat.format(startsAt)}, {timeFormat.format(startsAt)} –{' '}
             {timeFormat.format(endsAt)}
           </dd>

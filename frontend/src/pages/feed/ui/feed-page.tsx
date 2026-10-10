@@ -19,7 +19,7 @@ export function FeedPage() {
       lead={
         employer
           ? 'Банк категоризированных кандидатов: поиск, фильтры и объяснимый рейтинг'
-          : 'Только подходящие вам вакансии — по категории, стеку и предпочтениям'
+          : 'Вакансии под вашу категорию, стек и предпочтения'
       }
       actions={<FeedViewTabs role={employer ? 'employer' : 'candidate'} />}
       backdrop={<HackerRain />}
