@@ -22,7 +22,7 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     last_name: Mapped[str | None] = mapped_column(String(100))
     phone: Mapped[str | None] = mapped_column(String(32))
     # Set when the person signs in with Yandex ID. Empty for email-only accounts.
-    yandex_id: Mapped[str | None] = mapped_column(String(64), unique=True)
+    yandex_id: Mapped[str | None] = mapped_column(String(64), unique=True, index=True)
     # Portrait bytes until the first resume save copies them onto the profile.
     pending_photo: Mapped[bytes | None] = deferred(mapped_column(LargeBinary))
     pending_photo_type: Mapped[str | None] = mapped_column(String(32))

@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.admin.models import AdminBanEntry
 from app.core.config import get_settings
 from app.core.security import verify_password
-from app.dependencies.common import get_settings as settings_dependency
 from app.dependencies.services import get_yandex_directory
 from app.integrations.yandex.client import HttpYandexDirectory, YandexAccount
 from app.models import User
@@ -63,7 +62,7 @@ async def _install(client: AsyncClient, account: YandexAccount) -> ScriptedYande
             "yandex_client_secret": SecretStr("test-secret"),
         }
     )
-    app.dependency_overrides[settings_dependency] = lambda: opened
+    app.dependency_overrides[get_settings] = lambda: opened
     app.dependency_overrides[get_yandex_directory] = lambda: directory
     return directory
 
@@ -88,8 +87,8 @@ async def _start(
 
 
 def _state(response: httpx.Response) -> str:
-    query = parse_qs(urlparse(response.json()["authorizeUrl"]).query)
-    return query["state"][0]
+    url: str = response.json()["authorizeUrl"]
+    return parse_qs(urlparse(url).query)["state"][0]
 
 
 async def _finish(client: AsyncClient, state: str) -> httpx.Response:

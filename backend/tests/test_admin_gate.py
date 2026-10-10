@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import get_settings
 from app.core.security import hash_password
-from app.dependencies.common import get_settings as settings_dependency
 from app.models import User, UserRole
 from tests.conftest import API, PASSWORD, create_admin
 
@@ -64,7 +63,7 @@ async def test_admin_gate_rejects_a_non_admin_account(
 async def test_admin_gate_stays_closed_without_a_secret(client: AsyncClient) -> None:
     app = client._transport.app  # type: ignore[attr-defined]
     closed = get_settings().model_copy(update={"admin_gate_secret": SecretStr("")})
-    app.dependency_overrides[settings_dependency] = lambda: closed
+    app.dependency_overrides[get_settings] = lambda: closed
 
     response = await client.post(f"{API}/auth/admin-gate", headers=HEADER)
 
