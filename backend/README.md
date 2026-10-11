@@ -14,6 +14,7 @@ FastAPI + SQLAlchemy 2 (async) + PostgreSQL. Архитектура и прав�
 cp ../.env.example ../.env   # один .env на весь репозиторий; заполните JWT_SECRET
 uv sync                      # зависимости + dev-группа
 uv run alembic upgrade head  # миграции
+uv run python -m app.seed.cities --if-missing   # справочник городов GeoNames (нужен фильтрам по городу)
 uv run python -m app.seed    # демо-данные (необязательно)
 uv run uvicorn app.main:app --reload
 ```
@@ -31,6 +32,7 @@ Swagger: <http://localhost:8000/api/docs>, OpenAPI: `/api/openapi.json`.
 | `uv run mypy`                                   | строгая проверка типов            |
 | `uv run pytest`                                 | тесты (SQLite in-memory, без БД)  |
 | `uv run alembic revision --autogenerate -m "…"` | новая миграция (проверяйте руками) |
+| `uv run python -m app.seed.cities --if-missing` | загрузить справочник городов GeoNames (так делает контейнер при старте); без флага — перезалить |
 | `uv run python -m app.seed`                     | загрузить демо-данные (заменяет прежние демо-записи) |
 | `uv run python -m app.seed --if-missing`        | загрузить, только если демо-данных ещё нет (так делает контейнер при старте) |
 | `uv run python -m app.seed.assessment`          | добавить стартовый банк задач и тесты на грейд (только недостающие строки) |
@@ -199,7 +201,7 @@ app/
   search/        поиск кандидатов: Elasticsearch, резервный движок на базе, фильтры, счётчики
   admin/         панель администратора: модели, сервисы, маршруты `/admin/*` ([docs/ADMIN.md](../docs/ADMIN.md))
   assets/fonts/  шрифты сайта для PDF-резюме (TDAText, JetBrains Mono)
-  integrations/  внешние системы: FSP ID и реестр ФСП (реальные клиенты и эмуляция)
+  integrations/  внешние системы: FSP ID и реестр ФСП (реальные клиенты и эмуляция), ATS, Яндекс ID
   main.py        create_app()
 migrations/      Alembic (async), URL берётся из настроек
 tests/
@@ -209,10 +211,16 @@ tests/
 
 Реализованы:
 - health, users/me, categories/dictionary; админка (`/admin/*`: пользователи, банк заданий,
-  верификация компаний, статистика) — [`docs/ADMIN.md`](../docs/ADMIN.md);
-- auth: регистрация, подтверждение почты, вход, refresh-токен в cookie с ротацией, выход;
+  верификация компаний, статистика) — [`docs/ADMIN.md`](../docs/ADMIN.md). На проде админка ещё и
+  на отдельном поддомене за браузерным паролем nginx (`ADMIN_GATE_USERS`, `ADMIN_GATE_SECRET`,
+  `deploy/admin-gate/`), который открывает один аккаунт (`ADMIN_EMAIL`/`ADMIN_PASSWORD`,
+  `python -m app.admin.create_admin`);
+- auth: регистрация, подтверждение почты, вход, refresh-токен в cookie с ротацией, выход, вход
+  через Яндекс ID (`/auth/yandex*`, пустой `YANDEX_CLIENT_ID` скрывает кнопку и закрывает пути),
+  `/auth/admin-gate` для админ-поддомена (ниже);
 - кабинет: `/candidates/me` (резюме, дополнительные резюме, фото, распознавание файла резюме —
-  ниже) и `/companies/me`;
+  ниже) и `/companies/me`; город в резюме, вакансии и фильтрах — из справочника GeoNames
+  (`/cities/search`, `app/seed/cities.py`);
 - привязка FSP ID (OIDC + PKCE) и выгрузка результатов из реестра ФСП: `/fsp-id/authorize`,
   `/candidates/me/fsp-link`, `/candidates/me/fsp-sync`. Пока ФСП не дала доступ, реалм Keycloak и
   реестр эмулируются внутри API (`FSP_ID_MODE=mock`, пути `/mock/*`); устройство и переход на
@@ -223,6 +231,9 @@ tests/
 - календарь встреч (`/calendar/events`);
 - тестирование: категории, шаблоны, попытки, запуск кода, ИИ-собеседование по коду, тестовые
   задания, банк задач и тестов компании;
+- ATS (`/ats`): подключение внешней системы, периодический опрос (`ATS_POLL_SECONDS`), внешние
+  отклики и автоматическое решение по ним; банк кандидатов эти записи не меняют
+  (`app/integrations/ats`, `app/services/ats.py`);
 - чат (`/conversations`): сообщения, вложения, приглашения на встречу;
 - уведомления (`GET /notifications/stream`, SSE: лайки, сообщения, решение по аккредитации,
   новые результаты сохранённых поисков) и отклики (`/responses`).

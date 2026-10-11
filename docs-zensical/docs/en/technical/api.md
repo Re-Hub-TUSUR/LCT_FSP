@@ -9,9 +9,10 @@ Prefix `/api/v1`. The router is assembled in `backend/app/api/router.py`. OpenAP
 | Module | Prefix | What it does now |
 |--------|--------|------------------|
 | health | `/health` | Liveness and readiness |
-| auth | `/auth` | Register, sign-in, email confirmation code, resend, refresh, logout |
+| auth | `/auth` | Register, sign-in, email confirmation code, resend, refresh, logout, Yandex ID sign-in (`/yandex`, `/yandex/start`, `/yandex/callback`), `/admin-gate` for the admin subdomain |
 | users | `/users` | `/users/me` |
 | categories | `/categories` | Category dictionary |
+| cities | `/cities` | Search over the GeoNames city dictionary (`/search?q=`) |
 | candidates | `/candidates` | Search, own resume, a second resume, photo, PDF, FSP link and sync |
 | fsp-id | `/fsp-id` | Start of OIDC + PKCE sign-in |
 | companies | `/companies` | Own profile, logo, public page, the company's task bank |

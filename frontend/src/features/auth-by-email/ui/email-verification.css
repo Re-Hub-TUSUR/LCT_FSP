@@ -111,6 +111,13 @@
   color: var(--ink);
 }
 
+.verify__hint {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--dim);
+}
+
 .verify__error {
   margin-bottom: 18px;
   padding: 12px 14px;

@@ -39,7 +39,8 @@ Vite читает `.env` из **корня репозитория** (`envDir: '.
 src/
   app/       точка входа, провайдеры, роутер и guard'ы, layout, глобальные стили
   pages/     landing, auth, profile (кабинет), feed (лента и свайпы), vacancies, company, candidate,
-             matching, responses, calendar, testing, test-builder, fsp-callback, admin, not-found
+             matching, responses, calendar, testing, test-builder, fsp-callback, ats, admin, legal
+             (политика конфиденциальности, пользовательское соглашение, согласие), not-found
   widgets/   site-header, landing-hero, candidate-feed, vacancy-feed, feed-swipe, candidate-deck,
              vacancies-table, invitations-inbox, responses-hub, messenger, meeting-calendar,
              assessment-runner, assessment-bank, assignment-inbox, assignment-review,

@@ -19,7 +19,20 @@ DOCS = REPO / "docs-zensical" / "docs"
 FONTS = REPO / "frontend" / "src" / "shared" / "assets" / "fonts"
 OUT_HTML = REPO / "docs-zensical" / ".cache" / "kadry-ru.html"
 OUT_PDF = REPO / "kadry-ru.pdf"
-CHROME = Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+CHROME_CANDIDATES = [
+    Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
+    Path(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
+    Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
+]
+
+
+def find_chrome() -> Path:
+    for candidate in CHROME_CANDIDATES:
+        if candidate.exists():
+            return candidate
+    raise SystemExit(
+        "Chrome not found in any of: " + ", ".join(str(c) for c in CHROME_CANDIDATES)
+    )
 
 # Section, kicker, source path. Order matches the Russian nav in zensical.toml.
 CHAPTERS: list[tuple[str, str]] = [
@@ -531,11 +544,10 @@ def build_html() -> str:
 def main() -> None:
     OUT_HTML.parent.mkdir(parents=True, exist_ok=True)
     OUT_HTML.write_text(build_html(), encoding="utf-8")
-    if not CHROME.exists():
-        raise SystemExit(f"Chrome not found: {CHROME}")
+    chrome = find_chrome()
     subprocess.run(
         [
-            str(CHROME),
+            str(chrome),
             "--headless",
             "--disable-gpu",
             "--no-pdf-header-footer",

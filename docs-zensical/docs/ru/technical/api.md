@@ -9,9 +9,10 @@ icon: lucide/cable
 | Модуль | Префикс | Что делает сейчас |
 |--------|---------|-------------------|
 | health | `/health` | Живость и готовность |
-| auth | `/auth` | Регистрация, вход, код подтверждения почты, повторная отправка, refresh, logout |
+| auth | `/auth` | Регистрация, вход, код подтверждения почты, повторная отправка, refresh, logout, вход через Яндекс ID (`/yandex`, `/yandex/start`, `/yandex/callback`), `/admin-gate` для админ-поддомена |
 | users | `/users` | `/users/me` |
 | categories | `/categories` | Словарь категорий |
+| cities | `/cities` | Поиск по справочнику городов GeoNames (`/search?q=`) |
 | candidates | `/candidates` | Поиск, своё резюме, второе резюме, фото, PDF, привязка и синхронизация ФСП |
 | fsp-id | `/fsp-id` | Старт входа OIDC + PKCE |
 | companies | `/companies` | Свой профиль, логотип, публичная страница, банк задач компании |

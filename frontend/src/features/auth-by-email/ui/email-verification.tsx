@@ -139,6 +139,9 @@ export function EmailVerification({ email, onVerified, onClose }: Props) {
               <br />
               <strong>{maskEmail(email)}</strong>
             </p>
+            <p className="verify__hint">
+              Не видите письмо? Проверьте папку «Спам» — иногда код попадает туда.
+            </p>
           </div>
 
           {error && (
