@@ -20,9 +20,7 @@ async def search_cities(
     limit: Annotated[int, Query(ge=1, le=_MAX_HINTS)] = _MAX_HINTS,
 ) -> list[CityHit]:
     """Prefix, substring and alternate names. «г.» and «гор.» are ignored. Case does not matter."""
-    rows = await CityDirectory(session).search(
-        q, country_code=country_code.upper(), limit=limit
-    )
+    rows = await CityDirectory(session).search(q, country_code=country_code.upper(), limit=limit)
     return [
         CityHit(
             id=city.geoname_id,

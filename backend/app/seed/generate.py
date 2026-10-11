@@ -30,6 +30,7 @@ from app.models.enums import (
     JobStatus,
     WorkFormat,
 )
+from app.search.base import CandidateSearchQuery
 from app.search.filters import FilterFacts, failed_groups, fsp_marks, passes
 from app.seed import content
 from app.seed.content import CompanyPlan, Track, VacancyPlan
@@ -759,7 +760,7 @@ def _as_vacancy(vacancy: VacancyFixture) -> Vacancy:
     )
 
 
-def _search_query(vacancy: VacancyFixture):
+def _search_query(vacancy: VacancyFixture) -> CandidateSearchQuery:
     """Filters a recruiter gets by selecting this vacancy."""
     return candidate_query(
         vacancy_filters(_as_vacancy(vacancy)),

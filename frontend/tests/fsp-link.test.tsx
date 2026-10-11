@@ -157,7 +157,12 @@ describe('FSP ID link', () => {
     expect(router.state.location.search).toBe('?fsp=linked')
     const links = calls.filter((call) => call.path === '/candidates/me/fsp-link')
     expect(links).toEqual([
-      { method: 'POST', path: '/candidates/me/fsp-link', body: { code: 'abc', state: 'xyz' } },
+      {
+        method: 'POST',
+        path: '/candidates/me/fsp-link',
+        search: '',
+        body: { code: 'abc', state: 'xyz' },
+      },
     ])
   })
 

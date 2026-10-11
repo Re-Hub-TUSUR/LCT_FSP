@@ -17,6 +17,7 @@ from pathlib import Path
 from urllib.request import urlopen
 
 from sqlalchemy import delete, func, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_engine, get_sessionmaker
 from app.models.candidate import CandidateProfile
@@ -34,9 +35,7 @@ CITIES_URLS = (
     "https://download.geonames.org/export/dump/cities1000.zip",
     _ALIYUN,
 )
-_ADMIN1_MIRROR = (
-    "https://raw.githubusercontent.com/edsu/geonames-localsolr/master/admin1Codes.txt"
-)
+_ADMIN1_MIRROR = "https://raw.githubusercontent.com/edsu/geonames-localsolr/master/admin1Codes.txt"
 ADMIN1_URLS = (
     "https://download.geonames.org/export/dump/admin1CodesASCII.txt",
     "http://download.geonames.org/export/dump/admin1CodesASCII.txt",
@@ -94,7 +93,7 @@ def _download(urls: tuple[str, ...]) -> bytes:
         try:
             # GeoNames is slow from some networks; one attempt is allowed five minutes.
             with urlopen(url, timeout=300) as response:  # noqa: S310 - GeoNames dump, not user input
-                body = response.read()
+                body: bytes = response.read()
         except (TimeoutError, OSError, IncompleteRead) as exc:
             last = exc
             continue
@@ -162,9 +161,7 @@ def _cluster(names: list[str]) -> list[str]:
     """Names that share the longest common stem, so «Москва» wins over «Муско»."""
     if len(names) < _STEM:
         return names
-    prefixes = {
-        name[:length] for name in names for length in range(_STEM_LETTERS, len(name) + 1)
-    }
+    prefixes = {name[:length] for name in names for length in range(_STEM_LETTERS, len(name) + 1)}
     best_prefix = ""
     best_count = 1
     for prefix in prefixes:
@@ -261,7 +258,7 @@ def _places(
     return places
 
 
-async def import_cities(session, archive: bytes, admin1: bytes) -> int:
+async def import_cities(session: AsyncSession, archive: bytes, admin1: bytes) -> int:
     """Replace the dictionary. Callers import only into an empty table."""
     places = _places(archive, _regions(admin1))
     for start in range(0, len(places), _CHUNK):
@@ -328,16 +325,13 @@ async def _run(
                 print(f"City dictionary is already loaded ({loaded} places).")
             else:
                 print(
-                    f"City dictionary already has {loaded} places. "
-                    "Not downloading again.",
+                    f"City dictionary already has {loaded} places. Not downloading again.",
                     file=sys.stderr,
                 )
             gaps = await bind_stored_cities(session)
             await session.commit()
             # Names were loaded before the ids were copied onto the rows.
-            rows = await session.scalars(
-                select(CityResolutionGap).order_by(CityResolutionGap.id)
-            )
+            rows = await session.scalars(select(CityResolutionGap).order_by(CityResolutionGap.id))
             gaps = list(rows.all())
             _report(gaps)
             # Touch the count so a failed flush is visible.

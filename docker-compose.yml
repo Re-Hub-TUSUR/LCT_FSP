@@ -59,6 +59,9 @@ services:
       # Password of the demo accounts created by `python -m app.seed`.
       SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:-}
       ELASTICSEARCH_URL: http://elasticsearch:9200
+      # Live notifications fan-out across backend workers/replicas; empty = this one worker only
+      # (fine with the single `backend` replica below). Point at a Redis URL to scale past it.
+      BROKER_URL: ${BROKER_URL:-}
       UPLOAD_DIR: /data/uploads
       ROUTERAI_API_KEY: ${ROUTERAI_API_KEY:-}
       RESUME_PARSER_MODEL: ${RESUME_PARSER_MODEL:-yandex/aliceai-llm-flash}

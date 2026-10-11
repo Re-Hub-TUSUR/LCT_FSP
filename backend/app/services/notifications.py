@@ -1,4 +1,5 @@
-"""In-process SSE fan-out for the current uvicorn worker."""
+"""SSE fan-out, addressed one user at a time: see `app.services.broker` for how that is kept true
+even once there is more than one backend worker to publish from or subscribe through."""
 
 import asyncio
 import json
@@ -7,6 +8,8 @@ import uuid
 from collections import defaultdict
 from datetime import datetime
 from typing import Any
+
+from app.services.broker import Broker, InProcessBroker, user_channel
 
 logger = logging.getLogger(__name__)
 
@@ -20,33 +23,35 @@ class TooManyStreamsError(Exception):
 
 
 class NotificationHub:
-    def __init__(self) -> None:
-        self._queues: dict[uuid.UUID, set[asyncio.Queue[str]]] = defaultdict(set)
+    """Each person's events travel on their own broker channel (`user_channel`), so a message is
+    structurally addressed to one recipient and cannot drift to another's queue."""
+
+    def __init__(self, broker: Broker | None = None) -> None:
+        self._broker = broker or InProcessBroker()
+        # The per-account stream cap is local to this worker: it bounds one person's open tabs,
+        # not a count the broker needs to agree on across a fleet.
+        self._counts: dict[uuid.UUID, int] = defaultdict(int)
 
     def subscribe(self, user_id: uuid.UUID) -> asyncio.Queue[str]:
-        if len(self._queues.get(user_id, ())) >= MAX_STREAMS_PER_USER:
+        if self._counts[user_id] >= MAX_STREAMS_PER_USER:
             raise TooManyStreamsError
         queue: asyncio.Queue[str] = asyncio.Queue(maxsize=64)
-        self._queues[user_id].add(queue)
+        self._broker.subscribe(user_channel(user_id), queue)
+        self._counts[user_id] += 1
         return queue
 
     def unsubscribe(self, user_id: uuid.UUID, queue: asyncio.Queue[str]) -> None:
-        self._queues[user_id].discard(queue)
-        if not self._queues[user_id]:
-            del self._queues[user_id]
+        self._broker.unsubscribe(user_channel(user_id), queue)
+        self._counts[user_id] -= 1
+        if self._counts[user_id] <= 0:
+            del self._counts[user_id]
 
     async def publish(self, user_id: uuid.UUID, event: dict[str, Any]) -> None:
         payload = json.dumps(event, ensure_ascii=False)
-        stale: list[asyncio.Queue[str]] = []
-        for queue in self._queues.get(user_id, ()):
-            try:
-                queue.put_nowait(payload)
-            except asyncio.QueueFull:
-                stale.append(queue)
-        for queue in stale:
-            self._queues[user_id].discard(queue)
-        if stale:
-            logger.warning("Dropped %s slow SSE subscriber(s) for user %s", len(stale), user_id)
+        await self._broker.publish(user_channel(user_id), payload)
+
+    async def close(self) -> None:
+        await self._broker.close()
 
 
 async def announce_meeting(

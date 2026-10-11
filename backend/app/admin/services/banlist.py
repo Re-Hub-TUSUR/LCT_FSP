@@ -66,9 +66,7 @@ class BanlistService:
             )
         ).all()
         items = [await _present(self._session, *row) for row in rows]
-        return Page[BanRead].build(
-            items, total=total or 0, page=page, per_page=per_page
-        )
+        return Page[BanRead].build(items, total=total or 0, page=page, per_page=per_page)
 
     async def export_rows(self, *, search: str | None, active: bool | None) -> list[BanRead]:
         rows = (
@@ -222,9 +220,7 @@ async def matched_users(session: AsyncSession, entry: AdminBanEntry) -> list[Use
     if entry.inn:
         company_filters.append(Company.inn == entry.inn)
     if company_filters:
-        owners = list(
-            await session.scalars(select(Company.owner_id).where(or_(*company_filters)))
-        )
+        owners = list(await session.scalars(select(Company.owner_id).where(or_(*company_filters))))
         if owners:
             clauses.append(User.id.in_(owners))
     if not clauses:

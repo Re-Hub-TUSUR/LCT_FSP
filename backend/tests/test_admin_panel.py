@@ -714,7 +714,7 @@ async def test_ensure_admin(sessionmaker: async_sessionmaker[AsyncSession]) -> N
 async def _signal(client: AsyncClient, admin: dict[str, str], code: str) -> dict[str, Any]:
     page = await client.get(f"{API}/admin/analytics/employers?signal={code}", headers=admin)
     assert page.status_code == 200, page.text
-    items = page.json()["items"]
+    items: list[dict[str, Any]] = page.json()["items"]
     assert items, page.text
     assert code in items[0]["signals"]
     assert items[0]["caseStatus"] == "flagged"
@@ -732,9 +732,7 @@ async def test_reaction_flapping_flags_without_a_recount(
             headers=employer,
             json={"kind": "like"},
         )
-        cleared = await client.delete(
-            f"{API}/candidates/{candidate_id}/reaction", headers=employer
-        )
+        cleared = await client.delete(f"{API}/candidates/{candidate_id}/reaction", headers=employer)
         assert liked.status_code == 200, liked.text
         assert cleared.status_code == 204, cleared.text
     row = await _signal(client, admin, "reaction_flapping")
@@ -908,9 +906,9 @@ async def test_a_ban_blocks_login_refresh_and_requests(
         "Фиктивные вакансии",
     )
 
-    ban_id = (
-        await client.get(f"{API}/admin/banlist?q=banned-boss", headers=admin)
-    ).json()["items"][0]["id"]
+    ban_id = (await client.get(f"{API}/admin/banlist?q=banned-boss", headers=admin)).json()[
+        "items"
+    ][0]["id"]
     lifted = await client.post(
         f"{API}/admin/banlist/{ban_id}/unban", headers=admin, json={"reason": "Ошибка"}
     )

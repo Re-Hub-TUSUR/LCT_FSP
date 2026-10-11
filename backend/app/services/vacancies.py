@@ -9,6 +9,7 @@ from app.admin.dictionaries import INDUSTRY_VALUES
 from app.core.errors import AppError, ConflictError, NotFoundError
 from app.dependencies.common import Pagination
 from app.models import Company, Grade, User, Vacancy, WorkFormat
+from app.models.city import City
 from app.repositories.company import CompanyRepository
 from app.repositories.vacancy import VacancyRepository
 from app.schemas.common import Page
@@ -186,9 +187,7 @@ class VacancyService:
             return
         await self._reject(user, company, KIND_JUNK, message)
 
-    async def _reject(
-        self, user: User, company: Company | None, kind: str, message: str
-    ) -> None:
+    async def _reject(self, user: User, company: Company | None, kind: str, message: str) -> None:
         """Keep the rejected attempt. The error rolls the rest of the request back."""
         if self._activity is not None and company is not None:
             await self._activity.record(kind, user, company)
@@ -229,14 +228,14 @@ def _has_letters(value: str) -> bool:
     return any(character.isalpha() for character in value)
 
 
-async def _place(cities: CityDirectory, data: VacancyCreate):
+async def _place(cities: CityDirectory, data: VacancyCreate) -> City | None:
     """Remote work has no office. Otherwise the place comes from the dictionary."""
     if data.work_format == WorkFormat.REMOTE:
         return None
     return await cities.require(data.city_id, data.city)
 
 
-def _columns(data: VacancyCreate, city) -> dict[str, Any]:
+def _columns(data: VacancyCreate, city: City | None) -> dict[str, Any]:
     """The recruiter's form as the columns of `Vacancy`, publication aside."""
     if data.specialization not in SPECIALIZATIONS:
         raise AppError("Неизвестная специализация")

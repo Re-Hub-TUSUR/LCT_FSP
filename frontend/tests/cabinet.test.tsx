@@ -112,6 +112,18 @@ describe('personal cabinet', () => {
       '/api/v1/categories/dictionary': {
         body: { specializations: [{ code: 'backend', label: 'Backend-разработка' }], grades: [] },
       },
+      '/api/v1/cities/search': {
+        body: [
+          {
+            id: 551487,
+            name: 'Казань',
+            countryCode: 'RU',
+            region: 'Татарстан',
+            latitude: 55.7887,
+            longitude: 49.1221,
+          },
+        ],
+      },
     })
     vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = new URL(String(input), 'http://localhost')
@@ -133,7 +145,9 @@ describe('personal cabinet', () => {
     await user.type(screen.getByLabelText('Имя и фамилия'), 'Анна Петрова')
     await user.type(screen.getByLabelText('Должность'), 'Backend-разработчик')
     await user.selectOptions(await screen.findByLabelText('Специализация'), 'backend')
+    // The city is picked from the directory, not typed: `cityId` is what the form saves.
     await user.type(screen.getByLabelText('Город'), 'Казань')
+    await user.click(await screen.findByRole('option', { name: 'Казань' }, SLOW))
     await user.type(screen.getByLabelText('Стаж, лет'), '3')
     await user.click(screen.getByLabelText('Удалённо'))
     await user.click(screen.getByLabelText('Полная'))
@@ -208,7 +222,7 @@ describe('personal cabinet', () => {
     await user.type(await screen.findByLabelText('ИНН', {}, SLOW), '7707083893')
     await user.click(screen.getByRole('button', { name: 'Далее' }))
     await user.type(await screen.findByLabelText('Название для кандидатов', {}, SLOW), 'Технологии')
-    await user.type(screen.getByLabelText('Направление деятельности'), 'Финтех')
+    await user.selectOptions(screen.getByLabelText('Направление деятельности'), 'Финтех')
     await user.type(screen.getByLabelText('Город'), 'Казань')
     await user.type(screen.getByLabelText('Сайт'), 'company.ru')
     await user.type(screen.getByLabelText('Контакт для кандидатов'), 'hr@company.ru')

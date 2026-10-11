@@ -18,6 +18,7 @@ from app.db.session import get_engine, get_sessionmaker
 from app.repositories.candidate import CandidateRepository
 from app.search.elastic import ElasticSearchState, create_client
 from app.services.ats import run_ats_poll
+from app.services.broker import InProcessBroker, RedisBroker
 from app.services.notifications import NotificationHub
 from app.services.saved_searches import run_alerts
 
@@ -74,6 +75,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 await alerts
         if elastic is not None:
             await elastic.close()
+        await app.state.notifications.close()
         await get_engine().dispose()
 
     app = FastAPI(
@@ -105,7 +107,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.middleware("http")(security_headers_middleware)
     app.middleware("http")(request_logging_middleware)
     register_exception_handlers(app)
-    app.state.notifications = NotificationHub()
+    broker = RedisBroker(settings.broker_url) if settings.broker_url else InProcessBroker()
+    app.state.notifications = NotificationHub(broker)
     app.include_router(api_router)
     if settings.fsp_id_mode == "mock":
         app.include_router(mock_fsp.router, prefix=API_PREFIX)

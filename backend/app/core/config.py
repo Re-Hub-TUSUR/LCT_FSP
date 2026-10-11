@@ -64,6 +64,12 @@ class Settings(BaseSettings):
     upload_dir: str = "/data/uploads"
     chat_attachment_limit: int = Field(default=10 * 1024 * 1024, ge=1)
 
+    # Live notifications (chat, likes, meetings) fan out per user, see `app.services.broker`.
+    # Empty: one in-process worker, fine as deployed today. Pointed at Redis
+    # (redis://host:6379/0): the same fan-out works across several workers or replicas, so a
+    # message published on one still reaches a person's tab open through another.
+    broker_url: str = ""
+
     # Language models through RouterAI (OpenAI-compatible API, https://routerai.ru/models). Only
     # Russian models are allowed: the Yandex family. Empty key: the resume upload answers 503
     # and grade tests are confirmed without the AI interview.

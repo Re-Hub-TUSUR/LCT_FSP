@@ -160,9 +160,7 @@ async def employer_table(
     q: Annotated[str | None, Query(max_length=200)] = None,
 ) -> EmployerSignalsPage:
     snapshot = await snapshots.latest("employers", AnalyticsFilters(period=period))
-    rows = await merge_employer_rows(
-        session, snapshot.result["companies"] if snapshot else None
-    )
+    rows = await merge_employer_rows(session, snapshot.result["companies"] if snapshot else None)
     if snapshot is None and not rows:
         return EmployerSignalsPage(
             snapshot=None,

@@ -78,21 +78,11 @@ PARAMETERS: Final[tuple[ParameterSpec, ...]] = (
         100,
         "шт.",
     ),
-    ParameterSpec(
-        "requisites_churn_min", "Смены реквизитов за сутки", 5, 2, 100, "шт."
-    ),
-    ParameterSpec(
-        "junk_vacancy_min", "Вакансии без слов за сутки", 2, 1, 100, "шт."
-    ),
-    ParameterSpec(
-        "meeting_cancel_min", "Отмены встреч за сутки", 5, 2, 100, "шт."
-    ),
-    ParameterSpec(
-        "chat_media_min", "Файлы работодателя в чате за час", 10, 2, 1_000, "шт."
-    ),
-    ParameterSpec(
-        "invalid_industry_min", "Чужое направление деятельности", 1, 1, 100, "шт."
-    ),
+    ParameterSpec("requisites_churn_min", "Смены реквизитов за сутки", 5, 2, 100, "шт."),
+    ParameterSpec("junk_vacancy_min", "Вакансии без слов за сутки", 2, 1, 100, "шт."),
+    ParameterSpec("meeting_cancel_min", "Отмены встреч за сутки", 5, 2, 100, "шт."),
+    ParameterSpec("chat_media_min", "Файлы работодателя в чате за час", 10, 2, 1_000, "шт."),
+    ParameterSpec("invalid_industry_min", "Чужое направление деятельности", 1, 1, 100, "шт."),
 )
 
 # Directions a company may name. The employer form offers the same list.

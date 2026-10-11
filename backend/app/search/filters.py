@@ -169,13 +169,11 @@ def location_fits(facts: FilterFacts, query: CandidateSearchQuery) -> bool:
     """Remote work needs no city; office and hybrid need one of the cities (or readiness to
     move when relocation is counted in). Without formats only the city is checked."""
     if query.city_ids:
-        city_ok = facts.city_id in query.city_ids or (
-            query.include_relocation and facts.relocation
-        )
+        city_ok = facts.city_id in query.city_ids or (query.include_relocation and facts.relocation)
     else:
         cities = {normalize_term(city) for city in query.cities}
-        city_ok = not cities or facts.city in cities or (
-            query.include_relocation and facts.relocation
+        city_ok = (
+            not cities or facts.city in cities or (query.include_relocation and facts.relocation)
         )
     if not query.work_formats:
         return city_ok
