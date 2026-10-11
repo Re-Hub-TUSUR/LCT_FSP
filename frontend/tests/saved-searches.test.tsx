@@ -62,6 +62,7 @@ const noFilters: CandidateFiltersDto = {
   salaryMax: null,
   workFormats: [],
   cities: [],
+  cityIds: [],
   relocation: true,
   employmentTypes: [],
   jobStatuses: [],

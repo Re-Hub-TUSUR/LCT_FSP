@@ -10,6 +10,15 @@ import { useSession } from '@/entities/session'
 import { vacancyKeys } from '@/entities/vacancy'
 import { subscribeToNotifications } from './notification-source'
 
+/** A specialist applied to the company's vacancy and still waits for an answer. */
+export type CandidateAppliedEvent = {
+  type: 'candidate_applied'
+  candidateId: string
+  displayName: string
+  vacancyId: string
+  vacancyTitle: string
+}
+
 export type CompanyLikedEvent = {
   type: 'company_liked'
   companyId: string
@@ -60,6 +69,7 @@ export type InvitationEvent = {
 }
 
 export type NotificationEvent =
+  | CandidateAppliedEvent
   | CompanyLikedEvent
   | MessageEvent
   | CompanyVerificationEvent
@@ -68,6 +78,7 @@ export type NotificationEvent =
   | MeetingPendingEvent
 
 type Handlers = {
+  onCandidateApplied?: (event: CandidateAppliedEvent) => void
   onCompanyLiked?: (event: CompanyLikedEvent) => void
   onInvitation?: (event: InvitationEvent) => void
   onMeetingPending?: (event: MeetingPendingEvent) => void
@@ -91,6 +102,10 @@ export function useNotificationStream(handlers: Handlers) {
     if (!accessToken) return
 
     return subscribeToNotifications(accessToken, (payload) => {
+      if (payload.type === 'candidate_applied') {
+        handlersRef.current.onCandidateApplied?.(payload)
+        void queryClient.invalidateQueries({ queryKey: responseKeys.inbound() })
+      }
       if (payload.type === 'company_liked') {
         handlersRef.current.onCompanyLiked?.(payload)
         void queryClient.invalidateQueries({ queryKey: responseKeys.inbound() })

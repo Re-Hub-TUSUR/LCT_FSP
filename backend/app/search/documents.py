@@ -62,6 +62,7 @@ MAPPINGS: dict[str, Any] = {
         "stack": _KEYWORD_WITH_TEXT,
         "soft_skills": _TEXT,
         "city": _KEYWORD_WITH_TEXT,
+        "city_id": {"type": "integer"},
         "fsp_text": _TEXT,
         "specialization": {"type": "keyword"},
         # Professions of the additional resumes: they score in the vacancy fit, not in filters.
@@ -123,6 +124,7 @@ def candidate_document(profile: CandidateProfile) -> dict[str, Any]:
         "stack": list(profile.stack),
         "soft_skills": list(profile.soft_skills),
         "city": profile.city,
+        "city_id": profile.city_id,
         "fsp_text": fsp_text or None,
         "specialization": profile.specialization,
         "other_specializations": list(facts.other_specializations),

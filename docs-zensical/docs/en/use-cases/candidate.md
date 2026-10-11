@@ -12,7 +12,7 @@ The rules: [profile](../business/brd/02-candidate-profile.md), [test](../busines
 
 ## UC-К-02 Filling the form
 
-**As** a candidate, **I want** to press «Сохранить резюме», **so that** the profile appears in the bank. Saving does not set a grade. FR-К-01, FR-К-03.
+**As** a candidate, **I want** to press «Сохранить резюме», **so that** the profile appears in the bank. The city is chosen from the list. Saving does not set a grade. FR-К-01, FR-К-03.
 
 ## UC-К-03 A second resume
 
@@ -84,7 +84,7 @@ The rules: [profile](../business/brd/02-candidate-profile.md), [test](../busines
 
 ## UC-К-20 Feed filters
 
-**As** a candidate, **I want** to narrow the feed by salary, city, and stack and save the search. FR-К-26.
+**As** a candidate, **I want** to narrow the feed by salary, city, and stack and save the search. I look at my responses, mutual marks, and skips on «Мои отклики», not as feed tabs. FR-К-26.
 
 ## UC-К-21 What the bank shows
 
@@ -96,7 +96,7 @@ The rules: [profile](../business/brd/02-candidate-profile.md), [test](../busines
 
 ## UC-К-23 FSP link
 
-**As** a candidate, **I want** to press «Связать с ФСП», **so that** achievements appear on the card. FR-К-09, FR-К-10.
+**As** a candidate, **I want** to press «Привязать ФСП ID» and sign in with a demo login on the FSP ID page, **so that** achievements appear on the card. FR-К-09, FR-К-10.
 
 ## UC-К-24 No history
 

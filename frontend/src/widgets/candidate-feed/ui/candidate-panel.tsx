@@ -30,7 +30,7 @@ type Props = {
 
 /** Right-hand sheet on the employer feed: the whole profile, scrolling under a fixed footer. */
 export function CandidatePanel({ match, onClose, actions }: Props) {
-  const { candidate, matchScore, profileStrength, reasons, matched } = match
+  const { candidate, matchScore, reasons, matched } = match
   const notes = vacancyNotes(reasons)
   const titleId = useId()
   const photo = useCandidatePhoto(candidate.id, candidate.hasPhoto === true)
@@ -56,19 +56,11 @@ export function CandidatePanel({ match, onClose, actions }: Props) {
 
       <div className="candidate-panel__meters">
         <MatchMeter value={matchScore} label="Под вакансию" />
-        <MatchMeter value={profileStrength} label="Сила профиля" />
       </div>
 
       <ul className="match-card__facts">
-        {candidate.category && (
-          <li className="match-card__fact match-card__fact--accent">{candidate.category.label}</li>
-        )}
         <li>
-          <AssessmentStatusBadge
-            status={candidate.assessmentStatus}
-            score={candidate.assessmentScore}
-            beta={candidate.gradeBeta}
-          />
+          <AssessmentStatusBadge status={candidate.assessmentStatus} beta={candidate.gradeBeta} />
         </li>
         {candidate.experienceYears !== null && (
           <li className="match-card__fact">Опыт: {candidate.experienceYears} г.</li>

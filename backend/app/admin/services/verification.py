@@ -2,7 +2,8 @@
 DOCX), an admin approves or rejects the request.
 
 Uploading the first document opens a request; a new upload after a rejection reopens it. An
-approved company may add documents without losing its status.
+approved company may add documents without losing its status. Deleting the last file withdraws
+the request, so the admin list no longer offers a decision on an empty application.
 """
 
 import io
@@ -165,14 +166,26 @@ class VerificationService:
         await self._session.delete(document)
         await self._session.flush()
         (self._root / document.storage_key).unlink(missing_ok=True)
+        # Nothing left to confirm or refuse: the request leaves the admin queue.
+        if verification is not None and not await self._documents(company.id):
+            await self._session.delete(verification)
+            await self._session.flush()
         return await self.mine(user)
 
     # ── Admin ─────────────────────────────────────────────────────────────────────────────
 
+    def _has_documents(self) -> ColumnElement[bool]:
+        return (
+            select(CompanyDocument.id)
+            .where(CompanyDocument.company_id == CompanyVerification.company_id)
+            .exists()
+        )
+
     def _conditions(
         self, status: VerificationStatus | None, search: str | None
     ) -> list[ColumnElement[bool]]:
-        conditions: list[ColumnElement[bool]] = []
+        # A company that deleted every file has no request left to decide.
+        conditions: list[ColumnElement[bool]] = [self._has_documents()]
         if status is not None:
             conditions.append(CompanyVerification.status == status)
         if search:
@@ -232,7 +245,10 @@ class VerificationService:
         count = await self._session.scalar(
             select(func.count())
             .select_from(CompanyVerification)
-            .where(CompanyVerification.status == VerificationStatus.PENDING)
+            .where(
+                CompanyVerification.status == VerificationStatus.PENDING,
+                self._has_documents(),
+            )
         )
         return count or 0
 
@@ -251,6 +267,8 @@ class VerificationService:
             else None
         )
         documents = await self._documents(company_id)
+        if not documents and verification.status != VerificationStatus.APPROVED:
+            raise NotFoundError("Заявка не найдена")
         history, _ = await self._audit.page(
             entity="verification", entity_id=str(company_id), limit=50, offset=0
         )
@@ -290,7 +308,7 @@ class VerificationService:
         if verification is None:
             raise NotFoundError("Заявка не найдена")
         if not await self._documents(company_id):
-            raise ConflictError("В заявке нет документов")
+            raise NotFoundError("Заявка не найдена")
         target = VerificationStatus.APPROVED if approve else VerificationStatus.REJECTED
         before = verification.status
         verification.status = target

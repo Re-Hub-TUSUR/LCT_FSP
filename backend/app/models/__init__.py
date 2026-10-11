@@ -20,6 +20,7 @@ from app.models.ats import (
 )
 from app.models.candidate import CandidateProfile
 from app.models.candidate_category import CandidateCategory
+from app.models.city import City, CityAlias, CityResolutionGap
 from app.models.company import Company
 from app.models.conversation import Conversation, Message, MessageAttachment
 from app.models.email_verification import EmailVerificationCode
@@ -67,6 +68,9 @@ __all__ = [
     "CandidateCategory",
     "CandidateProfile",
     "CandidateReaction",
+    "City",
+    "CityAlias",
+    "CityResolutionGap",
     "Company",
     "Conversation",
     "EmailVerificationCode",

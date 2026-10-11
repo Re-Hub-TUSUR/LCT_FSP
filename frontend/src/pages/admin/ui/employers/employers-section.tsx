@@ -64,18 +64,43 @@ export function EmployersSection() {
         </div>
       )}
       <div className="admin-chips" role="group" aria-label="Фильтр">
-        <Chip active={signal === 'any'} onClick={() => (setPage(1), setSignal('any'))}>
+        <Chip
+          active={signal === 'any'}
+          onClick={() => {
+            setPage(1)
+            setSignal('any')
+          }}
+        >
           С сигналами
         </Chip>
-        <Chip active={signal === undefined} onClick={() => (setPage(1), setSignal(undefined))}>
+        <Chip
+          active={signal === undefined}
+          onClick={() => {
+            setPage(1)
+            setSignal(undefined)
+          }}
+        >
           Все активные
         </Chip>
         <span className="admin-chips__gap" />
-        <Chip active={!status} onClick={() => (setPage(1), setStatus(undefined))}>
+        <Chip
+          active={!status}
+          onClick={() => {
+            setPage(1)
+            setStatus(undefined)
+          }}
+        >
           Любое решение
         </Chip>
         {(Object.keys(CASE_LABELS) as CaseStatus[]).map((code) => (
-          <Chip key={code} active={status === code} onClick={() => (setPage(1), setStatus(code))}>
+          <Chip
+            key={code}
+            active={status === code}
+            onClick={() => {
+              setPage(1)
+              setStatus(code)
+            }}
+          >
             {CASE_LABELS[code]}
           </Chip>
         ))}
@@ -92,7 +117,7 @@ export function EmployersSection() {
         <Loader />
       ) : table.isError ? (
         <ErrorState message={errorText(table.error)} onRetry={() => void table.refetch()} />
-      ) : !table.data.snapshot ? (
+      ) : !table.data.snapshot && table.data.items.length === 0 ? (
         <EmptyState title="Данных пока нет">Нажмите «Пересчитать».</EmptyState>
       ) : table.data.items.length === 0 ? (
         <EmptyState title="Подозрительных компаний нет" />

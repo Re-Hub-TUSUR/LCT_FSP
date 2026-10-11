@@ -5,6 +5,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+from app.admin.services.banlist import active_ban_for, active_ban_for_email, raise_if_banned
 from app.core.config import Settings
 from app.core.errors import (
     AuthenticationError,
@@ -81,6 +82,7 @@ class AuthService:
 
     async def register(self, data: RegisterRequest) -> User:
         email = normalize_email(str(data.email))
+        raise_if_banned(await active_ban_for_email(self._users._session, email), self._settings)
         if await self._users.get_by_email(email):
             raise ConflictError("Пользователь с таким email уже зарегистрирован")
 
@@ -100,6 +102,7 @@ class AuthService:
         # Same error for unknown email and wrong password: don't reveal registered accounts.
         if not verify_password(data.password, user.password_hash if user else None) or not user:
             raise AuthenticationError("Неверный email или пароль")
+        raise_if_banned(await active_ban_for(self._users._session, user), self._settings)
         if not user.is_active:
             raise AuthenticationError("Учётная запись заблокирована")
         if not user.is_email_verified:
@@ -116,29 +119,38 @@ class AuthService:
         user = await self._users.get_by_email(normalize_email(email))
         if user is None or user.role != UserRole.ADMIN or not user.is_email_verified:
             raise AuthenticationError("Вход в админку закрыт")
+        raise_if_banned(await active_ban_for(self._users._session, user), self._settings)
         if not user.is_active:
             raise AuthenticationError("Учётная запись заблокирована")
         return await self._open_session(user)
 
     async def open_session(self, user: User) -> IssuedSession:
         """Session for a person Yandex ID already proved. The caller checked the account."""
+        raise_if_banned(await active_ban_for(self._users._session, user), self._settings)
         if not user.is_active:
             raise AuthenticationError("Учётная запись заблокирована")
         return await self._open_session(user)
 
     async def refresh(self, raw_token: str) -> IssuedSession:
         claims = decode_refresh_token(raw_token, self._settings)
+        try:
+            subject = uuid.UUID(claims.subject)
+        except ValueError as exc:
+            raise AuthenticationError("Сессия недействительна") from exc
+        user = await self._users.get_by_id(subject)
+        # A revoked cookie of a banned account still explains the ban, instead of a bare 401.
+        if user is not None:
+            raise_if_banned(await active_ban_for(self._users._session, user), self._settings)
         stored = await self._refresh_tokens.get(claims.token_id)
         now = datetime.now(UTC)
         if (
-            stored is None
+            user is None
+            or stored is None
             or stored.revoked_at is not None
             or _aware(stored.expires_at) < now
-            or str(stored.user_id) != claims.subject
+            or stored.user_id != subject
+            or not user.is_active
         ):
-            raise AuthenticationError("Сессия недействительна")
-        user = await self._users.get_by_id(stored.user_id)
-        if user is None or not user.is_active:
             raise AuthenticationError("Сессия недействительна")
         # Two requests with one cookie: only the one that revokes it gets a new session.
         if not await self._refresh_tokens.revoke(stored.id, now):

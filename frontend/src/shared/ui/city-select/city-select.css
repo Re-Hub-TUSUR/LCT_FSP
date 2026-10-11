@@ -1,0 +1,61 @@
+.city-select {
+  position: relative;
+}
+
+.city-select__control {
+  position: relative;
+}
+
+/* The shared error is taken out of flow. Here it keeps its own height and
+   padding, so the checkbox under the field moves down with it. */
+.city-select .field__error:not(:empty) {
+  position: static;
+  padding-bottom: 8px;
+}
+
+.city-select__list {
+  position: absolute;
+  z-index: 5;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 280px;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
+}
+
+.city-select__option,
+.city-select__empty {
+  padding: 10px 12px;
+  font-family: var(--font-mono), monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.city-select__option.is-active {
+  background: var(--bg);
+  color: var(--blue);
+}
+
+.city-select__empty {
+  color: var(--muted);
+  cursor: default;
+}
+
+.city-select .field__error:not(:empty) + .city-select__hint {
+  margin-top: 0;
+}
+
+.city-select__hint {
+  margin: 22px 0 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}

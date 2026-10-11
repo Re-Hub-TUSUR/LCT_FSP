@@ -1,16 +1,23 @@
 import { useState } from 'react'
+import { Navigate, useSearchParams } from 'react-router'
 import type { CandidateMatchDto } from '@/entities/candidate'
 import { useSession } from '@/entities/session'
+import { parseListView } from '@/entities/vacancy'
 import type { VacancyMatchDto } from '@/entities/vacancy'
+import { ROUTES } from '@/shared/config'
 import { HackerRain, Page } from '@/shared/ui'
 import { CandidateFeed, CandidatePanel } from '@/widgets/candidate-feed'
-import { CandidateSwipe, DecisionCounters, FeedViewTabs, VacancySwipe } from '@/widgets/feed-swipe'
+import { CandidateSwipe, DecisionCounters, VacancySwipe } from '@/widgets/feed-swipe'
 import { VacancyFeed, VacancyPanel } from '@/widgets/vacancy-feed'
 import './feed-page.css'
 
 export function FeedPage() {
   const { user } = useSession()
   const employer = user?.role === 'employer'
+  const [params] = useSearchParams()
+  const view = parseListView(params.get('view'))
+  // Old links from the reel open the same lists on «Мои отклики».
+  if (view !== 'all') return <Navigate to={`${ROUTES.responses}?tab=${view}`} replace />
 
   return (
     <Page
@@ -21,7 +28,6 @@ export function FeedPage() {
           ? 'Банк категоризированных кандидатов: поиск, фильтры и объяснимый рейтинг'
           : 'Вакансии под вашу категорию, стек и предпочтения'
       }
-      actions={<FeedViewTabs role={employer ? 'employer' : 'candidate'} />}
       backdrop={<HackerRain />}
     >
       {employer ? <CandidateFeed /> : <VacancyFeed />}

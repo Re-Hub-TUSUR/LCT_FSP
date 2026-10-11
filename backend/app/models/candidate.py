@@ -55,7 +55,13 @@ class CandidateProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     english_level: Mapped[str | None] = mapped_column(String(2))
 
     # Job preferences used to rank the vacancy feed.
+    # Canonical name. The place itself is `city_id` (GeoNames); the name is what cards show.
     city: Mapped[str | None] = mapped_column(String(100))
+    city_id: Mapped[int | None] = mapped_column(ForeignKey("cities.geoname_id"), index=True)
+    city_country_code: Mapped[str | None] = mapped_column(String(2))
+    city_region: Mapped[str | None] = mapped_column(String(200))
+    city_latitude: Mapped[float | None]
+    city_longitude: Mapped[float | None]
     relocation_ready: Mapped[bool] = mapped_column(default=False)
     work_formats: Mapped[list[str]] = mapped_column(JSON, default=list)
     # Desired monthly salary, RUB.

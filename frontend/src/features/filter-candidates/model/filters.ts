@@ -25,6 +25,7 @@ export const EMPTY_FILTERS: CandidateFiltersDto = {
   salaryMax: null,
   workFormats: [],
   cities: [],
+  cityIds: [],
   relocation: true,
   employmentTypes: [],
   jobStatuses: [],
@@ -79,6 +80,7 @@ const KEYS = [
   'salaryMax',
   'workFormat',
   'city',
+  'cityId',
   'relocation',
   'employment',
   'jobStatus',
@@ -120,6 +122,9 @@ export function readFilters(params: URLSearchParams): CandidateFiltersDto {
     salaryMax: positive(params.get('salaryMax')),
     workFormats: listOf(params, 'workFormat', WORK_FORMATS),
     cities: terms(params, 'city'),
+    cityIds: [...new Set(params.getAll('cityId').map(Number))].filter(
+      (item) => Number.isInteger(item) && item > 0,
+    ),
     relocation: params.get('relocation') !== 'false',
     employmentTypes: listOf(params, 'employment', EMPLOYMENT_TYPES),
     jobStatuses: listOf(
@@ -150,6 +155,7 @@ export function filterParams(filters: CandidateFiltersDto): CandidateFilterParam
     salaryMax: filters.salaryMax ?? undefined,
     workFormat: some(filters.workFormats),
     city: some(filters.cities),
+    cityId: some(filters.cityIds),
     relocation: filters.relocation ? undefined : false,
     employment: some(filters.employmentTypes),
     jobStatus: some(filters.jobStatuses),
@@ -184,7 +190,7 @@ export function activeCount(filters: CandidateFiltersDto): number {
     filters.nice.length,
     filters.salaryMin || filters.salaryMax,
     filters.workFormats.length,
-    filters.cities.length && !onlyRemote(filters),
+    (filters.cityIds.length || filters.cities.length) && !onlyRemote(filters),
     !filters.relocation,
     filters.employmentTypes.length,
     filters.jobStatuses.length,
@@ -295,7 +301,7 @@ export function relaxation(
     case 'relocation':
       return { label: 'Учесть готовых к переезду', next: { ...filters, relocation: true } }
     case 'cities':
-      return { label: 'Любой город', next: { ...filters, cities: [] } }
+      return { label: 'Любой город', next: { ...filters, cities: [], cityIds: [] } }
     case 'employment':
       return { label: 'Любая занятость', next: { ...filters, employmentTypes: [] } }
     case 'job_statuses':

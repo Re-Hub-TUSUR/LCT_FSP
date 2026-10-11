@@ -23,6 +23,7 @@ import { toggled } from '@/shared/lib'
 import {
   Button,
   CheckRow,
+  CitySelect,
   Segmented,
   SelectField,
   SkillField,
@@ -255,13 +256,19 @@ export function VacancyForm({ vacancy, onSaved }: Props) {
           </div>
           {!remote && (
             <div>
-              <TextField
+              <CitySelect
                 id="vacancy-city"
                 label="Город офиса"
-                autoComplete="address-level2"
-                value={values.city}
+                name={values.city}
                 error={errors.city}
-                onChange={(event) => update('city', event.target.value)}
+                onPick={(city) => {
+                  update('cityId', city.id)
+                  update('city', city.name)
+                }}
+                onClear={() => {
+                  update('cityId', null)
+                  update('city', '')
+                }}
               />
               <div className="vacancy-form__under">
                 <CheckRow

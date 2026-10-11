@@ -6,12 +6,10 @@ import { verificationQueries } from '@/features/company-verification'
 import type { VerificationStatus } from '@/features/company-verification'
 import { getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
-import { ButtonLink, ErrorState, Loader, Page, Panel, StatusTag } from '@/shared/ui'
-import { isNotReady, NOT_READY } from '@/widgets/invitations-inbox'
-import { isWaiting } from '../../lib/cabinet-data'
+import { ButtonLink, EmptyState, ErrorState, Loader, Page, Panel, StatusTag } from '@/shared/ui'
+import { InvitationsBoard } from '@/widgets/invitations-inbox'
 import { employerTodos } from '../../lib/todos'
 import { TodoList } from './todo-list'
-import { WaitingList } from './waiting-list'
 
 function AccreditationTag({
   accredited,
@@ -68,7 +66,6 @@ export function EmployerOverview() {
 
   const own = company.data
   const items = invitations.data?.items ?? []
-  const waiting = items.filter(isWaiting)
   const accepted = items.filter((item) => item.status === 'accepted').length
   const facts = [
     { label: 'ИНН', value: own.inn ?? 'Не указан' },
@@ -84,32 +81,18 @@ export function EmployerOverview() {
     <div className="cabinet-grid">
       <section className="cabinet-col" aria-labelledby="cabinet-waiting">
         <header className="cabinet-heading">
-          <h2 id="cabinet-waiting">
-            Ждут ответа кандидатов{' '}
-            {invitations.isSuccess && (
-              <span className="cabinet-heading__count">{waiting.length}</span>
-            )}
-          </h2>
-          <Link className="cabinet-link-btn" to={ROUTES.profileInvitations}>
-            Все приглашения
-          </Link>
+          <h2 id="cabinet-waiting">Приглашения</h2>
         </header>
-        {invitations.isPending ? (
-          <Loader />
-        ) : isNotReady(invitations.error) ? (
-          <p className="cabinet-muted cabinet-muted--plate">{NOT_READY}</p>
-        ) : invitations.isError ? (
-          <ErrorState
-            message={getErrorMessage(invitations.error)}
-            onRetry={() => void invitations.refetch()}
-          />
-        ) : (
-          <WaitingList
-            items={waiting}
-            direction="outgoing"
-            emptyText="Все кандидаты ответили — или приглашений ещё не было."
-          />
-        )}
+        <InvitationsBoard
+          direction="outgoing"
+          empty={
+            <EmptyState title="Вы ещё никого не пригласили">
+              <Link className="cabinet-link" to={ROUTES.feed}>
+                Открыть банк кандидатов
+              </Link>
+            </EmptyState>
+          }
+        />
       </section>
       <aside className="cabinet-col">
         <Panel

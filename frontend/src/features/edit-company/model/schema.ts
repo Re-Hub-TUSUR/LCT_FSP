@@ -99,7 +99,9 @@ export function validateLegal(values: LegalValues): LegalErrors {
 export function validateCompany(values: CompanyValues): CompanyErrors {
   const errors: CompanyErrors = validateLegal(values)
   if (!values.name.trim()) errors.name = 'Укажите название'
-  if (!values.industry.trim()) errors.industry = 'Укажите направление'
+  if (!INDUSTRIES.includes(values.industry as (typeof INDUSTRIES)[number])) {
+    errors.industry = 'Выберите направление из списка'
+  }
   const description = values.description.trim()
   if (description.length < DESCRIPTION_MIN) {
     errors.description = `Опишите компанию: ещё ${DESCRIPTION_MIN - description.length} символов`

@@ -22,6 +22,7 @@ from app.schemas.candidate import (
 )
 from app.services.age import MIN_AGE, age_on, experience_years
 from app.services.categories import SPECIALIZATIONS
+from app.services.cities import CityDirectory, apply_place
 from app.services.presenters import (
     candidate_read,
     own_candidate_read,
@@ -45,12 +46,15 @@ class CandidateProfileService:
         reactions: ReactionRepository,
         companies: CompanyRepository,
         users: UserRepository,
+        *,
+        cities: CityDirectory,
     ) -> None:
         self._candidates = candidates
         self._invitations = invitations
         self._reactions = reactions
         self._companies = companies
         self._users = users
+        self._cities = cities
 
     async def read(self, candidate_id: uuid.UUID, viewer: User) -> CandidateRead:
         """Candidates see only themselves; employers see visible profiles.
@@ -126,10 +130,12 @@ class CandidateProfileService:
             )
             profile.fsp_achievements = []
             profile.fsp_titles = []
+            await _take_city(self._cities, profile, data)
             _apply_resume(profile, data)
             await self._candidates.add(profile)
         else:
             previous = profile.specialization
+            await _take_city(self._cities, profile, data)
             _apply_resume(profile, data)
             await self._follow_specialization(profile, previous)
         await self._take_portrait(user, profile)
@@ -290,7 +296,7 @@ def _require_resume(data: CandidateProfileUpdate) -> None:
         missing.append("должность")
     if not data.specialization:
         missing.append("специализацию")
-    if not data.city:
+    if data.city_id is None and not (data.city and data.city.strip()):
         missing.append("город")
     if not (_blank(data.phone) or _telegram(data.telegram)):
         missing.append("телефон или Telegram")
@@ -307,6 +313,19 @@ def _require_resume(data: CandidateProfileUpdate) -> None:
         raise AppError("Заполните: " + ", ".join(missing))
     if len(_skills(data.stack or [], limit=30, label="Стек")) < MIN_STACK:
         raise AppError(f"Укажите не меньше {MIN_STACK} технологий в стеке")
+
+
+async def _take_city(
+    cities: CityDirectory, profile: CandidateProfile, data: CandidateProfileUpdate
+) -> None:
+    """A selected place, or a name that is exactly one place. Anything else is refused."""
+    fields = data.model_fields_set
+    if "city_id" not in fields and "city" not in fields:
+        return
+    if data.city_id is None and not (data.city and data.city.strip()):
+        apply_place(profile, None)
+        return
+    apply_place(profile, await cities.require(data.city_id, data.city))
 
 
 def _apply_resume(profile: CandidateProfile, data: CandidateProfileUpdate) -> None:
@@ -394,8 +413,6 @@ def _apply_texts(profile: CandidateProfile, data: CandidateProfileUpdate) -> Non
         profile.headline = data.headline.strip() if data.headline else None
     if "about" in fields:
         profile.about = data.about.strip() if data.about else None
-    if "city" in fields:
-        profile.city = data.city.strip() if data.city else None
     if "phone" in fields:
         profile.phone = _blank(data.phone)
     if "telegram" in fields:

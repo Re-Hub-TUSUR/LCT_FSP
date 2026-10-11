@@ -43,6 +43,8 @@ class CandidateSearchQuery:
     # (or readiness to relocate when `include_relocation`).
     work_formats: tuple[WorkFormat, ...] = ()
     cities: tuple[str, ...] = ()
+    # GeoNames ids. When set, the city filter uses these and ignores `cities`.
+    city_ids: tuple[int, ...] = ()
     include_relocation: bool = True
     employment_types: tuple[EmploymentType, ...] = ()
     job_statuses: tuple[JobStatus, ...] = ()

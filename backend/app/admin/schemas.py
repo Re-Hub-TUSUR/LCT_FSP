@@ -247,6 +247,13 @@ class EmployerOutreachRow(ApiModel):
     created_at: datetime
 
 
+class EmployerSignalRead(ApiModel):
+    code: str
+    hits: int
+    first_at: datetime
+    last_at: datetime
+
+
 class EmployerCard(ApiModel):
     company_id: uuid.UUID
     name: str
@@ -261,6 +268,8 @@ class EmployerCard(ApiModel):
     banned: bool
     # The company's row of the latest signals snapshot (null if it had no activity then).
     signals: dict[str, Any] | None
+    # Rules that fired as the actions happened, without waiting for a snapshot.
+    live_signals: list[EmployerSignalRead] = Field(default_factory=list)
     snapshot: SnapshotMeta | None
     vacancies: list[EmployerVacancyRow]
     outreach: list[EmployerOutreachRow]
@@ -319,6 +328,11 @@ class BanCreate(ApiModel):
         return self
 
 
+class BanAccountRead(ApiModel):
+    email: str
+    role: str
+
+
 class BanRead(ApiModel):
     id: uuid.UUID
     company_id: uuid.UUID | None
@@ -333,6 +347,7 @@ class BanRead(ApiModel):
     unbanned_at: datetime | None
     unbanned_by_email: str | None
     unban_reason: str | None
+    accounts: list[BanAccountRead] = Field(default_factory=list)
 
 
 # ── Dictionaries and parameters ─────────────────────────────────────────────────────────────────

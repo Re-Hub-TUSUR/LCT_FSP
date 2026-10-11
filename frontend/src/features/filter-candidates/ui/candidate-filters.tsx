@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { candidateApi, candidateKeys, candidateQueries } from '@/entities/candidate'
 import type {
   CandidateFiltersDto,
@@ -48,10 +48,28 @@ import {
   sameFilters,
 } from '../model/filters'
 import type { MarkGroup } from '../model/filters'
+// The slice barrel re-exports this hook, but importing it from there cycles back into this file.
+// noinspection JSImportCanBeShortened
 import { useCandidateFilters } from '../model/use-candidate-filters'
+import { VacancyModeCoach } from './vacancy-mode-coach'
 
 const CANDIDATES = ['кандидат', 'кандидата', 'кандидатов'] as const
 const FREE = 'free'
+/** Set once «Больше не показывать» is chosen. The note never comes back. */
+const ONBOARDING_KEY = 'kadry.onboarding.feed-vacancy'
+/** «Понял»: hidden until this tab is closed and the page is opened again. */
+const HINT_SESSION_KEY = 'kadry.feed.vacancy-hint'
+
+function vacancyHintHidden() {
+  try {
+    return (
+      window.localStorage.getItem(ONBOARDING_KEY) === 'done' ||
+      window.sessionStorage.getItem(HINT_SESSION_KEY) === '1'
+    )
+  } catch {
+    return false
+  }
+}
 // Mode ids of saved searches: `saved:<id>`.
 const SAVED = 'saved:'
 const SUGGESTIONS = 5
@@ -225,7 +243,26 @@ export function CandidateFilters() {
     />
   )
 
+  const modeAnchor = useRef<HTMLDivElement>(null)
+  const [vacancyHintOff, setVacancyHintOff] = useState(vacancyHintHidden)
   const vacancies = presets.data?.vacancies ?? []
+  const showVacancyHint = !vacancyHintOff && !vacancyId && !savedSearch && vacancies.length > 0
+  const hideHintForThisTab = () => {
+    try {
+      window.sessionStorage.setItem(HINT_SESSION_KEY, '1')
+    } catch {
+      // A private window can refuse the write. The note still stays hidden this visit.
+    }
+    setVacancyHintOff(true)
+  }
+  const finishOnboarding = () => {
+    try {
+      window.localStorage.setItem(ONBOARDING_KEY, 'done')
+    } catch {
+      // A private window can refuse the write. The note still stays hidden this visit.
+    }
+    setVacancyHintOff(true)
+  }
   const modes: ModeOption[] = [
     {
       id: FREE,
@@ -315,15 +352,24 @@ export function CandidateFilters() {
       />
 
       <div className="filters-group">
-        <ModeSelect
-          label="Подбор под вакансию"
-          options={modes}
-          value={mode}
-          onChange={pickMode}
-          searchPlaceholder="Найти вакансию или поиск"
-          emptyText="Ничего не найдено"
-          accented={mode !== FREE}
-        />
+        <div ref={modeAnchor}>
+          <ModeSelect
+            label="Подбор под вакансию"
+            options={modes}
+            value={mode}
+            onChange={pickMode}
+            searchPlaceholder="Найти вакансию или поиск"
+            emptyText="Ничего не найдено"
+            accented={mode !== FREE}
+          />
+        </div>
+        {showVacancyHint && (
+          <VacancyModeCoach
+            anchor={modeAnchor}
+            onLater={hideHintForThisTab}
+            onNever={finishOnboarding}
+          />
+        )}
         {savedSearch ? (
           <p className="filters-saved-note">
             О новых подходящих кандидатах придёт уведомление.
@@ -337,11 +383,10 @@ export function CandidateFilters() {
             </button>
           </p>
         ) : (
+          vacancyId &&
           vacancies.length > 0 && (
             <p className="filters-hint">
-              {vacancyId
-                ? 'Фильтры заполнены из вакансии, кандидаты отсортированы по совпадению.'
-                : 'Выберите вакансию — фильтры заполнятся из её требований.'}
+              Фильтры заполнены из вакансии, кандидаты отсортированы по совпадению.
             </p>
           )
         )}
@@ -622,9 +667,14 @@ export function CandidateFilters() {
             values={filters.cities}
             options={(typed) => termOptions(counts?.cities ?? [], typed, filters.cities)}
             resolve={(typed) => resolveTerm(counts?.cities ?? [], typed)}
-            onAdd={(values) => change({ cities: [...new Set([...filters.cities, ...values])] })}
+            onAdd={(values) =>
+              change({ cities: [...new Set([...filters.cities, ...values])], cityIds: [] })
+            }
             onRemove={(value) =>
-              change({ cities: filters.cities.filter((item) => item !== value) })
+              change({
+                cities: filters.cities.filter((item) => item !== value),
+                cityIds: [],
+              })
             }
             emptyText="Ничего не найдено"
           />

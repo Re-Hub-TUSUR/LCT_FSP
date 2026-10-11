@@ -14,6 +14,7 @@ import {
 import { adminApi, adminKeys, adminQueries } from '../../api/admin-api'
 import type { BanCreate, BanEntry } from '../../api/types'
 import { errorText, formatStamp } from '../../lib/format'
+import { ACCOUNT_ROLE_LABELS } from '../../lib/labels'
 import { ExportButton } from '../common/export-button'
 import { HistoryList } from '../common/history-list'
 import { Pager } from '../common/pager'
@@ -73,7 +74,8 @@ function AddBanDialog({ onClose }: { onClose: () => void }) {
           onChange={(e) => set('reason', e.target.value)}
         />
         <p className="admin-hint">
-          Нужно хотя бы одно: компания-клиент платформы, ИНН, email или домен.
+          Бан по email действует и на специалиста, и на работодателя. Нужно хотя бы одно: компания,
+          ИНН, email или домен.
         </p>
         {add.isError && (
           <p className="admin-error" role="alert">
@@ -203,6 +205,7 @@ export function BanlistSection() {
                   <th scope="col">Компания</th>
                   <th scope="col">ИНН</th>
                   <th scope="col">Email</th>
+                  <th scope="col">Кого затрагивает</th>
                   <th scope="col">Домен</th>
                   <th scope="col">Причина</th>
                   <th scope="col">Дата и кто</th>
@@ -215,6 +218,16 @@ export function BanlistSection() {
                     <td>{ban.companyName ?? '—'}</td>
                     <td>{ban.inn ?? '—'}</td>
                     <td>{ban.email ?? '—'}</td>
+                    <td>
+                      {ban.accounts.length === 0
+                        ? '—'
+                        : ban.accounts
+                            .map(
+                              (account) =>
+                                `${ACCOUNT_ROLE_LABELS[account.role] ?? account.role}: ${account.email}`,
+                            )
+                            .join(', ')}
+                    </td>
                     <td>{ban.emailDomain ?? '—'}</td>
                     <td>
                       {ban.reason}

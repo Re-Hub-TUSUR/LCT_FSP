@@ -1,5 +1,5 @@
-/* Rain fills only the vacancy/candidate list. z-index -1 stays behind this
-   page and above the ground. Swipe uses its own layer in page.css. */
+/* Rain covers the viewport behind this page and above the ground.
+   Swipe uses its own layer in page.css. */
 .page--feed {
   position: relative;
   isolation: isolate;

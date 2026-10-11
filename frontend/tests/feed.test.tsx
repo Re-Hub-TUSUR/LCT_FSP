@@ -166,7 +166,7 @@ describe('feeds', () => {
     expect(within(sheet).getByText('Команда процессинга.')).toBeInTheDocument()
   })
 
-  it('shows the recruiter search with profile strength, the engine and FSP on the sheet', async () => {
+  it('shows the recruiter search with the test score, the engine and FSP on the sheet', async () => {
     signIn('employer')
     vi.stubGlobal(
       'fetch',
@@ -181,11 +181,18 @@ describe('feeds', () => {
     renderApp('/feed')
 
     expect(await screen.findByText('Марина Крылова', {}, SLOW)).toBeInTheDocument()
-    expect(screen.getByText('Сила профиля')).toBeInTheDocument()
+    expect(screen.getByText('Тест пройден')).toBeInTheDocument()
+    expect(screen.queryByText(/\/100/)).not.toBeInTheDocument()
+    expect(screen.queryByText('Сила профиля')).not.toBeInTheDocument()
+    expect(screen.queryByText('Backend-разработка · Middle')).not.toBeInTheDocument()
     expect(screen.getByText('Поиск: Elasticsearch')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /Марина Крылова/ }))
     const sheet = await screen.findByRole('dialog', { name: 'Марина Крылова' })
+    expect(within(sheet).queryByText('Сила профиля')).not.toBeInTheDocument()
+    expect(within(sheet).queryByText('Backend-разработка · Middle')).not.toBeInTheDocument()
+    expect(within(sheet).getByText('Тест пройден')).toBeInTheDocument()
+    expect(within(sheet).queryByText(/\/100/)).not.toBeInTheDocument()
     expect(
       within(sheet).getByText(/^Победитель · Чемпионат Москвы .* · команда «NullPointer»/),
     ).toBeInTheDocument()
@@ -232,9 +239,7 @@ describe('feeds', () => {
       await screen.findByText('Вы посмотрели все подходящие вакансии', {}, SLOW),
     ).toBeInTheDocument()
     expect(
-      screen.getByText(
-        'Ваши отклики — в ленте, раздел «Отклики». Новые вакансии появятся здесь сами.',
-      ),
+      screen.getByText('Ваши отклики — в «Мои отклики». Новые вакансии появятся здесь сами.'),
     ).toBeInTheDocument()
     expect(document.querySelector('.reel__placeholder')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Интересно' })).not.toBeInTheDocument()
@@ -313,49 +318,39 @@ describe('feeds', () => {
     await waitFor(() => expect(within(counters).getByText('12')).toBeInTheDocument())
     const links = within(counters).getAllByRole('link')
     expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
-      ['Отобрано12', '/feed?view=liked'],
-      ['Взаимно3', '/feed?view=matched'],
-      ['Вырезано40', '/feed?view=skipped'],
+      ['Отобрано12', '/responses?tab=liked'],
+      ['Взаимно3', '/responses?tab=matched'],
+      ['Не интересно40', '/responses?tab=skipped'],
     ])
   })
 
-  it('opens the lists of own decisions from the feed and marks mutual interest', async () => {
+  it('keeps decision lists off the feed and opens them on «Мои отклики»', async () => {
     signIn('candidate')
-    const views: (string | null)[] = []
-    const rest = mockFetch({})
-    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
-      const url = new URL(String(input), 'http://localhost')
-      const view = url.searchParams.get('view')
-      // The app also restores the session and checks the resume on start; the filters ask for
-      // their counts and saved searches: only the feed itself answers here.
-      if (!url.pathname.endsWith('/vacancies/feed')) return rest(input)
-      views.push(view)
-      const items =
-        view === 'matched'
-          ? [{ ...vacancyMatch('v1', 'Go-разработчик в команду антифрода', 0.91), matched: true }]
-          : view === 'skipped'
-            ? []
+    stubApi(({ method, path, search }) => {
+      if (path === '/vacancies/feed') {
+        const view = new URLSearchParams(search).get('view')
+        const items =
+          view === 'matched'
+            ? [{ ...vacancyMatch('v1', 'Go-разработчик в команду антифрода', 0.91), matched: true }]
             : vacancyFeed.items
-      return new Response(JSON.stringify({ ...vacancyFeed, ...page(items) }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      })
+        return { ...vacancyFeed, ...page(items) }
+      }
+      return method === 'GET' ? [] : undefined
     })
-    const user = userEvent.setup()
 
     renderApp('/feed')
     await screen.findByText('Python-разработчик', {}, SLOW)
-    expect(screen.queryByText(/Взаимно: компания/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Все' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Отобрано' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Взаимно' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Вырезано' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Отклики' })).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Взаимно' }))
+    renderApp('/responses?tab=matched')
+    expect(await screen.findByRole('button', { name: 'Взаимно' }, SLOW)).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
     expect(await screen.findByText('Взаимно: компания отобрала вас')).toBeInTheDocument()
-    expect(screen.queryByText('Python-разработчик')).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Вырезано' }))
-    expect(await screen.findByText('Ничего не вырезано')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Отклики' }))
-    await screen.findByText('Python-разработчик')
-    expect(views).toEqual(['all', 'matched', 'skipped', 'liked'])
   })
 })

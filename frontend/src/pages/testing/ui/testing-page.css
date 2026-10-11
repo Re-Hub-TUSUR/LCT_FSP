@@ -1,4 +1,4 @@
-/* Rain fills this page only and stays behind the heading, the error, and the cards. */
+/* Rain covers the viewport and stays behind the heading, the error, and the cards. */
 main:has(.page--testing) {
   position: relative;
   isolation: isolate;

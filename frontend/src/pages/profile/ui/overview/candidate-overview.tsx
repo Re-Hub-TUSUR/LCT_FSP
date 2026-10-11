@@ -1,16 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
 import { JOB_STATUS_LABELS, candidateQueries } from '@/entities/candidate'
-import { invitationQueries } from '@/entities/invitation'
 import { getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
 import { formatRubRange } from '@/shared/lib'
-import { ButtonLink, ErrorState, Loader, Page, Panel } from '@/shared/ui'
-import { isNotReady, NOT_READY } from '@/widgets/invitations-inbox'
-import { isWaiting } from '../../lib/cabinet-data'
+import { ButtonLink, EmptyState, ErrorState, Loader, Page, Panel } from '@/shared/ui'
+import { CompanyLikes, InvitationsBoard } from '@/widgets/invitations-inbox'
 import { candidateTodos } from '../../lib/todos'
 import { TodoList } from './todo-list'
-import { WaitingList } from './waiting-list'
 
 function yearsLabel(years: number): string {
   const tail = years % 10
@@ -22,10 +19,6 @@ function yearsLabel(years: number): string {
 
 export function CandidateOverview() {
   const profile = useQuery(candidateQueries.mine())
-  const invitations = useQuery({
-    ...invitationQueries.list('incoming'),
-    enabled: profile.isSuccess,
-  })
 
   if (profile.isPending) {
     return (
@@ -57,8 +50,6 @@ export function CandidateOverview() {
   }
 
   const own = profile.data
-  const waiting = (invitations.data?.items ?? []).filter(isWaiting)
-  const fresh = waiting.filter((item) => item.status === 'sent').length
   const facts = [
     { label: 'Категория', value: own.category?.label ?? 'Не подтверждена' },
     { label: 'Статус', value: JOB_STATUS_LABELS[own.jobStatus] },
@@ -83,30 +74,19 @@ export function CandidateOverview() {
     <div className="cabinet-grid">
       <section className="cabinet-col" aria-labelledby="cabinet-waiting">
         <header className="cabinet-heading">
-          <h2 id="cabinet-waiting">
-            Ждут ответа{' '}
-            {invitations.isSuccess && <span className="cabinet-heading__count">{fresh}</span>}
-          </h2>
-          <Link className="cabinet-link-btn" to={ROUTES.profileInvitations}>
-            Все приглашения
-          </Link>
+          <h2 id="cabinet-waiting">Приглашения</h2>
         </header>
-        {invitations.isPending ? (
-          <Loader />
-        ) : isNotReady(invitations.error) ? (
-          <p className="cabinet-muted cabinet-muted--plate">{NOT_READY}</p>
-        ) : invitations.isError ? (
-          <ErrorState
-            message={getErrorMessage(invitations.error)}
-            onRetry={() => void invitations.refetch()}
-          />
-        ) : (
-          <WaitingList
-            items={waiting}
-            direction="incoming"
-            emptyText="Сейчас ответа ничего не ждёт."
-          />
-        )}
+        <CompanyLikes />
+        <InvitationsBoard
+          direction="incoming"
+          empty={
+            <EmptyState title="Приглашений пока нет">
+              <Link className="cabinet-link" to={ROUTES.feed}>
+                Смотреть вакансии
+              </Link>
+            </EmptyState>
+          }
+        />
       </section>
       <aside className="cabinet-col">
         <Panel className="panel--frame" title="Что сделать">

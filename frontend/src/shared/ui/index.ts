@@ -1,6 +1,8 @@
 export { Button, ButtonLink } from './button/button'
 export { CodeEditor } from './code-editor/code-editor'
 export { SelectField, TextArea, TextField } from './text-field/text-field'
+export { CitySelect, cityOptionLabel, searchCities } from './city-select/city-select'
+export type { CityOption } from './city-select/city-select'
 export { EmptyState, ErrorState, FspMark, Loader } from './feedback/feedback'
 export { QueryState } from './feedback/query-state'
 export { ConfirmDialog } from './modal/confirm-dialog'

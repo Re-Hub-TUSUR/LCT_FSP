@@ -42,8 +42,13 @@ class VacancyRead(ApiModel):
     stack: list[str]
     salary: SalaryRead
     work_format: WorkFormat
-    # Office location; null for remote positions.
+    # Office location; null for remote positions. `city_id` is the GeoNames place.
     city: str | None
+    city_id: int | None = None
+    city_country_code: str | None = None
+    city_region: str | None = None
+    city_latitude: float | None = None
+    city_longitude: float | None = None
     description: str
     # Null for a draft, which only its company sees.
     published_at: datetime | None
@@ -222,7 +227,8 @@ class VacancyCreate(ApiModel):
     stack_nice: list[str] = Field(default_factory=list, max_length=20)
     salary: SalaryRange
     work_format: WorkFormat
-    # Required for office and hybrid work.
+    # The place from the city list. A bare name is accepted only when it is exactly one place.
+    city_id: int | None = None
     city: str | None = Field(default=None, max_length=100)
     relocation_help: bool = False
     employment_types: list[EmploymentType] = Field(min_length=1)
@@ -236,13 +242,6 @@ class VacancyCreate(ApiModel):
 
     @model_validator(mode="after")
     def _rules(self) -> Self:
-        # «8II8MI ,» has letters, but no word: a title needs three letters in a row somewhere.
-        if not _has_word(self.title):
-            msg = "Название вакансии — словами, например «Backend-разработчик»"
-            raise ValueError(msg)
-        if _words(self.description) < MIN_DESCRIPTION_WORDS:
-            msg = "Опишите вакансию словами: задачи, команда, условия"
-            raise ValueError(msg)
         if self.salary.from_ < MIN_VACANCY_SALARY:
             msg = f"Зарплата — от {MIN_VACANCY_SALARY} ₽ в месяц"
             raise ValueError(msg)
@@ -256,7 +255,8 @@ class VacancyCreate(ApiModel):
             if last - first != 1:
                 msg = "Можно выбрать один грейд или два соседних"
                 raise ValueError(msg)
-        if self.work_format != WorkFormat.REMOTE and not (self.city and self.city.strip()):
+        named = self.city.strip() if self.city else ""
+        if self.work_format != WorkFormat.REMOTE and self.city_id is None and not named:
             msg = "Укажите город для офиса или гибрида"
             raise ValueError(msg)
         return self

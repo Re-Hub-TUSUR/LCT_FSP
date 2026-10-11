@@ -9,6 +9,7 @@ const FILLED: ResumeValues = {
   headline: 'Backend-разработчик',
   specialization: 'backend',
   city: 'Казань',
+  cityId: 551487,
   workFormats: ['remote'],
   employmentTypes: ['full'],
   experienceYears: '3',
@@ -18,11 +19,11 @@ const FILLED: ResumeValues = {
 
 describe('resume panels', () => {
   it('reports only the errors of the open panel', () => {
-    const values = { ...FILLED, city: '', stack: ['Python'] }
+    const values = { ...FILLED, city: '', cityId: null, stack: ['Python'] }
     expect(validatePanels(values, ['skills'])).toEqual({
       stack: 'Укажите не меньше 3 технологий',
     })
-    expect(validatePanels(values, ['basic'])).toEqual({ city: 'Укажите город' })
+    expect(validatePanels(values, ['basic'])).toEqual({ city: 'Выберите город из списка' })
     expect(validatePanels(FILLED, ['basic', 'skills', 'contacts'])).toEqual({})
   })
 

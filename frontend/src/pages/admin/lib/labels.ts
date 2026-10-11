@@ -35,6 +35,18 @@ export const FLAG_LABELS: Record<TaskFlag, string> = {
 export const SIGNAL_LABELS: Record<string, string> = {
   invites_spike: 'Аномально много приглашений за сутки',
   low_response: 'Низкая доля ответов кандидатам',
+  reaction_flapping: 'Частая смена отметки одного кандидата',
+  requisites_churn: 'Частая смена реквизитов',
+  junk_vacancies: 'Вакансии без слов',
+  meeting_churn: 'Частые отмены встреч',
+  chat_media_spam: 'Много файлов в чате',
+  invalid_industry: 'Направление не из списка',
+}
+
+export const ACCOUNT_ROLE_LABELS: Record<string, string> = {
+  candidate: 'Специалист',
+  employer: 'Работодатель',
+  admin: 'Администратор',
 }
 
 export const CASE_LABELS: Record<CaseStatus, string> = {

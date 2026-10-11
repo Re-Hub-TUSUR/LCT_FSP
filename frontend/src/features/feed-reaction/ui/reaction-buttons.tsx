@@ -90,7 +90,7 @@ export function ReactionButtons({ target, id, initial, vacancyId, likeLabel = '�
           className={`reaction-buttons__btn${reaction === 'skip' ? ' is-on' : ''}`}
           onClick={() => toggle('skip')}
         >
-          {reaction === 'skip' ? 'Вырезано · вернуть' : 'Не интересно'}
+          {reaction === 'skip' ? 'Не интересно · вернуть' : 'Не интересно'}
         </button>
       )}
     </div>

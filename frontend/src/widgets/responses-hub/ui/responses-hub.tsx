@@ -21,16 +21,23 @@ type Props = {
   messagesPanel: ReactNode
 }
 
-export type ResponsesTab = 'skipped' | 'liked' | 'inbound' | 'messages'
+export type ResponsesTab = 'skipped' | 'liked' | 'matched' | 'inbound' | 'messages'
 
 const TAB_LABELS: Record<ResponsesTab, string> = {
   skipped: 'Не понравились',
   liked: 'Мне понравились',
+  matched: 'Взаимно',
   inbound: 'Я понравился',
   messages: 'Сообщения',
 }
 
-const TABS: ResponsesTab[] = ['skipped', 'liked', 'inbound', 'messages']
+const TABS: ResponsesTab[] = ['skipped', 'liked', 'matched', 'inbound', 'messages']
+
+const DECISION_TABS = ['skipped', 'liked', 'matched'] as const
+
+function isDecisionTab(tab: ResponsesTab): tab is (typeof DECISION_TABS)[number] {
+  return (DECISION_TABS as readonly string[]).includes(tab)
+}
 
 function parseTab(value: string | null): ResponsesTab {
   return TABS.includes(value as ResponsesTab) ? (value as ResponsesTab) : 'liked'
@@ -52,15 +59,15 @@ export function ResponsesHub({ messagesPanel }: Props) {
     setParams(copy, { replace: true })
   }
 
-  const feedView = tab === 'skipped' || tab === 'liked' ? tab : 'liked'
+  const feedView = isDecisionTab(tab) ? tab : 'liked'
   const vacancyQuery = useQuery({
     ...vacancyQueries.feed({ page: 1, perPage: 20, view: feedView }),
-    enabled: !employer && (tab === 'skipped' || tab === 'liked'),
+    enabled: !employer && isDecisionTab(tab),
     placeholderData: keepPreviousData,
   })
   const candidateQuery = useQuery({
     ...candidateQueries.search({ page: 1, perPage: 20, view: feedView }),
-    enabled: employer && (tab === 'skipped' || tab === 'liked'),
+    enabled: employer && isDecisionTab(tab),
     placeholderData: keepPreviousData,
   })
   const inboundQuery = useQuery({
@@ -200,10 +207,12 @@ export function ResponsesHub({ messagesPanel }: Props) {
                 ))}
               </ul>
             ) : (
-              <EmptyState title="Список пуст">
+              <EmptyState title={tab === 'matched' ? 'Взаимных отметок пока нет' : 'Список пуст'}>
                 {tab === 'skipped'
                   ? 'Пропущенные кандидаты появятся здесь после свайпа влево.'
-                  : 'Лайкнутые кандидаты появятся после «Интересно» или избранного.'}
+                  : tab === 'matched'
+                    ? 'Здесь появятся отобранные вами кандидаты, которые отметили вакансию вашей компании.'
+                    : 'Лайкнутые кандидаты появятся после «Интересно» или избранного.'}
               </EmptyState>
             )
           }
@@ -229,10 +238,12 @@ export function ResponsesHub({ messagesPanel }: Props) {
                 ))}
               </ul>
             ) : (
-              <EmptyState title="Список пуст">
+              <EmptyState title={tab === 'matched' ? 'Взаимных отметок пока нет' : 'Список пуст'}>
                 {tab === 'skipped'
                   ? 'Пропущенные вакансии появятся здесь после свайпа влево.'
-                  : 'Понравившиеся вакансии появятся после «Интересно» или избранного.'}
+                  : tab === 'matched'
+                    ? 'Здесь появятся вакансии с вашим откликом, чьи компании отобрали вас.'
+                    : 'Понравившиеся вакансии появятся после «Интересно» или избранного.'}
               </EmptyState>
             )
           }

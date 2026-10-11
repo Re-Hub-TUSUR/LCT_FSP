@@ -16,6 +16,7 @@ const valid: ResumeValues = {
   headline: 'Backend-разработчик',
   specialization: 'backend',
   city: 'Казань',
+  cityId: 551487,
   experienceYears: '4',
   workFormats: ['hybrid'],
   employmentTypes: ['full'],

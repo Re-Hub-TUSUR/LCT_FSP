@@ -40,7 +40,7 @@ type PayloadKey = keyof CandidateProfileUpdate
 
 /** What PATCH /candidates/me receives for a panel: only its own columns. */
 const PANEL_PAYLOAD: Record<PanelId, PayloadKey[]> = {
-  basic: ['displayName', 'headline', 'specialization', 'city', 'birthDate'],
+  basic: ['displayName', 'headline', 'specialization', 'cityId', 'birthDate'],
   search: ['jobStatus', 'salaryExpectation', 'relocationReady', 'workFormats', 'employmentTypes'],
   experience: ['noExperience', 'experienceYears', 'experienceEntries'],
   skills: ['stack', 'softSkills'],

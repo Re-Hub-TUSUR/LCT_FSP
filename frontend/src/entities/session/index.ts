@@ -1,6 +1,8 @@
 export { sessionApi } from './api/session-api'
 export type { SignInPayload, SignUpPayload, TokenResponseDto } from './api/session-api'
 export { refreshSession } from './model/refresh-session'
+export { bannedStore } from './model/banned-store'
+export type { BanNotice } from './model/banned-store'
 export { sessionStore } from './model/session-store'
 export type { Session } from './model/session-store'
 export { signOut } from './model/sign-out'

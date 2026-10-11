@@ -11,7 +11,7 @@ export const DECISION_VIEW_LABELS: Record<DecisionView, string> = {
   /** Liked, and the other side liked back. */
   matched: 'Взаимно',
   /** Skipped; a card can be taken back from here. */
-  skipped: 'Вырезано',
+  skipped: 'Не интересно',
 }
 
 /** A feed page shows everything or one of the decision lists (`unseen` is the swipe deck's). */

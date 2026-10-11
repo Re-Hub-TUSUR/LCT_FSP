@@ -7,7 +7,7 @@
   /* Also a <p> or <legend> over a group of chips: no default top margin, so the row lines up. */
   margin: 0 0 8px;
   padding: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -22,7 +22,7 @@
   border: 1px solid var(--line);
   border-radius: 0;
   background: var(--bg-deep);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-weight: 400;
   font-size: 14px;
   line-height: 1.45;
@@ -33,6 +33,7 @@
 
 .field__input--multiline {
   min-height: 96px;
+  overflow-wrap: anywhere;
   resize: vertical;
   scrollbar-width: thin;
   scrollbar-color: var(--line) transparent;
@@ -59,7 +60,7 @@
   top: 100%;
   left: 0;
   margin: 4px 0 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-weight: 400;
   font-size: 12px;
   line-height: 1.3;

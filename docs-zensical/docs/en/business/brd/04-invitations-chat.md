@@ -36,9 +36,9 @@ A chat opens when the candidate accepts an invitation, or when interest is mutua
 
 **Priority:** extra · К1 · **UC:** UC-О-06
 
-The employer sets a meeting: date, time, and a link to an external call. The candidate confirms or declines. The employer can move or cancel it.
+The employer sets a meeting: date, time, and a link to an external call. On a chat card that is still waiting for an answer, the candidate presses «Принять» or «Отклонить». The employer does not see those buttons in the chat. The employer can move or cancel the meeting.
 
-**UI strings:** «Назначить встречу», «Подтвердить».
+**UI strings:** «Назначить встречу», «Принять», «Отклонить», «Подтвердить».
 
 ## FR-О-10. Live events
 
@@ -56,7 +56,7 @@ An empty list says what to do next: poll the ATS, take the test, fill in the com
 
 **Priority:** MVP · К1 · **UC:** UC-К-14
 
-The candidate has a list of invitations, newest first. A row shows the company, the text, the band, and the status. Without a resume the list is empty, and that is not an error.
+The candidate's invitation list is on the cabinet page «Обзор»: newest first, and a row shows the company, the text, the band, and the status. The cabinet menu has no separate «Приглашения» section. Without a resume the list is empty, and that is not an error.
 
 ## FR-К-24. Invitation card
 

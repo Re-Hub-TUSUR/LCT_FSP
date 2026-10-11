@@ -20,7 +20,7 @@ Email and password or Yandex ID, a confirmation code, one role per account. Scre
 **Priority:** MVP · К3  
 **UC:** UC-О-01, UC-О-02
 
-**Rule.** The role is chosen on the home page: «Я ищу работу» or «Я нанимаю». The sign-up form is email, password, and consent. The resume and the company profile are filled in after sign-in.
+**Rule.** The role is chosen on the home page: «Я ищу работу» or «Я нанимаю». The sign-up form is email, password, and consent. The resume and the company profile are filled in after sign-in. Signing in to an existing account opens «Лента».
 
 **UI strings:** «Я ищу работу», «Я нанимаю», «Продолжить».
 
@@ -34,9 +34,9 @@ Email and password or Yandex ID, a confirmation code, one role per account. Scre
 ## FR-О-04. Ban list
 
 **Priority:** MVP · К6  
-**UC:** UC-А-05, UC-А-06
+**UC:** UC-А-05, UC-А-06, UC-О-10
 
-**Rule.** An administrator blocks a company, an email, or a domain and writes a reason. Unblocking needs a reason too. Who blocked and who lifted the block is kept on the record. Signing up again with a blocked email or domain does not go through.
+**Rule.** An administrator blocks a company, an email, or a domain and writes a reason. Unblocking needs a reason too. Who blocked and who lifted the block is kept on the record. Signing up again with a blocked email or domain does not go through. Sign-in, a session refresh, and a request from an open tab also fail for a blocked specialist or employer: the screen shows only the window with the reason and the support address.
 
 ## FR-О-12. Sign-in through Yandex ID
 

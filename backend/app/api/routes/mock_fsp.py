@@ -22,6 +22,8 @@ from app.models.enums import FspOutcome
 
 REALM_PATH: Final = "/mock/fsp-id/realms/fsp"
 _OIDC: Final = f"{REALM_PATH}/protocol/openid-connect"
+# Absolute: a relative action breaks after a failed login, when the browser is already on /confirm.
+_CONFIRM: Final = f"/api/v1{_OIDC}/auth/confirm"
 _MEMBER_ID: Final = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 _OUTCOME_LABELS: Final = {
     FspOutcome.WINNER: "победитель",
@@ -100,17 +102,86 @@ async def confirm(
     code_challenge: str,
     member: str = "",
     custom: str = "",
+    login: str = "",
+    password: str = "",
     action: str = "allow",
 ) -> Response:
+    return _finish_sign_in(
+        settings,
+        client_id=client_id,
+        redirect_uri=redirect_uri,
+        state=state,
+        nonce=nonce,
+        code_challenge=code_challenge,
+        member=member,
+        custom=custom,
+        login=login,
+        password=password,
+        action=action,
+    )
+
+
+@router.post(f"{_OIDC}/auth/confirm", summary="Mock FSP ID: sign in with a demo login")
+async def confirm_login(
+    *,
+    settings: SettingsDep,
+    client_id: Annotated[str, Form()],
+    redirect_uri: Annotated[str, Form()],
+    state: Annotated[str, Form()],
+    nonce: Annotated[str, Form()],
+    code_challenge: Annotated[str, Form()],
+    login: Annotated[str, Form()] = "",
+    password: Annotated[str, Form()] = "",
+    custom: Annotated[str, Form()] = "",
+    action: Annotated[str, Form()] = "allow",
+) -> Response:
+    return _finish_sign_in(
+        settings,
+        client_id=client_id,
+        redirect_uri=redirect_uri,
+        state=state,
+        nonce=nonce,
+        code_challenge=code_challenge,
+        member="",
+        custom=custom,
+        login=login,
+        password=password,
+        action=action,
+    )
+
+
+def _finish_sign_in(
+    settings: Settings,
+    *,
+    client_id: str,
+    redirect_uri: str,
+    state: str,
+    nonce: str,
+    code_challenge: str,
+    member: str,
+    custom: str,
+    login: str,
+    password: str,
+    action: str,
+) -> Response:
+    hidden = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "state": state,
+        "nonce": nonce,
+        "code_challenge": code_challenge,
+    }
     problem = _request_problem(settings, client_id, redirect_uri)
     if problem is not None:
         return _page(settings, "Ошибка входа", f"<p>{html.escape(problem)}</p>", status=400)
     if action != "allow":
         return _back(redirect_uri, {"error": "access_denied", "state": state})
-    member_id = custom.strip() or member.strip()
-    if not _MEMBER_ID.fullmatch(member_id):
-        body = "<p>ID участника: латиница, цифры, точка, дефис, до 64 символов.</p>"
-        return _page(settings, "Ошибка входа", body, status=400)
+    member_id, failure = _resolve_member(login, password, member, custom)
+    if member_id is None:
+        status = 401 if failure == "Неверный логин или пароль" else 400
+        return _page(
+            settings, "Вход через ФСП ID", _sign_in_form(hidden, failure or ""), status=status
+        )
     code = mock.issue_code(
         settings,
         member_id=member_id,
@@ -120,6 +191,23 @@ async def confirm(
         nonce=nonce,
     )
     return _back(redirect_uri, {"code": code, "state": state})
+
+
+def _resolve_member(
+    login: str, password: str, member: str, custom: str
+) -> tuple[str | None, str | None]:
+    """A demo login, or an explicit participant id from the old query form."""
+    if login.strip() or password:
+        account = mock.account_by_login(login)
+        if account is None or not mock.password_matches(password, account.password):
+            return None, "Неверный логин или пароль"
+        return account.member_id, None
+    member_id = custom.strip() or member.strip()
+    if not member_id:
+        return None, "Введите логин и пароль"
+    if not _MEMBER_ID.fullmatch(member_id):
+        return None, "ID участника: латиница, цифры, точка, дефис, до 64 символов."
+    return member_id, None
 
 
 @router.post(f"{_OIDC}/token", summary="Mock FSP ID: exchange the code for tokens")
@@ -211,41 +299,50 @@ def _describe(member_id: str) -> str:
         return "реестр не отвечает"
 
 
-def _sign_in_form(hidden: dict[str, str]) -> str:
+def _sign_in_form(hidden: dict[str, str], error: str = "") -> str:
     fields = "".join(
         f'<input type="hidden" name="{name}" value="{html.escape(value)}">'
         for name, value in hidden.items()
     )
-    # A new participant with a generated history goes first: two demo accounts never collide.
-    members = (mock.random_member_id(), *mock.DEMO_MEMBERS)
-    options = "".join(
-        f'<label class="option"><input type="radio" name="member" value="{member_id}"'
-        f"{' checked' if index == 0 else ''}> <b>{member_id}</b> — "
-        f"{'случайный участник: ' if index == 0 else ''}"
-        f"{html.escape(_describe(member_id))}</label>"
-        for index, member_id in enumerate(members)
+    banner = f'<p class="error" role="alert">{html.escape(error)}</p>' if error else ""
+    accounts = "".join(
+        "<tr><td><code>"
+        f"{html.escape(account.login)}</code></td><td>{html.escape(account.name)}</td>"
+        f"<td><code>{html.escape(account.member_id)}</code></td>"
+        f"<td>{html.escape(_describe(account.member_id))}</td></tr>"
+        for account in mock.DEMO_ACCOUNTS
     )
     return (
-        "<p>Демо-режим: настоящий ФСП ID (Keycloak) подключится после хакатона. "
-        "Выберите участника — платформа получит его ID и результаты из реестра ФСП.</p>"
-        f'<form method="get" action="auth/confirm">{fields}{options}'
-        '<label class="custom">Другой ID участника '
+        "<p>Демо-режим: это вход Keycloak ФСП ID. "
+        "Платформа получит номер участника и результаты из реестра.</p>"
+        f"{banner}"
+        f'<form method="post" action="{_CONFIRM}">{fields}'
+        '<label class="custom">Логин <input name="login" autocomplete="username"></label>'
+        '<label class="custom">Пароль <input name="password" type="password" '
+        'autocomplete="current-password"></label>'
+        '<label class="custom">Или ID участника без пароля '
         '<input name="custom" maxlength="64" placeholder="FSP-123456"></label>'
-        '<div class="actions"><button name="action" value="allow">Войти и разрешить доступ</button>'
+        '<div class="actions"><button name="action" value="allow">Войти</button>'
         '<button name="action" value="deny" class="secondary">Отмена</button></div></form>'
+        f"<p>Пароль у всех аккаунтов: <code>{html.escape(mock.DEMO_PASSWORD)}</code></p>"
+        "<table><thead><tr><th>Логин</th><th>Имя</th><th>ID</th><th>Реестр</th></tr></thead>"
+        f"<tbody>{accounts}</tbody></table>"
     )
 
 
 _STYLE: Final = (
     "body{font:16px/1.5 system-ui,sans-serif;background:#0b1020;color:#e8ecf5;margin:0;"
     "display:grid;place-items:center;min-height:100vh}"
-    "main{max-width:560px;padding:32px;background:#141b31;border-radius:16px}"
-    "h1{font-size:22px;margin:0 0 12px}.option,.custom{display:block;margin:10px 0}"
-    "input[name=custom]{display:block;width:100%;margin-top:6px;padding:8px;border-radius:8px;"
-    "border:1px solid #3a4566;background:#0b1020;color:inherit}"
-    ".actions{display:flex;gap:12px;margin-top:20px}"
+    "main{max-width:720px;padding:32px;background:#141b31;border-radius:16px}"
+    "h1{font-size:22px;margin:0 0 12px}.custom{display:block;margin:10px 0}"
+    "input{display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:8px;"
+    "border-radius:8px;border:1px solid #3a4566;background:#0b1020;color:inherit}"
+    ".error{color:#ffb4b4}.actions{display:flex;gap:12px;margin-top:20px}"
     "button{padding:10px 18px;border:0;border-radius:8px;background:#3b6cff;color:#fff;"
     "font:inherit;cursor:pointer}button.secondary{background:#2a334d}"
+    "table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}"
+    "th,td{text-align:left;padding:6px 8px 6px 0;vertical-align:top}"
+    "code{font-family:ui-monospace,monospace}"
 )
 
 

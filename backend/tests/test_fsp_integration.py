@@ -422,3 +422,44 @@ async def test_mock_realm_accepts_local_origins_and_offers_a_random_participant(
     body = linked.json()
     assert (body["fspLinked"], body["fspMemberId"], body["fspSyncError"]) == (True, first, None)
     assert len(body["fspAchievements"]) > 0
+
+
+async def test_mock_keycloak_signs_in_with_a_demo_password(client: AsyncClient) -> None:
+    token = await candidate(client, "fsp-login@fsp.ru")
+    started = await client.post(
+        f"{API}/fsp-id/authorize", headers=bearer(token), json={"redirectUri": CALLBACK}
+    )
+    assert started.status_code == 200, started.text
+    url = urlsplit(started.json()["authorizeUrl"])
+    params = dict(parse_qsl(url.query))
+    page = await client.get(url.path, params=params)
+    assert page.status_code == 200
+    assert mock.DEMO_PASSWORD in page.text
+    assert "champion" in page.text
+    confirm = "/api/v1/mock/fsp-id/realms/fsp/protocol/openid-connect/auth/confirm"
+    assert f'action="{confirm}"' in page.text
+    hidden = {
+        key: params[key]
+        for key in ("client_id", "redirect_uri", "state", "nonce", "code_challenge")
+    }
+
+    wrong = await client.post(
+        f"{url.path}/confirm",
+        data={**hidden, "login": "champion", "password": "not-the-password", "action": "allow"},
+    )
+    assert wrong.status_code == 401
+    assert "Неверный логин или пароль" in wrong.text
+
+    signed_in = await client.post(
+        f"{url.path}/confirm",
+        data={**hidden, "login": "Champion", "password": mock.DEMO_PASSWORD, "action": "allow"},
+    )
+    assert signed_in.status_code == 302, signed_in.text
+    query = dict(parse_qsl(urlsplit(signed_in.headers["location"]).query))
+    linked = await client.post(
+        f"{API}/candidates/me/fsp-link",
+        headers=bearer(token),
+        json={"code": query["code"], "state": query["state"]},
+    )
+    assert linked.status_code == 200, linked.text
+    assert linked.json()["fspMemberId"] == "FSP-100101"

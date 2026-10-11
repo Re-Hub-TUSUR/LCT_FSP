@@ -3,6 +3,8 @@ import { Link } from 'react-router'
 import { useSession } from '@/entities/session'
 import { ROUTES } from '@/shared/config'
 import { formatDateTime, plural } from '@/shared/lib'
+// The slice barrel re-exports this hook, but importing it from there cycles back into this file.
+// noinspection JSImportCanBeShortened
 import { useNotificationStream } from '../model/use-notification-stream'
 import './notification-toasts.css'
 
@@ -32,20 +34,27 @@ export function NotificationToasts() {
   )
 
   useNotificationStream({
+    onCandidateApplied: (event) => {
+      if (user?.role !== 'employer') return
+      push(
+        `Новый отклик: ${event.displayName}, «${event.vacancyTitle}». Открыть →`,
+        `${ROUTES.responses}?tab=inbound`,
+      )
+    },
     onCompanyLiked: (event) => {
       if (user?.role !== 'candidate') return
       push(
         event.vacancyTitle
           ? `${event.companyName} отобрала вас на вакансию «${event.vacancyTitle}». Ответить →`
           : `${event.companyName} вас отобрала. Ответить →`,
-        ROUTES.profileInvitations,
+        ROUTES.profile,
       )
     },
     onInvitation: (event) => {
       if (user?.role !== 'candidate') return
       push(
         `Приглашение${event.companyName ? ` от ${event.companyName}` : ''}. Открыть →`,
-        ROUTES.profileInvitations,
+        ROUTES.profile,
       )
     },
     onMeetingPending: (event) => {

@@ -38,6 +38,7 @@ from app.search.database import DatabaseCandidateSearch
 from app.search.elastic import ElasticCandidateSearch, ElasticErrors, ElasticSearchState
 from app.search.facets import candidate_facets
 from app.search.filters import FilterFacts, passes
+from app.services.cities import CityDirectory
 from app.services.matching import CandidateFacts, VacancyFacts, candidate_reasons, fit
 from app.services.presenters import candidate_read
 
@@ -82,7 +83,8 @@ def candidate_query(
         salary_min=filters.salary_min,
         salary_max=filters.salary_max,
         work_formats=tuple(filters.work_formats),
-        cities=_terms(filters.cities),
+        cities=() if filters.city_ids else _terms(filters.cities),
+        city_ids=tuple(filters.city_ids),
         include_relocation=filters.relocation,
         employment_types=tuple(filters.employment_types),
         job_statuses=tuple(filters.job_statuses),
@@ -111,6 +113,7 @@ def vacancy_filters(vacancy: Vacancy) -> CandidateFilterSet:
         nice=list(vacancy.stack_nice if split else vacancy.stack),
         salary_max=vacancy.salary_to,
         work_formats=[vacancy.work_format],
+        city_ids=[vacancy.city_id] if onsite and vacancy.city_id else [],
         cities=[vacancy.city] if onsite and vacancy.city else [],
         employment_types=[EmploymentType(kind) for kind in vacancy.employment_types],
     )
@@ -144,12 +147,15 @@ class CandidateSearchService:
         companies: CompanyRepository,
         reactions: ReactionRepository,
         elastic: ElasticSearchState | None,
+        *,
+        cities: CityDirectory | None = None,
     ) -> None:
         self._candidates = candidates
         self._vacancies = vacancies
         self._companies = companies
         self._reactions = reactions
         self._elastic = elastic
+        self._cities = cities
 
     async def search(
         self,
@@ -162,7 +168,7 @@ class CandidateSearchService:
         await self._require_company(user)
         vacancy = await self._own_vacancy(user, params.vacancy_id)
         scope = await self._scope(user, params.view)
-        query = candidate_query(params.filters, text=params.text, now=now or datetime.now(UTC))
+        query = await self._query(params.filters, text=params.text, now=now or datetime.now(UTC))
         query = replace(scope.apply(query), vacancy=vacancy, sort=params.sort)
 
         engine, hits = await self._run(query, offset=pagination.offset, limit=pagination.per_page)
@@ -202,7 +208,7 @@ class CandidateSearchService:
         await self._require_company(user)
         now = now or datetime.now(UTC)
         scope = await self._scope(user, params.view)
-        query = scope.apply(candidate_query(params.filters, text=params.text, now=now))
+        query = scope.apply(await self._query(params.filters, text=params.text, now=now))
         return candidate_facets(await self._base(query), query, now=now)
 
     async def presets(
@@ -216,7 +222,7 @@ class CandidateSearchService:
         facts = [FilterFacts.of(profile) for profile in await self._base(scope.apply(_ANY))]
         presets = []
         for vacancy, _ in rows:
-            filters = vacancy_filters(vacancy)
+            filters = await self._resolve_cities(vacancy_filters(vacancy))
             query = candidate_query(filters, text=None, now=now)
             presets.append(
                 VacancyPreset(
@@ -245,7 +251,7 @@ class CandidateSearchService:
         plain: list[tuple[uuid.UUID, FilterFacts]] | None = None
         found = []
         for params in searches:
-            query = scope.apply(candidate_query(params.filters, text=params.text, now=now))
+            query = scope.apply(await self._query(params.filters, text=params.text, now=now))
             if query.text is None:
                 if plain is None:
                     plain = [(p.id, FilterFacts.of(p)) for p in await self._base(query)]
@@ -273,6 +279,18 @@ class CandidateSearchService:
             matched=await shown(tuple(matched)),
             skipped=await shown(ids_with(reactions, (ReactionKind.SKIP,))),
         )
+
+    async def _query(
+        self, filters: CandidateFilterSet, *, text: str | None, now: datetime
+    ) -> CandidateSearchQuery:
+        return candidate_query(await self._resolve_cities(filters), text=text, now=now)
+
+    async def _resolve_cities(self, filters: CandidateFilterSet) -> CandidateFilterSet:
+        """A typed city name becomes the places it names. An unknown name matches nobody."""
+        if filters.city_ids or not filters.cities or self._cities is None:
+            return filters
+        ids = await self._cities.filter_ids(filters.cities)
+        return filters.model_copy(update={"city_ids": ids or [-1], "cities": []})
 
     async def _require_company(self, user: User) -> None:
         """The candidate bank opens to a company, not to anyone who ticked «работодатель»."""

@@ -33,7 +33,7 @@
   padding: 0;
   border: 0;
   background: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   text-align: left;
   color: var(--ink);
   cursor: pointer;
@@ -45,7 +45,7 @@
 }
 
 .vacancy-row__title {
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-size: 18px;
   line-height: 1.15;
   text-transform: uppercase;
@@ -172,7 +172,7 @@
 
 .vacancy-panel__title {
   margin: 0;
-  font-family: var(--font-accent);
+  font-family: var(--font-accent), monospace;
   font-weight: 400;
   font-size: clamp(24px, 2.2vw, 32px);
   line-height: 1.05;
@@ -195,6 +195,8 @@
 }
 
 .sheet-section .vacancy-panel__text {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   white-space: pre-line;
 }
 

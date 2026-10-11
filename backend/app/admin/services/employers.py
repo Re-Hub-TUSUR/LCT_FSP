@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.admin.analytics.employers import company_signal_rows
 from app.admin.audit import AuditLog
 from app.admin.enums import EmployerCaseStatus
-from app.admin.models import AdminEmployerCase, CompanyVerification
+from app.admin.models import AdminEmployerCase, AdminEmployerSignal, CompanyVerification
 from app.admin.schemas import (
     AnalyticsFilters,
     AuditEntryRead,
@@ -19,6 +19,7 @@ from app.admin.schemas import (
     EmployerCaseRead,
     EmployerDecision,
     EmployerOutreachRow,
+    EmployerSignalRead,
     EmployerVacancyRow,
 )
 from app.admin.services.banlist import BanlistService
@@ -92,9 +93,8 @@ class EmployerModerationService:
         await self._audit.record(
             actor, "company", company_id, data.action, changes, reason=data.reason
         )
-        await self._apply_to_owner(
-            company, blocked=status == EmployerCaseStatus.BLOCKED, was=before
-        )
+        if status == EmployerCaseStatus.BLOCKED:
+            await self._sign_out(company)
         if data.action == "block" and not await self._banlist.active_for_company(company_id):
             owner = await self._session.get(User, company.owner_id)
             await self._banlist.add(
@@ -108,22 +108,14 @@ class EmployerModerationService:
             )
         return await self.card(company_id)
 
-    async def _apply_to_owner(self, company: Company, *, blocked: bool, was: str | None) -> None:
-        """A block is not a label: the owner is signed out and cannot sign in. Lifting it (any
-        other decision after a block) lets them back in."""
-        owner = await self._session.get(User, company.owner_id)
-        if owner is None:
-            return
-        if blocked:
-            owner.is_active = False
-            await self._session.execute(
-                update(RefreshToken)
-                .where(RefreshToken.user_id == owner.id, RefreshToken.revoked_at.is_(None))
-                .values(revoked_at=datetime.now(UTC))
-                .execution_options(synchronize_session=False)
-            )
-        elif was == EmployerCaseStatus.BLOCKED.value:
-            owner.is_active = True
+    async def _sign_out(self, company: Company) -> None:
+        """Drop the owner's refresh tokens. The ban row, not is_active, is what keeps them out."""
+        await self._session.execute(
+            update(RefreshToken)
+            .where(RefreshToken.user_id == company.owner_id, RefreshToken.revoked_at.is_(None))
+            .values(revoked_at=datetime.now(UTC))
+            .execution_options(synchronize_session=False)
+        )
 
     async def card(
         self, company_id: uuid.UUID, filters: AnalyticsFilters | None = None
@@ -162,6 +154,21 @@ class EmployerModerationService:
             verification=verification.status if verification else None,
             banned=await self._banlist.active_for_company(company_id),
             signals=company_signal_rows(snapshot.result, company_id) if snapshot else None,
+            live_signals=[
+                EmployerSignalRead(
+                    code=row.code,
+                    hits=row.hits,
+                    first_at=row.first_at,
+                    last_at=row.last_at,
+                )
+                for row in (
+                    await self._session.scalars(
+                        select(AdminEmployerSignal)
+                        .where(AdminEmployerSignal.company_id == company_id)
+                        .order_by(AdminEmployerSignal.last_at.desc())
+                    )
+                ).all()
+            ],
             snapshot=meta(snapshot) if snapshot else None,
             vacancies=[
                 EmployerVacancyRow(

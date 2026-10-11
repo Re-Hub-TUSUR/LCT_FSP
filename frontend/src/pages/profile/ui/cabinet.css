@@ -408,79 +408,6 @@ section.cabinet-col {
   background: var(--bg);
 }
 
-/* Waiting invitations: a card per reply that is still owed. */
-.wait-list {
-  display: grid;
-  gap: 12px;
-}
-
-.wait-card {
-  display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 16px 20px;
-  padding: 20px 22px;
-  border-left: 4px solid var(--dim);
-  background: var(--surface);
-  text-decoration: none;
-  color: var(--ink);
-  transition: background 0.2s ease;
-}
-
-.wait-card.is-fresh {
-  border-left-color: var(--red);
-}
-
-.wait-card:hover {
-  background: var(--line);
-}
-
-.wait-card:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 3px;
-}
-
-.wait-card__main,
-.wait-card__side {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.wait-card__side {
-  align-items: flex-end;
-}
-
-.wait-card__title {
-  font-size: 17px;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
-.wait-card__sub {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.wait-card__salary {
-  font-weight: 600;
-  font-size: 16px;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.wait-card__status {
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--dim);
-}
-
-.wait-card.is-fresh .wait-card__status {
-  color: var(--red-text);
-}
-
 /* Checklist «Что сделать»: whole row is the link. */
 .todo-list {
   list-style: none;
@@ -787,15 +714,6 @@ section.cabinet-col {
   .cabinet-hero,
   .cabinet-hero--candidate {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .wait-card {
-    grid-template-columns: 52px minmax(0, 1fr);
-  }
-
-  .wait-card__side {
-    grid-column: 1 / -1;
-    align-items: flex-start;
   }
 }
 

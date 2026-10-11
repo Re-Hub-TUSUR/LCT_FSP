@@ -41,6 +41,7 @@ from app.seed.details import (
     vacancy_details,
 )
 from app.seed.fixtures import CandidateFixture, CompanyFixture, SeedData, VacancyFixture
+from app.services.cities import bind_stored_cities
 
 # Demo accounts share one password. Override it on a public stand with SEED_USER_PASSWORD.
 PASSWORD_ENV: Final = "SEED_USER_PASSWORD"  # noqa: S105 - variable name, not a secret
@@ -375,6 +376,7 @@ async def seed_database(
     )
     session.add_all(_demo_meetings(data, now))
     await session.flush()
+    await bind_stored_cities(session)
 
     return SeedSummary(
         companies=len(data.companies),

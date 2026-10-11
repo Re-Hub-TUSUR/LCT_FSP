@@ -8,6 +8,7 @@ EXPECTED_TAGS = {
     "users",
     "categories",
     "candidates",
+    "cities",
     "companies",
     "vacancies",
     "invitations",

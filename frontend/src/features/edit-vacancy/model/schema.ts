@@ -34,6 +34,8 @@ export type VacancyValues = {
   salaryTo: string
   workFormat: WorkFormat
   city: string
+  /** GeoNames id. Null until the person picks a row from the list. */
+  cityId: number | null
   relocationHelp: boolean
   employmentTypes: EmploymentType[]
   benefits: VacancyBenefit[]
@@ -67,6 +69,7 @@ export const EMPTY_VACANCY: VacancyValues = {
   salaryTo: '',
   workFormat: 'remote',
   city: '',
+  cityId: null,
   relocationHelp: false,
   employmentTypes: ['full'],
   benefits: [],
@@ -134,7 +137,7 @@ export function validateVacancy(values: VacancyValues): VacancyErrors {
   if (!to) errors.salaryTo = 'Укажите верхнюю границу вилки'
   else if (to > MAX_SALARY) errors.salaryTo = MAX_SALARY_ERROR
   else if (from && from > to) errors.salaryTo = 'Верхняя граница меньше нижней'
-  if (values.workFormat !== 'remote' && !values.city.trim()) {
+  if (values.workFormat !== 'remote' && values.cityId == null) {
     errors.city = 'Укажите город для офиса или гибрида'
   }
   if (values.employmentTypes.length === 0) errors.employmentTypes = 'Выберите тип занятости'
@@ -153,7 +156,8 @@ export function toVacancyPayload(values: VacancyValues, publish: boolean): Vacan
     stackNice: values.stackNice.filter((skill) => !taken.has(skill.toLocaleLowerCase('ru'))),
     salary: { from: rubles(values.salaryFrom), to: rubles(values.salaryTo) },
     workFormat: values.workFormat,
-    city: remote ? null : values.city.trim(),
+    city: null,
+    cityId: remote ? null : values.cityId,
     relocationHelp: !remote && values.relocationHelp,
     employmentTypes: values.employmentTypes,
     benefits: values.benefits,
@@ -181,6 +185,7 @@ export function vacancyValuesFrom(vacancy: VacancyDto | null): VacancyValues {
     salaryTo: String(vacancy.salary.to),
     workFormat: vacancy.workFormat,
     city: vacancy.city ?? '',
+    cityId: vacancy.cityId ?? null,
     relocationHelp: vacancy.relocationHelp,
     employmentTypes: vacancy.employmentTypes.length > 0 ? vacancy.employmentTypes : ['full'],
     benefits: vacancy.benefits,

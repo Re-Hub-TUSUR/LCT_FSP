@@ -12,6 +12,7 @@ from app.dependencies.common import get_db_session
 from app.main import create_app
 from app.models import Company, Vacancy
 from app.repositories.conversation import ConversationRepository
+from app.services.cities import install_reference_cities
 from tests.conftest import API, bearer, register_and_login
 from tests.test_cabinet import COMPANY, RESUME, employer_with_company
 from tests.test_vacancies import VACANCY
@@ -66,6 +67,9 @@ async def test_the_unit_of_work_is_committed_before_the_answer_is_sent(
     """Committed after the answer, a save loses to the request that follows it: the chat list
     reloaded right after «Ответить» came back empty."""
     events: list[str] = []
+    async with sessionmaker() as session:
+        await install_reference_cities(session)
+        await session.commit()
 
     async def traced_session() -> AsyncIterator[AsyncSession]:
         async with sessionmaker() as session:

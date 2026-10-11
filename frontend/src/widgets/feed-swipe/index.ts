@@ -1,2 +1,2 @@
 export { CandidateSwipe, VacancySwipe } from './ui/feed-swipe'
-export { DecisionCounters, FeedViewTabs } from './ui/decision-counters'
+export { DecisionCounters } from './ui/decision-counters'

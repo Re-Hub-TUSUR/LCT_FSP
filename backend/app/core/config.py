@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     # Browser gate on the admin subdomain. An empty secret closes POST /auth/admin-gate.
     admin_email: str = ""
     admin_gate_secret: SecretStr = SecretStr("")
+    # Shown on the ban screen. The admin writes the reason; this address is the appeal mailbox.
+    support_email: str = "support@kadry.local"
     jwt_issuer: str = "kadry"
     access_token_ttl_minutes: int = Field(default=30, ge=1, le=24 * 60)
     # Survives a closed browser. Logout revokes it; each refresh rotates it.

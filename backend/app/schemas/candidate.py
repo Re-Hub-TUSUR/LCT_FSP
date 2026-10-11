@@ -125,7 +125,13 @@ class CandidateRead(ApiModel):
     soft_skills: list[str]
     experience_years: int | None
     english_level: str | None
+    # Canonical name. `city_id` is the GeoNames place the form selected.
     city: str | None
+    city_id: int | None = None
+    city_country_code: str | None = None
+    city_region: str | None = None
+    city_latitude: float | None = None
+    city_longitude: float | None = None
     relocation_ready: bool
     work_formats: list[WorkFormat]
     salary_expectation: int | None
@@ -196,6 +202,8 @@ class CandidateFilterSet(ApiModel):
     # Remote work needs no city; office and hybrid need one of `cities`, or readiness to relocate
     # when `relocation`.
     work_formats: list[WorkFormat] = Field(default_factory=list)
+    # GeoNames ids. A city name in `cities` is resolved to these before the search runs.
+    city_ids: list[int] = Field(default_factory=list)
     cities: list[str] = Field(default_factory=list)
     relocation: bool = True
     employment_types: list[EmploymentType] = Field(default_factory=list)
@@ -316,7 +324,9 @@ class CandidateProfileUpdate(ApiModel):
     stack: list[str] | None = Field(default=None, max_length=30)
     soft_skills: list[str] | None = Field(default=None, max_length=20)
     experience_years: int | None = Field(default=None, ge=0, le=50)
-    city: str | None = Field(default=None, min_length=1, max_length=100)
+    # The place from the city list. A bare name is accepted only when it is exactly one place.
+    city_id: int | None = None
+    city: str | None = Field(default=None, max_length=100)
     work_formats: list[WorkFormat] | None = None
     salary_expectation: int | None = Field(default=None, gt=0, le=MAX_SALARY)
     phone: str | None = Field(default=None, max_length=32)

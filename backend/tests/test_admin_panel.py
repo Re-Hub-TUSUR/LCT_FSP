@@ -15,20 +15,30 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.admin.activity import ActivityRecorder
 from app.admin.create_admin import AdminSetupError, ensure_admin
 from app.admin.dependencies import get_verification
 from app.admin.services.verification import VerificationService, clean_filename, sniff_document
 from app.core.config import get_settings
 from app.dependencies.common import SessionDep
-from app.dependencies.services import NotificationHubDep
+from app.dependencies.services import NotificationHubDep, get_chat_service
 from app.models import AssessmentAttempt, AssessmentTask, CandidateProfile, User, UserRole
+from app.repositories.candidate import CandidateRepository
+from app.repositories.company import CompanyRepository
+from app.repositories.conversation import ConversationRepository
+from app.repositories.meeting import MeetingRepository
+from app.repositories.reaction import ReactionRepository
+from app.repositories.vacancy import VacancyRepository
+from app.services.chat import ChatService
 from app.services.notifications import NotificationHub
-from tests.conftest import API, bearer, create_admin, login, make_inn, register_and_login
+from tests.conftest import API, PASSWORD, bearer, create_admin, login, make_inn, register_and_login
+from tests.test_invitations import candidate_with_resume
+from tests.test_vacancies import VACANCY
 
 PDF = b"%PDF-1.7\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n"
 COMPANY = {
     "name": "ООО Проверка",
-    "industry": "ИТ",
+    "industry": "Финтех",
     "description": "Компания для проверки документов. " * 4,
     "city": "Москва",
     "website": "https://example.ru",
@@ -612,6 +622,52 @@ async def test_registry_extract_may_be_docx(
     assert file.content == data
 
 
+async def test_deleting_the_last_document_drops_the_request(
+    client: AsyncClient, admin: dict[str, str]
+) -> None:
+    employer = await employer_with_company(client, "withdraw@fsp.ru")
+    first = await client.post(
+        f"{API}/companies/me/verification/documents",
+        headers=employer,
+        files={"file": ("one.pdf", PDF, "application/pdf")},
+    )
+    second = await client.post(
+        f"{API}/companies/me/verification/documents",
+        headers=employer,
+        files={"file": ("two.pdf", PDF, "application/pdf")},
+    )
+    assert second.status_code == 201, second.text
+    kept, dropped = second.json()["documents"]
+    company_id = (await client.get(f"{API}/companies/me", headers=employer)).json()["id"]
+
+    still = await client.delete(
+        f"{API}/companies/me/verification/documents/{dropped['id']}", headers=employer
+    )
+    assert still.json()["status"] == "pending"
+    assert [item["id"] for item in still.json()["documents"]] == [kept["id"]]
+    assert (await client.get(f"{API}/admin/verifications/pending-count", headers=admin)).json() == 1
+
+    gone = await client.delete(
+        f"{API}/companies/me/verification/documents/{kept['id']}", headers=employer
+    )
+    assert gone.status_code == 200, gone.text
+    assert gone.json()["status"] is None
+    assert gone.json()["documents"] == []
+    assert (await client.get(f"{API}/admin/verifications/pending-count", headers=admin)).json() == 0
+    queue = (await client.get(f"{API}/admin/verifications?status=pending", headers=admin)).json()
+    assert queue["items"] == []
+    missing = await client.get(f"{API}/admin/verifications/{company_id}", headers=admin)
+    assert missing.status_code == 404
+    refused = await client.post(
+        f"{API}/admin/verifications/{company_id}/reject",
+        headers=admin,
+        json={"reason": "Нечего проверять"},
+    )
+    assert refused.status_code == 404
+    # The first upload is only here so a failed assertion names the response.
+    assert first.status_code == 201
+
+
 def stored_files(root: Path, kind: str) -> int:
     return len(list(root.rglob(f"*.{kind}")))
 
@@ -650,3 +706,235 @@ async def test_ensure_admin(sessionmaker: async_sessionmaker[AsyncSession]) -> N
         admin = await session.scalar(select(User).where(User.email == "root@fsp.ru"))
         assert admin is not None
         assert (admin.role, admin.is_email_verified) == (UserRole.ADMIN, True)
+
+
+# ── Live suspicion signals ──────────────────────────────────────────────────────────────────────
+
+
+async def _signal(client: AsyncClient, admin: dict[str, str], code: str) -> dict[str, Any]:
+    page = await client.get(f"{API}/admin/analytics/employers?signal={code}", headers=admin)
+    assert page.status_code == 200, page.text
+    items = page.json()["items"]
+    assert items, page.text
+    assert code in items[0]["signals"]
+    assert items[0]["caseStatus"] == "flagged"
+    return items[0]
+
+
+async def test_reaction_flapping_flags_without_a_recount(
+    client: AsyncClient, admin: dict[str, str]
+) -> None:
+    employer = await employer_with_company(client, "flap@fsp.ru")
+    _token, candidate_id = await candidate_with_resume(client, "flap-dev@fsp.ru")
+    for _ in range(5):
+        liked = await client.put(
+            f"{API}/candidates/{candidate_id}/reaction",
+            headers=employer,
+            json={"kind": "like"},
+        )
+        cleared = await client.delete(
+            f"{API}/candidates/{candidate_id}/reaction", headers=employer
+        )
+        assert liked.status_code == 200, liked.text
+        assert cleared.status_code == 204, cleared.text
+    row = await _signal(client, admin, "reaction_flapping")
+    assert row["name"] == "ООО Проверка"
+
+
+async def test_requisites_churn_and_unknown_industry(
+    client: AsyncClient, admin: dict[str, str]
+) -> None:
+    email = "churn@fsp.ru"
+    employer = await employer_with_company(client, email)
+    inn = make_inn(email)
+    for index in range(5):
+        saved = await client.put(
+            f"{API}/companies/me",
+            headers=employer,
+            json={**COMPANY, "inn": inn, "name": f"Смена {index}"},
+        )
+        assert saved.status_code == 200, saved.text
+    await _signal(client, admin, "requisites_churn")
+
+    rejected = await client.put(
+        f"{API}/companies/me",
+        headers=employer,
+        json={**COMPANY, "inn": inn, "industry": "Космос"},
+    )
+    assert rejected.status_code == 400
+    assert rejected.json()["error"]["message"] == "Выберите направление из списка"
+    await _signal(client, admin, "invalid_industry")
+
+
+async def test_digit_only_vacancy_is_rejected_and_counted(
+    client: AsyncClient, admin: dict[str, str]
+) -> None:
+    employer = await employer_with_company(client, "digits@fsp.ru")
+    body = {**VACANCY, "title": "12345", "description": "1" * 150}
+    for _ in range(2):
+        created = await client.post(f"{API}/vacancies", headers=employer, json=body)
+        assert created.status_code == 400, created.text
+        assert created.json()["error"]["message"] == "Опишите вакансию словами"
+    await _signal(client, admin, "junk_vacancies")
+
+
+async def test_meeting_cancellations_flag_the_company(
+    client: AsyncClient, admin: dict[str, str]
+) -> None:
+    employer = await employer_with_company(client, "meets@fsp.ru")
+    candidate, candidate_id = await candidate_with_resume(client, "meets-dev@fsp.ru")
+    vacancy = await client.post(f"{API}/vacancies", headers=employer, json=VACANCY)
+    assert vacancy.status_code == 201, vacancy.text
+    liked = await client.put(
+        f"{API}/vacancies/{vacancy.json()['id']}/reaction",
+        headers=bearer(candidate),
+        json={"kind": "like"},
+    )
+    assert liked.status_code == 200, liked.text
+    start = datetime.now(UTC) + timedelta(days=3)
+    for _ in range(5):
+        created = await client.post(
+            f"{API}/calendar/events",
+            headers=employer,
+            json={
+                "candidateId": candidate_id,
+                "startsAt": start.isoformat(),
+                "endsAt": (start + timedelta(hours=1)).isoformat(),
+            },
+        )
+        assert created.status_code == 201, created.text
+        cancelled = await client.delete(
+            f"{API}/calendar/events/{created.json()['id']}", headers=employer
+        )
+        assert cancelled.status_code == 204, cancelled.text
+    await _signal(client, admin, "meeting_churn")
+
+
+async def test_employer_attachments_flag_the_company(
+    client: AsyncClient, admin: dict[str, str], tmp_path: Path
+) -> None:
+    settings = get_settings().model_copy(update={"upload_dir": str(tmp_path)})
+
+    def factory(session: SessionDep, hub: NotificationHubDep) -> ChatService:
+        return ChatService(
+            conversations=ConversationRepository(session),
+            reactions=ReactionRepository(session),
+            companies=CompanyRepository(session),
+            candidates=CandidateRepository(session),
+            vacancies=VacancyRepository(session),
+            meetings=MeetingRepository(session),
+            settings=settings,
+            notifications=hub,
+            activity=ActivityRecorder(session),
+        )
+
+    app = client._transport.app  # type: ignore[attr-defined]
+    app.dependency_overrides[get_chat_service] = factory
+
+    employer = await employer_with_company(client, "media@fsp.ru")
+    vacancy = await client.post(f"{API}/vacancies", headers=employer, json=VACANCY)
+    assert vacancy.status_code == 201, vacancy.text
+    candidate, candidate_id = await candidate_with_resume(client, "media-dev@fsp.ru")
+    liked = await client.put(
+        f"{API}/candidates/{candidate_id}/reaction", headers=employer, json={"kind": "like"}
+    )
+    assert liked.status_code == 200, liked.text
+    inbound = (await client.get(f"{API}/responses/inbound", headers=bearer(candidate))).json()
+    answered = await client.post(
+        f"{API}/responses/inbound/companies/{inbound[0]['companyId']}/respond",
+        headers=bearer(candidate),
+    )
+    assert answered.status_code == 204, answered.text
+    chats = (await client.get(f"{API}/conversations", headers=employer)).json()
+    for _ in range(10):
+        sent = await client.post(
+            f"{API}/conversations/{chats[0]['id']}/attachments",
+            headers=employer,
+            files={"file": ("note.pdf", PDF, "application/pdf")},
+        )
+        assert sent.status_code == 201, sent.text
+    await _signal(client, admin, "chat_media_spam")
+    app.dependency_overrides.pop(get_chat_service, None)
+
+
+# ── Bans that block ─────────────────────────────────────────────────────────────────────────────
+
+
+CSRF = {"X-Kadry-Request": "1"}
+
+
+def _banned(response: Any, reason: str) -> None:
+    assert response.status_code == 403, response.text
+    error = response.json()["error"]
+    assert error["code"] == "account_banned"
+    assert error["details"]["reason"] == reason
+    assert error["details"]["supportEmail"] == "support@kadry.local"
+
+
+async def test_a_ban_blocks_login_refresh_and_requests(
+    client: AsyncClient, admin: dict[str, str]
+) -> None:
+    specialist = await register_and_login(client, "banned-dev@fsp.ru")
+    added = await client.post(
+        f"{API}/admin/banlist",
+        headers=admin,
+        json={"email": "banned-dev@fsp.ru", "reason": "Спам"},
+    )
+    assert added.status_code == 201, added.text
+    assert added.json()["accounts"] == [{"email": "banned-dev@fsp.ru", "role": "candidate"}]
+    _banned(await client.get(f"{API}/users/me", headers=bearer(specialist)), "Спам")
+    _banned(await client.post(f"{API}/auth/refresh", headers=CSRF), "Спам")
+    _banned(
+        await client.post(
+            f"{API}/auth/login", json={"email": "banned-dev@fsp.ru", "password": PASSWORD}
+        ),
+        "Спам",
+    )
+
+    employer = await employer_with_company(client, "banned-boss@fsp.ru")
+    added = await client.post(
+        f"{API}/admin/banlist",
+        headers=admin,
+        json={"email": "banned-boss@fsp.ru", "reason": "Фиктивные вакансии"},
+    )
+    assert added.status_code == 201, added.text
+    assert added.json()["accounts"][0]["role"] == "employer"
+    _banned(await client.get(f"{API}/companies/me", headers=employer), "Фиктивные вакансии")
+    _banned(await client.post(f"{API}/auth/refresh", headers=CSRF), "Фиктивные вакансии")
+    _banned(
+        await client.post(
+            f"{API}/auth/login", json={"email": "banned-boss@fsp.ru", "password": PASSWORD}
+        ),
+        "Фиктивные вакансии",
+    )
+
+    ban_id = (
+        await client.get(f"{API}/admin/banlist?q=banned-boss", headers=admin)
+    ).json()["items"][0]["id"]
+    lifted = await client.post(
+        f"{API}/admin/banlist/{ban_id}/unban", headers=admin, json={"reason": "Ошибка"}
+    )
+    assert lifted.status_code == 200, lifted.text
+    back = await client.post(
+        f"{API}/auth/login", json={"email": "banned-boss@fsp.ru", "password": PASSWORD}
+    )
+    assert back.status_code == 200, back.text
+
+
+async def test_a_domain_ban_blocks_registration(client: AsyncClient, admin: dict[str, str]) -> None:
+    added = await client.post(
+        f"{API}/admin/banlist",
+        headers=admin,
+        json={"emailDomain": "blocked.example", "reason": "Домен закрыт"},
+    )
+    assert added.status_code == 201, added.text
+    registered = await client.post(
+        f"{API}/auth/register",
+        json={
+            "email": "newbie@blocked.example",
+            "password": PASSWORD,
+            "role": "candidate",
+            "personalDataConsent": True,
+        },
+    )
+    _banned(registered, "Домен закрыт")

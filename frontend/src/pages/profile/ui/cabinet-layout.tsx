@@ -2,15 +2,15 @@ import { useState } from 'react'
 import { NavLink, Outlet, useMatch } from 'react-router'
 import { ROUTES } from '@/shared/config'
 import { HackerRain } from '@/shared/ui'
-import { isWaiting, useCabinetData, useCategoryLabel } from '../lib/cabinet-data'
+import { useCabinetData, useCategoryLabel } from '../lib/cabinet-data'
 import type { CabinetOutlet } from '../lib/cabinet-data'
 import { CandidateHero, EmployerHero } from './cabinet-hero'
 import './cabinet.css'
 
-type NavEntry = { label: string; to: string; count?: number }
+type NavEntry = { label: string; to: string }
 
 export function CabinetLayout() {
-  const { role, profile, company, invitations, likes } = useCabinetData()
+  const { role, profile, company, invitations } = useCabinetData()
   const category = useCategoryLabel()
   const onOverview = useMatch({ path: ROUTES.profile, end: true }) !== null
   // The query cache outlives a change of account: read only the current role's data.
@@ -29,24 +29,18 @@ export function CabinetLayout() {
     (role === 'employer' && Boolean(company.data) && !settingUp)
 
   const items = invitations.data?.items
-  const fresh =
-    role === 'employer'
-      ? (items?.filter(isWaiting).length ?? 0)
-      : (items?.filter((item) => item.status === 'sent').length ?? 0) + (likes.data?.length ?? 0)
 
   const links: NavEntry[] = !ready
     ? []
     : role === 'employer'
       ? [
           { label: 'Обзор', to: ROUTES.profile },
-          { label: 'Приглашения', to: ROUTES.profileInvitations, count: fresh },
           { label: 'Компания', to: ROUTES.profileCompany },
           { label: 'Настройки', to: ROUTES.profileSettings },
         ]
       : role === 'candidate'
         ? [
             { label: 'Обзор', to: ROUTES.profile },
-            { label: 'Приглашения', to: ROUTES.profileInvitations, count: fresh },
             { label: 'Профиль и резюме', to: ROUTES.profileResume },
             { label: 'Категория и грейд', to: ROUTES.profileCategory },
             { label: 'Настройки', to: ROUTES.profileSettings },
@@ -77,12 +71,6 @@ export function CabinetLayout() {
         {links.map((link) => (
           <NavLink key={link.to} to={link.to} end className="cabinet-nav__link">
             {link.label}
-            {link.count ? (
-              <span className="cabinet-nav__count">
-                {link.count}
-                <span className="visually-hidden"> новых</span>
-              </span>
-            ) : null}
           </NavLink>
         ))}
       </nav>

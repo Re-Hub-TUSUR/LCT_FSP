@@ -2,8 +2,7 @@ import { queryOptions } from '@tanstack/react-query'
 import { http } from '@/shared/api'
 import type { OptionCountDto, Paginated, PaginationParams, SalaryRangeDto } from '@/shared/api'
 import type { CategoryDto, Grade, SpecializationCode } from '@/entities/category/@x/vacancy'
-import type { EmploymentType, FspResult, VacancyBenefit } from '../model/employment'
-import type { WorkFormat } from '../model/work-format'
+import type { EmploymentType, FspResult, VacancyBenefit, WorkFormat } from '..'
 
 export type CompanyBriefDto = {
   id: string
@@ -26,6 +25,11 @@ export type VacancyDto = {
   workFormat: WorkFormat
   /** Office location; null for remote positions. */
   city: string | null
+  cityId?: number | null
+  cityRegion?: string | null
+  cityCountryCode?: string | null
+  cityLatitude?: number | null
+  cityLongitude?: number | null
   description: string
   /** Null for a draft, visible only to its company. */
   publishedAt: string | null
@@ -54,8 +58,9 @@ export type VacancyWrite = {
   stackNice: string[]
   salary: SalaryRangeDto
   workFormat: WorkFormat
-  /** Required for office and hybrid work. */
+  /** Required for office and hybrid work: the place from the city list. */
   city: string | null
+  cityId: number | null
   relocationHelp: boolean
   employmentTypes: EmploymentType[]
   benefits: VacancyBenefit[]

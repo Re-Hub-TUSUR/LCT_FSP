@@ -68,7 +68,7 @@ function RoleAuthPage({ role }: { role: 'candidate' | 'employer' }) {
               navigate(setup, { replace: true })
               return
             }
-            navigate(isSafeInternalPath(redirect) ? redirect : ROUTES.feedSwipe, { replace: true })
+            navigate(isSafeInternalPath(redirect) ? redirect : ROUTES.feed, { replace: true })
           }}
         />
       </Page>

@@ -70,7 +70,43 @@ PARAMETERS: Final[tuple[ParameterSpec, ...]] = (
     ParameterSpec(
         "low_response_min_inbound", "Доля ответов: минимум откликов", 10, 1, 10_000, "шт."
     ),
+    ParameterSpec(
+        "reaction_flap_min",
+        "Смены отметки одного кандидата за 10 минут",
+        5,
+        2,
+        100,
+        "шт.",
+    ),
+    ParameterSpec(
+        "requisites_churn_min", "Смены реквизитов за сутки", 5, 2, 100, "шт."
+    ),
+    ParameterSpec(
+        "junk_vacancy_min", "Вакансии без слов за сутки", 2, 1, 100, "шт."
+    ),
+    ParameterSpec(
+        "meeting_cancel_min", "Отмены встреч за сутки", 5, 2, 100, "шт."
+    ),
+    ParameterSpec(
+        "chat_media_min", "Файлы работодателя в чате за час", 10, 2, 1_000, "шт."
+    ),
+    ParameterSpec(
+        "invalid_industry_min", "Чужое направление деятельности", 1, 1, 100, "шт."
+    ),
 )
+
+# Directions a company may name. The employer form offers the same list.
+INDUSTRIES: Final[tuple[str, ...]] = (
+    "Финтех",
+    "E-commerce",
+    "Телеком",
+    "Госсектор",
+    "Образование",
+    "Медицина",
+    "Игровая индустрия",
+    "Промышленность",
+)
+INDUSTRY_VALUES: Final = frozenset(INDUSTRIES)
 PARAMETER_SPECS: Final = {spec.key: spec for spec in PARAMETERS}
 DEFAULTS: Final = {spec.key: spec.default for spec in PARAMETERS}
 

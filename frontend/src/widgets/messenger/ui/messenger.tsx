@@ -87,7 +87,7 @@ function MeetingAnswer({
     <>
       <div className="chat-msg__meet-actions">
         <Button size="inline" disabled={respond.isPending} onClick={() => respond.mutate(true)}>
-          Подтвердить
+          Принять
         </Button>
         <Button
           size="inline"

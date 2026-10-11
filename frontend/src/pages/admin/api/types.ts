@@ -262,6 +262,7 @@ export type EmployerCard = {
   verification: VerificationStatus | null
   banned: boolean
   signals: Omit<EmployerSignalRow, 'caseStatus' | 'inviteLimit'> | null
+  liveSignals: { code: string; hits: number; firstAt: string; lastAt: string }[]
   snapshot: SnapshotMeta | null
   vacancies: {
     id: string
@@ -295,6 +296,7 @@ export type BanEntry = {
   unbannedAt: string | null
   unbannedByEmail: string | null
   unbanReason: string | null
+  accounts: { email: string; role: string }[]
 }
 
 export type BanCreate = {

@@ -44,7 +44,7 @@ services:
     build: ./backend
     image: kadry-backend
     # Demo data is loaded once, into an empty database (`--if-missing` never blocks the start).
-    command: sh -c "alembic upgrade head && python -m app.seed.assessment && python -m app.seed --if-missing && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    command: sh -c "alembic upgrade head && { python -m app.seed.cities --if-missing || echo 'City dictionary was not imported'; } && python -m app.seed.assessment && python -m app.seed --if-missing && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     environment:
       APP_ENV: ${APP_ENV:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -78,6 +78,7 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       ADMIN_GATE_SECRET: ${ADMIN_GATE_SECRET:-}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-support@kadry.local}
     volumes:
       - upload-data:/data/uploads
     depends_on:

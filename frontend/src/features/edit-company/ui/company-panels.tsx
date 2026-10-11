@@ -190,14 +190,20 @@ export function CompanyPanels({ company }: { company: CompanyDto }) {
           <p className="form-hint">Можно короче юридического: «Технологии», а не ООО «…».</p>
         </div>
         <div>
-          <TextField
+          <SelectField
             id="company-industry"
             label="Направление деятельности"
             value={values.industry}
             error={errors.industry}
             onChange={(event) => update('industry', event.target.value)}
-          />
-          <p className="form-hint">Например: {INDUSTRIES.slice(0, 4).join(', ')}</p>
+          >
+            <option value="">Выберите направление</option>
+            {INDUSTRIES.map((industry) => (
+              <option key={industry} value={industry}>
+                {industry}
+              </option>
+            ))}
+          </SelectField>
         </div>
         <TextField
           id="company-city"

@@ -4,6 +4,8 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
+from app.admin.activity import KIND_INDUSTRY, KIND_JUNK, KIND_REQUISITES, ActivityRecorder
+from app.admin.dictionaries import INDUSTRY_VALUES
 from app.core.errors import AppError, ConflictError, NotFoundError
 from app.dependencies.common import Pagination
 from app.models import Company, Grade, User, Vacancy, WorkFormat
@@ -11,20 +13,37 @@ from app.repositories.company import CompanyRepository
 from app.repositories.vacancy import VacancyRepository
 from app.schemas.common import Page
 from app.schemas.company import CompanyRead, CompanyUpsert
-from app.schemas.vacancy import VacancyCreate, VacancyRead
+from app.schemas.vacancy import (
+    MIN_DESCRIPTION_WORDS,
+    VacancyCreate,
+    VacancyRead,
+    _has_word,
+    _words,
+)
 from app.services.categories import SPECIALIZATIONS
+from app.services.cities import CityDirectory, place_fields
 from app.services.inn import ORGANISATION_LENGTH as ORGANISATION_INN_LENGTH
 from app.services.presenters import company_read, vacancy_read
 from app.services.uploads import PHOTO_LIMIT, sniff_image
 
 # Details the accreditation was checked against: changing any of them reopens the check.
 CHECKED_FIELDS = ("name", "inn", "ogrn", "kpp", "legal_address")
+# One event when any of these differ from the stored company.
+REQUISITE_FIELDS = ("name", "inn", "kpp", "ogrn", "industry")
 
 
 class VacancyService:
-    def __init__(self, vacancies: VacancyRepository, companies: CompanyRepository) -> None:
+    def __init__(
+        self,
+        vacancies: VacancyRepository,
+        companies: CompanyRepository,
+        cities: CityDirectory,
+        activity: ActivityRecorder | None = None,
+    ) -> None:
         self._vacancies = vacancies
         self._companies = companies
+        self._cities = cities
+        self._activity = activity
 
     async def public_page(
         self,
@@ -80,7 +99,8 @@ class VacancyService:
 
     async def create(self, user: User, data: VacancyCreate) -> VacancyRead:
         company = await self._require_mine(user)
-        vacancy = Vacancy(company_id=company.id, **_columns(data))
+        await self._require_words(user, company, data)
+        vacancy = Vacancy(company_id=company.id, **_columns(data, await _place(self._cities, data)))
         vacancy.published_at = datetime.now(UTC) if data.publish else None
         await self._vacancies.add(vacancy)
         return vacancy_read(vacancy, company)
@@ -90,7 +110,8 @@ class VacancyService:
         if row is None or row[1].owner_id != user.id:
             raise NotFoundError("Вакансия не найдена")
         vacancy, company = row
-        for name, value in _columns(data).items():
+        await self._require_words(user, company, data)
+        for name, value in _columns(data, await _place(self._cities, data)).items():
             setattr(vacancy, name, value)
         # The date of the first publication survives later edits.
         if not data.publish:
@@ -112,12 +133,15 @@ class VacancyService:
 
     async def upsert_mine(self, user: User, data: CompanyUpsert) -> CompanyRead:
         company = await self._companies.get_by_owner(user.id)
+        industry = data.industry.strip()
+        if industry not in INDUSTRY_VALUES:
+            await self._reject(user, company, KIND_INDUSTRY, "Выберите направление из списка")
         if await self._companies.inn_taken(data.inn, except_id=company.id if company else None):
             raise ConflictError("Компания с таким ИНН уже зарегистрирована")
         address = data.legal_address.strip() if data.legal_address else None
         fields = {
             "name": data.name.strip(),
-            "industry": data.industry.strip(),
+            "industry": industry,
             "description": data.description.strip(),
             "city": data.city.strip(),
             "size": data.size,
@@ -129,6 +153,9 @@ class VacancyService:
             "kpp": data.kpp if len(data.inn) == ORGANISATION_INN_LENGTH else None,
             "legal_address": address or None,
         }
+        requisites_changed = company is not None and any(
+            getattr(company, name) != fields[name] for name in REQUISITE_FIELDS
+        )
         if company is None:
             company = await self._companies.add(Company(owner_id=user.id, **fields))
         else:
@@ -141,7 +168,32 @@ class VacancyService:
                 await self._companies.reopen_verification(
                     company, "Реквизиты компании изменились: нужна повторная проверка"
                 )
+        if requisites_changed and self._activity is not None:
+            await self._activity.record(KIND_REQUISITES, user, company)
+            # The flush expires the accreditation mark; reading it afterwards is not async.
+            await self._companies._session.refresh(company, ["it_accredited"])
         return company_read(company)
+
+    async def _require_words(self, user: User, company: Company, data: VacancyCreate) -> None:
+        """A digit-only offer is rejected and counted. A thin one is rejected the same way."""
+        if not _has_letters(data.title) or not _has_letters(data.description):
+            message = "Опишите вакансию словами"
+        elif not _has_word(data.title):
+            message = "Название вакансии — словами, например «Backend-разработчик»"
+        elif _words(data.description) < MIN_DESCRIPTION_WORDS:
+            message = "Опишите вакансию словами: задачи, команда, условия"
+        else:
+            return
+        await self._reject(user, company, KIND_JUNK, message)
+
+    async def _reject(
+        self, user: User, company: Company | None, kind: str, message: str
+    ) -> None:
+        """Keep the rejected attempt. The error rolls the rest of the request back."""
+        if self._activity is not None and company is not None:
+            await self._activity.record(kind, user, company)
+            await self._companies._session.commit()
+        raise AppError(message)
 
     async def set_logo(self, user: User, data: bytes) -> CompanyRead:
         company = await self._require_mine(user)
@@ -173,7 +225,18 @@ class VacancyService:
         return company
 
 
-def _columns(data: VacancyCreate) -> dict[str, Any]:
+def _has_letters(value: str) -> bool:
+    return any(character.isalpha() for character in value)
+
+
+async def _place(cities: CityDirectory, data: VacancyCreate):
+    """Remote work has no office. Otherwise the place comes from the dictionary."""
+    if data.work_format == WorkFormat.REMOTE:
+        return None
+    return await cities.require(data.city_id, data.city)
+
+
+def _columns(data: VacancyCreate, city) -> dict[str, Any]:
     """The recruiter's form as the columns of `Vacancy`, publication aside."""
     if data.specialization not in SPECIALIZATIONS:
         raise AppError("Неизвестная специализация")
@@ -191,7 +254,7 @@ def _columns(data: VacancyCreate) -> dict[str, Any]:
         "salary_from": data.salary.from_,
         "salary_to": data.salary.to,
         "work_format": data.work_format,
-        "city": None if remote or data.city is None else data.city.strip(),
+        **place_fields(None if remote else city),
         "relocation_help": data.relocation_help,
         "employment_types": [item.value for item in dict.fromkeys(data.employment_types)],
         "benefits": [item.value for item in dict.fromkeys(data.benefits)],

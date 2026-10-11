@@ -50,6 +50,9 @@ def get_candidate_search_params(
     salary_max: Annotated[int | None, Query(alias="salaryMax", gt=0)] = None,
     work_format: Annotated[list[WorkFormat] | None, Query(alias="workFormat")] = None,
     city: Annotated[Terms, Query(max_length=MAX_TERMS, description="Для офиса и гибрида")] = None,
+    city_id: Annotated[
+        list[int] | None, Query(alias="cityId", description="Населённый пункт из справочника")
+    ] = None,
     relocation: Annotated[
         bool, Query(description="Учитывать готовых к переезду в другие города")
     ] = True,
@@ -73,6 +76,7 @@ def get_candidate_search_params(
         salary_min=salary_min,
         salary_max=salary_max,
         work_formats=work_format or [],
+        city_ids=city_id or [],
         cities=city or [],
         relocation=relocation,
         employment_types=employment or [],

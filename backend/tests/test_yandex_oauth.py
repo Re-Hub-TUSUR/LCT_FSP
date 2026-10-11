@@ -96,8 +96,14 @@ async def _finish(client: AsyncClient, state: str) -> httpx.Response:
 
 
 async def test_yandex_stays_closed_without_a_client_id(client: AsyncClient) -> None:
+    app = client._transport.app  # type: ignore[attr-defined]
+    closed = get_settings().model_copy(
+        update={"yandex_client_id": "", "yandex_client_secret": SecretStr("")}
+    )
+    app.dependency_overrides[get_settings] = lambda: closed
     status = await client.get(f"{API}/auth/yandex")
     started = await _start(client, mode="sign-in")
+    app.dependency_overrides.pop(get_settings, None)
     assert status.status_code == started.status_code == 404
 
 

@@ -11,7 +11,7 @@ import {
 } from '@/entities/vacancy'
 import { getErrorMessage } from '@/shared/api'
 import { STACK_SKILLS } from '@/shared/config'
-import { SelectField, SkillField, TextArea, TextField } from '@/shared/ui'
+import { CitySelect, SelectField, SkillField, TextArea, TextField } from '@/shared/ui'
 import type { PanelId } from '../model/panels'
 import type { ResumeErrors, ResumeValues } from '../model/schema'
 import { SOFT_SKILLS } from '../model/skills'
@@ -70,13 +70,21 @@ export function PanelFields({ panel, values, errors, update }: Props) {
             </option>
           ))}
         </SelectField>
-        <TextField
+        <CitySelect
           id="resume-city"
           label="Город"
-          autoComplete="address-level2"
-          value={values.city}
+          name={values.city}
           error={errors.city}
-          onChange={(event) => update('city', event.target.value)}
+          hint={values.cityHint}
+          onPick={(city) => {
+            update('cityId', city.id)
+            update('city', city.name)
+            update('cityHint', '')
+          }}
+          onClear={() => {
+            update('cityId', null)
+            update('city', '')
+          }}
         />
         <div>
           <TextField

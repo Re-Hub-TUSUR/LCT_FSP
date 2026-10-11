@@ -30,7 +30,13 @@ class Vacancy(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     salary_to: Mapped[int]
     work_format: Mapped[WorkFormat] = mapped_column(str_enum(WorkFormat))
     # Office location; null for fully remote positions.
+    # Canonical name. The place itself is `city_id` (GeoNames).
     city: Mapped[str | None] = mapped_column(String(100))
+    city_id: Mapped[int | None] = mapped_column(ForeignKey("cities.geoname_id"), index=True)
+    city_country_code: Mapped[str | None] = mapped_column(String(2))
+    city_region: Mapped[str | None] = mapped_column(String(200))
+    city_latitude: Mapped[float | None]
+    city_longitude: Mapped[float | None]
     # Null = draft, not shown in feeds.
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
 

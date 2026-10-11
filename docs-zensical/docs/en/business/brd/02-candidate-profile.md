@@ -10,9 +10,9 @@ The resume, what an employer sees on the card, and the FSP link. Screens: П-К-
 
 **Priority:** MVP · К5 · **UC:** UC-К-02
 
-**Rule.** The candidate fills in a resume: name, specialization, stack, years of experience, city, work format. Email comes from the account. The salary expectation is optional. Saving does not set a grade.
+**Rule.** The candidate fills in a resume: name, specialization, stack, years of experience, city, work format. The city is chosen from the list of populated places; an arbitrary name cannot be saved. Email comes from the account. The salary expectation is optional. Saving does not set a grade.
 
-**UI strings:** «Сохранить резюме».
+**UI strings:** «Сохранить резюме», «Выберите город из списка».
 
 ## FR-К-02. PDF recognition
 
@@ -62,9 +62,9 @@ The resume, what an employer sees on the card, and the FSP link. Screens: П-К-
 
 **Priority:** MVP · К1 · **UC:** UC-К-23, UC-К-25
 
-**Rule.** The candidate links the profile to their FSP participant ID. The registry and the sign-in are emulated inside the API for now (`FSP_ID_MODE=mock`). Achievements are pulled when the candidate asks. Unlinking removes the imported results and titles. One FSP account is one platform account.
+**Rule.** The candidate links the profile to their FSP participant ID. The registry and the sign-in are emulated inside the API for now (`FSP_ID_MODE=mock`): the page «Вход через ФСП ID» accepts a demo account's login and password. Every account uses `kadry-demo-2026`. The logins are `champion`, `cup`, `hackathon`, `empty` (an empty registry), and `offline` (the registry does not answer). A wrong password stays on the page: «Неверный логин или пароль». «Отмена» does not link the profile. Achievements are pulled when the candidate asks. Unlinking removes the imported results and titles. One FSP account is one platform account.
 
-**UI strings:** «Связать с ФСП», «Отвязать».
+**UI strings:** «Привязать ФСП ID», «Войти», «Отмена», «Логин», «Пароль», «Неверный логин или пароль», «Отвязать».
 
 ## FR-К-10. FSP achievements on the card
 

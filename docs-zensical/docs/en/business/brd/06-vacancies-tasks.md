@@ -10,9 +10,9 @@ An employer publishes a vacancy. A candidate likes it or skips it. A take-home i
 
 **Priority:** extra · К6 · **UC:** UC-К-20
 
-The candidate sees published vacancies. Salary, format, city, and stack filters narrow the feed. There is a search box: a saved search reminds them about new vacancies.
+The candidate sees published vacancies. Salary, format, city, and stack filters narrow the feed. There is a search box: a saved search reminds them about new vacancies. The feed has no «Отобрано», «Взаимно», or «Не интересно» tabs: those lists live on «Мои отклики» — «Мне понравились», «Взаимно», «Не понравились».
 
-**UI strings:** «Сбросить фильтры».
+**UI strings:** «Сбросить фильтры», «Мои отклики», «Взаимно».
 
 ## FR-К-27. Candidate swipes
 
@@ -24,17 +24,17 @@ One vacancy card. Right means interested, left means skip.
 
 **Priority:** extra · К1 · **UC:** UC-Р-10
 
-Interest is mutual when the company marked the candidate and the candidate answered, or the candidate marked a vacancy and the company answered. Then a chat opens. There is no separate «Откликнуться» application with a cover letter: the `/applications` route does not work.
+Interest is mutual when the company marked the candidate and the candidate answered, or the candidate marked a vacancy and the company answered. Then a chat opens. Until the company presses «Ответить», the specialist's application («Откликнуться») is on the company's «Мои отклики» → «Я понравился». If that section is already open, the card appears without a reload. There is no separate application with a cover letter: the `/applications` route does not work.
 
-**UI strings:** «Взаимно».
+**UI strings:** «Взаимно», «Я понравился», «Ответить», «Откликнуться».
 
 ## FR-Р-09. Publishing a vacancy
 
 **Priority:** extra · К6 · **UC:** UC-Р-09
 
-The employer creates a vacancy with a title, a description, a band, a format, and a city. A draft is not in the feed. Publishing shows it to candidates. Taking it down removes it from the feed.
+The employer creates a vacancy with a title, a description, a band, a format, and a city. The title and the description have to contain words, otherwise the system answers «Опишите вакансию словами». For office and hybrid work the city is chosen from the list of populated places. A draft is not in the feed. Publishing shows it to candidates. Taking it down removes it from the feed.
 
-**UI strings:** «Опубликовать».
+**UI strings:** «Опубликовать», «Опишите вакансию словами», «Укажите город для офиса или гибрида».
 
 ## FR-К-29. A take-home for the candidate
 

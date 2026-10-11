@@ -4,6 +4,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+from app.admin.activity import KIND_CHAT, ActivityRecorder
 from app.core.config import Settings
 from app.core.errors import AppError, NotFoundError, PermissionDeniedError
 from app.models import (
@@ -51,6 +52,7 @@ class ChatService:
         meetings: MeetingRepository,
         settings: Settings,
         notifications: NotificationHub | None = None,
+        activity: ActivityRecorder | None = None,
     ) -> None:
         self._conversations = conversations
         self._reactions = reactions
@@ -60,6 +62,7 @@ class ChatService:
         self._meetings = meetings
         self._settings = settings
         self._notifications = notifications
+        self._activity = activity
         self._upload_root = Path(settings.upload_dir)
 
     async def list_conversations(self, user: User) -> list[ConversationRead]:
@@ -180,6 +183,9 @@ class ChatService:
         path.write_bytes(data)
         await self._conversations.touch(conv.id, _utc(message.created_at))
         read = await self._present_message(message)
+        if user.role == UserRole.EMPLOYER and self._activity is not None:
+            company = await self._companies.get_by_owner(user.id)
+            await self._activity.record(KIND_CHAT, user, company, attachment.id)
         await self._notify_message(conv, read)
         return read
 

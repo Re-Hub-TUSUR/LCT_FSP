@@ -48,6 +48,7 @@ async def export_bans(
             "Разблокирован",
             "Кто разблокировал",
             "Причина разблокировки",
+            "Кого затрагивает",
         ],
         (
             [
@@ -62,6 +63,7 @@ async def export_bans(
                 row.unbanned_at.isoformat() if row.unbanned_at else None,
                 row.unbanned_by_email,
                 row.unban_reason,
+                "; ".join(f"{account.role} {account.email}" for account in row.accounts),
             ]
             for row in rows
         ),

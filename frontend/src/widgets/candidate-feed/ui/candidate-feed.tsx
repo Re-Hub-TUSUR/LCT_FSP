@@ -149,9 +149,8 @@ export function CandidateFeed() {
               <div className="feed-table">
                 <div className="feed-table__head candidate-row__grid" aria-hidden="true">
                   <span>Кандидат</span>
-                  <span>Категория · тест</span>
+                  <span>Тест</span>
                   <span>Под вакансию</span>
-                  <span>Сила профиля</span>
                   <span>Ожидания</span>
                   <span>Решение</span>
                 </div>

@@ -8,7 +8,7 @@ The rules: [search](../business/brd/05-employer-matching.md), [vacancies](../bus
 
 ## UC-Р-01 The first profile
 
-**As** an employer, **I want** to save the company, **so that** an invitation can go out. Without a profile the system asks to fill it in. FR-Р-01.
+**As** an employer, **I want** to save the company, **so that** an invitation can go out. Without a profile the system asks to fill it in. The industry comes from the list, otherwise «Выберите направление из списка». FR-Р-01.
 
 ## UC-Р-02 Swipes
 
@@ -16,7 +16,7 @@ The rules: [search](../business/brd/05-employer-matching.md), [vacancies](../bus
 
 ## UC-Р-03 Bank
 
-**As** an employer, **I want** to filter the feed, **so that** I see people of the right grade and city. FR-Р-02.
+**As** an employer, **I want** to filter the feed, **so that** I see people of the right grade and city. I look at picked, mutual, and skipped people on «Мои отклики». FR-Р-02.
 
 ## UC-Р-04 Card before contact
 
@@ -40,11 +40,11 @@ The rules: [search](../business/brd/05-employer-matching.md), [vacancies](../bus
 
 ## UC-Р-09 Publishing
 
-**As** an employer, **I want** to press «Опубликовать», **so that** the vacancy appears in the candidate feed. FR-Р-09.
+**As** an employer, **I want** to press «Опубликовать», **so that** the vacancy appears in the candidate feed. The office city is chosen from the list. The title and the description are in words, otherwise «Опишите вакансию словами». FR-Р-09.
 
 ## UC-Р-10 A match
 
-**As** an employer, **I want** to answer the candidate's interest, **so that** a chat opens. FR-К-28.
+**As** an employer, **I want** to see an application on «Я понравился» without a reload and answer it, **so that** a chat opens. FR-К-28.
 
 ## UC-Р-11 A meeting
 

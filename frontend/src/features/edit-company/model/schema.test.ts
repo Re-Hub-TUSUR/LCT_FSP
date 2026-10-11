@@ -19,6 +19,12 @@ const valid: CompanyValues = {
 }
 
 describe('validateCompany', () => {
+  it('accepts only a direction from the list', () => {
+    expect(validateCompany({ ...valid, industry: 'Космос' }).industry).toBe(
+      'Выберите направление из списка',
+    )
+  })
+
   it('requires a description of at least 100 characters', () => {
     expect(validateCompany({ ...valid, description: 'коротко' }).description).toMatch(/ещё/)
   })

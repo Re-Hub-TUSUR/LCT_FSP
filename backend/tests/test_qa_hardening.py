@@ -151,18 +151,33 @@ async def test_a_block_signs_the_owner_out_and_a_restriction_limits_invitations(
         json={"action": "block", "reason": "Фиктивная компания"},
     )
     assert blocked.status_code == 200
-    assert (await client.get(f"{API}/companies/me", headers=bearer(owner))).status_code == 401
+    banned = await client.get(f"{API}/companies/me", headers=bearer(owner))
+    assert banned.status_code == 403
+    assert banned.json()["error"]["code"] == "account_banned"
     relogin = await client.post(
         f"{API}/auth/login", json={"email": "limited@fsp.ru", "password": PASSWORD}
     )
-    assert relogin.status_code == 401
+    assert relogin.status_code == 403
+    assert relogin.json()["error"]["details"]["reason"] == "Фиктивная компания"
 
     await client.post(
         f"{API}/admin/employers/{company_id}/decision",
         headers=admin,
         json={"action": "clear", "reason": "Проверили документы"},
     )
-    assert (await login(client, "limited@fsp.ru")) is not None
+    # The case can be closed. The ban row is what keeps the account out until it is lifted.
+    still = await client.post(
+        f"{API}/auth/login", json={"email": "limited@fsp.ru", "password": PASSWORD}
+    )
+    assert still.status_code == 403
+    ban_id = (await client.get(f"{API}/admin/banlist?q=limited", headers=admin)).json()["items"][0][
+        "id"
+    ]
+    lifted = await client.post(
+        f"{API}/admin/banlist/{ban_id}/unban", headers=admin, json={"reason": "Ошибка"}
+    )
+    assert lifted.status_code == 200, lifted.text
+    assert await login(client, "limited@fsp.ru")
 
 
 async def test_new_legal_details_reopen_the_accreditation(

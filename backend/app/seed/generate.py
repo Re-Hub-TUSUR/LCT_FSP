@@ -9,13 +9,16 @@ Dates are stored as "days ago" and resolved when the data is loaded, so the demo
 
 import json
 import random
+import uuid
 import zlib
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
 
+from app.models import Vacancy
 from app.models.enums import (
     FspDiscipline,
     FspEventKind,
@@ -24,11 +27,16 @@ from app.models.enums import (
     FspParticipation,
     FspTitleKind,
     Grade,
+    JobStatus,
     WorkFormat,
 )
+from app.search.filters import FilterFacts, failed_groups, fsp_marks, passes
 from app.seed import content
 from app.seed.content import CompanyPlan, Track, VacancyPlan
-from app.seed.fixtures import DATA_DIR
+from app.seed.details import candidate_details, vacancy_details
+from app.seed.fixtures import DATA_DIR, CandidateFixture, VacancyFixture
+from app.services.candidate_search import candidate_query, vacancy_filters
+from app.services.matching import normalize_term
 
 SEED: Final = 20261006
 EMAIL_DOMAIN: Final = "example.com"
@@ -42,6 +50,8 @@ DEMO_TRACK: Final = "python-backend"
 
 HIDDEN_CANDIDATES: Final = 4
 UNTESTED_CANDIDATES: Final = 12
+# Selecting any vacancy fills its filters; that search must still find this many people.
+MATCHES_PER_VACANCY: Final = 10
 # Every N-th candidate with an FSP ID has no results yet (linked, but nothing to show).
 FSP_LINKED_WITHOUT_RESULTS_EVERY: Final = 12
 
@@ -717,10 +727,243 @@ def build_companies(rng: random.Random) -> tuple[list[Record], list[Record]]:
     return companies, vacancies
 
 
+def _registry_of(companies: Sequence[Record], candidates: Sequence[Record]) -> _Registry:
+    registry = _Registry()
+    for company in companies:
+        registry.emails.add(str(company["owner_email"]))
+        registry.emails.add(str(company["contact_email"]))
+    for candidate in candidates:
+        registry.names.add(str(candidate["display_name"]))
+        registry.emails.add(str(candidate["email"]))
+        if candidate["telegram"]:
+            registry.handles.add(str(candidate["telegram"]))
+        if candidate["fsp_member_id"]:
+            registry.fsp_ids.add(str(candidate["fsp_member_id"]))
+    return registry
+
+
+def _as_vacancy(vacancy: VacancyFixture) -> Vacancy:
+    """The same row the loader inserts, without a database."""
+    return Vacancy(
+        company_id=uuid.UUID(int=0),
+        title=vacancy.title,
+        description=vacancy.description,
+        specialization=vacancy.specialization,
+        grade=vacancy.grade,
+        stack=list(vacancy.stack),
+        salary_from=vacancy.salary_from,
+        salary_to=vacancy.salary_to,
+        work_format=vacancy.work_format,
+        city=vacancy.city,
+        **vacancy_details(vacancy),
+    )
+
+
+def _search_query(vacancy: VacancyFixture):
+    """Filters a recruiter gets by selecting this vacancy."""
+    return candidate_query(
+        vacancy_filters(_as_vacancy(vacancy)),
+        text=None,
+        now=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+
+
+def _search_facts(candidate: CandidateFixture) -> FilterFacts:
+    details = candidate_details(candidate, datetime(2026, 1, 1, tzinfo=UTC))
+    status = details["job_status"]
+    employment = details["employment_types"]
+    if not isinstance(status, JobStatus) or not isinstance(employment, list):
+        msg = f"{candidate.key}: candidate details are incomplete"
+        raise TypeError(msg)
+    return FilterFacts(
+        specialization=candidate.specialization,
+        grade=candidate.grade,
+        verified=candidate.assessment_score is not None,
+        fsp_marks=fsp_marks(candidate.fsp_achievements),
+        experience=candidate.experience_years,
+        stack=frozenset(normalize_term(item) for item in candidate.stack),
+        salary=candidate.salary_expectation,
+        formats=frozenset(item.value for item in candidate.work_formats),
+        city=normalize_term(candidate.city) if candidate.city else None,
+        relocation=candidate.relocation_ready,
+        employment=frozenset(str(item) for item in employment),
+        status=status.value,
+        last_active=None,
+    )
+
+
+def match_counts(
+    candidates: Sequence[CandidateFixture], vacancies: Sequence[VacancyFixture]
+) -> list[int]:
+    """How many visible candidates pass each vacancy's preset filters."""
+    visible = [_search_facts(item) for item in candidates if item.is_visible_to_employers]
+    return [
+        sum(passes(facts, _search_query(vacancy)) for facts in visible) for vacancy in vacancies
+    ]
+
+
+def _expectation(vacancy: VacancyFixture) -> int:
+    """A grade-typical salary that still fits this vacancy's ceiling."""
+    factor = content.SPECIALIZATION_SALARY_FACTOR[vacancy.specialization]
+    typical = round_salary(content.GRADE_SALARY[vacancy.grade] * factor)
+    return min(typical, vacancy.salary_to)
+
+
+def _cover_stack(vacancy: VacancyFixture, cohort: Sequence[VacancyFixture]) -> list[str]:
+    stack: list[str] = []
+    for item in (vacancy, *cohort):
+        for technology in item.stack:
+            if technology not in stack:
+                stack.append(technology)
+    return stack
+
+
+def _cover_disciplines(cohort: Sequence[VacancyFixture]) -> list[FspDiscipline]:
+    found: list[FspDiscipline] = []
+    for item in cohort:
+        discipline = vacancy_details(item)["fsp_discipline"]
+        if isinstance(discipline, FspDiscipline) and discipline not in found:
+            found.append(discipline)
+    return found
+
+
+def _university(city_name: str) -> content.University:
+    for university in content.UNIVERSITIES:
+        if university.city == city_name:
+            return university
+    return content.UNIVERSITIES[0]
+
+
+def _matching_candidate(
+    rng: random.Random,
+    index: int,
+    vacancy: VacancyFixture,
+    vacancies: Sequence[VacancyFixture],
+    registry: _Registry,
+) -> Record:
+    """A visible, verified profile that passes this vacancy and the similar ones it can."""
+    track = content.TRACKS_BY_KEY[vacancy.track]
+    grade = vacancy.grade
+    expectation = _expectation(vacancy)
+    cohort = [
+        item
+        for item in vacancies
+        if item.specialization == vacancy.specialization
+        and item.grade == grade
+        and item.salary_to >= expectation
+    ]
+    person = _person(rng, track, registry)
+    city = content.CITIES_BY_NAME["Москва"]
+    years = EXPERIENCE_YEARS[grade][0]
+    work_formats = [WorkFormat.REMOTE, WorkFormat.HYBRID, WorkFormat.OFFICE]
+    disciplines = _cover_disciplines(cohort)
+    key = f"cand-{index + 1:04d}"
+    achievements: list[Record] = []
+    titles: list[Record] = []
+    if disciplines:
+        raw = [
+            {
+                "event_name": content.FSP_NATIONAL_EVENTS[0],
+                "discipline": discipline.value,
+                "level": FspEventLevel.NATIONAL.value,
+                "year": CURRENT_YEAR - 1,
+                "place": 1,
+            }
+            for discipline in disciplines
+        ]
+        achievements, titles = _registry_fields(key, raw)
+
+    return {
+        "key": key,
+        "track": track.key,
+        "email": _email(person, registry),
+        "display_name": f"{person.first} {person.last}",
+        "headline": _headline(rng, track, grade),
+        "about": _about(
+            rng,
+            person,
+            track=track,
+            grade=grade,
+            years=years,
+            university=_university(city.name) if grade == Grade.INTERN else None,
+            work_formats=work_formats,
+            relocation_ready=True,
+            achievements=achievements,
+        ),
+        "specialization": track.specialization,
+        "grade": grade.value,
+        "experience_years": years,
+        "stack": _cover_stack(vacancy, cohort),
+        "soft_skills": _soft_skills(rng, grade),
+        "english_level": _weighted(rng, content.ENGLISH_LEVELS[grade]),
+        "city": city.name,
+        "relocation_ready": True,
+        "work_formats": [item.value for item in work_formats],
+        "salary_expectation": expectation,
+        "assessment_score": 84.0,
+        "assessed_days_ago": 30,
+        "registered_days_ago": 45,
+        "fsp_member_id": _fsp_member_id(rng, registry) if disciplines else None,
+        "fsp_achievements": achievements,
+        "fsp_titles": titles,
+        "phone": _phone(rng),
+        "telegram": _telegram(rng, person, registry),
+        "is_visible_to_employers": True,
+    }
+
+
+def _cover_vacancies(
+    rng: random.Random,
+    companies: Sequence[Record],
+    candidates: list[Record],
+    vacancies: Sequence[Record],
+) -> list[Record]:
+    """Adds candidates until every vacancy's own filters keep at least ten people."""
+    registry = _registry_of(companies, candidates)
+    vacancy_fixtures = [VacancyFixture.model_validate(item) for item in vacancies]
+    queries = [_search_query(item) for item in vacancy_fixtures]
+    facts = [
+        _search_facts(CandidateFixture.model_validate(item))
+        for item in candidates
+        if item["is_visible_to_employers"]
+    ]
+    counts = [sum(passes(item, query) for item in facts) for query in queries]
+    order = sorted(
+        range(len(vacancy_fixtures)),
+        key=lambda index: (vacancy_fixtures[index].salary_to, vacancy_fixtures[index].key),
+    )
+    index = len(candidates)
+    for vacancy_index in order:
+        added = 0
+        while counts[vacancy_index] < MATCHES_PER_VACANCY:
+            record = _matching_candidate(
+                rng, index, vacancy_fixtures[vacancy_index], vacancy_fixtures, registry
+            )
+            index += 1
+            added += 1
+            fixture = CandidateFixture.model_validate(record)
+            fact = _search_facts(fixture)
+            if not passes(fact, queries[vacancy_index]):
+                missed = ", ".join(failed_groups(fact, queries[vacancy_index]))
+                key = vacancy_fixtures[vacancy_index].key
+                msg = f"{record['key']} does not match {key}: {missed}"
+                raise RuntimeError(msg)
+            candidates.append(record)
+            facts.append(fact)
+            for other, query in enumerate(queries):
+                if passes(fact, query):
+                    counts[other] += 1
+            if added > MATCHES_PER_VACANCY:
+                msg = f"{vacancy_fixtures[vacancy_index].key} still has {counts[vacancy_index]}"
+                raise RuntimeError(msg)
+    return candidates
+
+
 def build_dataset(seed: int = SEED) -> dict[str, list[Record]]:
     rng = random.Random(seed)  # noqa: S311 - reproducible fake data, not a security context
     companies, vacancies = build_companies(rng)
     candidates = build_candidates(rng)
+    candidates = _cover_vacancies(rng, companies, candidates, vacancies)
     return {"companies": companies, "vacancies": vacancies, "candidates": candidates}
 
 

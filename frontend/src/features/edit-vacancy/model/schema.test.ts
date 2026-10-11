@@ -15,6 +15,7 @@ const valid: VacancyValues = {
   salaryTo: '320 000',
   workFormat: 'hybrid',
   city: ' Москва ',
+  cityId: 524901,
   relocationHelp: true,
   employmentTypes: ['full'],
   benefits: ['dms'],
@@ -30,7 +31,7 @@ describe('validateVacancy', () => {
   })
 
   it('asks for a city unless the work is remote', () => {
-    expect(validateVacancy({ ...valid, city: ' ' }).city).toMatch(/город/)
+    expect(validateVacancy({ ...valid, city: ' ', cityId: null }).city).toMatch(/город/)
     expect(validateVacancy({ ...valid, city: '', workFormat: 'remote' })).toEqual({})
   })
 
@@ -64,7 +65,8 @@ describe('toVacancyPayload', () => {
   it('reads the salary, trims the city and keeps a technology in one list', () => {
     const payload = toVacancyPayload(valid, false)
     expect(payload.salary).toEqual({ from: 200_000, to: 320_000 })
-    expect(payload.city).toBe('Москва')
+    expect(payload.cityId).toBe(524901)
+    expect(payload.city).toBeNull()
     expect(payload.stackNice).toEqual(['Kafka'])
     expect(payload.fspDiscipline).toBeNull()
     expect(payload.publish).toBe(false)
@@ -72,6 +74,6 @@ describe('toVacancyPayload', () => {
 
   it('drops the office details of a remote vacancy', () => {
     const payload = toVacancyPayload({ ...valid, workFormat: 'remote' }, true)
-    expect([payload.city, payload.relocationHelp]).toEqual([null, false])
+    expect([payload.city, payload.cityId, payload.relocationHelp]).toEqual([null, null, false])
   })
 })

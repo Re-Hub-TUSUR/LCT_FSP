@@ -1,16 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useSearchParams } from 'react-router'
+import { Link } from 'react-router'
 import { candidateQueries } from '@/entities/candidate'
-import {
-  DECISION_VIEW_LABELS,
-  DECISION_VIEWS,
-  parseListView,
-  vacancyQueries,
-} from '@/entities/vacancy'
-import type { DecisionView, ListView } from '@/entities/vacancy'
+import { DECISION_VIEW_LABELS, DECISION_VIEWS, vacancyQueries } from '@/entities/vacancy'
+import type { DecisionView } from '@/entities/vacancy'
 import { ROUTES } from '@/shared/config'
-import { Tabs } from '@/shared/ui'
-import type { TabItem } from '@/shared/ui'
 import './decision-counters.css'
 
 type Props = {
@@ -33,7 +26,7 @@ function useDecisionCounts(role: Props['role']) {
 
 /**
  * Three numbers above the reel: how much is liked, matched and skipped. Each opens that list
- * in the feed. They refresh after every decision.
+ * on «Мои отклики». They refresh after every decision.
  */
 export function DecisionCounters({ role }: Props) {
   const counts = useDecisionCounts(role)
@@ -44,46 +37,12 @@ export function DecisionCounters({ role }: Props) {
         <Link
           key={view}
           className={`decisions__link decisions__link--${view}`}
-          to={`${ROUTES.feed}?view=${view}`}
+          to={`${ROUTES.responses}?tab=${view}`}
         >
           {labelOf(view, role)}
           {counts && <span className="decisions__count">{counts[view]}</span>}
         </Link>
       ))}
     </nav>
-  )
-}
-
-const TONES = { liked: undefined, matched: 'accent', skipped: 'danger' } as const
-
-/** The feed's views in the page header: everything, or one of the lists of own decisions. */
-export function FeedViewTabs({ role }: Props) {
-  const counts = useDecisionCounts(role)
-  const [params, setParams] = useSearchParams()
-  const view = parseListView(params.get('view'))
-
-  const items: TabItem<ListView>[] = [
-    { value: 'all', label: 'Все' },
-    ...DECISION_VIEWS.map((item) => ({
-      value: item,
-      label: labelOf(item, role),
-      count: counts?.[item],
-      tone: TONES[item],
-    })),
-  ]
-
-  return (
-    <Tabs
-      label="Показать"
-      items={items}
-      value={view}
-      onChange={(next) => {
-        const copy = new URLSearchParams(params)
-        copy.delete('page')
-        if (next === 'all') copy.delete('view')
-        else copy.set('view', next)
-        setParams(copy, { replace: true })
-      }}
-    />
   )
 }

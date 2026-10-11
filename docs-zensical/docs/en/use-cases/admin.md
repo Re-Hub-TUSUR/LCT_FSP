@@ -20,11 +20,11 @@ The rules: [administrator](../business/brd/07-admin.md).
 
 ## UC-А-04 A company card
 
-**As** an administrator, **I want** to confirm or refuse the company's documents. FR-А-04.
+**As** an administrator, **I want** to confirm or refuse the company's documents. When the company deletes every file, the request is not in the list. In «Работодатели под подозрением» the company appears at once, with the «Сигналы» list, and the decision stays mine. FR-А-04. П-А-08.
 
 ## UC-А-05 A block
 
-**As** an administrator, **I want** to block an email, a domain, or a company with a reason. FR-А-05, FR-О-04.
+**As** an administrator, **I want** to block an email, a domain, or a company with a reason, **so that** both a specialist and an employer see only the window with that reason. The ban list shows whom the record hits. FR-А-05, FR-О-04.
 
 ## UC-А-06 Unblock
 

@@ -13,17 +13,15 @@ from typing import Any, Final, Literal
 from urllib.parse import urlencode, urlsplit
 
 import jwt
-from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.admin.models import AdminBanEntry
+from app.admin.services.banlist import active_ban_for_email, raise_if_banned
 from app.core.config import Settings
 from app.core.errors import (
     AppError,
     AuthenticationError,
     ConflictError,
     NotFoundError,
-    PermissionDeniedError,
 )
 from app.core.security import hash_password
 from app.integrations.yandex.client import AUTHORIZE_URL, SCOPE, YandexAccount, YandexDirectory
@@ -119,8 +117,7 @@ class YandexAuthService:
         if existing is not None:
             if existing.role != role:
                 raise ConflictError("Эта почта уже зарегистрирована с другой ролью")
-            if await self._blocked(email):
-                raise PermissionDeniedError("Регистрация на эту почту закрыта")
+            raise_if_banned(await active_ban_for_email(self._session, email), self._settings)
             if existing.yandex_id and existing.yandex_id != account.account_id:
                 raise ConflictError("Аккаунт уже связан с другим Яндекс ID")
             if not existing.is_email_verified:
@@ -134,8 +131,7 @@ class YandexAuthService:
             return existing, False
         if claims["mode"] == "sign-in":
             raise AppError("Сначала зарегистрируйтесь")
-        if await self._blocked(email):
-            raise PermissionDeniedError("Регистрация на эту почту закрыта")
+        raise_if_banned(await active_ban_for_email(self._session, email), self._settings)
         user = await self._users.add(
             User(
                 email=email,
@@ -150,21 +146,6 @@ class YandexAuthService:
         )
         _keep_portrait(user, account.portrait)
         return user, True
-
-    async def _blocked(self, email: str) -> bool:
-        domain = email.partition("@")[2]
-        found = await self._session.scalar(
-            select(AdminBanEntry.id)
-            .where(
-                AdminBanEntry.is_active.is_(True),
-                or_(
-                    func.lower(AdminBanEntry.email) == email,
-                    func.lower(AdminBanEntry.email_domain) == domain,
-                ),
-            )
-            .limit(1)
-        )
-        return found is not None
 
     def _secret(self) -> str:
         return self._settings.jwt_secret.get_secret_value()

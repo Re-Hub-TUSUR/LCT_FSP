@@ -145,7 +145,8 @@ describe('personal cabinet', () => {
 
     // The form gives way to the profile as the employer sees it, with the cabinet around it.
     expect(await screen.findByText(/Так вас видит работодатель/, {}, SLOW)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Приглашения' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Обзор' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Приглашения' })).not.toBeInTheDocument()
     expect(screen.queryByText(/создать ещё одно резюме/)).not.toBeInTheDocument()
     // The next step is offered in a window over the profile.
     const next = screen.getByRole('dialog', { name: 'Резюме сохранено' })
@@ -221,6 +222,7 @@ describe('personal cabinet', () => {
     expect(screen.queryByRole('link', { name: 'Приглашения' })).not.toBeInTheDocument()
     await user.click(done)
     await waitFor(() => expect(router.state.location.pathname).toBe('/profile'), SLOW)
-    expect(await screen.findByRole('link', { name: 'Приглашения' }, SLOW)).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Обзор' }, SLOW)).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Приглашения' })).not.toBeInTheDocument()
   })
 })

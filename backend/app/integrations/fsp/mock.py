@@ -14,6 +14,7 @@ import random
 import secrets
 import uuid
 import zlib
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 from typing import Any, Final
@@ -51,7 +52,46 @@ _SUBJECTS: Final = uuid.UUID("0b7d3c52-5f0e-4f7a-9a43-2d1f8f6c9e11")
 # Participants the demo sign-in page offers. Any other id works too: its history is generated.
 NO_HISTORY_ID: Final = "FSP-000000"
 REGISTRY_DOWN_ID: Final = "FSP-000503"
-DEMO_MEMBERS: Final = ("FSP-100101", "FSP-100202", "FSP-100303", NO_HISTORY_ID, REGISTRY_DOWN_ID)
+# One password for every demo account, the same as the platform demo.
+DEMO_PASSWORD: Final = "kadry-demo-2026"  # noqa: S105 - documented password of demo accounts
+
+
+@dataclass(frozen=True, slots=True)
+class DemoAccount:
+    """A Keycloak user the mock login page accepts."""
+
+    login: str
+    password: str
+    member_id: str
+    name: str
+
+
+DEMO_ACCOUNTS: Final[tuple[DemoAccount, ...]] = (
+    DemoAccount("champion", DEMO_PASSWORD, "FSP-100101", "Анна Соколова"),
+    DemoAccount("cup", DEMO_PASSWORD, "FSP-100202", "Илья Морозов"),
+    DemoAccount("hackathon", DEMO_PASSWORD, "FSP-100303", "Мария Лебедева"),
+    DemoAccount("empty", DEMO_PASSWORD, NO_HISTORY_ID, "Пётр Новиков"),
+    DemoAccount("offline", DEMO_PASSWORD, REGISTRY_DOWN_ID, "Ольга Сергеева"),
+)
+DEMO_MEMBERS: Final = tuple(account.member_id for account in DEMO_ACCOUNTS)
+
+
+def account_by_login(login: str) -> DemoAccount | None:
+    key = login.strip().casefold()
+    return next((account for account in DEMO_ACCOUNTS if account.login == key), None)
+
+
+def account_by_member(member_id: str) -> DemoAccount | None:
+    return next((account for account in DEMO_ACCOUNTS if account.member_id == member_id), None)
+
+
+def password_matches(given: str, expected: str) -> bool:
+    return secrets.compare_digest(given.encode(), expected.encode())
+
+
+def display_name(member_id: str) -> str:
+    account = account_by_member(member_id)
+    return account.name if account is not None else f"Участник {member_id}"
 
 
 def _key(settings: Settings) -> str:
@@ -131,7 +171,7 @@ def redeem_code(
             "aud": client_id,
             "azp": client_id,
             "nonce": claims.get("nonce"),
-            "name": f"Участник {member_id}",
+            "name": display_name(member_id),
         },
         _key(settings),
         algorithm=_ALGORITHM,
@@ -160,7 +200,7 @@ def userinfo(settings: Settings, access_token: str) -> dict[str, Any]:
     if claims.get("typ") != _ACCESS_TYPE:
         raise FspIdError("ФСП ID: токен доступа недействителен")
     member_id = str(claims[MEMBER_CLAIM])
-    return {"sub": claims["sub"], MEMBER_CLAIM: member_id, "name": f"Участник {member_id}"}
+    return {"sub": claims["sub"], MEMBER_CLAIM: member_id, "name": display_name(member_id)}
 
 
 class MockFspIdProvider:

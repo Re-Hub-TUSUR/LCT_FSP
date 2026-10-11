@@ -19,9 +19,13 @@ export class ApiError extends Error {
   }
 }
 
+type BanNotice = { reason: string; supportEmail: string }
+
 type HttpHooks = {
   getAccessToken: () => string | null
   onUnauthorized: () => void
+  /** 403 account_banned: the app replaces itself with the ban screen. */
+  onBanned?: (notice: BanNotice) => void
   /** Returns a new access token, or null when the session cannot be restored. */
   refresh?: () => Promise<string | null>
 }
@@ -82,6 +86,15 @@ async function maybeRefresh(response: Response, options: RequestOptions): Promis
   return (await hooks.refresh()) !== null
 }
 
+function noticeBanned(error: ApiError) {
+  if (error.code !== 'account_banned') return
+  const details = (error.details ?? {}) as { reason?: unknown; supportEmail?: unknown }
+  hooks.onBanned?.({
+    reason: typeof details.reason === 'string' ? details.reason : error.message,
+    supportEmail: typeof details.supportEmail === 'string' ? details.supportEmail : '',
+  })
+}
+
 function errorFrom(response: Response, payload: unknown): ApiError {
   const envelope = (typeof payload === 'object' && payload !== null ? payload : {}) as ErrorEnvelope
   return new ApiError(
@@ -131,8 +144,10 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     if (await maybeRefresh(response, options)) {
       return request<T>(path, { ...options, skipAuthRefresh: true })
     }
+    const error = errorFrom(response, payload)
     if (response.status === 401) hooks.onUnauthorized()
-    throw errorFrom(response, payload)
+    noticeBanned(error)
+    throw error
   }
 
   return payload as T
@@ -157,8 +172,10 @@ export async function requestBlob(path: string, options: RequestOptions = {}): P
     if (await maybeRefresh(response, options)) {
       return requestBlob(path, { ...options, skipAuthRefresh: true })
     }
+    const error = errorFrom(response, await parseBody(response))
     if (response.status === 401) hooks.onUnauthorized()
-    throw errorFrom(response, await parseBody(response))
+    noticeBanned(error)
+    throw error
   }
   return response.blob()
 }

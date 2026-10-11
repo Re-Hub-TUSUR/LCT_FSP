@@ -81,6 +81,11 @@ export type CandidateDto = {
   experienceYears: number | null
   englishLevel: string | null
   city: string | null
+  cityId?: number | null
+  cityRegion?: string | null
+  cityCountryCode?: string | null
+  cityLatitude?: number | null
+  cityLongitude?: number | null
   relocationReady: boolean
   workFormats: WorkFormat[]
   salaryExpectation: number | null
@@ -156,7 +161,8 @@ export type CandidateProfileUpdate = {
   stack: string[]
   softSkills: string[]
   experienceYears: number
-  city: string
+  city?: string | null
+  cityId: number | null
   workFormats: WorkFormat[]
   salaryExpectation: number | null
   phone: string | null
@@ -229,6 +235,7 @@ export type CandidateFiltersDto = {
   /** Remote needs no city; office and hybrid need one of `cities` or readiness to relocate. */
   workFormats: WorkFormat[]
   cities: string[]
+  cityIds: number[]
   relocation: boolean
   employmentTypes: EmploymentType[]
   jobStatuses: JobStatus[]
@@ -253,6 +260,7 @@ export type CandidateFilterParams = {
   salaryMax?: number
   workFormat?: WorkFormat[]
   city?: string[]
+  cityId?: number[]
   relocation?: boolean
   employment?: EmploymentType[]
   jobStatus?: JobStatus[]

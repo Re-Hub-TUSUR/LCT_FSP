@@ -26,7 +26,7 @@ export function YandexCallbackPage() {
       .then((token) => {
         sessionStore.set({ accessToken: token.accessToken, user: token.user })
         const setup = token.user.role === 'employer' ? ROUTES.profileCompany : ROUTES.profileResume
-        const home = token.user.role === 'admin' ? ROUTES.admin : ROUTES.feedSwipe
+        const home = token.user.role === 'admin' ? ROUTES.admin : ROUTES.feed
         navigate(token.created ? setup : home, { replace: true })
       })
       .catch((error: unknown) => {

@@ -117,3 +117,52 @@ async def test_like_names_its_vacancy_and_meeting_asks_for_an_answer(client: Asy
     event = json.loads(queue.get_nowait())
     assert (event["type"], event["meetingId"]) == ("meeting_pending", scheduled.json()["id"])
     assert event["companyName"] == "ООО «Технологии»"
+
+
+async def test_a_candidate_application_appears_for_the_company(client: AsyncClient) -> None:
+    """An application stays on «Я понравился» even when the company already liked someone else."""
+    employer = await employer_with_company(client, "hr-apply@fsp.ru")
+    _other, other_id = await candidate_with_resume(client, "other-apply@fsp.ru")
+    applicant, applicant_id = await candidate_with_resume(client, "applicant@fsp.ru")
+    vacancy = await client.post(f"{API}/vacancies", headers=bearer(employer), json=VACANCY)
+    assert vacancy.status_code == 201, vacancy.text
+    vacancy_id = vacancy.json()["id"]
+
+    liked_someone_else = await client.put(
+        f"{API}/candidates/{other_id}/reaction",
+        headers=bearer(employer),
+        json={"kind": "like"},
+    )
+    assert liked_someone_else.status_code == 200, liked_someone_else.text
+
+    me = (await client.get(f"{API}/users/me", headers=bearer(employer))).json()
+    hub = client._transport.app.state.notifications  # type: ignore[attr-defined]
+    queue = hub.subscribe(uuid.UUID(me["id"]))
+
+    applied = await client.put(
+        f"{API}/vacancies/{vacancy_id}/reaction",
+        headers=bearer(applicant),
+        json={"kind": "like"},
+    )
+    assert applied.status_code == 200, applied.text
+
+    event = json.loads(queue.get_nowait())
+    assert (event["type"], event["candidateId"], event["vacancyTitle"]) == (
+        "candidate_applied",
+        applicant_id,
+        VACANCY["title"],
+    )
+    assert event["displayName"] == "Иван Иванов"
+
+    inbound = (await client.get(f"{API}/responses/inbound", headers=bearer(employer))).json()
+    assert [item["candidateId"] for item in inbound] == [applicant_id]
+    assert inbound[0]["vacancyTitle"] == VACANCY["title"]
+    assert inbound[0]["displayName"]
+
+    answered = await client.post(
+        f"{API}/responses/inbound/candidates/{applicant_id}/respond",
+        headers=bearer(employer),
+        params={"vacancyId": vacancy_id},
+    )
+    assert answered.status_code == 204, answered.text
+    assert (await client.get(f"{API}/responses/inbound", headers=bearer(employer))).json() == []

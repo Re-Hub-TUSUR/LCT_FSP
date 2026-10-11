@@ -22,7 +22,7 @@ import {
 import type { EmploymentType, WorkFormat } from '@/entities/vacancy'
 import { getErrorMessage, http } from '@/shared/api'
 import { ROUTES, STACK_SKILLS } from '@/shared/config'
-import { Button, SelectField, SkillField, TextArea, TextField } from '@/shared/ui'
+import { Button, CitySelect, SelectField, SkillField, TextArea, TextField } from '@/shared/ui'
 import { draftPhotoFile, photoFileError, resumeFileError, resumeUploadError } from '../model/files'
 import {
   applyResumeDraft,
@@ -405,13 +405,21 @@ export function ResumeForm({ profile }: Props) {
                 </option>
               ))}
             </SelectField>
-            <TextField
+            <CitySelect
               id="resume-city"
               label="Город"
-              autoComplete="address-level2"
-              value={values.city}
+              name={values.city}
               error={errors.city}
-              onChange={(event) => update('city', event.target.value)}
+              hint={values.cityHint}
+              onPick={(city) => {
+                update('cityId', city.id)
+                update('city', city.name)
+                update('cityHint', '')
+              }}
+              onClear={() => {
+                update('cityId', null)
+                update('city', '')
+              }}
             />
             <div>
               <TextField

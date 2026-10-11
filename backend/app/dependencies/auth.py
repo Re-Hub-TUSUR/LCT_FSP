@@ -6,6 +6,7 @@ from typing import Annotated
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from app.admin.services.banlist import active_ban_for, raise_if_banned
 from app.core.config import Settings
 from app.core.errors import AuthenticationError, PermissionDeniedError
 from app.core.security import decode_access_token
@@ -30,7 +31,10 @@ async def get_current_user(
         raise AuthenticationError("Недействительный токен") from exc
 
     user = await UserRepository(session).get_by_id(user_id)
-    if user is None or not user.is_active:
+    if user is None:
+        raise AuthenticationError()
+    raise_if_banned(await active_ban_for(session, user), settings)
+    if not user.is_active:
         raise AuthenticationError()
     return user
 

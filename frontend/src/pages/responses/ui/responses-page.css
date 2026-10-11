@@ -1,4 +1,4 @@
-/* The rain fills this page and stays behind the header, tabs, and cards. */
+/* The rain covers the viewport and stays behind the header, tabs, and cards. */
 main:has(.page--responses),
 .page--responses {
   position: relative;

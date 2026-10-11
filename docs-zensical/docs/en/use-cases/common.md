@@ -26,7 +26,7 @@ icon: lucide/users
 
 ## UC-О-06 Meetings
 
-**As** an employer, **I want** to schedule a meeting with a link, **so that** the candidate presses «Подтвердить» or declines. FR-О-09.
+**As** an employer, **I want** to schedule a meeting with a link, **so that** the candidate presses «Принять» or «Отклонить» on the card in the chat. The employer does not see those buttons in the chat. FR-О-09.
 
 ## UC-О-07 A live event
 
@@ -39,3 +39,7 @@ icon: lucide/users
 ## UC-О-09 Sign-in through Yandex
 
 **As** a specialist or an employer, **I want** to press «Войти через Яндекс», **so that** a session opens without the code from the letter. On «Регистрация» the first and last name are already in the form, and the portrait is in «Фото». On «Вход» a new person is not created: «Сначала зарегистрируйтесь». FR-О-12. П-О-08.
+
+## UC-О-10 A banned person
+
+**As** a banned specialist or employer, **I want** to see only the window with the reason and the support address, **so that** I understand why sign-in is closed and can write if it is a mistake. FR-О-04, FR-А-05. П-О-09.

@@ -104,6 +104,7 @@ class FilterFacts:
     employment: frozenset[str]
     status: str
     last_active: datetime | None
+    city_id: int | None = None
 
     @classmethod
     def of(cls, profile: CandidateProfile) -> "FilterFacts":
@@ -118,6 +119,7 @@ class FilterFacts:
             salary=profile.salary_expectation,
             formats=frozenset(profile.work_formats),
             city=normalize_term(profile.city) if profile.city else None,
+            city_id=profile.city_id,
             relocation=profile.relocation_ready,
             employment=frozenset(profile.employment_types),
             status=profile.job_status.value,
@@ -166,8 +168,15 @@ def _salary(expectation: int | None, query: CandidateSearchQuery) -> bool:
 def location_fits(facts: FilterFacts, query: CandidateSearchQuery) -> bool:
     """Remote work needs no city; office and hybrid need one of the cities (or readiness to
     move when relocation is counted in). Without formats only the city is checked."""
-    cities = {normalize_term(city) for city in query.cities}
-    city_ok = not cities or facts.city in cities or (query.include_relocation and facts.relocation)
+    if query.city_ids:
+        city_ok = facts.city_id in query.city_ids or (
+            query.include_relocation and facts.relocation
+        )
+    else:
+        cities = {normalize_term(city) for city in query.cities}
+        city_ok = not cities or facts.city in cities or (
+            query.include_relocation and facts.relocation
+        )
     if not query.work_formats:
         return city_ok
     remote = WorkFormat.REMOTE in query.work_formats and WorkFormat.REMOTE.value in facts.formats

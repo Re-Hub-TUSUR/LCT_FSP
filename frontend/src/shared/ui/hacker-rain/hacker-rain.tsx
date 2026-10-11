@@ -176,9 +176,9 @@ function Rain({ count, className }: { count: number; className?: string }) {
  * Each glyph is one character. It rests, then walks the same ASCII noise
  * `HackerText` uses, slowly enough to read each frame.
  *
- * It fills the nearest positioned ancestor. That ancestor needs
- * `position: relative` and `isolation: isolate`, so the glyphs stay
- * behind the ancestor's content and above its background.
+ * The field is fixed to the viewport, so glyphs start at the bottom edge
+ * and cross the whole page. An isolated ancestor keeps them behind that
+ * page's content and above the ground.
  */
 export function HackerRain({ count = DEFAULT_COUNT, className }: Props) {
   const [reduced] = useState(prefersReducedMotion)

@@ -1,12 +1,12 @@
-/* Fills a positioned, isolated ancestor and paints behind its content. */
+/* The field is the viewport, so a short page cannot stop the glyphs mid-screen.
+   z-index -1 stays behind the page when an ancestor is isolated. */
 .hacker-rain {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  container-type: size;
   font-family: var(--font-mono), monospace;
   font-weight: 400;
   line-height: 1;
@@ -55,7 +55,7 @@
   }
 
   100% {
-    transform: translate3d(var(--drift), calc(-100cqh - 1.4em), 0);
+    transform: translate3d(var(--drift), calc(-100dvh - 1.4em), 0);
     opacity: 0;
   }
 }

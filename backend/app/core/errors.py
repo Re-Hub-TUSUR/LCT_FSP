@@ -33,6 +33,14 @@ class AuthenticationError(AppError):
     default_message = "Требуется авторизация"
 
 
+class AccountBannedError(AppError):
+    """The banlist matches this account. `details` carries reason and supportEmail."""
+
+    status_code = status.HTTP_403_FORBIDDEN
+    code = "account_banned"
+    default_message = "Вы были забанены"
+
+
 class PermissionDeniedError(AppError):
     status_code = status.HTTP_403_FORBIDDEN
     code = "forbidden"

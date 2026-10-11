@@ -53,7 +53,7 @@ export function mockFetch(handlers: Record<string, { status?: number; body?: unk
   }
 }
 
-export type ApiCall = { method: string; path: string; body: unknown }
+export type ApiCall = { method: string; path: string; search: string; body: unknown }
 
 /** A `fetch` whose answers may depend on what was called before. */
 export function stubApi(answer: (call: ApiCall, calls: ApiCall[]) => unknown) {
@@ -63,6 +63,7 @@ export function stubApi(answer: (call: ApiCall, calls: ApiCall[]) => unknown) {
     const call: ApiCall = {
       method: init?.method ?? 'GET',
       path: url.pathname.replace('/api/v1', ''),
+      search: url.search,
       body: init?.body ? JSON.parse(String(init.body)) : undefined,
     }
     const body = answer(call, calls)

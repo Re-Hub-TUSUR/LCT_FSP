@@ -64,7 +64,11 @@ if (doc['work_formats'].contains(params.work_format)) {
 
 if (params.remote) {
   points += params.w_location;
-} else if (params.city != null && doc['city'].size() != 0 && doc['city'].value == params.city) {
+} else if (params.city_id != null && doc['city_id'].size() != 0
+    && doc['city_id'].value == params.city_id) {
+  points += params.w_location;
+} else if (params.city_id == null && params.city != null && doc['city'].size() != 0
+    && doc['city'].value == params.city) {
   points += params.w_location;
 } else if (doc['relocation_ready'].size() != 0 && doc['relocation_ready'].value) {
   points += params.w_location * params.relocation_share;
@@ -107,7 +111,8 @@ def _fit_params(vacancy: VacancyFacts) -> dict[str, Any]:
         "stack": [normalize_term(item) for item in vacancy.stack],
         "work_format": vacancy.work_format.value,
         "remote": vacancy.work_format == WorkFormat.REMOTE,
-        "city": normalize_term(vacancy.city) if vacancy.city else None,
+        "city_id": vacancy.city_id,
+        "city": normalize_term(vacancy.city) if vacancy.city and vacancy.city_id is None else None,
         "salary_to": vacancy.salary_to,
     }
 
@@ -172,10 +177,12 @@ def _salary(query: CandidateSearchQuery) -> list[dict[str, Any]]:
 def _location(query: CandidateSearchQuery) -> dict[str, Any] | None:
     """`app.search.filters.location_fits`: remote needs no city, the other formats need one."""
     city_ok: dict[str, Any] | None = None
-    if query.cities:
-        options: list[dict[str, Any]] = [
-            {"terms": {"city": [normalize_term(city) for city in query.cities]}}
-        ]
+    options: list[dict[str, Any]] = []
+    if query.city_ids:
+        options.append({"terms": {"city_id": list(query.city_ids)}})
+    elif query.cities:
+        options.append({"terms": {"city": [normalize_term(city) for city in query.cities]}})
+    if options:
         if query.include_relocation:
             options.append({"term": {"relocation_ready": True}})
         city_ok = {"bool": {"should": options, "minimum_should_match": 1}}

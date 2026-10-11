@@ -7,7 +7,7 @@ type PageProps = {
   eyebrow?: ReactNode
   lead?: ReactNode
   actions?: ReactNode
-  /** Painted behind the page, in the section's box. */
+  /** Painted behind the page content. */
   backdrop?: ReactNode
   /** Fixed overlays, kept outside the raised content layer. */
   overlay?: ReactNode

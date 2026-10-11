@@ -103,6 +103,7 @@ const candidatePresets: CandidatePresetsDto = {
         salaryMax: 350_000,
         workFormats: ['hybrid'],
         cities: ['Тюмень'],
+        cityIds: [],
         relocation: true,
         employmentTypes: ['full'],
         jobStatuses: [],
@@ -200,6 +201,34 @@ describe('feed filters', () => {
     await user.click(screen.getByRole('button', { name: 'Вернуть' }))
     expect(params().get('vacancyId')).toBeNull()
     expect(params().getAll('grade')).toEqual(['middle'])
+  })
+
+  it('hides the vacancy note for this tab, or for good', async () => {
+    signIn('employer')
+    recordFetch({
+      '/api/v1/candidates': () => search,
+      '/api/v1/candidates/facets': () => candidateFacets,
+      '/api/v1/candidates/presets': () => candidatePresets,
+      '/api/v1/categories/dictionary': () => dictionary,
+    })
+    const user = userEvent.setup()
+
+    const { unmount } = renderApp('/feed')
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Выберите вакансию' }, SLOW),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Понял' }))
+    expect(screen.queryByRole('dialog', { name: 'Выберите вакансию' })).not.toBeInTheDocument()
+    expect(window.sessionStorage.getItem('kadry.feed.vacancy-hint')).toBe('1')
+    expect(window.localStorage.getItem('kadry.onboarding.feed-vacancy')).toBeNull()
+
+    unmount()
+    window.sessionStorage.clear()
+    renderApp('/feed')
+    await user.click(await screen.findByRole('button', { name: 'Больше не показывать' }, SLOW))
+    expect(screen.queryByRole('dialog', { name: 'Выберите вакансию' })).not.toBeInTheDocument()
+    expect(window.localStorage.getItem('kadry.onboarding.feed-vacancy')).toBe('done')
   })
 
   it('finds a technology by slang and suggests what to loosen when nobody matches', async () => {

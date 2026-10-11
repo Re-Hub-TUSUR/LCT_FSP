@@ -40,6 +40,7 @@ from app.services.categories import (
     SPECIALIZATIONS,
     WORK_FORMAT_LABELS,
 )
+from app.services.cities import CityDirectory
 from app.services.matching import rub
 from app.services.notifications import NotificationHub
 from app.services.vacancy_feed import VacancyFeedParams, VacancyFeedService
@@ -386,6 +387,7 @@ def saved_search_service(
         CompanyRepository(session),
         ReactionRepository(session),
         elastic,
+        cities=CityDirectory(session),
     )
     vacancies = VacancyFeedService(
         VacancyRepository(session), CandidateRepository(session), ReactionRepository(session)

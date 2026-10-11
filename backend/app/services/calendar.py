@@ -3,6 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 
+from app.admin.activity import KIND_MEETING_CANCEL, KIND_MEETING_CREATE, ActivityRecorder
 from app.core.errors import AppError, ConflictError, NotFoundError
 from app.models import Meeting, MeetingStatus, User, UserRole
 from app.repositories.candidate import CandidateRepository
@@ -48,12 +49,15 @@ class CalendarService:
         candidates: CandidateRepository,
         vacancies: VacancyRepository,
         notifications: NotificationHub | None = None,
+        *,
+        activity: ActivityRecorder | None = None,
     ) -> None:
         self._meetings = meetings
         self._companies = companies
         self._candidates = candidates
         self._vacancies = vacancies
         self._notifications = notifications
+        self._activity = activity
 
     async def events(self, user: User, from_: datetime, to: datetime) -> list[CalendarEventRead]:
         """An employer sees the meetings of the company, a candidate — the ones they are in."""
@@ -114,6 +118,8 @@ class CalendarService:
             title=meeting.title,
             starts_at=starts_at,
         )
+        if self._activity is not None:
+            await self._activity.record(KIND_MEETING_CREATE, user, company, meeting.id)
         return _event(meeting, company.name, profile.display_name, vacancy_title)
 
     async def reschedule(
@@ -148,6 +154,9 @@ class CalendarService:
 
     async def cancel(self, user: User, meeting_id: uuid.UUID) -> None:
         meeting, _ = await self._own_meeting(user, meeting_id)
+        if self._activity is not None:
+            company = await self._companies.get_by_owner(user.id)
+            await self._activity.record(KIND_MEETING_CANCEL, user, company, meeting.id)
         await self._meetings.delete(meeting)
 
     async def respond(

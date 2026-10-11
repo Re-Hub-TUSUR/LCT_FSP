@@ -19,7 +19,7 @@ function AccountPanel({ user }: { user: UserDto }) {
     <Panel
       title="Аккаунт"
       action={
-        <Button variant="ghost" size="inline" onClick={() => void signOut()}>
+        <Button variant="danger" size="inline" onClick={() => void signOut()}>
           Выйти
         </Button>
       }

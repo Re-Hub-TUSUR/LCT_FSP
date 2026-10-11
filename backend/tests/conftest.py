@@ -31,6 +31,7 @@ from app.db.base import Base
 from app.dependencies.common import get_db_session
 from app.main import create_app
 from app.models import User, UserRole
+from app.services.cities import install_reference_cities
 
 API = "/api/v1"
 PASSWORD = "correct-horse-battery"
@@ -65,6 +66,10 @@ async def client(sessionmaker: async_sessionmaker[AsyncSession]) -> AsyncIterato
             except Exception:
                 await session.rollback()
                 raise
+
+    async with sessionmaker() as session:
+        await install_reference_cities(session)
+        await session.commit()
 
     app = create_app()
     app.dependency_overrides[get_db_session] = override_session

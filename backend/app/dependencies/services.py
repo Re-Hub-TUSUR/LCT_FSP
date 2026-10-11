@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, Request
 
+from app.admin.activity import ActivityRecorder
 from app.dependencies.common import SessionDep, SettingsDep
 from app.integrations.fsp import fsp_id_provider, fsp_registry
 from app.integrations.fsp.provider import FspIdProvider
@@ -31,6 +32,7 @@ from app.services.calendar import CalendarService
 from app.services.candidate_search import CandidateSearchService
 from app.services.candidates import CandidateProfileService
 from app.services.chat import ChatService
+from app.services.cities import CityDirectory
 from app.services.code_runner import CodeRunner, OnlineCompilerRunner
 from app.services.email import ResendEmailSender
 from app.services.fsp_link import FspLinkService
@@ -92,7 +94,12 @@ YandexAuthServiceDep = Annotated[YandexAuthService, Depends(get_yandex_auth_serv
 
 
 def get_vacancy_service(session: SessionDep) -> VacancyService:
-    return VacancyService(VacancyRepository(session), CompanyRepository(session))
+    return VacancyService(
+        VacancyRepository(session),
+        CompanyRepository(session),
+        CityDirectory(session),
+        ActivityRecorder(session),
+    )
 
 
 VacancyServiceDep = Annotated[VacancyService, Depends(get_vacancy_service)]
@@ -116,6 +123,7 @@ def get_candidate_search_service(request: Request, session: SessionDep) -> Candi
         CompanyRepository(session),
         ReactionRepository(session),
         elastic,
+        cities=CityDirectory(session),
     )
 
 
@@ -140,6 +148,7 @@ def get_candidate_profile_service(session: SessionDep) -> CandidateProfileServic
         ReactionRepository(session),
         CompanyRepository(session),
         UserRepository(session),
+        cities=CityDirectory(session),
     )
 
 
@@ -198,6 +207,7 @@ def get_reaction_service(session: SessionDep, hub: NotificationHubDep) -> Reacti
         CandidateRepository(session),
         CompanyRepository(session),
         hub,
+        activity=ActivityRecorder(session),
     )
 
 
@@ -227,6 +237,7 @@ def get_chat_service(
         meetings=MeetingRepository(session),
         settings=settings,
         notifications=hub,
+        activity=ActivityRecorder(session),
     )
 
 
@@ -240,6 +251,7 @@ def get_calendar_service(session: SessionDep, hub: NotificationHubDep) -> Calend
         CandidateRepository(session),
         VacancyRepository(session),
         hub,
+        activity=ActivityRecorder(session),
     )
 
 

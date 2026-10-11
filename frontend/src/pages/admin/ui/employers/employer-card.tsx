@@ -83,13 +83,23 @@ export function EmployerCardView({ companyId, period, onBack }: Props) {
       <div className="admin-columns">
         <article className="admin-card">
           <h2 className="admin-card__title">Сигналы</h2>
-          {!signals ? (
+          {data.liveSignals.length > 0 && (
+            <ul className="admin-list">
+              {data.liveSignals.map((signal) => (
+                <li key={signal.code}>
+                  {SIGNAL_LABELS[signal.code] ?? signal.code}: {signal.hits},{' '}
+                  {formatStamp(signal.lastAt)}
+                </li>
+              ))}
+            </ul>
+          )}
+          {!signals && data.liveSignals.length === 0 ? (
             <p className="admin-hint">
               {data.snapshot
                 ? `В расчёте от ${formatStamp(data.snapshot.computedAt)} активности компании не было.`
                 : 'Сигналы ещё не считались: нажмите «Пересчитать» в списке.'}
             </p>
-          ) : (
+          ) : signals ? (
             <dl className="admin-dl">
               <dt>Сигналы</dt>
               <dd>
@@ -112,7 +122,7 @@ export function EmployerCardView({ companyId, period, onBack }: Props) {
               <dt>Жалобы кандидатов</dt>
               <dd>нет данных: жалоб в платформе нет</dd>
             </dl>
-          )}
+          ) : null}
           <h2 className="admin-card__title">Компания</h2>
           <dl className="admin-dl">
             <dt>Владелец</dt>

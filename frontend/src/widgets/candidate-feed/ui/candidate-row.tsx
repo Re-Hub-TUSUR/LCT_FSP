@@ -19,7 +19,7 @@ type Props = {
 
 /** Table row of the employer's feed. The full profile, FSP and the bio open in the side sheet. */
 export function CandidateRow({ match, selected, dimmed = false, onOpen, actions }: Props) {
-  const { candidate, matchScore, profileStrength, matched } = match
+  const { candidate, matchScore, matched } = match
   const photo = useCandidatePhoto(candidate.id, candidate.hasPhoto === true)
   const place = candidate.city
     ? `${candidate.city}${candidate.relocationReady ? ' · переезд' : ''}`
@@ -61,19 +61,11 @@ export function CandidateRow({ match, selected, dimmed = false, onOpen, actions 
       </div>
 
       <div className="candidate-row__tags">
-        {candidate.category && <span className="tag">{candidate.category.label}</span>}
-        <AssessmentStatusBadge
-          status={candidate.assessmentStatus}
-          score={candidate.assessmentScore}
-          beta={candidate.gradeBeta}
-        />
+        <AssessmentStatusBadge status={candidate.assessmentStatus} beta={candidate.gradeBeta} />
       </div>
 
       <div className="candidate-row__meter">
         <MatchMeter compact value={matchScore} label="Под вакансию" />
-      </div>
-      <div className="candidate-row__meter">
-        <MatchMeter compact value={profileStrength} label="Сила профиля" />
       </div>
 
       <div className="candidate-row__pay">

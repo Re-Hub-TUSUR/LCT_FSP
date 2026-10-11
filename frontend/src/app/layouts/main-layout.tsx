@@ -10,15 +10,15 @@ import { CabinetGate, useCabinetSetup } from '../router/cabinet-gate'
 const NAV_BY_ROLE: Record<UserRole | 'guest', NavItem[]> = {
   guest: [{ label: 'Вакансии', to: ROUTES.vacancies }],
   candidate: [
-    { label: 'Свайпы', to: ROUTES.feedSwipe },
     { label: 'Лента', to: ROUTES.feed },
+    { label: 'Свайпы', to: ROUTES.feedSwipe },
     { label: 'Мои отклики', to: ROUTES.responses },
     { label: 'Тестирование', to: ROUTES.testing },
     { label: 'Календарь', to: ROUTES.calendar },
   ],
   employer: [
-    { label: 'Свайпы', to: ROUTES.feedSwipe },
     { label: 'Лента', to: ROUTES.feed },
+    { label: 'Свайпы', to: ROUTES.feedSwipe },
     { label: 'Мои отклики', to: ROUTES.responses },
     { label: 'Вакансии', to: ROUTES.vacancies },
     { label: 'ATS', to: ROUTES.ats },

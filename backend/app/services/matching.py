@@ -221,6 +221,7 @@ class CandidateFacts:
     fsp_titles: tuple[FspTitleKind, ...] = ()
     # The confirming test was a beta one.
     assessment_beta: bool = False
+    city_id: int | None = None
 
     @classmethod
     def of(cls, profile: CandidateProfile) -> Self:
@@ -231,6 +232,7 @@ class CandidateFacts:
             stack=tuple(profile.stack),
             work_formats=tuple(WorkFormat(value) for value in profile.work_formats),
             city=profile.city,
+            city_id=profile.city_id,
             relocation_ready=profile.relocation_ready,
             salary_expectation=profile.salary_expectation,
             assessment_score=profile.assessment_score,
@@ -271,6 +273,7 @@ class VacancyFacts:
     salary_from: int
     salary_to: int
     published_at: datetime | None
+    city_id: int | None = None
 
     @classmethod
     def of(cls, vacancy: Vacancy) -> Self:
@@ -280,6 +283,7 @@ class VacancyFacts:
             stack=tuple(vacancy.stack),
             work_format=vacancy.work_format,
             city=vacancy.city,
+            city_id=vacancy.city_id,
             salary_from=vacancy.salary_from,
             salary_to=vacancy.salary_to,
             published_at=vacancy.published_at,
@@ -321,7 +325,10 @@ def round_points(points: float) -> float:
     return math.floor(points * 10000 + 0.5) / 10000
 
 
-def _same_city(left: str | None, right: str | None) -> bool:
+def _same_city(candidate: CandidateFacts, vacancy: VacancyFacts) -> bool:
+    if candidate.city_id is not None and vacancy.city_id is not None:
+        return candidate.city_id == vacancy.city_id
+    left, right = candidate.city, vacancy.city
     return left is not None and right is not None and normalize_term(left) == normalize_term(right)
 
 
@@ -356,7 +363,7 @@ def _stack(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[float, tup
 def _location(candidate: CandidateFacts, vacancy: VacancyFacts) -> tuple[float, Location]:
     if vacancy.work_format == WorkFormat.REMOTE:
         return WEIGHTS.location, "remote"
-    if _same_city(candidate.city, vacancy.city):
+    if _same_city(candidate, vacancy):
         return WEIGHTS.location, "same_city"
     if candidate.relocation_ready:
         return WEIGHTS.location * RELOCATION_SHARE, "relocation"

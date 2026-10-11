@@ -24,8 +24,10 @@ from app.seed.generate import (
     DEMO_EMPLOYER2_EMAIL,
     DEMO_EMPLOYER_EMAIL,
     EXPERIENCE_YEARS,
+    MATCHES_PER_VACANCY,
     build_dataset,
     dump,
+    match_counts,
 )
 from app.seed.loader import SeedConflictError, demo_data_loaded, seed_database, seed_id
 from app.services.categories import SPECIALIZATIONS
@@ -63,6 +65,16 @@ def test_every_category_has_candidates_and_vacancies(data: SeedData) -> None:
     assert {vacancy.specialization for vacancy in published} == set(SPECIALIZATIONS)
     assert {vacancy.grade for vacancy in published} == set(Grade)
     assert min(Counter(vacancy.company_key for vacancy in data.vacancies).values()) >= 3
+
+
+def test_every_vacancy_matches_at_least_ten_candidates(data: SeedData) -> None:
+    counts = match_counts(data.candidates, data.vacancies)
+    short = {
+        vacancy.key: count
+        for vacancy, count in zip(data.vacancies, counts, strict=True)
+        if count < MATCHES_PER_VACANCY
+    }
+    assert short == {}
 
 
 def test_dataset_contains_the_edge_cases(data: SeedData) -> None:

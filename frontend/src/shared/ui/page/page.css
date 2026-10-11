@@ -88,7 +88,7 @@ body:has(.page--swipe) main {
   overflow: hidden;
 }
 
-/* Rain sits in the section box. Header and reel paint above it; the study sheet
+/* Rain covers the viewport. Header and reel paint above it; the study sheet
    stays a sibling so its fixed layer can still cover the site header. */
 .page--swipe > .hacker-rain {
   z-index: 0;

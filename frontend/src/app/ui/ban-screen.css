@@ -1,0 +1,56 @@
+.ban-screen {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #000;
+  color: var(--red-text);
+}
+
+.ban-screen__card {
+  width: min(36rem, 100%);
+  padding: 36px 32px 32px;
+  text-align: center;
+  background: #000;
+  border: 2px solid var(--red);
+  color: var(--red-text);
+}
+
+.ban-screen__mark {
+  margin: 0 0 22px;
+  font-family: var(--font-mono), monospace;
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  color: var(--red);
+}
+
+.ban-screen__title {
+  margin: 0 0 16px;
+  font-family: var(--font-mono), monospace;
+  font-size: 1.05rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--red-text);
+}
+
+.ban-screen__text {
+  margin: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--red-text);
+}
+
+.ban-screen__text a {
+  color: var(--red-text);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.ban-screen__text a:focus-visible {
+  outline: 2px solid var(--red-text);
+  outline-offset: 3px;
+}

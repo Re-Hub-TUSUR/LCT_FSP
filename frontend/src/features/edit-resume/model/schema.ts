@@ -26,6 +26,10 @@ export type ResumeValues = {
   headline: string
   specialization: string
   city: string
+  /** GeoNames id. Null until the person picks a row from the list. */
+  cityId: number | null
+  /** A city read from a file. It is a hint, not a saved value. */
+  cityHint: string
   experienceYears: string
   workFormats: WorkFormat[]
   stack: string[]
@@ -52,6 +56,8 @@ export const RESUME_FIELD_IDS: Record<keyof ResumeValues, string> = {
   headline: 'resume-headline',
   specialization: 'resume-specialization',
   city: 'resume-city',
+  cityId: 'resume-city',
+  cityHint: 'resume-city',
   birthDate: 'resume-birth',
   jobStatus: 'resume-status',
   salary: 'resume-salary',
@@ -85,6 +91,8 @@ export const EMPTY_RESUME: ResumeValues = {
   headline: '',
   specialization: '',
   city: '',
+  cityId: null,
+  cityHint: '',
   experienceYears: '',
   workFormats: [],
   stack: [],
@@ -227,7 +235,7 @@ export function validateResume(values: ResumeValues): ResumeErrors {
   if (!values.displayName.trim()) errors.displayName = 'Укажите имя и фамилию'
   if (!values.headline.trim()) errors.headline = 'Укажите должность'
   if (!values.specialization) errors.specialization = 'Выберите специализацию'
-  if (!values.city.trim()) errors.city = 'Укажите город'
+  if (values.cityId == null) errors.city = 'Выберите город из списка'
   if (values.birthDate) {
     const age = ageOn(values.birthDate)
     if (age === null || age < 0) errors.birthDate = 'Проверьте дату рождения'
@@ -323,7 +331,7 @@ export function toResumePayload(
     displayName: values.displayName.trim(),
     headline: values.headline.trim(),
     specialization: values.specialization,
-    city: values.city.trim(),
+    cityId: values.cityId,
     experienceYears: years,
     workFormats: values.workFormats,
     stack: values.stack,
@@ -362,6 +370,15 @@ function draftList<T>(value: T[], current: T[]): T[] {
   return value.length > 0 ? value : current
 }
 
+function draftCity(
+  values: ResumeValues,
+  raw: string | null,
+): Pick<ResumeValues, 'city' | 'cityId' | 'cityHint'> {
+  const recognized = raw?.trim() ?? ''
+  if (!recognized) return { city: values.city, cityId: values.cityId, cityHint: values.cityHint }
+  return { city: '', cityId: null, cityHint: recognized }
+}
+
 function draftNumber(value: number | null, current: string): string {
   return value == null ? current : String(value)
 }
@@ -373,7 +390,7 @@ export function applyResumeDraft(values: ResumeValues, draft: ResumeDraftDto): R
     displayName: draftText(draft.displayName, values.displayName),
     headline: draftText(draft.headline, values.headline),
     specialization: draftText(draft.specialization, values.specialization),
-    city: draftText(draft.city, values.city),
+    ...draftCity(values, draft.city),
     experienceYears: draftNumber(draft.experienceYears, values.experienceYears),
     workFormats: draftList(draft.workFormats, values.workFormats),
     stack: draftList(draft.stack, values.stack),
@@ -394,6 +411,8 @@ export function resumeValuesFrom(profile: OwnCandidateDto | null, fallbackName =
     headline: profile.headline ?? '',
     specialization: profile.specialization ?? profile.category?.specialization ?? '',
     city: profile.city ?? '',
+    cityId: profile.cityId ?? null,
+    cityHint: '',
     experienceYears: profile.experienceYears == null ? '' : String(profile.experienceYears),
     workFormats: profile.workFormats,
     stack: profile.stack,

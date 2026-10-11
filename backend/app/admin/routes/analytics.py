@@ -7,11 +7,12 @@ from typing import Annotated, Any, Final
 from fastapi import APIRouter, Query, Response
 from sqlalchemy import select
 
+from app.admin.activity import merge_employer_rows
 from app.admin.analytics.metrics import TaskFlag
 from app.admin.csv_export import csv_response
 from app.admin.dependencies import SnapshotsDep
 from app.admin.enums import AnalyticsPeriod, TaskStatus
-from app.admin.models import AdminEmployerCase, AdminTaskMeta
+from app.admin.models import AdminTaskMeta
 from app.admin.schemas import (
     AnalyticsFilters,
     Block,
@@ -40,7 +41,23 @@ FLAG_LABELS: Final = {
 SIGNAL_LABELS: Final = {
     "invites_spike": "Аномально много приглашений за сутки",
     "low_response": "Низкая доля ответов кандидатам",
+    "reaction_flapping": "Частая смена отметки одного кандидата",
+    "requisites_churn": "Частая смена реквизитов",
+    "junk_vacancies": "Вакансии без слов",
+    "meeting_churn": "Частые отмены встреч",
+    "chat_media_spam": "Много файлов в чате",
+    "invalid_industry": "Направление не из списка",
 }
+
+
+def _live_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "companies": len(rows),
+        "flagged": sum(1 for row in rows if row["signals"]),
+        "invitesSpike": sum(1 for row in rows if "invites_spike" in row["signals"]),
+        "lowResponse": sum(1 for row in rows if "low_response" in row["signals"]),
+        "medianInvitesPerDay": None,
+    }
 
 
 def _paged(items: list[dict[str, Any]], page: int) -> tuple[list[dict[str, Any]], int, int]:
@@ -143,7 +160,10 @@ async def employer_table(
     q: Annotated[str | None, Query(max_length=200)] = None,
 ) -> EmployerSignalsPage:
     snapshot = await snapshots.latest("employers", AnalyticsFilters(period=period))
-    if snapshot is None:
+    rows = await merge_employer_rows(
+        session, snapshot.result["companies"] if snapshot else None
+    )
+    if snapshot is None and not rows:
         return EmployerSignalsPage(
             snapshot=None,
             summary=None,
@@ -153,17 +173,6 @@ async def employer_table(
             page=page,
             per_page=PER_PAGE,
             pages=0,
-        )
-    cases = {
-        str(case.company_id): case
-        for case in (await session.scalars(select(AdminEmployerCase))).all()
-    }
-    rows = []
-    for row in snapshot.result["companies"]:
-        case = cases.get(row["companyId"])
-        status = case.status.value if case else ("flagged" if row["signals"] else None)
-        rows.append(
-            {**row, "caseStatus": status, "inviteLimit": case.invite_limit if case else None}
         )
     if signal == "any":
         rows = [row for row in rows if row["signals"]]
@@ -175,10 +184,12 @@ async def employer_table(
         needle = q.strip().lower()
         rows = [row for row in rows if needle in row["name"].lower()]
     items, total, pages = _paged(rows, page)
+    summary = snapshot.result["summary"] if snapshot else _live_summary(rows)
+    unavailable = snapshot.result.get("unavailable", []) if snapshot else []
     return EmployerSignalsPage(
-        snapshot=meta(snapshot),
-        summary=snapshot.result["summary"],
-        unavailable=snapshot.result.get("unavailable", []),
+        snapshot=meta(snapshot) if snapshot else None,
+        summary=summary,
+        unavailable=unavailable,
         items=items,
         total=total,
         page=page,
