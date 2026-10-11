@@ -5,7 +5,9 @@ import type { OwnCandidateDto } from '@/entities/candidate'
 import { sessionStore } from '@/entities/session'
 import { mockFetch, renderApp } from './test-utils'
 
-const SLOW = { timeout: 5000 }
+// The cabinet pulls in the biggest lazy chunk: cold, the first render alone takes ~3.5 s, and the
+// suite runs every file in parallel. A wait ceiling, not a delay: a fast render returns at once.
+const SLOW = { timeout: 10_000 }
 
 function signIn(role: 'candidate' | 'employer', name?: { firstName: string; lastName: string }) {
   sessionStore.set({

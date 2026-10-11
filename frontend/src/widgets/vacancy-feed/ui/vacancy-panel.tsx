@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useId, type ReactNode } from 'react'
+import { Link } from 'react-router'
 import { companyQueries } from '@/entities/company'
 import type { VacancyMatchDto } from '@/entities/vacancy'
 import { SALARY_NOTE, WORK_FORMAT_LABELS } from '@/entities/vacancy'
+import { paths } from '@/shared/config'
 import { formatDate, formatRubRange, isHttpUrl } from '@/shared/lib'
 import { Sheet, SheetSection, VerifiedMark } from '@/shared/ui'
 import './vacancy-sheet.css'
@@ -33,7 +35,9 @@ export function VacancyPanel({ match, profileStack, onClose, actions }: Props) {
     <Sheet label="Вакансия" labelledBy={titleId} onClose={onClose} footer={actions}>
       <div className="vacancy-panel__head">
         <p className="vacancy-panel__company">
-          <b>{vacancy.company.name}</b>
+          <Link to={paths.company(vacancy.company.id)}>
+            <b>{vacancy.company.name}</b>
+          </Link>
           {vacancy.company.itAccredited && <VerifiedMark />}
           {vacancy.company.industry && <span> · {vacancy.company.industry}</span>}
         </p>

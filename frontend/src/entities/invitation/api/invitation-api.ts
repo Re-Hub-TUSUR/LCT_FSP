@@ -8,6 +8,8 @@ export type InvitationDto = {
   candidateId: string
   company: { id: string; name: string }
   vacancyId: string | null
+  /** None both when no vacancy was named and when that vacancy was later deleted. */
+  vacancyTitle: string | null
   message: string
   salary: SalaryRangeDto
   contactMethod: string

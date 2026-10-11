@@ -130,6 +130,13 @@
   gap: 12px;
 }
 
+.inv-detail__names {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
 .inv-detail__who {
   margin: 0;
   font-family: var(--font-accent);
@@ -138,6 +145,21 @@
   line-height: 1.1;
   text-transform: uppercase;
   overflow-wrap: anywhere;
+}
+
+a.inv-detail__who {
+  text-decoration: none;
+}
+
+a.inv-detail__who:hover,
+a.inv-detail__who:focus-visible {
+  text-decoration: underline;
+}
+
+.inv-detail__company {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .inv-detail__salary {

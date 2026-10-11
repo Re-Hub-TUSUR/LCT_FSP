@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { candidateQueries } from '@/entities/candidate'
 import { INVITATION_STATUSES, invitationQueries } from '@/entities/invitation'
 import type { InvitationDirection, InvitationDto, InvitationStatus } from '@/entities/invitation'
 import { SALARY_NOTE } from '@/entities/vacancy'
 import { ApiError } from '@/shared/api'
 import { RespondButtons } from '@/features/respond-to-invitation'
+import { ROUTES } from '@/shared/config'
 import { formatDateTime, formatRubRange } from '@/shared/lib'
 import { ChipList, QueryState, StatusTag } from '@/shared/ui'
 import type { StatusTone } from '@/shared/ui'
@@ -161,7 +162,7 @@ export function InvitationsBoard({
                         </span>
                         <span className="inv-item__who">
                           {direction === 'incoming' ? (
-                            item.company.name
+                            (item.vacancyTitle ?? item.company.name)
                           ) : (
                             <CandidateName id={item.candidateId} />
                           )}
@@ -196,8 +197,17 @@ function InvitationDetail({
   invitation: InvitationDto
   direction: InvitationDirection
 }) {
-  const { status, company, salary, message, contactMethod, vacancyId, createdAt, updatedAt } =
-    invitation
+  const {
+    status,
+    company,
+    salary,
+    message,
+    contactMethod,
+    vacancyId,
+    vacancyTitle,
+    createdAt,
+    updatedAt,
+  } = invitation
   const answered = status === 'accepted' || status === 'declined'
   const steps = [
     { title: 'Отправлено', done: true, time: formatDateTime(createdAt) },
@@ -208,19 +218,39 @@ function InvitationDetail({
       time: answered ? formatDateTime(updatedAt) : null,
     },
   ]
+  // The candidate's own invitation names the vacancy first and the company underneath, the same
+  // way an incoming like does elsewhere; the employer's own sent invitation keeps the candidate's
+  // name, since there is no company to swap it with.
+  const incoming = direction === 'incoming'
 
   return (
     <article className="inv-detail" aria-label="Приглашение">
       <header className="inv-detail__top">
-        <p className="inv-detail__who">
-          {direction === 'incoming' ? company.name : <CandidateName id={invitation.candidateId} />}
-        </p>
+        <div className="inv-detail__names">
+          {incoming ? (
+            vacancyTitle && vacancyId ? (
+              <Link
+                className="inv-detail__who"
+                to={`${ROUTES.vacancies}?vacancyId=${encodeURIComponent(vacancyId)}`}
+              >
+                {vacancyTitle}
+              </Link>
+            ) : (
+              <p className="inv-detail__who">{vacancyTitle ?? company.name}</p>
+            )
+          ) : (
+            <p className="inv-detail__who">
+              <CandidateName id={invitation.candidateId} />
+            </p>
+          )}
+          {incoming && vacancyTitle && <p className="inv-detail__company">{company.name}</p>}
+        </div>
         <InvitationStatusTag status={status} direction={direction} />
       </header>
       <p className="inv-detail__salary">
         {formatRubRange(salary.from, salary.to)} <span>{SALARY_NOTE}</span>
       </p>
-      <ChipList items={[vacancyId ? 'По опубликованной вакансии' : 'Без публикации вакансии']} />
+      {!incoming && <ChipList items={[vacancyTitle ?? 'Без публикации вакансии']} />}
 
       <div className="inv-detail__message">
         <p className="inv-detail__label">

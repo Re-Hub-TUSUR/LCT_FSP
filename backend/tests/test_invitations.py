@@ -6,6 +6,7 @@ from httpx import AsyncClient
 
 from tests.conftest import API, bearer, register_and_login
 from tests.test_cabinet import COMPANY, RESUME
+from tests.test_vacancies import VACANCY
 
 OFFER: dict[str, Any] = {
     "message": "Предлагаем позицию backend-разработчика в команде платежей",
@@ -49,6 +50,8 @@ async def test_invitation_is_sent_listed_and_accepted(client: AsyncClient) -> No
     invitation = sent.json()
     assert (invitation["status"], invitation["company"]["name"]) == ("sent", COMPANY["name"])
     assert invitation["salary"] == OFFER["salary"]
+    # No vacancy was named: nothing to show instead of a title.
+    assert (invitation["vacancyId"], invitation["vacancyTitle"]) == (None, None)
 
     twice = await client.post(
         f"{API}/invitations", headers=bearer(employer), json={**OFFER, "candidateId": candidate_id}
@@ -83,6 +86,36 @@ async def test_invitation_is_sent_listed_and_accepted(client: AsyncClient) -> No
         f"{API}/invitations/{next_one.json()['id']}/decline", headers=bearer(candidate)
     )
     assert declined.json()["status"] == "declined"
+
+
+async def test_invitation_names_the_vacancy_it_was_sent_for(client: AsyncClient) -> None:
+    employer = await employer_with_company(client, "hr-vacancy@fsp.ru")
+    candidate, candidate_id = await candidate_with_resume(client, "dev-vacancy@fsp.ru")
+    vacancy = await client.post(f"{API}/vacancies", headers=bearer(employer), json=VACANCY)
+    assert vacancy.status_code == 201, vacancy.text
+    vacancy_id = vacancy.json()["id"]
+
+    sent = await client.post(
+        f"{API}/invitations",
+        headers=bearer(employer),
+        json={**OFFER, "candidateId": candidate_id, "vacancyId": vacancy_id},
+    )
+    assert sent.status_code == 201, sent.text
+    assert (sent.json()["vacancyId"], sent.json()["vacancyTitle"]) == (
+        vacancy_id,
+        VACANCY["title"],
+    )
+
+    # The join survives a list, not just the single row `create` and `accept` return.
+    incoming = (await client.get(f"{API}/invitations/incoming", headers=bearer(candidate))).json()
+    outgoing = (await client.get(f"{API}/invitations/outgoing", headers=bearer(employer))).json()
+    assert incoming["items"][0]["vacancyTitle"] == VACANCY["title"]
+    assert outgoing["items"][0]["vacancyTitle"] == VACANCY["title"]
+
+    accepted = await client.post(
+        f"{API}/invitations/{sent.json()['id']}/accept", headers=bearer(candidate)
+    )
+    assert accepted.json()["vacancyTitle"] == VACANCY["title"]
 
 
 async def test_invitation_belongs_to_its_company_and_its_candidate(client: AsyncClient) -> None:

@@ -6,9 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.enums import EmployerCaseStatus
 from app.admin.models import AdminEmployerCase
-from app.models import Company, Invitation, InvitationStatus
+from app.models import Company, Invitation, InvitationStatus, Vacancy
 
-InvitationRow = tuple[Invitation, Company]
+# The vacancy is named by id alone and may have none (`vacancy_title` is then None): a left join,
+# not an inner one.
+InvitationRow = tuple[Invitation, Company, str | None]
 
 # Still waiting for the candidate's answer.
 OPEN_STATUSES = (InvitationStatus.SENT, InvitationStatus.VIEWED)
@@ -47,13 +49,14 @@ class InvitationRepository:
     async def get(self, invitation_id: uuid.UUID) -> InvitationRow | None:
         row = (
             await self._session.execute(
-                select(Invitation, Company)
+                select(Invitation, Company, Vacancy.title)
                 .join(Company, Company.id == Invitation.company_id)
+                .outerjoin(Vacancy, Vacancy.id == Invitation.vacancy_id)
                 .where(Invitation.id == invitation_id)
                 .with_for_update(of=Invitation)
             )
         ).first()
-        return (row[0], row[1]) if row else None
+        return (row[0], row[1], row[2]) if row else None
 
     async def page_for_candidate(
         self, candidate_id: uuid.UUID, *, limit: int, offset: int
@@ -73,14 +76,17 @@ class InvitationRepository:
             select(func.count()).select_from(Invitation).where(condition)
         )
         result = await self._session.execute(
-            select(Invitation, Company)
+            select(Invitation, Company, Vacancy.title)
             .join(Company, Company.id == Invitation.company_id)
+            .outerjoin(Vacancy, Vacancy.id == Invitation.vacancy_id)
             .where(condition)
             .order_by(Invitation.created_at.desc(), Invitation.id)
             .limit(limit)
             .offset(offset)
         )
-        return [(invitation, company) for invitation, company in result], total or 0
+        return [
+            (invitation, company, vacancy_title) for invitation, company, vacancy_title in result
+        ], total or 0
 
     async def has_open(self, company_id: uuid.UUID, candidate_id: uuid.UUID) -> bool:
         """Is an invitation of the company still waiting for this candidate's answer?"""

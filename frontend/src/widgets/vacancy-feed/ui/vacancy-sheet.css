@@ -172,6 +172,15 @@
   color: var(--ink);
 }
 
+.vacancy-panel__company a {
+  text-decoration: none;
+}
+
+.vacancy-panel__company a:hover,
+.vacancy-panel__company a:focus-visible {
+  text-decoration: underline;
+}
+
 .vacancy-panel__title {
   margin: 0;
   font-family: var(--font-accent), monospace;

@@ -623,7 +623,7 @@ async def test_registry_extract_may_be_docx(
 
 
 async def test_deleting_the_last_document_drops_the_request(
-    client: AsyncClient, admin: dict[str, str]
+    client: AsyncClient, admin: dict[str, str], uploads: Path
 ) -> None:
     employer = await employer_with_company(client, "withdraw@fsp.ru")
     first = await client.post(

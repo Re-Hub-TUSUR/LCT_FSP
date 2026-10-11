@@ -5,7 +5,7 @@ import type { CandidateInboundDto, InboundDto } from '@/entities/response'
 import { SALARY_NOTE } from '@/entities/vacancy'
 import { useRespondToLike } from '@/features/respond-to-like'
 import { getErrorMessage } from '@/shared/api'
-import { ROUTES, paths } from '@/shared/config'
+import { ROUTES } from '@/shared/config'
 import { formatDateTime, formatRubRange } from '@/shared/lib'
 import { Button } from '@/shared/ui'
 import './company-likes.css'
@@ -46,18 +46,27 @@ export function CompanyLikes() {
         {likes.map((like) => (
           <li key={like.companyId} className="company-likes__item">
             <div className="company-likes__text">
-              <Link className="company-likes__company" to={paths.company(like.companyId)}>
-                {like.companyName}
-              </Link>
-              <p className="company-likes__vacancy">
-                {like.vacancyTitle ?? 'Вакансия не указана'}
-                {like.salary && (
-                  <span>
-                    {' '}
-                    · {formatRubRange(like.salary.from, like.salary.to)} {SALARY_NOTE}
-                  </span>
-                )}
-              </p>
+              {like.vacancyTitle && like.vacancyId ? (
+                <Link
+                  className="company-likes__item-title"
+                  to={`${ROUTES.vacancies}?vacancyId=${encodeURIComponent(like.vacancyId)}`}
+                >
+                  {like.vacancyTitle}
+                </Link>
+              ) : (
+                <p className="company-likes__item-title">{like.vacancyTitle ?? like.companyName}</p>
+              )}
+              {like.vacancyTitle && (
+                <p className="company-likes__item-subtitle">
+                  {like.companyName}
+                  {like.salary && (
+                    <span>
+                      {' '}
+                      · {formatRubRange(like.salary.from, like.salary.to)} {SALARY_NOTE}
+                    </span>
+                  )}
+                </p>
+              )}
               <p className="company-likes__time">{formatDateTime(like.reactedAt)}</p>
             </div>
             <Button
@@ -70,7 +79,7 @@ export function CompanyLikes() {
                 })
               }
             >
-              Ответить
+              Принять
             </Button>
           </li>
         ))}

@@ -79,6 +79,7 @@ function invitation(id: string, status: InvitationDto['status'], name: string): 
     candidateId: 'me',
     company: { id: `c-${id}`, name },
     vacancyId: null,
+    vacancyTitle: null,
     message: `Приглашение от ${name}`,
     salary: { from: 200000, to: 250000 },
     contactMethod: 'Telegram',

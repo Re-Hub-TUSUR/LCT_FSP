@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { useSession } from '@/entities/session'
 import {
   type CandidateInboundDto,
@@ -13,6 +13,7 @@ import { SALARY_NOTE, vacancyQueries } from '@/entities/vacancy'
 import type { VacancyMatchDto } from '@/entities/vacancy'
 import { useRespondToLike } from '@/features/respond-to-like'
 import { getErrorMessage } from '@/shared/api'
+import { ROUTES } from '@/shared/config'
 import { formatDateTime, formatRubRange } from '@/shared/lib'
 import { Button, EmptyState, QueryState, Tabs } from '@/shared/ui'
 import './responses-hub.css'
@@ -119,10 +120,24 @@ export function ResponsesHub({ messagesPanel, renderCandidates, renderVacancies 
                       <li key={item.companyId} className="responses__card">
                         <div className="responses__card-text">
                           <p className="responses__eyebrow">{item.industry ?? 'Компания'}</p>
-                          <h3 className="responses__title">{item.companyName}</h3>
+                          <h3 className="responses__title">
+                            {item.vacancyTitle ? (
+                              item.vacancyId ? (
+                                <Link
+                                  to={`${ROUTES.vacancies}?vacancyId=${encodeURIComponent(item.vacancyId)}`}
+                                >
+                                  {item.vacancyTitle}
+                                </Link>
+                              ) : (
+                                item.vacancyTitle
+                              )
+                            ) : (
+                              item.companyName
+                            )}
+                          </h3>
                           {item.vacancyTitle && (
                             <p className="responses__lead">
-                              {item.vacancyTitle}
+                              {item.companyName}
                               {item.salary &&
                                 ` · ${formatRubRange(item.salary.from, item.salary.to)} ${SALARY_NOTE}`}
                             </p>
@@ -139,7 +154,7 @@ export function ResponsesHub({ messagesPanel, renderCandidates, renderVacancies 
                             })
                           }
                         >
-                          Ответить
+                          Принять
                         </Button>
                       </li>
                     ) : (
@@ -173,7 +188,7 @@ export function ResponsesHub({ messagesPanel, renderCandidates, renderVacancies 
                             })
                           }
                         >
-                          Ответить
+                          Принять
                         </Button>
                       </li>
                     ),

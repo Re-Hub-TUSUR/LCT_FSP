@@ -63,7 +63,23 @@ export function VacanciesTable() {
     ? (params.get('workFormat') as WorkFormat)
     : undefined
   const [text, setText] = useState(q)
-  const [open, setOpen] = useState<VacancyDto | null>(null)
+  const [clicked, setClicked] = useState<VacancyDto | null>(null)
+  // A card elsewhere (an inbound like, an invitation) links here with `?vacancyId=`: open that
+  // one vacancy on arrival, whatever page or filters it would otherwise take to find it.
+  const deepLinkId = params.get('vacancyId')
+  const deepLink = useQuery({
+    ...vacancyQueries.detail(deepLinkId ?? ''),
+    enabled: Boolean(deepLinkId),
+  })
+  const open = clicked ?? (deepLinkId ? (deepLink.data ?? null) : null)
+  const closeOpen = () => {
+    setClicked(null)
+    if (deepLinkId) {
+      const next = new URLSearchParams(params)
+      next.delete('vacancyId')
+      setParams(next, { replace: true })
+    }
+  }
 
   const dictionary = useQuery(categoryQueries.dictionary())
   const company = useQuery({ ...companyQueries.mine(), enabled: employer, retry: false })
@@ -193,7 +209,7 @@ export function VacanciesTable() {
                               .filter(Boolean)
                               .join(' ') || undefined
                           }
-                          onClick={() => setOpen(vacancy)}
+                          onClick={() => setClicked(vacancy)}
                         >
                           <td data-label="Вакансия">
                             <button
@@ -202,7 +218,7 @@ export function VacanciesTable() {
                               aria-expanded={open?.id === vacancy.id}
                               onClick={(event) => {
                                 event.stopPropagation()
-                                setOpen(vacancy)
+                                setClicked(vacancy)
                               }}
                             >
                               {vacancy.title}
@@ -267,14 +283,7 @@ export function VacanciesTable() {
         }}
       </QueryState>
 
-      {open && (
-        <VacancySheet
-          key={open.id}
-          vacancy={open}
-          own={isOwn(open)}
-          onClose={() => setOpen(null)}
-        />
-      )}
+      {open && <VacancySheet key={open.id} vacancy={open} own={isOwn(open)} onClose={closeOpen} />}
     </div>
   )
 }

@@ -62,13 +62,13 @@
   min-width: 0;
 }
 
-.company-likes__company {
+.company-likes__item-title {
   font-weight: 600;
   font-size: 15px;
   color: var(--ink);
 }
 
-.company-likes__vacancy,
+.company-likes__item-subtitle,
 .company-likes__time {
   margin: 0;
   font-size: 13px;
@@ -76,7 +76,7 @@
   color: var(--ink);
 }
 
-.company-likes__vacancy span,
+.company-likes__item-subtitle span,
 .company-likes__time {
   font-family: var(--font-mono);
   font-size: 12px;

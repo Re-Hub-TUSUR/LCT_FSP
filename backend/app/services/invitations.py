@@ -41,10 +41,12 @@ class InvitationService:
         profile = await self._candidates.get(data.candidate_id)
         if profile is None or not profile.is_visible_to_employers:
             raise NotFoundError("Кандидат не найден")
+        vacancy_title = None
         if data.vacancy_id is not None:
             row = await self._vacancies.get(data.vacancy_id)
             if row is None or row[1].id != company.id:
                 raise NotFoundError("Вакансия не найдена")
+            vacancy_title = row[0].title
         if await self._invitations.has_open(company.id, profile.id):
             raise ConflictError("Кандидат ещё не ответил на ваше предыдущее приглашение")
         limit = await self._invitations.invite_limit(company.id)
@@ -74,7 +76,7 @@ class InvitationService:
                 "companyName": company.name,
             },
         )
-        return _read(invitation, company)
+        return _read(invitation, company, vacancy_title)
 
     async def incoming(self, user: User, pagination: Pagination) -> Page[InvitationRead]:
         """A candidate without a resume has no invitations yet: an empty list, not an error."""
@@ -106,7 +108,7 @@ class InvitationService:
         row = await self._invitations.get(invitation_id)
         if profile is None or row is None or row[0].candidate_id != profile.id:
             raise NotFoundError("Приглашение не найдено")
-        invitation, company = row
+        invitation, company, vacancy_title = row
         if invitation.status not in OPEN_STATUSES:
             raise ConflictError("На это приглашение уже дан ответ")
         invitation.status = InvitationStatus.ACCEPTED if accept else InvitationStatus.DECLINED
@@ -120,15 +122,16 @@ class InvitationService:
                 "status": invitation.status.value,
             },
         )
-        return _read(invitation, company)
+        return _read(invitation, company, vacancy_title)
 
 
-def _read(invitation: Invitation, company: Company) -> InvitationRead:
+def _read(invitation: Invitation, company: Company, vacancy_title: str | None) -> InvitationRead:
     return InvitationRead(
         id=invitation.id,
         candidate_id=invitation.candidate_id,
         company=CompanyRef(id=company.id, name=company.name),
         vacancy_id=invitation.vacancy_id,
+        vacancy_title=vacancy_title,
         message=invitation.message,
         salary=SalaryRead.model_validate(
             {"from": invitation.salary_from, "to": invitation.salary_to}
@@ -142,7 +145,7 @@ def _read(invitation: Invitation, company: Company) -> InvitationRead:
 
 def _page(rows: list[InvitationRow], total: int, pagination: Pagination) -> Page[InvitationRead]:
     return Page[InvitationRead].build(
-        [_read(invitation, company) for invitation, company in rows],
+        [_read(invitation, company, vacancy_title) for invitation, company, vacancy_title in rows],
         total=total,
         page=pagination.page,
         per_page=pagination.per_page,

@@ -21,6 +21,8 @@ class InvitationRead(ApiModel):
     candidate_id: uuid.UUID
     company: CompanyRef
     vacancy_id: uuid.UUID | None
+    # None both when no vacancy was named and when that vacancy was later deleted.
+    vacancy_title: str | None
     message: str
     salary: SalaryRead
     contact_method: str
