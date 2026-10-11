@@ -10,15 +10,6 @@
   border-bottom: 1px solid var(--line);
 }
 
-.responses__feed {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
 /* «Я понравился»: a tile per person or company still waiting for an answer. */
 .responses__list {
   display: grid;

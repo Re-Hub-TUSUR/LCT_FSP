@@ -10,7 +10,8 @@
 }
 
 .candidate-row {
-  padding: 18px 20px;
+  position: relative;
+  padding: 18px 60px 18px 20px;
   border-top: 1px solid var(--line);
   cursor: pointer;
   transition:
@@ -107,6 +108,13 @@
   justify-content: flex-end;
 }
 
+/* «Скрыть» is an eye in the top right corner of the card, as on hh.ru. */
+.candidate-row .reaction-hide {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+}
+
 /* Below the full table: person, tags and expectations, the decision on its own line. */
 @media (max-width: 1319px) {
   .candidate-row__grid {
@@ -130,7 +138,8 @@
   }
 
   .candidate-row {
-    padding: 16px;
+    /* Room on the right for the eye in the corner. */
+    padding: 16px 56px 16px 16px;
   }
 }
 

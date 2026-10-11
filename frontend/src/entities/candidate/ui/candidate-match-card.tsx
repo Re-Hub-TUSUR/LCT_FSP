@@ -43,7 +43,7 @@ type Props = {
 
 /** Recruiter's feed card. Contacts are never shown here: only after an accepted invitation. */
 export function CandidateMatchCard({ match, actions, frame = false, onStudy }: Props) {
-  const { candidate, matchScore, profileStrength, reasons, matched } = match
+  const { candidate, matchScore, reasons, matched } = match
   const [bodyRef, overflows] = useOverflows(
     frame ? `${candidate.id}:${candidate.about?.length ?? 0}:${reasons.length}` : '',
   )
@@ -72,10 +72,12 @@ export function CandidateMatchCard({ match, actions, frame = false, onStudy }: P
               )}
             </div>
           </div>
-          <div className="match-card__meters">
-            {matchScore !== null && <MatchMeter value={matchScore} label="Под вакансию" />}
-            <MatchMeter value={profileStrength} label="Сила профиля" />
-          </div>
+          {/* Profile strength still ranks the feed on the server; on the card it was noise. */}
+          {matchScore !== null && (
+            <div className="match-card__meters">
+              <MatchMeter value={matchScore} label="Под вакансию" />
+            </div>
+          )}
         </header>
 
         <ul className="match-card__facts">

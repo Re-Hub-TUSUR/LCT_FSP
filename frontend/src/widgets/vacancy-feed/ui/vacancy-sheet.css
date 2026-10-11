@@ -1,11 +1,12 @@
 /* ── Feed row ──────────────────────────────────────── */
 
 .vacancy-row {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px 20px;
-  padding: 18px 20px;
+  padding: 18px 60px 18px 20px;
   border-top: 1px solid var(--line);
   transition: background 0.15s ease;
 }
@@ -142,7 +143,8 @@
 
 @media (max-width: 639px) {
   .vacancy-row {
-    padding: 16px;
+    /* Room on the right for the eye in the corner. */
+    padding: 16px 56px 16px 16px;
   }
 
   .vacancy-row__open {
@@ -224,4 +226,11 @@
 .sheet-section .vacancy-panel__meta {
   font-size: 12.5px;
   color: var(--muted);
+}
+
+/* «Скрыть» is an eye in the top right corner of the card, as on hh.ru. */
+.vacancy-row .reaction-hide {
+  position: absolute;
+  top: 10px;
+  right: 12px;
 }

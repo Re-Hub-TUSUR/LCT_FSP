@@ -37,6 +37,17 @@ type Props = {
   likeLabel?: string
 }
 
+/** An eye, crossed out while the card is in the feed: «Скрыть», as on hh.ru. */
+function EyeIcon({ crossed }: { crossed: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" />
+      {crossed && <path d="M4 4l16 16" />}
+    </svg>
+  )
+}
+
 export function ReactionButtons({ target, id, initial, vacancyId, likeLabel = 'Отобрать' }: Props) {
   const [reaction, setReaction] = useState<Reaction | null>(initial)
   // The same candidate has buttons in the row and in the side sheet: a decision made in one
@@ -49,6 +60,7 @@ export function ReactionButtons({ target, id, initial, vacancyId, likeLabel = '�
   const mutation = useReaction()
   const likeVacancy = useLikeVacancy()
   const applicant = target === 'vacancy'
+  const hidden = reaction === 'skip'
 
   const save = (next: Reaction | null, forVacancy = vacancyId) => {
     setReaction(next)
@@ -81,18 +93,18 @@ export function ReactionButtons({ target, id, initial, vacancyId, likeLabel = '�
             ? '★ Отобрано'
             : `☆ ${likeLabel}`}
       </button>
-      {/* A candidate answers a vacancy with one button; a skipped one (from the swipes) can be
-          brought back. */}
-      {(!applicant || reaction === 'skip') && (
-        <button
-          type="button"
-          aria-pressed={reaction === 'skip'}
-          className={`reaction-buttons__btn${reaction === 'skip' ? ' is-on' : ''}`}
-          onClick={() => toggle('skip')}
-        >
-          {reaction === 'skip' ? 'Не интересно · вернуть' : 'Не интересно'}
-        </button>
-      )}
+      {/* «Не интересно» is an icon in the corner of the card; a hidden card shows an open eye
+          that brings it back. */}
+      <button
+        type="button"
+        aria-pressed={hidden}
+        aria-label={hidden ? 'Вернуть в ленту' : 'Скрыть'}
+        title={hidden ? 'Вернуть в ленту' : 'Скрыть — не интересно'}
+        className={hidden ? 'reaction-hide is-on' : 'reaction-hide'}
+        onClick={() => toggle('skip')}
+      >
+        <EyeIcon crossed={!hidden} />
+      </button>
     </div>
   )
 }

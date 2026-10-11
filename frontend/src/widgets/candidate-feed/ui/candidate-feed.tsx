@@ -1,17 +1,14 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router'
 import { candidateQueries } from '@/entities/candidate'
-import type { CandidateMatchDto, CandidateSort } from '@/entities/candidate'
+import type { CandidateSort } from '@/entities/candidate'
 import type { ListView } from '@/entities/vacancy'
-import { ReactionButtons } from '@/features/feed-reaction'
 import { CandidateFilters, useCandidateFilters } from '@/features/filter-candidates'
-import { InviteCandidateLink } from '@/features/invite-candidate'
 import { plural } from '@/shared/lib'
 import { EmptyState, FeedSkeleton, Pagination, QueryState } from '@/shared/ui'
-import { CandidatePanel } from './candidate-panel'
-import { CandidateRow } from './candidate-row'
+import { CandidateList } from './candidate-list'
 
 const SORTS: Record<CandidateSort, string> = {
   relevance: 'По релевантности',
@@ -47,9 +44,7 @@ export function CandidateFeed() {
   const { view, text: q, vacancyId, query: filters, active } = useCandidateFilters()
   const sort = (params.get('sort') as CandidateSort | null) ?? 'relevance'
   const [text, setText] = useState(q)
-  const [open, setOpen] = useState<CandidateMatchDto | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const closePanel = useCallback(() => setOpen(null), [setOpen])
 
   const query = useQuery({
     ...candidateQueries.search({
@@ -146,35 +141,7 @@ export function CandidateFeed() {
             </div>
           ) : (
             <>
-              <div className="feed-table">
-                <div className="feed-table__head candidate-row__grid" aria-hidden="true">
-                  <span>Кандидат</span>
-                  <span>Тест</span>
-                  <span>Под вакансию</span>
-                  <span>Ожидания</span>
-                  <span>Решение</span>
-                </div>
-                <ol className="feed__list">
-                  {data.items.map((match) => (
-                    <li key={match.candidate.id}>
-                      <CandidateRow
-                        match={match}
-                        dimmed={match.reaction === 'skip' && view !== 'skipped'}
-                        selected={open?.candidate.id === match.candidate.id}
-                        onOpen={() => setOpen(match)}
-                        actions={
-                          <ReactionButtons
-                            target="candidate"
-                            id={match.candidate.id}
-                            initial={match.reaction}
-                            vacancyId={vacancyId ?? undefined}
-                          />
-                        }
-                      />
-                    </li>
-                  ))}
-                </ol>
-              </div>
+              <CandidateList items={data.items} view={view} vacancyId={vacancyId ?? undefined} />
               <Pagination
                 page={data.page}
                 pages={data.pages}
@@ -194,33 +161,6 @@ export function CandidateFeed() {
           <QueryState query={query}>{() => null}</QueryState>
         )}
       </section>
-      {open && (
-        <CandidatePanel
-          key={open.candidate.id}
-          match={open}
-          onClose={closePanel}
-          actions={
-            <>
-              <ReactionButtons
-                target="candidate"
-                id={open.candidate.id}
-                initial={
-                  // The refreshed list knows a decision made in the row after the sheet opened.
-                  (
-                    query.data?.items.find((item) => item.candidate.id === open.candidate.id) ??
-                    open
-                  ).reaction
-                }
-                vacancyId={vacancyId ?? undefined}
-              />
-              <InviteCandidateLink
-                candidateId={open.candidate.id}
-                vacancyId={vacancyId ?? undefined}
-              />
-            </>
-          }
-        />
-      )}
     </div>
   )
 }

@@ -7,18 +7,24 @@ import {
   type EmployerInboundDto,
   responseQueries,
 } from '@/entities/response'
-import { CandidateMatchCard, candidateQueries } from '@/entities/candidate'
-import { SALARY_NOTE, VacancyMatchCard, vacancyQueries } from '@/entities/vacancy'
-import { ReactionButtons } from '@/features/feed-reaction'
-import { InviteCandidateLink } from '@/features/invite-candidate'
+import { candidateQueries } from '@/entities/candidate'
+import type { CandidateMatchDto } from '@/entities/candidate'
+import { SALARY_NOTE, vacancyQueries } from '@/entities/vacancy'
+import type { VacancyMatchDto } from '@/entities/vacancy'
 import { useRespondToLike } from '@/features/respond-to-like'
 import { getErrorMessage } from '@/shared/api'
 import { formatDateTime, formatRubRange } from '@/shared/lib'
 import { Button, EmptyState, QueryState, Tabs } from '@/shared/ui'
 import './responses-hub.css'
 
+export type DecisionTab = 'skipped' | 'liked' | 'matched'
+
 type Props = {
   messagesPanel: ReactNode
+  /** The rows of the employer's feed: a candidate looks here as in the feed. */
+  renderCandidates: (items: CandidateMatchDto[], tab: DecisionTab) => ReactNode
+  /** The rows of the candidate's feed, with the profile stack for the match notes. */
+  renderVacancies: (items: VacancyMatchDto[], profileStack: readonly string[]) => ReactNode
 }
 
 export type ResponsesTab = 'skipped' | 'liked' | 'matched' | 'inbound' | 'messages'
@@ -31,7 +37,8 @@ const TAB_LABELS: Record<ResponsesTab, string> = {
   messages: 'Сообщения',
 }
 
-const TABS: ResponsesTab[] = ['skipped', 'liked', 'matched', 'inbound', 'messages']
+// «Я понравился» comes before «Взаимно»: an incoming like is answered first, then it is mutual.
+const TABS: ResponsesTab[] = ['skipped', 'liked', 'inbound', 'matched', 'messages']
 
 const DECISION_TABS = ['skipped', 'liked', 'matched'] as const
 
@@ -47,7 +54,7 @@ function isCandidateInbound(item: unknown): item is CandidateInboundDto {
   return typeof item === 'object' && item !== null && 'companyId' in item
 }
 
-export function ResponsesHub({ messagesPanel }: Props) {
+export function ResponsesHub({ messagesPanel, renderCandidates, renderVacancies }: Props) {
   const { user } = useSession()
   const employer = user?.role === 'employer'
   const [params, setParams] = useSearchParams()
@@ -185,27 +192,7 @@ export function ResponsesHub({ messagesPanel }: Props) {
         <QueryState query={candidateQuery} loadingLabel="Загрузка…">
           {(data) =>
             data.items.length ? (
-              <ul className="responses__feed">
-                {data.items.map((match) => (
-                  <li key={match.candidate.id}>
-                    <CandidateMatchCard
-                      match={match}
-                      actions={
-                        <>
-                          <ReactionButtons
-                            target="candidate"
-                            id={match.candidate.id}
-                            initial={match.reaction}
-                          />
-                          {tab === 'liked' && (
-                            <InviteCandidateLink candidateId={match.candidate.id} />
-                          )}
-                        </>
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
+              renderCandidates(data.items, feedView)
             ) : (
               <EmptyState title={tab === 'matched' ? 'Взаимных отметок пока нет' : 'Список пуст'}>
                 {tab === 'skipped'
@@ -221,22 +208,7 @@ export function ResponsesHub({ messagesPanel }: Props) {
         <QueryState query={vacancyQuery} loadingLabel="Загрузка…">
           {(data) =>
             data.items.length ? (
-              <ul className="responses__feed">
-                {data.items.map((match) => (
-                  <li key={match.vacancy.id}>
-                    <VacancyMatchCard
-                      match={match}
-                      actions={
-                        <ReactionButtons
-                          target="vacancy"
-                          id={match.vacancy.id}
-                          initial={match.reaction}
-                        />
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
+              renderVacancies(data.items, data.basis?.stack ?? [])
             ) : (
               <EmptyState title={tab === 'matched' ? 'Взаимных отметок пока нет' : 'Список пуст'}>
                 {tab === 'skipped'

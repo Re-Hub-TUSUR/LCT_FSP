@@ -1,8 +1,17 @@
 import { useSearchParams } from 'react-router'
+import type { CandidateMatchDto } from '@/entities/candidate'
+import { InviteCandidateLink } from '@/features/invite-candidate'
 import { HackerRain, Page } from '@/shared/ui'
+import { CandidateList } from '@/widgets/candidate-feed'
 import { Messenger } from '@/widgets/messenger'
 import { ResponsesHub } from '@/widgets/responses-hub'
+import { VacancyList } from '@/widgets/vacancy-feed'
 import './responses-page.css'
+
+/** «Мне понравились»: the next step with a liked candidate is the invitation. */
+function inviteLink(match: CandidateMatchDto) {
+  return <InviteCandidateLink candidateId={match.candidate.id} />
+}
 
 export function ResponsesPage() {
   const [params, setParams] = useSearchParams()
@@ -16,6 +25,16 @@ export function ResponsesPage() {
     >
       <HackerRain />
       <ResponsesHub
+        renderCandidates={(items, tab) => (
+          <CandidateList
+            items={items}
+            view={tab}
+            rowExtra={tab === 'liked' ? inviteLink : undefined}
+          />
+        )}
+        renderVacancies={(items, profileStack) => (
+          <VacancyList items={items} profileStack={profileStack} />
+        )}
         messagesPanel={
           <Messenger
             selectedId={chatId}

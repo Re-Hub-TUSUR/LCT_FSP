@@ -48,9 +48,54 @@
   outline-offset: 3px;
 }
 
+.reaction-hide {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.reaction-hide svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.reaction-hide:hover {
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.reaction-hide.is-on {
+  border-color: var(--red);
+  color: var(--red-text);
+}
+
+.reaction-hide:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
 /* In the footer of a sheet the two decisions share the width. */
 .sheet__foot .reaction-buttons {
   flex-wrap: nowrap;
+}
+
+.sheet__foot .reaction-hide {
+  width: 48px;
+  height: 48px;
+  border-color: var(--line);
 }
 
 .sheet__foot .reaction-buttons__btn {

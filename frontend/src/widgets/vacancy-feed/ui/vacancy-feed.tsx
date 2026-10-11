@@ -1,13 +1,11 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { vacancyQueries } from '@/entities/vacancy'
-import type { ListView, VacancyMatchDto } from '@/entities/vacancy'
-import { ReactionButtons } from '@/features/feed-reaction'
+import type { ListView } from '@/entities/vacancy'
 import { useProfilePrefill, useVacancyFilters, VacancyFilters } from '@/features/filter-vacancies'
 import { EmptyState, FeedSkeleton, Notice, Pagination, QueryState } from '@/shared/ui'
-import { VacancyPanel } from './vacancy-panel'
-import { VacancyRow } from './vacancy-row'
+import { VacancyList } from './vacancy-list'
 
 const EMPTY: Record<ListView, { title: string; text: string }> = {
   all: { title: 'Подходящих вакансий нет', text: 'Ослабьте фильтры или загляните позже.' },
@@ -35,9 +33,7 @@ export function VacancyFeed() {
   const perPage = Number(params.get('perPage')) || 10
   const { view, query: filters, active } = useVacancyFilters()
   const ready = useProfilePrefill()
-  const [open, setOpen] = useState<VacancyMatchDto | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const closePanel = useCallback(() => setOpen(null), [setOpen])
 
   const query = useQuery({
     ...vacancyQueries.feed({ ...filters, page, perPage, view }),
@@ -85,27 +81,7 @@ export function VacancyFeed() {
             </div>
           ) : (
             <>
-              <div className="feed-table">
-                <ol className="feed__list">
-                  {data.items.map((match) => (
-                    <li key={match.vacancy.id}>
-                      <VacancyRow
-                        match={match}
-                        profileStack={data.basis?.stack ?? []}
-                        selected={open?.vacancy.id === match.vacancy.id}
-                        onOpen={() => setOpen(match)}
-                        actions={
-                          <ReactionButtons
-                            target="vacancy"
-                            id={match.vacancy.id}
-                            initial={match.reaction}
-                          />
-                        }
-                      />
-                    </li>
-                  ))}
-                </ol>
-              </div>
+              <VacancyList items={data.items} profileStack={data.basis?.stack ?? []} />
               <Pagination
                 page={data.page}
                 pages={data.pages}
@@ -125,23 +101,6 @@ export function VacancyFeed() {
           <QueryState query={query}>{() => null}</QueryState>
         )}
       </section>
-      {open && (
-        <VacancyPanel
-          key={open.vacancy.id}
-          match={open}
-          profileStack={data?.basis?.stack ?? []}
-          onClose={closePanel}
-          actions={
-            <ReactionButtons
-              target="vacancy"
-              id={open.vacancy.id}
-              initial={
-                (data?.items.find((item) => item.vacancy.id === open.vacancy.id) ?? open).reaction
-              }
-            />
-          }
-        />
-      )}
     </div>
   )
 }
